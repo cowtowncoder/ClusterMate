@@ -1,11 +1,11 @@
 package com.fasterxml.clustermate.client.impl;
 
 import com.fasterxml.clustermate.client.operation.OperationConfig;
+import com.fasterxml.clustermate.json.ClusterMateObjectMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.api.EntryKey;
 import com.fasterxml.storemate.api.EntryKeyConverter;
 import com.fasterxml.storemate.client.call.CallConfig;
-import com.fasterxml.storemate.json.StoreMateObjectMapper;
 
 /**
  * Builder class for creating immutable {@link StoreClientConfig}
@@ -24,7 +24,7 @@ public abstract class StoreClientConfigBuilder<K extends EntryKey,
 
     protected final static OperationConfig DEFAULT_OPERATION_CONFIG = new OperationConfig();
 
-    protected final static ObjectMapper DEFAULT_JSON_MAPPER = new StoreMateObjectMapper();
+    protected final static ObjectMapper DEFAULT_JSON_MAPPER = new ClusterMateObjectMapper();
     
     /*
     ///////////////////////////////////////////////////////////////////////
