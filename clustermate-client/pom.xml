@@ -1,0 +1,49 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion> 
+  <parent>
+    <groupId>com.fasterxml.clustermate</groupId>
+    <artifactId>clustermate-parent</artifactId>
+    <version>0.5.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>clustermate-client</artifactId>
+  <name>ClusterMate-client</name>
+  <packaging>jar</packaging>
+  <description>Building blocks for client libraries that access
+ClusterMate-based service.
+  </description>
+
+  <dependencies>
+    <!--  First: StoreMate deps -->
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-shared</artifactId>
+      <version>${version.storemate}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-client-base</artifactId>
+      <version>${version.storemate}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!--  for base Client impl, JSON also needed: -->
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-json</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- need Jackson for some stuff, dont we? -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${version.jackson}</version>
+    </dependency>
+
+  </dependencies>
+</project>
