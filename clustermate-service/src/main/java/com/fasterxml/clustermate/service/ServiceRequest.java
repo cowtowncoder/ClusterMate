@@ -1,7 +1,7 @@
 package com.fasterxml.clustermate.service;
 
-import com.fasterxml.storemate.api.ByteRange;
-import com.fasterxml.storemate.api.HTTPConstants;
+import com.fasterxml.storemate.shared.ByteRange;
+import com.fasterxml.storemate.shared.HTTPConstants;
 
 
 /**

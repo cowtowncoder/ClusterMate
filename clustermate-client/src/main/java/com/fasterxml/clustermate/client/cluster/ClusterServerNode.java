@@ -1,13 +1,13 @@
 package com.fasterxml.clustermate.client.cluster;
 
 import com.fasterxml.clustermate.api.KeyRange;
-import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.RequestPathBuilder;
 import com.fasterxml.storemate.client.ServerNode;
 import com.fasterxml.storemate.client.call.ContentDeleter;
 import com.fasterxml.storemate.client.call.ContentGetter;
 import com.fasterxml.storemate.client.call.ContentHeader;
 import com.fasterxml.storemate.client.call.ContentPutter;
+import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.RequestPathBuilder;
 
 /**
  * Representation of a server node that is part of a cluster, including

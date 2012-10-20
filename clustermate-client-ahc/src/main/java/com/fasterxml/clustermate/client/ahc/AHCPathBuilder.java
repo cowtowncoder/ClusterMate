@@ -3,8 +3,8 @@ package com.fasterxml.clustermate.client.ahc;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.storemate.api.RequestPathBuilder;
 import com.fasterxml.storemate.shared.IpAndPort;
+import com.fasterxml.storemate.shared.RequestPathBuilder;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.util.UTF8UrlEncoder;

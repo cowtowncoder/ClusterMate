@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 
-import com.fasterxml.storemate.api.ClientId;
+import com.fasterxml.storemate.shared.ClientId;
 
 @SuppressWarnings("serial")
 public class ClientIdDeserializer extends StdScalarDeserializer<ClientId>

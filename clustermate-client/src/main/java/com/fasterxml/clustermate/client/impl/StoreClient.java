@@ -15,11 +15,11 @@ import com.fasterxml.clustermate.client.operation.GetOperationResult;
 import com.fasterxml.clustermate.client.operation.HeadOperationResult;
 import com.fasterxml.clustermate.client.operation.NodeFailure;
 import com.fasterxml.clustermate.client.operation.PutOperationResult;
-import com.fasterxml.storemate.api.ByteRange;
-import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.EntryKeyConverter;
 import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.*;
+import com.fasterxml.storemate.shared.ByteRange;
+import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.EntryKeyConverter;
 import com.fasterxml.storemate.shared.util.ByteAggregator;
 
 /**

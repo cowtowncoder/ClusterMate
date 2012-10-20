@@ -9,7 +9,7 @@ import com.fasterxml.clustermate.client.cluster.ClusterStatusAccessor;
 import com.fasterxml.clustermate.client.cluster.ClusterViewByClientImpl;
 import com.fasterxml.clustermate.client.cluster.Loggable;
 import com.fasterxml.clustermate.client.cluster.NetworkClient;
-import com.fasterxml.storemate.api.EntryKey;
+import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 /**

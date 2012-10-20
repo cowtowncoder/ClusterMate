@@ -4,10 +4,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.fasterxml.storemate.api.EntryKey;
 import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.CallConfig;
 import com.fasterxml.storemate.client.call.ContentDeleter;
+import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 import com.fasterxml.clustermate.client.cluster.ClusterServerNode;

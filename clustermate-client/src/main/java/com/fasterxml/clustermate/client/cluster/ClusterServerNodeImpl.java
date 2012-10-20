@@ -5,14 +5,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.clustermate.api.KeyHash;
 import com.fasterxml.clustermate.api.KeyRange;
-import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.RequestPath;
-import com.fasterxml.storemate.api.RequestPathBuilder;
 import com.fasterxml.storemate.client.call.ContentDeleter;
 import com.fasterxml.storemate.client.call.ContentGetter;
 import com.fasterxml.storemate.client.call.ContentHeader;
 import com.fasterxml.storemate.client.call.ContentPutter;
+import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
+import com.fasterxml.storemate.shared.RequestPath;
+import com.fasterxml.storemate.shared.RequestPathBuilder;
 
 /**
  * Value class used by {@link NetworkClient} to keep track of state

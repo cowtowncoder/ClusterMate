@@ -4,12 +4,12 @@ import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
 import com.fasterxml.clustermate.client.cluster.EntryAccessors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.EntryKeyConverter;
 import com.fasterxml.storemate.client.call.ContentDeleter;
 import com.fasterxml.storemate.client.call.ContentGetter;
 import com.fasterxml.storemate.client.call.ContentHeader;
 import com.fasterxml.storemate.client.call.ContentPutter;
+import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.EntryKeyConverter;
 
 import com.ning.http.client.AsyncHttpClient;
 

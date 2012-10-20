@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleDeserializers;
 import com.fasterxml.jackson.databind.module.SimpleSerializers;
 
-import com.fasterxml.storemate.api.ClientId;
+import com.fasterxml.storemate.shared.ClientId;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.StorableKey;
 

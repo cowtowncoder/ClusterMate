@@ -9,13 +9,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.EntryKeyConverter;
 import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.CallConfig;
 import com.fasterxml.storemate.client.call.ContentPutter;
 import com.fasterxml.storemate.client.call.PutContentProvider;
 import com.fasterxml.storemate.shared.ByteContainer;
+import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.EntryKeyConverter;
 import com.fasterxml.storemate.shared.util.IOUtil;
 import com.fasterxml.storemate.shared.util.WithBytesCallback;
 

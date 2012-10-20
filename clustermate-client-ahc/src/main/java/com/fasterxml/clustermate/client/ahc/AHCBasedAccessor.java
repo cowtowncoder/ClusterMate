@@ -6,7 +6,7 @@ import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
 import com.fasterxml.clustermate.client.cluster.Loggable;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.storemate.api.HTTPConstants;
+import com.fasterxml.storemate.shared.HTTPConstants;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.FluentCaseInsensitiveStringsMap;

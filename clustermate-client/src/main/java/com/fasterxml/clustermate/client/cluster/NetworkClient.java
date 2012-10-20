@@ -1,9 +1,9 @@
 package com.fasterxml.clustermate.client.cluster;
 
-import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.EntryKeyConverter;
-import com.fasterxml.storemate.api.RequestPathBuilder;
+import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.EntryKeyConverter;
 import com.fasterxml.storemate.shared.IpAndPort;
+import com.fasterxml.storemate.shared.RequestPathBuilder;
 
 /**
  * Factory abstraction used to separate details of physical network Client,

@@ -9,8 +9,8 @@ import com.fasterxml.clustermate.api.KeyHash;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
-import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.EntryKeyConverter;
+import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.EntryKeyConverter;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 /**

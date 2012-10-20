@@ -2,7 +2,7 @@ package com.fasterxml.clustermate.client.ahc;
 
 import java.util.List;
 
-import com.fasterxml.storemate.api.RequestPath;
+import com.fasterxml.storemate.shared.RequestPath;
 
 public class AHCPath extends RequestPath
 {

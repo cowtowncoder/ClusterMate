@@ -21,11 +21,6 @@ for Jackson-based JSON serialization
       <version>${version.storemate}</version>
     </dependency>
     <dependency>
-      <groupId>com.fasterxml.storemate</groupId>
-      <artifactId>storemate-api</artifactId>
-      <version>${version.storemate}</version>
-    </dependency>
-    <dependency>
       <groupId>com.fasterxml.clustermate</groupId>
       <artifactId>clustermate-api</artifactId>
       <version>${project.version}</version>

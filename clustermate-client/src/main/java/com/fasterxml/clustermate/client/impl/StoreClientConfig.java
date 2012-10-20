@@ -2,9 +2,9 @@ package com.fasterxml.clustermate.client.impl;
 
 import com.fasterxml.clustermate.client.operation.OperationConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.EntryKeyConverter;
 import com.fasterxml.storemate.client.call.CallConfig;
+import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.EntryKeyConverter;
 
 public abstract class StoreClientConfig<
     K extends EntryKey,
