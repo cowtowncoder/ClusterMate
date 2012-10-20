@@ -3,9 +3,9 @@ package com.fasterxml.clustermate.client.cluster;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.fasterxml.clustermate.api.KeyHash;
+import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.KeyHash;
-import com.fasterxml.storemate.api.KeyRange;
 import com.fasterxml.storemate.api.RequestPath;
 import com.fasterxml.storemate.api.RequestPathBuilder;
 import com.fasterxml.storemate.client.call.ContentDeleter;

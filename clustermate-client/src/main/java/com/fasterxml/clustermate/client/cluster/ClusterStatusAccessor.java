@@ -4,9 +4,9 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import com.fasterxml.clustermate.api.ClusterStatusResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.storemate.api.ClusterStatusResponse;
 import com.fasterxml.storemate.api.HTTPConstants;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.IOUtil;

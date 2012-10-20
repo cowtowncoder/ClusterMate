@@ -3,13 +3,13 @@ package com.fasterxml.clustermate.client.impl;
 import java.io.IOException;
 import java.util.*;
 
+import com.fasterxml.clustermate.api.ClusterStatusResponse;
+import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.client.cluster.ClusterStatusAccessor;
 import com.fasterxml.clustermate.client.cluster.ClusterViewByClientImpl;
 import com.fasterxml.clustermate.client.cluster.Loggable;
 import com.fasterxml.clustermate.client.cluster.NetworkClient;
-import com.fasterxml.storemate.api.ClusterStatusResponse;
 import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.NodeState;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 /**

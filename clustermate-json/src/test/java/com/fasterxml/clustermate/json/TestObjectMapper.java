@@ -1,8 +1,8 @@
 package com.fasterxml.clustermate.json;
 
+import com.fasterxml.clustermate.api.ClusterStatusResponse;
+import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.json.ClusterMateObjectMapper;
-import com.fasterxml.storemate.api.ClusterStatusResponse;
-import com.fasterxml.storemate.api.NodeState;
 
 /**
  * Simple unit tests to verify that we can map basic JSON data

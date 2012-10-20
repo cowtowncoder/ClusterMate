@@ -1,9 +1,9 @@
 package com.fasterxml.clustermate.json;
 
+import com.fasterxml.clustermate.api.KeyRange;
+import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.json.ClusterMateTypesModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import com.fasterxml.storemate.api.*;
 
 public class TestBasicTypes extends JsonTestBase
 {

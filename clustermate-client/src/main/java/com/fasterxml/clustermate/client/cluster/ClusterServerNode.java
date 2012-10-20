@@ -1,7 +1,7 @@
 package com.fasterxml.clustermate.client.cluster;
 
+import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.storemate.api.EntryKey;
-import com.fasterxml.storemate.api.KeyRange;
 import com.fasterxml.storemate.api.RequestPathBuilder;
 import com.fasterxml.storemate.client.ServerNode;
 import com.fasterxml.storemate.client.call.ContentDeleter;

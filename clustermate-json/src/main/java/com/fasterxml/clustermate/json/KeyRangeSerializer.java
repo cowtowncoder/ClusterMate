@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.json;
 
 import java.io.IOException;
 
+import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,7 +10,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
-import com.fasterxml.storemate.api.KeyRange;
 
 /**
  * We don't absolutely need a serializer for this type, but it's
