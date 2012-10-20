@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion> 
+  <parent>
+    <groupId>com.fasterxml.clustermate</groupId>
+    <artifactId>clustermate-parent</artifactId>
+    <version>0.5.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>clustermate-client-ahc</artifactId>
+  <name>ClusterMate-client-AHC</name>
+  <packaging>jar</packaging>
+  <description>Almost complete ClusterMate NetworkClient implementation built on
+Async HTTP Client
+  </description>
+
+  <dependencies>
+<!--
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-shared</artifactId>
+      <version>${version.storemate}</version>
+    </dependency>
+-->
+
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Async-http-client for HTTP access -->
+    <dependency>
+      <groupId>com.ning</groupId>
+      <artifactId>async-http-client</artifactId>
+      <version>1.7.6</version>
+    </dependency>
+
+  </dependencies>
+</project>

@@ -2,9 +2,8 @@ package com.fasterxml.clustermate.api;
 
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
-import com.fasterxml.storemate.shared.SharedTestBase;
 
-public class KeySpaceTest extends SharedTestBase
+public class KeySpaceTest extends ApiTestBase
 {
     protected final KeySpace DEFAULT_SPACE = new KeySpace(360);
 	
