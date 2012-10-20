@@ -18,6 +18,11 @@ used by both server and client components.
       <artifactId>storemate-shared</artifactId>
       <version>${version.storemate}</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-api</artifactId>
+      <version>${version.storemate}</version>
+    </dependency>
 
   </dependencies>
 </project>
