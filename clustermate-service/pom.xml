@@ -12,6 +12,13 @@
   </description>
 
   <dependencies>
+    <dependency> <!-- Servlet API -->
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.5</version>
+      <scope>provided</scope>
+    </dependency>
+
     <dependency>
       <groupId>com.fasterxml.storemate</groupId>
       <artifactId>storemate-shared</artifactId>
@@ -28,6 +35,14 @@
       <artifactId>clustermate-api</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+    <!-- And Jackson 2.0 for databinding -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${version.jackson}</version>
+    </dependency>
+
 
   </dependencies>
 </project>
