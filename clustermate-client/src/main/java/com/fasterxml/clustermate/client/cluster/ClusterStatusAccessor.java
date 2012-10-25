@@ -5,6 +5,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import com.fasterxml.clustermate.api.ClusterStatusResponse;
+import com.fasterxml.clustermate.client.Loggable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.storemate.shared.HTTPConstants;

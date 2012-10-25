@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.client.cluster;
+package com.fasterxml.clustermate.client;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

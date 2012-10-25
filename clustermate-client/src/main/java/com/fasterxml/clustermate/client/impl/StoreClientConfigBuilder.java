@@ -11,7 +11,8 @@ import com.fasterxml.storemate.shared.EntryKeyConverter;
  * Builder class for creating immutable {@link StoreClientConfig}
  * instances.
  */
-public abstract class StoreClientConfigBuilder<K extends EntryKey,
+public abstract class StoreClientConfigBuilder<
+    K extends EntryKey,
     CONFIG extends StoreClientConfig<K, CONFIG>,
     BUILDER extends StoreClientConfigBuilder<K, CONFIG, BUILDER>
 >
@@ -28,7 +29,7 @@ public abstract class StoreClientConfigBuilder<K extends EntryKey,
     
     /*
     ///////////////////////////////////////////////////////////////////////
-    // state
+    // Configuration state
     ///////////////////////////////////////////////////////////////////////
      */
 
@@ -36,6 +37,8 @@ public abstract class StoreClientConfigBuilder<K extends EntryKey,
 
     // We need some additional features; but a single instance is fine:
     protected ObjectMapper _jsonMapper = DEFAULT_JSON_MAPPER;
+
+    protected String _basePath;
     
     // // // General configuration
     
@@ -83,18 +86,21 @@ public abstract class StoreClientConfigBuilder<K extends EntryKey,
     ///////////////////////////////////////////////////////////////////////
      */
     
-    public StoreClientConfigBuilder(EntryKeyConverter<K> keyConverter) {
-        this(keyConverter, DEFAULT_JSON_MAPPER, DEFAULT_OPERATION_CONFIG);
+    public StoreClientConfigBuilder(EntryKeyConverter<K> keyConverter,
+            String basePath) {
+        this(keyConverter, basePath,
+                DEFAULT_JSON_MAPPER, DEFAULT_OPERATION_CONFIG);
     }
 
     public StoreClientConfigBuilder(CONFIG config)
     {
-        this(config.getKeyConverter(), config.getJsonMapper(),
+        this(config.getKeyConverter(), config.getBasePath(),
+                config.getJsonMapper(),
         		config.getOperationConfig());
     }
 
-    protected StoreClientConfigBuilder(EntryKeyConverter<K> keyConv, ObjectMapper jsonMapper,
-            OperationConfig operationConfig)
+    protected StoreClientConfigBuilder(EntryKeyConverter<K> keyConv, String basePath,
+            ObjectMapper jsonMapper, OperationConfig operationConfig)
     {
         _keyConverter = keyConv;
         _jsonMapper = jsonMapper;
@@ -231,6 +237,10 @@ public abstract class StoreClientConfigBuilder<K extends EntryKey,
         return _keyConverter;
     }
 
+    public String getBasePath() {
+        return _basePath;
+    }
+    
     public ObjectMapper getJsonMapper() {
     	return _jsonMapper;
     }

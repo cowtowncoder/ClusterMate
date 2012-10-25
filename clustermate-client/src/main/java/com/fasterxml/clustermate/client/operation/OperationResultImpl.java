@@ -3,7 +3,8 @@ package com.fasterxml.clustermate.client.operation;
 import java.util.Collection;
 import java.util.LinkedList;
 
-import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
+import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.NodeFailure;
 
 /**
  * Intermediate base class to simplify actual result implementations.

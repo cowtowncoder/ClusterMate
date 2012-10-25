@@ -2,9 +2,9 @@ package com.fasterxml.clustermate.client.cluster;
 
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
+import com.fasterxml.clustermate.client.NodesForKey;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
 import com.fasterxml.clustermate.client.cluster.ClusterViewByClientImpl;
-import com.fasterxml.clustermate.client.cluster.NodesForKey;
 import com.fasterxml.storemate.shared.EntryKey;
 
 public class TestClientClusterViewImpl extends ClientTestBase

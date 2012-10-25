@@ -6,7 +6,7 @@ import java.util.concurrent.TimeoutException;
 import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
-import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.CallConfig;
 import com.fasterxml.storemate.client.call.ContentHeader;

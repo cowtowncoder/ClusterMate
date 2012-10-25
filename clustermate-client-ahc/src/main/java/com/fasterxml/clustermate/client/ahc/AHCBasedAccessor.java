@@ -2,9 +2,9 @@ package com.fasterxml.clustermate.client.ahc;
 
 import java.io.*;
 
-import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
+import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.Loggable;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
-import com.fasterxml.clustermate.client.cluster.Loggable;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.HTTPConstants;
 

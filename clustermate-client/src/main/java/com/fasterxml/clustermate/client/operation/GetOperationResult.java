@@ -2,7 +2,7 @@ package com.fasterxml.clustermate.client.operation;
 
 import java.util.LinkedList;
 
-import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.storemate.client.call.GetContentProcessor;
 
 /**

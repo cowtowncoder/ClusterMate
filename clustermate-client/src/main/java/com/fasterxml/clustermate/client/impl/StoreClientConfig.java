@@ -19,6 +19,8 @@ public abstract class StoreClientConfig<
 
     protected final OperationConfig _operationConfig;
 
+    protected final String _basePath;
+
     /*
     ///////////////////////////////////////////////////////////////////////
     // Life-cycle
@@ -26,9 +28,11 @@ public abstract class StoreClientConfig<
      */
     
     protected StoreClientConfig(EntryKeyConverter<K> keyConverter,
+            String basePath,
             ObjectMapper jsonMapper, OperationConfig operConfig)
     {
         _keyConverter = keyConverter;
+        _basePath = basePath;
         _jsonMapper = jsonMapper;
         _operationConfig = operConfig;
     }
@@ -50,6 +54,14 @@ public abstract class StoreClientConfig<
         return _keyConverter;
     }
 
+    /**
+     * Accessor getting the base path (or "root" path) for Vagabond services
+     * to access. Relative paths are built from this path by appending.
+     */
+    public String getBasePath() {
+        return _basePath;
+    }
+    
     public ObjectMapper getJsonMapper() {
     	return _jsonMapper;
     }

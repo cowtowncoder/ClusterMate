@@ -1,6 +1,4 @@
-package com.fasterxml.clustermate.client.cluster;
-
-
+package com.fasterxml.clustermate.client;
 
 
 /**
@@ -17,9 +15,9 @@ public class NodesForKey
     private final ClusterServerNode[] _nodes;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Construction
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Construction
+    /**********************************************************************
      */
     
     public NodesForKey(int version, ClusterServerNode[] nodes)
@@ -28,15 +26,14 @@ public class NodesForKey
         _nodes = nodes;
     }
 
-    public static NodesForKey empty(int version)
-    {
+    public static NodesForKey empty(int version) {
         return new NodesForKey(version, NO_NODES);
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Accessors
+    /**********************************************************************
      */
     
     public int version() { return _version; }
@@ -48,9 +45,9 @@ public class NodesForKey
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Overrides
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Overrides
+    /**********************************************************************
      */
 
     @Override

@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.client.cluster;
+package com.fasterxml.clustermate.client;
 
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.storemate.client.ServerNode;

@@ -5,10 +5,10 @@ import java.util.*;
 
 import com.fasterxml.clustermate.api.ClusterStatusResponse;
 import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.client.Loggable;
+import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.clustermate.client.cluster.ClusterStatusAccessor;
 import com.fasterxml.clustermate.client.cluster.ClusterViewByClientImpl;
-import com.fasterxml.clustermate.client.cluster.Loggable;
-import com.fasterxml.clustermate.client.cluster.NetworkClient;
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
 

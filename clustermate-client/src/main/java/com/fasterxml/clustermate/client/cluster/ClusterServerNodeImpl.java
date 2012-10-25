@@ -5,6 +5,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.clustermate.api.KeyHash;
 import com.fasterxml.clustermate.api.KeyRange;
+import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.storemate.client.call.ContentDeleter;
 import com.fasterxml.storemate.client.call.ContentGetter;
 import com.fasterxml.storemate.client.call.ContentHeader;
@@ -87,9 +89,9 @@ public class ClusterServerNodeImpl
     protected final ContentDeleter<?> _entryDeleter;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Instance creation
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Instance creation
+    /**********************************************************************
      */
 
     public ClusterServerNodeImpl(RequestPath pathBase,
@@ -133,11 +135,11 @@ public class ClusterServerNodeImpl
         		new IpAndPort("localhost:"+rangeActive.getStart()),
                 rangeActive, rangePassive);
     }
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Mutations
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Mutations
+    /**********************************************************************
      */
     
     /**
@@ -201,9 +203,9 @@ public class ClusterServerNodeImpl
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // ReadOnlyServerNodeState implementation (public accessors)
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* ReadOnlyServerNodeState implementation (public accessors)
+    /**********************************************************************
      */
 
     @Override

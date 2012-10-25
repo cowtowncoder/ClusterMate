@@ -2,7 +2,7 @@ package com.fasterxml.clustermate.client.operation;
 
 import java.util.LinkedList;
 
-import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 
 public class HeadOperationResult extends OperationResultImpl<HeadOperationResult>
 {

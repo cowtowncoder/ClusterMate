@@ -1,5 +1,6 @@
-package com.fasterxml.clustermate.client.cluster;
+package com.fasterxml.clustermate.client;
 
+import com.fasterxml.clustermate.client.cluster.EntryAccessors;
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.EntryKeyConverter;
 import com.fasterxml.storemate.shared.IpAndPort;

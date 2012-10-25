@@ -10,7 +10,7 @@ import com.fasterxml.storemate.client.call.ContentDeleter;
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
-import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.ning.http.client.AsyncHttpClient;

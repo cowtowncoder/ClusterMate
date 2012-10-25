@@ -1,6 +1,7 @@
 package com.fasterxml.clustermate.client.operation;
 
-import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
+import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.NodeFailure;
 
 /**
  * Class used for returning information about operation success (or lack thereof).

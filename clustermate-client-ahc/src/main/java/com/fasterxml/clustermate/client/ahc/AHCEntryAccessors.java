@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.client.ahc;
 
-import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.cluster.EntryAccessors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

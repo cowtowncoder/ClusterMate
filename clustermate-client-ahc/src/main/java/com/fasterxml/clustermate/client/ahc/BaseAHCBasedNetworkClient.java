@@ -1,7 +1,7 @@
 package com.fasterxml.clustermate.client.ahc;
 
+import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.clustermate.client.cluster.EntryAccessors;
-import com.fasterxml.clustermate.client.cluster.NetworkClient;
 import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.EntryKey;

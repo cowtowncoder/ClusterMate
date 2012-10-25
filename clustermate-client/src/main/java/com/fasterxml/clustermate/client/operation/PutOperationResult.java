@@ -3,7 +3,7 @@ package com.fasterxml.clustermate.client.operation;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 
 public class PutOperationResult extends OperationResultImpl<PutOperationResult>
 {

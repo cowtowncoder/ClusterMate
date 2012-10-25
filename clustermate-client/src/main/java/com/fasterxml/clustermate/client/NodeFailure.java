@@ -1,8 +1,7 @@
-package com.fasterxml.clustermate.client.operation;
+package com.fasterxml.clustermate.client;
 
 import java.util.*;
 
-import com.fasterxml.clustermate.client.cluster.ClusterServerNode;
 import com.fasterxml.storemate.client.CallFailure;
 
 /**
