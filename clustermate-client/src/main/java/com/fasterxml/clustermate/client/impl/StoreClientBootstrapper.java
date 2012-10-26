@@ -260,7 +260,7 @@ public abstract class StoreClientBootstrapper<
                     it.remove(); // remove from bootstrap list
                     NodeState local = resp.local;
                     ClusterViewByClientImpl<K> clusterView = new ClusterViewByClientImpl<K>(
-                            _httpClient, local.totalRange().getKeyspace());
+                            config, _httpClient, local.totalRange().getKeyspace());
                     clusterView.updateDirectState(ip, local,
                             requestTime, System.currentTimeMillis(), resp.clusterLastUpdated);
                     for (NodeState stateSec : resp.remote) {

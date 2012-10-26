@@ -12,9 +12,12 @@ import com.fasterxml.clustermate.client.ClusterViewByClient;
 import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.clustermate.client.NodesForKey;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
+import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.EntryKeyConverter;
 import com.fasterxml.storemate.shared.IpAndPort;
+import com.fasterxml.storemate.shared.RequestPath;
+import com.fasterxml.storemate.shared.RequestPathBuilder;
 
 /**
  * Class that encapsulates view of the cluster, as whole, from
@@ -23,8 +26,6 @@ import com.fasterxml.storemate.shared.IpAndPort;
 public class ClusterViewByClientImpl<K extends EntryKey>
     extends ClusterViewByClient<K>
 {
-	protected final static String PATH_STORE = "apicursorfile";
-	
 	/**
 	 * Reference to the underlying network client, so that we can
 	 * construct paths for requests.
@@ -54,27 +55,50 @@ public class ClusterViewByClientImpl<K extends EntryKey>
 
     private final EntryAccessors<K> _entryAccessors;
     
-    public ClusterViewByClientImpl(NetworkClient<K> client, KeySpace keyspace)
-    {
-        _keyspace = keyspace;
-        _client = client;
-        _keyConverter = client.getKeyConverter();
-        _routing = new AtomicReferenceArray<NodesForKey>(keyspace.getLength());
-        _entryAccessors = client.getEntryAccessors();
-    }
+    /**
+     * Path segments for the root path
+     */
+    private final String[] _rootPathSegments;
 
-    private ClusterViewByClientImpl(KeySpace keyspace)
+    public ClusterViewByClientImpl(StoreClientConfig<K,?> storeConfig,
+            NetworkClient<K> client, KeySpace keyspace)
     {
         _keyspace = keyspace;
-        _client = null;
-        _keyConverter = null;
-        _routing = null;
-        _entryAccessors = null;
+        _routing = new AtomicReferenceArray<NodesForKey>(keyspace.getLength());
+        if (client == null) {
+            _client = null;
+            _keyConverter = null;
+            _entryAccessors = null;
+        } else {
+            _client = client;
+            _keyConverter = client.getKeyConverter();
+            _entryAccessors = client.getEntryAccessors();
+        }
+        if (storeConfig == null) {
+            _rootPathSegments = new String[0];
+        } else {
+            _rootPathSegments = _splitPath(storeConfig.getBasePath());
+        }
     }
     
     public static <K extends EntryKey> ClusterViewByClientImpl<K> forTesting(KeySpace keyspace)
     {
-        return new ClusterViewByClientImpl<K>(keyspace);
+        return new ClusterViewByClientImpl<K>(null, null, keyspace);
+    }
+
+    protected String[] _splitPath(String base)
+    {
+        base = base.trim();
+        if (base.startsWith("/")) {
+            base = base.substring(1);
+        }
+        if (base.endsWith("/")) {
+            base = base.substring(0, base.length()-1);
+        }
+        if (base.length() == 0) {
+            return new String[0];
+        }
+        return base.split("/");
     }
     
     /*
@@ -141,7 +165,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
     {
         ClusterServerNodeImpl localState = _nodes.get(byNode);
         if (localState == null) { // new info 
-            localState = new ClusterServerNodeImpl(_client.pathBuilder(byNode).addPathSegment(PATH_STORE).build(),
+            localState = new ClusterServerNodeImpl(_rootPathFor(byNode),
             		byNode, stateInfo.getRangeActive(), stateInfo.getRangePassive(),
                     _entryAccessors);
             _addNode(byNode, localState);
@@ -174,8 +198,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
         // otherwise pretty simple:
         ClusterServerNodeImpl state = _nodes.get(ip);
         if (state == null) { // new info 
-            state = new ClusterServerNodeImpl(
-            		_client.pathBuilder(ip).addPathSegment(PATH_STORE).build(),
+            state = new ClusterServerNodeImpl(_rootPathFor(ip),
             		ip, stateInfo.getRangeActive(), stateInfo.getRangePassive(),
                     _entryAccessors);
             _addNode(ip, state);
@@ -195,13 +218,22 @@ public class ClusterViewByClientImpl<K extends EntryKey>
             invalidateRouting();
         }
     }
-
+    
     /*
     ///////////////////////////////////////////////////////////////////////
     // Internal methods
     ///////////////////////////////////////////////////////////////////////
      */
 
+    protected RequestPath _rootPathFor(IpAndPort serverAddress)
+    {
+        RequestPathBuilder builder = _client.pathBuilder(serverAddress);
+        for (String component : _rootPathSegments) {
+            builder = builder.addPathSegment(component);
+        }
+        return builder.build();
+    }
+    
     private void _addNode(IpAndPort key, ClusterServerNodeImpl state)
     {
         _nodes.put(key, state);
@@ -257,7 +289,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
         Arrays.sort(matching, 0, appl.size(), new NodePriorityComparator(keyHash));
         return new NodesForKey(version, matching);
     }
-
+        
     /*
     ///////////////////////////////////////////////////////////////////////
     // Helper classes

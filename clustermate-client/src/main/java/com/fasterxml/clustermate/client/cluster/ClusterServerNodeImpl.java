@@ -270,16 +270,21 @@ public class ClusterServerNodeImpl
     /**********************************************************************
      */
     
-    /**
-     * Accessor for finding URL for server endpoint used for
-     * accessing (CRUD) of stored entries.
-     */
+    /*
     @SuppressWarnings("unchecked")
     @Override
     public <P extends RequestPathBuilder> P resourceEndpoint() {
         return (P) _pathBase.builder();
+ 
     }
+    */
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <P extends RequestPathBuilder> P rootPath() {
+        return (P) _pathBase.builder();
+    }
+    
     @SuppressWarnings("unchecked")
     @Override
     public <K extends EntryKey> ContentPutter<K> entryPutter() {

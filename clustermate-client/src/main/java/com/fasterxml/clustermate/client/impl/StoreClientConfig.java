@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.client.impl;
 
+import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.clustermate.client.operation.OperationConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.client.call.CallConfig;
@@ -21,6 +22,8 @@ public abstract class StoreClientConfig<
 
     protected final String _basePath;
 
+    protected final RequestPathStrategy _pathStrategy;
+    
     /*
     ///////////////////////////////////////////////////////////////////////
     // Life-cycle
@@ -28,11 +31,13 @@ public abstract class StoreClientConfig<
      */
     
     protected StoreClientConfig(EntryKeyConverter<K> keyConverter,
-            String basePath,
-            ObjectMapper jsonMapper, OperationConfig operConfig)
+            String basePath, RequestPathStrategy pathMapper,
+            ObjectMapper jsonMapper,
+            OperationConfig operConfig)
     {
         _keyConverter = keyConverter;
         _basePath = basePath;
+        _pathStrategy = pathMapper;
         _jsonMapper = jsonMapper;
         _operationConfig = operConfig;
     }
@@ -49,7 +54,7 @@ public abstract class StoreClientConfig<
     // Accessors
     ///////////////////////////////////////////////////////////////////////
      */
-
+    
     public EntryKeyConverter<K> getKeyConverter() {
         return _keyConverter;
     }
@@ -60,6 +65,10 @@ public abstract class StoreClientConfig<
      */
     public String getBasePath() {
         return _basePath;
+    }
+
+    public RequestPathStrategy getPathStrategy() {
+        return _pathStrategy;
     }
     
     public ObjectMapper getJsonMapper() {

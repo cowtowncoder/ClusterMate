@@ -7,7 +7,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.clustermate.client.ClusterServerNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 
 import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.CallConfig;
@@ -47,13 +47,12 @@ public class AHCContentPutter<K extends EntryKey>
     
     protected final EntryKeyConverter<K> _keyConverter;
     
-    public AHCContentPutter(AsyncHttpClient asyncHC, ObjectMapper m,
-            EntryKeyConverter<K> keyConverter,
-            ClusterServerNode server)
+    public AHCContentPutter(StoreClientConfig<K,?> storeConfig,
+            AsyncHttpClient asyncHC, ClusterServerNode server)
     {
-        super(asyncHC, m);
+        super(storeConfig, asyncHC);
         _server = server;
-        _keyConverter = keyConverter;
+        _keyConverter = storeConfig.getKeyConverter();
     }
 
     @Override
@@ -137,8 +136,9 @@ public class AHCContentPutter<K extends EntryKey>
             final long startTime, final long timeout)
         throws IOException, ExecutionException, InterruptedException
     {
-        AHCPathBuilder path = _server.resourceEndpoint();
-        path = contentId.appendToPath(path);
+        AHCPathBuilder path = _server.rootPath();
+        path = _pathFinder.appendStoreEntryPath(path);
+        path = contentId.appendToPath(path);      
         BoundRequestBuilder reqBuilder = path.putRequest(_httpClient);
         Generator<K> gen = new Generator<K>(content, _keyConverter);
         int checksum = gen.getChecksum();

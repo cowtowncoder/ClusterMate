@@ -79,10 +79,11 @@ public interface ClusterServerNode
      */
     
     /**
-     * Accessor for finding URL for server endpoint used for
-     * accessing (CRUD) of stored entries.
+     * Accessor for getting path builder initialized to the root path of
+     * the service for this node; used for building paths to access
+     * things like entries and node state.
      */
-    public <P extends RequestPathBuilder> P resourceEndpoint();
+    public <P extends RequestPathBuilder> P rootPath();
 
     public abstract <K extends EntryKey> ContentPutter<K> entryPutter();
 

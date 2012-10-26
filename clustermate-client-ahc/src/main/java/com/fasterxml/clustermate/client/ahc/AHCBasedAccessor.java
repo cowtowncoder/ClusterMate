@@ -2,9 +2,11 @@ package com.fasterxml.clustermate.client.ahc;
 
 import java.io.*;
 
+import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.Loggable;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
+import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.HTTPConstants;
 
@@ -23,15 +25,15 @@ public abstract class AHCBasedAccessor extends Loggable
 
     protected final ObjectMapper _mapper;
 
+    protected final RequestPathStrategy _pathFinder;
     
-//    protected final int _excerptLength;
-    
-    protected AHCBasedAccessor(AsyncHttpClient hc, ObjectMapper m)
+    protected AHCBasedAccessor(StoreClientConfig<?,?> storeConfig,
+            AsyncHttpClient hc)
     {
         super();
         _httpClient = hc;
-        _mapper = m;
-//        _excerptLength = config.getExcerptLength();
+        _mapper = storeConfig.getJsonMapper();
+        _pathFinder = storeConfig.getPathStrategy();
     }
 
     /*

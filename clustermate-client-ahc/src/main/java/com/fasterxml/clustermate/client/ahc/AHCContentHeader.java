@@ -7,6 +7,7 @@ import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
 import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.CallConfig;
 import com.fasterxml.storemate.client.call.ContentHeader;
@@ -23,9 +24,10 @@ public class AHCContentHeader<K extends EntryKey>
 {
     protected final ClusterServerNode _server;
     
-    public AHCContentHeader(AsyncHttpClient hc, ClusterServerNode server)
+    public AHCContentHeader(StoreClientConfig<K,?> storeConfig,
+            AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(hc, null);
+        super(storeConfig, hc);
         _server = server;
     }
 
@@ -46,9 +48,10 @@ public class AHCContentHeader<K extends EntryKey>
         }
 
         try {
-        	AHCPathBuilder path = _server.resourceEndpoint();
-        	path = contentId.appendToPath(path);    	
-        	BoundRequestBuilder reqBuilder = path.headRequest(_httpClient);
+            AHCPathBuilder path = _server.rootPath();
+            path = _pathFinder.appendStoreEntryPath(path);
+            path = contentId.appendToPath(path);      
+            BoundRequestBuilder reqBuilder = path.headRequest(_httpClient);
 
             HeadHandler<K> hh = new HeadHandler<K>(this, _server, startTime);
             ListenableFuture<Object> futurama = _httpClient.executeRequest(reqBuilder.build(), hh);

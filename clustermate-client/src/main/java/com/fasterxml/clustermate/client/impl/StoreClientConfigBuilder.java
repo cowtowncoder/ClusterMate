@@ -1,11 +1,14 @@
 package com.fasterxml.clustermate.client.impl;
 
-import com.fasterxml.clustermate.client.operation.OperationConfig;
-import com.fasterxml.clustermate.json.ClusterMateObjectMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.fasterxml.storemate.client.call.CallConfig;
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.EntryKeyConverter;
+
+import com.fasterxml.clustermate.api.RequestPathStrategy;
+import com.fasterxml.clustermate.client.operation.OperationConfig;
+import com.fasterxml.clustermate.json.ClusterMateObjectMapper;
 
 /**
  * Builder class for creating immutable {@link StoreClientConfig}
@@ -18,9 +21,9 @@ public abstract class StoreClientConfigBuilder<
 >
 {
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Default values
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Default values
+    /**********************************************************************
      */
 
     protected final static OperationConfig DEFAULT_OPERATION_CONFIG = new OperationConfig();
@@ -28,9 +31,9 @@ public abstract class StoreClientConfigBuilder<
     protected final static ObjectMapper DEFAULT_JSON_MAPPER = new ClusterMateObjectMapper();
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Configuration state
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Configuration state
+    /**********************************************************************
      */
 
     protected EntryKeyConverter<K> _keyConverter;
@@ -39,6 +42,8 @@ public abstract class StoreClientConfigBuilder<
     protected ObjectMapper _jsonMapper = DEFAULT_JSON_MAPPER;
 
     protected String _basePath;
+
+    protected RequestPathStrategy _pathStrategy;
     
     // // // General configuration
     
@@ -81,30 +86,34 @@ public abstract class StoreClientConfigBuilder<
     protected long _deleteOperationTimeoutMsecs;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Instance creation, building
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Instance creation, building
+    /**********************************************************************
      */
     
     public StoreClientConfigBuilder(EntryKeyConverter<K> keyConverter,
-            String basePath) {
-        this(keyConverter, basePath,
+            String basePath, RequestPathStrategy pathStrategy)
+    {
+        this(keyConverter, basePath, pathStrategy,
                 DEFAULT_JSON_MAPPER, DEFAULT_OPERATION_CONFIG);
     }
 
     public StoreClientConfigBuilder(CONFIG config)
     {
-        this(config.getKeyConverter(), config.getBasePath(),
-                config.getJsonMapper(),
-        		config.getOperationConfig());
+        this(config.getKeyConverter(),
+                config.getBasePath(), config.getPathStrategy(), config.getJsonMapper(),
+                config.getOperationConfig());
     }
 
-    protected StoreClientConfigBuilder(EntryKeyConverter<K> keyConv, String basePath,
+    protected StoreClientConfigBuilder(EntryKeyConverter<K> keyConv,
+            String basePath, RequestPathStrategy pathStrategy,
             ObjectMapper jsonMapper, OperationConfig operationConfig)
     {
         _keyConverter = keyConv;
         _jsonMapper = jsonMapper;
-
+        _basePath = basePath;
+        _pathStrategy = pathStrategy;
+        
         _minOksToSucceed = operationConfig.getMinimalOksToSucceed();
         _optimalOks = operationConfig.getOptimalOks();
         _maxOks = operationConfig.getMaxOks();
@@ -144,9 +153,9 @@ public abstract class StoreClientConfigBuilder<
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Mutators
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Mutators
+    /**********************************************************************
      */
 
     // // // Low-level single-call timeouts
@@ -226,11 +235,23 @@ public abstract class StoreClientConfigBuilder<
         _deleteOperationTimeoutMsecs = msecs;
          return (BUILDER) this;
     }
+
+    @SuppressWarnings("unchecked")
+    public BUILDER setBasePath(String path) {
+        _basePath = path;
+         return (BUILDER) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public BUILDER setBasePath(RequestPathStrategy pathStrategy) {
+        _pathStrategy = pathStrategy;
+         return (BUILDER) this;
+    }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Accessors
+    /**********************************************************************
      */
 
     public EntryKeyConverter<K> getKeyConverter() {
@@ -239,6 +260,10 @@ public abstract class StoreClientConfigBuilder<
 
     public String getBasePath() {
         return _basePath;
+    }
+
+    public RequestPathStrategy getPathStrategy() {
+        return _pathStrategy;
     }
     
     public ObjectMapper getJsonMapper() {

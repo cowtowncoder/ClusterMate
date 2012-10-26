@@ -3,9 +3,8 @@ package com.fasterxml.clustermate.client.ahc;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 
 import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.CallConfig;
@@ -25,10 +24,10 @@ public class AHCContentGetter<K extends EntryKey>
 {
     protected final ClusterServerNode _server;
 
-    public AHCContentGetter(AsyncHttpClient hc, ObjectMapper m,
-            ClusterServerNode server)
+    public AHCContentGetter(StoreClientConfig<K,?> storeConfig,
+            AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(hc, m);
+        super(storeConfig, hc);
         _server = server;
     }
 
@@ -49,9 +48,10 @@ public class AHCContentGetter<K extends EntryKey>
         if (timeout < config.getMinimumTimeoutMsecs()) {
             return new AHCGetCallResult<T>(CallFailure.timeout(_server, startTime, startTime));
         }
-    	AHCPathBuilder path = _server.resourceEndpoint();
-    	path = contentId.appendToPath(path);    	
-    	BoundRequestBuilder reqBuilder = path.getRequest(_httpClient);
+        AHCPathBuilder path = _server.rootPath();
+        path = _pathFinder.appendStoreEntryPath(path);
+        path = contentId.appendToPath(path);      
+        BoundRequestBuilder reqBuilder = path.getRequest(_httpClient);
         // plus, allow use of GZIP and LZF
         reqBuilder = reqBuilder.addHeader(HTTPConstants.HTTP_HEADER_ACCEPT_COMPRESSION,
                 "lzf, gzip, identity");

@@ -120,7 +120,7 @@ public abstract class BaseAHCBasedNetworkClient<
     
     @Override
     public EntryAccessors<K> getEntryAccessors() {
-        return new AHCEntryAccessors<K>(_ahc, _mapper, _config.getKeyConverter());
+        return new AHCEntryAccessors<K>(_config, _ahc);
     }
 
     @Override

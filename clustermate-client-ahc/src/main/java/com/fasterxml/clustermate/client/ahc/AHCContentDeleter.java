@@ -11,7 +11,7 @@ import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 import com.fasterxml.clustermate.client.ClusterServerNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
@@ -23,10 +23,11 @@ public class AHCContentDeleter<K extends EntryKey>
 {
     protected final ClusterServerNode _server;
 
-    public AHCContentDeleter(AsyncHttpClient hc, ObjectMapper m,
+    public AHCContentDeleter(StoreClientConfig<K,?> storeConfig,
+            AsyncHttpClient hc,
             ClusterServerNode server)
     {
-        super(hc, m);
+        super(storeConfig, hc);
         _server = server;
     }
 
@@ -39,7 +40,8 @@ public class AHCContentDeleter<K extends EntryKey>
         if (timeout < config.getMinimumTimeoutMsecs()) {
             return CallFailure.timeout(_server, startTime, startTime);
         }
-        AHCPathBuilder path = _server.resourceEndpoint();
+        AHCPathBuilder path = _server.rootPath();
+        path = _pathFinder.appendStoreEntryPath(path);
         path = contentId.appendToPath(path);    	
         BoundRequestBuilder reqBuilder = path.deleteRequest(_httpClient);
 
