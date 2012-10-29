@@ -1,5 +1,7 @@
 package com.fasterxml.clustermate.service.servlet;
 
+import java.io.*;
+
 import javax.servlet.http.*;
 
 import com.fasterxml.clustermate.service.ServiceRequest;
@@ -16,9 +18,9 @@ public class ServletServiceRequest extends ServiceRequest
     protected final HttpServletRequest _request;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life-cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
      */
     
     public ServletServiceRequest(HttpServletRequest r)
@@ -27,11 +29,16 @@ public class ServletServiceRequest extends ServiceRequest
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Basic VHttpRequest impl
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Basic ServiceRequest impl
+    /**********************************************************************
      */
 
+    @Override
+    public InputStream getInputStream() throws IOException {
+        return _request.getInputStream();
+    }
+    
     @Override
     public String getPath() {
         return _request.getPathInfo();
@@ -49,12 +56,12 @@ public class ServletServiceRequest extends ServiceRequest
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Extended API
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Extended API
+    /**********************************************************************
      */
 
     public HttpServletRequest getNativeRequest() {
-    	return _request;
+        return _request;
     }
 }

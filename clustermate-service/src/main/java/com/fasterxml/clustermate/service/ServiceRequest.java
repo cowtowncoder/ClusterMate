@@ -1,8 +1,9 @@
 package com.fasterxml.clustermate.service;
 
+import java.io.*;
+
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.HTTPConstants;
-
 
 /**
  * Interface class that defines abstraction implemented by classes that
@@ -19,10 +20,11 @@ public abstract class ServiceRequest
 
     public abstract String getHeader(String key);
 
+    public abstract InputStream getInputStream() throws IOException;
+    
     public ByteRange findByteRange()
     {
         String rangeStr = getHeader(HTTPConstants.HTTP_HEADER_RANGE_FOR_REQUEST);
         return (rangeStr == null) ? null : ByteRange.valueOf(rangeStr);
     }
 }
-
