@@ -52,8 +52,6 @@ public class ClusterStatusAccessor
         }
         pathBuilder = _clientConfig.getPathStrategy().appendNodeStatusPath(pathBuilder);
         String endpoint = pathBuilder.toString();
-
-System.err.println("END POINT: "+endpoint);
         
         HttpURLConnection conn;
 
