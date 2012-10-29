@@ -41,7 +41,7 @@ public abstract class StoreClientConfigBuilder<
     // We need some additional features; but a single instance is fine:
     protected ObjectMapper _jsonMapper = DEFAULT_JSON_MAPPER;
 
-    protected String _basePath;
+    protected String[] _basePath;
 
     protected RequestPathStrategy _pathStrategy;
     
@@ -92,7 +92,7 @@ public abstract class StoreClientConfigBuilder<
      */
     
     public StoreClientConfigBuilder(EntryKeyConverter<K> keyConverter,
-            String basePath, RequestPathStrategy pathStrategy)
+            String[] basePath, RequestPathStrategy pathStrategy)
     {
         this(keyConverter, basePath, pathStrategy,
                 DEFAULT_JSON_MAPPER, DEFAULT_OPERATION_CONFIG);
@@ -106,7 +106,7 @@ public abstract class StoreClientConfigBuilder<
     }
 
     protected StoreClientConfigBuilder(EntryKeyConverter<K> keyConv,
-            String basePath, RequestPathStrategy pathStrategy,
+            String[] basePath, RequestPathStrategy pathStrategy,
             ObjectMapper jsonMapper, OperationConfig operationConfig)
     {
         _keyConverter = keyConv;
@@ -237,7 +237,7 @@ public abstract class StoreClientConfigBuilder<
     }
 
     @SuppressWarnings("unchecked")
-    public BUILDER setBasePath(String path) {
+    public BUILDER setBasePath(String[] path) {
         _basePath = path;
          return (BUILDER) this;
     }
@@ -258,7 +258,7 @@ public abstract class StoreClientConfigBuilder<
         return _keyConverter;
     }
 
-    public String getBasePath() {
+    public String[] getBasePath() {
         return _basePath;
     }
 

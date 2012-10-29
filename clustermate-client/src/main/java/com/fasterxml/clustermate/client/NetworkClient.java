@@ -18,7 +18,7 @@ public abstract class NetworkClient<K extends EntryKey>
      * host, but without actual path.
      */
     public abstract RequestPathBuilder pathBuilder(IpAndPort server);
-
+    
     /**
      * Method to call to shut down client implementation; called when
      * main client library is stopped.

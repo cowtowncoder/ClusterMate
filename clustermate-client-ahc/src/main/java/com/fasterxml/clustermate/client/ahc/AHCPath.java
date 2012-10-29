@@ -30,4 +30,9 @@ public class AHCPath extends RequestPath
 		}
 		return list.toArray(new String[list.size()]);
 	}
+
+	@Override
+	public String toString() {
+	    return builder().toString();
+	}
 }

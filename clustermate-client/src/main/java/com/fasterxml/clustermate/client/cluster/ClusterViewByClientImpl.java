@@ -54,6 +54,12 @@ public class ClusterViewByClientImpl<K extends EntryKey>
     private final AtomicReferenceArray<NodesForKey> _routing;
 
     private final EntryAccessors<K> _entryAccessors;
+
+    /*
+    /**********************************************************************
+    /* Construction
+    /**********************************************************************
+     */
     
     /**
      * Path segments for the root path
@@ -77,7 +83,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
         if (storeConfig == null) {
             _rootPathSegments = new String[0];
         } else {
-            _rootPathSegments = _splitPath(storeConfig.getBasePath());
+            _rootPathSegments = storeConfig.getBasePath();
         }
     }
     
@@ -86,6 +92,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
         return new ClusterViewByClientImpl<K>(null, null, keyspace);
     }
 
+    /*
     protected String[] _splitPath(String base)
     {
         base = base.trim();
@@ -100,11 +107,12 @@ public class ClusterViewByClientImpl<K extends EntryKey>
         }
         return base.split("/");
     }
+    */
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Accessors
+    /**********************************************************************
      */
 
     @Override
@@ -150,9 +158,9 @@ public class ClusterViewByClientImpl<K extends EntryKey>
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Updating state
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Updating state
+    /**********************************************************************
      */
     
     /**
@@ -220,9 +228,9 @@ public class ClusterViewByClientImpl<K extends EntryKey>
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
      */
 
     protected RequestPath _rootPathFor(IpAndPort serverAddress)
@@ -291,9 +299,9 @@ public class ClusterViewByClientImpl<K extends EntryKey>
     }
         
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Helper classes
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Helper classes
+    /**********************************************************************
      */
 
     /**
@@ -303,7 +311,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
     private final static class NodePriorityComparator implements Comparator<ClusterServerNodeImpl>
     {
         private final KeyHash _keyHash;
-        
+
         public NodePriorityComparator(KeyHash keyHash) {
             _keyHash = keyHash;
         }

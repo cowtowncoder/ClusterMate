@@ -12,31 +12,30 @@ import com.ning.http.util.UTF8UrlEncoder;
 public class AHCPathBuilder
 	extends RequestPathBuilder
 {
-	// Server definition won't change, can make final
-	protected final String _serverPart;
+    protected final String _serverPart;
 
-	protected String _path;
+    protected String _path;
 
-	protected List<String> _queryParams;
+    protected List<String> _queryParams;
 	
-	public AHCPathBuilder(IpAndPort server) {
-		this(server, null, null);
-	}
+    public AHCPathBuilder(IpAndPort server) {
+        this(server, null, null);
+    }
 
-	public AHCPathBuilder(IpAndPort server, String path, String[] qp) {
-		this(server.getEndpoint(), path, _arrayToList(qp));
-	}
+    public AHCPathBuilder(IpAndPort server, String path, String[] qp) {
+        this(server.getEndpoint(), path, _arrayToList(qp));
+    }
 
-	public AHCPathBuilder(String serverPart, String path, String[] qp) {
-		this(serverPart, path, _arrayToList(qp));
-	}
-	
-	public AHCPathBuilder(String serverPart, String path, List<String> qp)
-	{
-		_serverPart = serverPart;
-		_path = path;
-		_queryParams = qp;
-	}
+    public AHCPathBuilder(String serverPart, String path, String[] qp) {
+        this(serverPart, path, _arrayToList(qp));
+    }
+
+    public AHCPathBuilder(String serverPart, String path, List<String> qp)
+    {
+        _serverPart = serverPart;
+        _path = path;
+        _queryParams = qp;
+    }
 
 	private static List<String> _arrayToList(String[] qp)
 	{
@@ -53,11 +52,11 @@ public class AHCPathBuilder
 		return list;
 	}
 
-    /*
-    ///////////////////////////////////////////////////////////////////////
-    // API impl
-    ///////////////////////////////////////////////////////////////////////
-     */
+	/*
+     /*********************************************************************
+     /* API impl
+     /*********************************************************************
+      */
 	
 	@Override
 	public RequestPathBuilder addPathSegment(String segment)
@@ -90,13 +89,17 @@ public class AHCPathBuilder
 	public AHCPath build() {
 		return new AHCPath(_serverPart, _path, _queryParams);
 	}
+     
+     /*
+     /*********************************************************************
+     /* Extended API
+     /*********************************************************************
+      */
 
-    /*
-    ///////////////////////////////////////////////////////////////////////
-    // Extended API
-    ///////////////////////////////////////////////////////////////////////
-     */
-	
+     public String getServerPart() {
+         return _serverPart;
+     }
+     
 	public BoundRequestBuilder putRequest(AsyncHttpClient ahc) {
 		return _addParams(ahc.preparePut(toString()));
 	}

@@ -31,9 +31,9 @@ public abstract class StoreClientBootstrapper<
     public final static long BOOTSTRAP_TIMEOUT_MSECS = 2000L;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Helper objects
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Helper objects
+    /**********************************************************************
      */
 
     protected final CONFIG _config;
@@ -50,11 +50,11 @@ public abstract class StoreClientBootstrapper<
     protected final Set<IpAndPort> _nodes = new LinkedHashSet<IpAndPort>();
 
     protected ClusterStatusAccessor _accessor;
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Construction
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Construction
+    /**********************************************************************
      */
 	
     public StoreClientBootstrapper(CONFIG config, NetworkClient<K> hc)
@@ -65,9 +65,9 @@ public abstract class StoreClientBootstrapper<
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Builder initialization
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Builder initialization
+    /**********************************************************************
      */
     
     @SuppressWarnings("unchecked")
@@ -99,9 +99,9 @@ public abstract class StoreClientBootstrapper<
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Client bootstrapping:
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Client bootstrapping:
+    /**********************************************************************
      */
     
     /**
@@ -171,8 +171,8 @@ public abstract class StoreClientBootstrapper<
     protected STORE _buildAndInit(int maxWaitSecs, boolean fullInit)
         throws IOException
     {
-        _accessor = new ClusterStatusAccessor(_config.getJsonMapper());
-        
+        _accessor = new ClusterStatusAccessor(_config, _httpClient);
+
         _verifySetup();
         
         final long startTime = System.currentTimeMillis();

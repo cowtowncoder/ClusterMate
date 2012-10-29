@@ -6,27 +6,38 @@ import java.net.URL;
 
 import com.fasterxml.clustermate.api.ClusterStatusResponse;
 import com.fasterxml.clustermate.client.Loggable;
+import com.fasterxml.clustermate.client.NetworkClient;
+import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.storemate.shared.HTTPConstants;
 import com.fasterxml.storemate.shared.IpAndPort;
+import com.fasterxml.storemate.shared.RequestPathBuilder;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 /**
  * Helper class that handles details of getting cluster status information
  * from a store node.
  */
-public class ClusterStatusAccessor extends Loggable
+public class ClusterStatusAccessor
+    extends Loggable
 {
     protected final static long MIN_TIMEOUT_MSECS = 10L;
     
+    protected final StoreClientConfig<?,?> _clientConfig;
+
+    protected final NetworkClient<?> _networkClient;
+
     protected final ObjectMapper _mapper;
     
-    public ClusterStatusAccessor(ObjectMapper m) {
+    public ClusterStatusAccessor(StoreClientConfig<?,?> clientConfig,
+            NetworkClient<?> networkClient)
+    {
         super(ClusterStatusAccessor.class);
-        _mapper = m;
+        _clientConfig = clientConfig;
+        _networkClient = networkClient;
+        _mapper = clientConfig.getJsonMapper();
     }
-    
+
     public ClusterStatusResponse getClusterStatus(IpAndPort ip, long timeoutMsecs)
         throws IOException
     {
@@ -34,9 +45,17 @@ public class ClusterStatusAccessor extends Loggable
         if (timeoutMsecs < MIN_TIMEOUT_MSECS) {
             return null;
         }
+
+        RequestPathBuilder pathBuilder = _networkClient.pathBuilder(ip);
+        for (String part : _clientConfig.getBasePath()) {
+            pathBuilder = pathBuilder.addPathSegment(part);
+        }
+        pathBuilder = _clientConfig.getPathStrategy().appendNodeStatusPath(pathBuilder);
+        String endpoint = pathBuilder.toString();
+
+System.err.println("END POINT: "+endpoint);
         
         HttpURLConnection conn;
-        String endpoint = ip.getEndpoint() + HTTPConstants.PATH_CLUSTER_STATUS;
 
         try {
             URL url = new URL(endpoint);
