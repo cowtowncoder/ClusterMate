@@ -171,7 +171,7 @@ public abstract class StoreClientBootstrapper<
     protected STORE _buildAndInit(int maxWaitSecs, boolean fullInit)
         throws IOException
     {
-        _accessor = new ClusterStatusAccessor(_config, _httpClient);
+        _accessor = new ClusterStatusAccessor(_config);
 
         _verifySetup();
         

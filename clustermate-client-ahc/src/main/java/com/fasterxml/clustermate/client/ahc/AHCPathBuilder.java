@@ -5,13 +5,15 @@ import java.util.List;
 
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.RequestPathBuilder;
+import com.fasterxml.storemate.shared.util.UTF8UrlEncoder;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
-import com.ning.http.util.UTF8UrlEncoder;
 
 public class AHCPathBuilder
 	extends RequestPathBuilder
 {
+    protected final static UTF8UrlEncoder _urlEncoder = new UTF8UrlEncoder();
+
     protected final String _serverPart;
 
     protected String _path;
@@ -37,37 +39,22 @@ public class AHCPathBuilder
         _queryParams = qp;
     }
 
-	private static List<String> _arrayToList(String[] qp)
-	{
-		if (qp == null) {
-			return new ArrayList<String>(8);
-		}
-		int len = qp.length;
-		List<String> list = new ArrayList<String>(Math.min(8, len));
-		if (len > 0) {
-			for (int i = 0; i < len; ++i) {
-				list.add(qp[i]);
-			}
-		}
-		return list;
-	}
-
-	/*
-     /*********************************************************************
-     /* API impl
-     /*********************************************************************
-      */
+    /*
+    /*********************************************************************
+    /* API impl
+    /*********************************************************************
+     */
 	
 	@Override
 	public RequestPathBuilder addPathSegment(String segment)
 	{
 		if (_path == null) {
-			_path = UTF8UrlEncoder.encode(segment);
+			_path = _urlEncoder.encode(segment);
 		} else {
 			StringBuilder sb = new StringBuilder(_path);
 			sb.append('/');
 			if (segment != null && segment.length() > 0) {
-				sb = UTF8UrlEncoder.appendEncoded(sb, segment);
+				sb = _urlEncoder.appendEncoded(sb, segment);
 			}
 			_path = sb.toString();
 		}
@@ -85,6 +72,16 @@ public class AHCPathBuilder
 		return this;
 	}
 
+     @Override
+     public String getServerPart() {
+         return _serverPart;
+     }
+
+     @Override
+	public String getPath() {
+	    return _path;
+	}
+	
 	@Override
 	public AHCPath build() {
 		return new AHCPath(_serverPart, _path, _queryParams);
@@ -95,10 +92,6 @@ public class AHCPathBuilder
      /* Extended API
      /*********************************************************************
       */
-
-     public String getServerPart() {
-         return _serverPart;
-     }
      
 	public BoundRequestBuilder putRequest(AsyncHttpClient ahc) {
 		return _addParams(ahc.preparePut(toString()));
@@ -126,11 +119,26 @@ public class AHCPathBuilder
 		return b;
 	}
 
-	protected String _url() {
+	protected String _url()
+	{
 		if (_path == null) {
 			return _serverPart;
 		}
-		return _serverPart + _path;
+		if (_queryParams == null) {
+		    return _serverPart + _path;
+		}
+		StringBuilder sb = new StringBuilder(100);
+		sb.append(_serverPart);
+		sb.append(_path);
+		final int len = _queryParams.size();
+		if (len > 0) {
+		    sb.append('?');
+              for (int i = 0; i < len; i += 2) {
+                  sb.append(_queryParams.get(i)).append('=');
+                  _urlEncoder.appendEncoded(sb, _queryParams.get(i+1));
+              }
+		}
+          return sb.toString();
 	}
 
 	@Override

@@ -6,13 +6,13 @@ import java.net.URL;
 
 import com.fasterxml.clustermate.api.ClusterStatusResponse;
 import com.fasterxml.clustermate.client.Loggable;
-import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.RequestPathBuilder;
 import com.fasterxml.storemate.shared.util.IOUtil;
+import com.fasterxml.storemate.shared.util.JdkHttpClientPathBuilder;
 
 /**
  * Helper class that handles details of getting cluster status information
@@ -25,16 +25,12 @@ public class ClusterStatusAccessor
     
     protected final StoreClientConfig<?,?> _clientConfig;
 
-    protected final NetworkClient<?> _networkClient;
-
     protected final ObjectMapper _mapper;
     
-    public ClusterStatusAccessor(StoreClientConfig<?,?> clientConfig,
-            NetworkClient<?> networkClient)
+    public ClusterStatusAccessor(StoreClientConfig<?,?> clientConfig)
     {
         super(ClusterStatusAccessor.class);
         _clientConfig = clientConfig;
-        _networkClient = networkClient;
         _mapper = clientConfig.getJsonMapper();
     }
 
@@ -46,13 +42,11 @@ public class ClusterStatusAccessor
             return null;
         }
 
-        RequestPathBuilder pathBuilder = _networkClient.pathBuilder(ip);
-        for (String part : _clientConfig.getBasePath()) {
-            pathBuilder = pathBuilder.addPathSegment(part);
-        }
+        RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(ip)
+            .addPathSegments(_clientConfig.getBasePath());
         pathBuilder = _clientConfig.getPathStrategy().appendNodeStatusPath(pathBuilder);
         String endpoint = pathBuilder.toString();
-        
+
         HttpURLConnection conn;
 
         try {
