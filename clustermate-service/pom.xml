@@ -12,6 +12,12 @@
   </description>
 
   <dependencies>
+    <!-- Standard Java APIs -->
+    <dependency> <!--  Bean Validation for Annotations to use on Config objects -->
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>1.0.0.GA</version>
+    </dependency>
     <dependency> <!-- Servlet API -->
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
