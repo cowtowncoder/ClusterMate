@@ -25,6 +25,7 @@
       <scope>provided</scope>
     </dependency>
 
+    <!-- Dependies to StoreMate, other CM modules -->
     <dependency>
       <groupId>com.fasterxml.storemate</groupId>
       <artifactId>storemate-shared</artifactId>
@@ -41,14 +42,35 @@
       <artifactId>clustermate-api</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-json</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
-    <!-- And Jackson 2.0 for databinding -->
+    <!-- Config-magic for config (time values) -->
+    <dependency>
+      <groupId>org.skife.config</groupId>
+      <artifactId>config-magic</artifactId>
+      <version>0.14</version>
+    </dependency>
+
+    <!-- And Jackson 2.0 for databinding; Smile for sync-data -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${version.jackson}</version>
+    </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${version.jackson}</version>
     </dependency>
-
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-smile</artifactId>
+      <version>${version.jackson}</version>
+    </dependency>
 
   </dependencies>
 </project>

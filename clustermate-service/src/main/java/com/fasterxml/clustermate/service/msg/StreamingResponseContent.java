@@ -1,10 +1,10 @@
-package com.fasterxml.clustermate.service;
+package com.fasterxml.clustermate.service.msg;
 
 import java.io.*;
 
 /**
  * Interface wrapped around content that is dynamically read and written
- * as part of HTTP response processing.
+ * as part of Service response processing.
  */
 public interface StreamingResponseContent
 {

@@ -1,7 +1,7 @@
 package com.fasterxml.clustermate.service;
 
 import com.fasterxml.clustermate.service.ServiceResponse;
-import com.fasterxml.clustermate.service.StreamingResponseContent;
+import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
 import com.fasterxml.storemate.shared.HTTPConstants;
 
 

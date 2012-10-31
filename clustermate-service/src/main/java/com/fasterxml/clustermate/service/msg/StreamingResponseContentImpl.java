@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.compress.lzf.LZFInputStream;
 
-import com.fasterxml.clustermate.service.StreamingResponseContent;
 import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.compress.Compression;
