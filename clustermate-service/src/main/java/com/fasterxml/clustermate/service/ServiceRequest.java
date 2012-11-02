@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.service;
 
 import java.io.*;
 
+import com.fasterxml.clustermate.api.DecodableRequestPath;
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.HTTPConstants;
 
@@ -13,8 +14,35 @@ import com.fasterxml.storemate.shared.HTTPConstants;
  * container like Servlet or JAX-RS container.
  */
 public abstract class ServiceRequest
+    implements DecodableRequestPath
 {
-    public abstract String getPath();
+    /**
+     * This is the full non-decoded original path of the request.
+     */
+    protected final String _originalFullPath;
+
+    /**
+     * Path override assigned by {@link #setPath}, if any.
+     */
+    protected String _currentPath;
+    
+    /*
+    /**********************************************************************
+    /* Construction
+    /**********************************************************************
+     */
+
+    protected ServiceRequest(String origPath)
+    {
+        _originalFullPath = origPath;
+        _currentPath = origPath;
+    }
+    
+    /*
+    /**********************************************************************
+    /* Access to information other than path
+    /**********************************************************************
+     */
     
     public abstract String getQueryParameter(String key);
 
@@ -27,4 +55,61 @@ public abstract class ServiceRequest
         String rangeStr = getHeader(HTTPConstants.HTTP_HEADER_RANGE_FOR_REQUEST);
         return (rangeStr == null) ? null : ByteRange.valueOf(rangeStr);
     }
+
+    /*
+    /**********************************************************************
+    /* Path handling (mostly from DecodableRequestPath)
+    /**********************************************************************
+     */
+    
+    @Override
+    public String getPath() {
+        return _currentPath;
+    }
+    
+    @Override
+    public void setPath(String path) {
+        _currentPath = path;
+    }
+    
+    @Override
+    public String nextPathSegment() {
+        String str = _currentPath;
+        if (str == null) {
+            return null;
+        }
+        int ix = str.indexOf('/');
+        if (ix < 0) { // last segment...
+            _currentPath = null;
+            return str;
+        }
+        _currentPath = str.substring(ix+1);
+        str = str.substring(0, ix);
+        return str;
+    }
+
+    @Override
+    public boolean matchPathSegment(String segment) {
+        String str = _currentPath;
+        final int len = segment.length();
+        if (str == null || str.startsWith(segment)) {
+            return false;
+        }
+        // ok; we now it starts with it, but is it followed by a slash?
+        if (str.length() == len) { // full match
+            _currentPath = null;
+            return true;
+        }
+        if (str.charAt(len) == '/') { // yeppers
+            _currentPath = _currentPath.substring(len+1);
+            return true;
+        }
+        return false;
+    }
+
+    /*
+    /**********************************************************************
+    /* Helper methods
+    /**********************************************************************
+     */
 }

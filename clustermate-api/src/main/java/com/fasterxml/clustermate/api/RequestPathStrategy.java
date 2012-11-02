@@ -8,6 +8,12 @@ import com.fasterxml.storemate.shared.RequestPathBuilder;
  */
 public abstract class RequestPathStrategy
 {
+    /*
+    /**********************************************************************
+    /* Methods for building requests paths (by client or server-as-client)
+    /**********************************************************************
+     */
+    
     /**
      * Method for creating the path for accessing stored entries,
      * but without including actual entry id, given a builder that
@@ -27,4 +33,16 @@ public abstract class RequestPathStrategy
     public abstract <B extends RequestPathBuilder> B appendSyncListPath(B nodeRoot);
 
     public abstract <B extends RequestPathBuilder> B appendSyncPullPath(B nodeRoot);
+
+    /*
+    /**********************************************************************
+    /* Methods for decoded requests paths (by server)
+    /**********************************************************************
+     */
+    
+    /**
+     * Method for finding which entry point given path matches (if any); and if there
+     * is a match, consuming matched path.
+     */
+    public abstract PathType matchPath(DecodableRequestPath pathDecoder);
 }
