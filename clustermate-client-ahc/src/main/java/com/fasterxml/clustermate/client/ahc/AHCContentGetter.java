@@ -19,7 +19,7 @@ import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
 public class AHCContentGetter<K extends EntryKey>
-    extends AHCBasedAccessor
+    extends AHCBasedAccessor<K>
     implements ContentGetter<K>
 {
     protected final ClusterServerNode _server;
@@ -32,9 +32,9 @@ public class AHCContentGetter<K extends EntryKey>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // External API
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Call implementation
+    /**********************************************************************
      */
 
     @Override
@@ -50,7 +50,7 @@ public class AHCContentGetter<K extends EntryKey>
         }
         AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendStoreEntryPath(path);
-        path = contentId.appendToPath(path);      
+        path = _keyConverter.appendToPath(path, contentId);       
         BoundRequestBuilder reqBuilder = path.getRequest(_httpClient);
         // plus, allow use of GZIP and LZF
         reqBuilder = reqBuilder.addHeader(HTTPConstants.HTTP_HEADER_ACCEPT_COMPRESSION,

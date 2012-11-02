@@ -40,7 +40,7 @@ import org.apache.http.util.EntityUtils;
  * server node.
  */
 public class AHCContentPutter<K extends EntryKey>
-    extends AHCBasedAccessor
+    extends AHCBasedAccessor<K>
     implements ContentPutter<K>
 {
     protected final ClusterServerNode _server;
@@ -125,9 +125,9 @@ public class AHCContentPutter<K extends EntryKey>
 */
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Implementation: async (non-blocking)
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Call implementation
+    /**********************************************************************
      */
     
     // And with async-http-client:
@@ -138,7 +138,7 @@ public class AHCContentPutter<K extends EntryKey>
     {
         AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendStoreEntryPath(path);
-        path = contentId.appendToPath(path);      
+        path = _keyConverter.appendToPath(path, contentId);       
         BoundRequestBuilder reqBuilder = path.putRequest(_httpClient);
         Generator<K> gen = new Generator<K>(content, _keyConverter);
         int checksum = gen.getChecksum();

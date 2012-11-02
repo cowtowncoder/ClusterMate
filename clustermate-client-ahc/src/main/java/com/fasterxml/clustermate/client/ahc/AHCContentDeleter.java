@@ -18,7 +18,7 @@ import com.ning.http.client.Response;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
 public class AHCContentDeleter<K extends EntryKey>
-    extends AHCBasedAccessor
+    extends AHCBasedAccessor<K>
     implements ContentDeleter<K>
 {
     protected final ClusterServerNode _server;
@@ -42,7 +42,7 @@ public class AHCContentDeleter<K extends EntryKey>
         }
         AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendStoreEntryPath(path);
-        path = contentId.appendToPath(path);    	
+        path = _keyConverter.appendToPath(path, contentId);    	
         BoundRequestBuilder reqBuilder = path.deleteRequest(_httpClient);
 
         try {

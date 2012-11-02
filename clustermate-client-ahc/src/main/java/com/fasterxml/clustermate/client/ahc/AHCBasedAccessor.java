@@ -8,6 +8,8 @@ import com.fasterxml.clustermate.client.Loggable;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
 import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.EntryKeyConverter;
 import com.fasterxml.storemate.shared.HTTPConstants;
 
 import com.ning.http.client.AsyncHttpClient;
@@ -19,27 +21,30 @@ import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
  * Intermediate base class used by accessors that use
  * Async HTTP Client library for HTTP Access.
  */
-public abstract class AHCBasedAccessor extends Loggable
+public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
 {
     protected final AsyncHttpClient _httpClient;
 
     protected final ObjectMapper _mapper;
 
     protected final RequestPathStrategy _pathFinder;
+
+    protected EntryKeyConverter<K> _keyConverter;
     
-    protected AHCBasedAccessor(StoreClientConfig<?,?> storeConfig,
+    protected AHCBasedAccessor(StoreClientConfig<K,?> storeConfig,
             AsyncHttpClient hc)
     {
         super();
         _httpClient = hc;
         _mapper = storeConfig.getJsonMapper();
         _pathFinder = storeConfig.getPathStrategy();
+        _keyConverter = storeConfig.getKeyConverter();
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Simple HTTP helper methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Simple HTTP helper methods
+    /**********************************************************************
      */
 
     protected void drain(Response resp)
@@ -81,20 +86,10 @@ public abstract class AHCBasedAccessor extends Loggable
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // HTTP Request helpers
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* HTTP Request helpers
+    /**********************************************************************
      */
-
-    /*
-    protected BoundRequestBuilder addStandardParams(BoundRequestBuilder reqBuilder,
-            ClientId clientId)
-    {
-        reqBuilder = reqBuilder.addQueryParameter(HTTPConstants.HTTP_QUERY_PARAM_CLIENT_ID,
-                String.valueOf(clientId));
-        return reqBuilder;
-    }
-    */
 
     protected BoundRequestBuilder addCheckSum(BoundRequestBuilder reqBuilder, int checksum)
     {
@@ -104,9 +99,9 @@ public abstract class AHCBasedAccessor extends Loggable
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // HTTP Response helpers
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* HTTP Response helpers
+    /**********************************************************************
      */
     
     /**

@@ -7,12 +7,12 @@ import java.net.URL;
 import com.fasterxml.clustermate.api.ClusterStatusResponse;
 import com.fasterxml.clustermate.client.Loggable;
 import com.fasterxml.clustermate.client.impl.StoreClientConfig;
+import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.RequestPathBuilder;
 import com.fasterxml.storemate.shared.util.IOUtil;
-import com.fasterxml.storemate.shared.util.JdkHttpClientPathBuilder;
 
 /**
  * Helper class that handles details of getting cluster status information

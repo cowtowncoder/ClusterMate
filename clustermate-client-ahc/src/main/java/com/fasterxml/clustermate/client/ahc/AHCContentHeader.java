@@ -19,7 +19,7 @@ import com.fasterxml.storemate.shared.util.IOUtil;
  * Helper object for making HEAD requests.
  */
 public class AHCContentHeader<K extends EntryKey>
-    extends AHCBasedAccessor
+    extends AHCBasedAccessor<K>
     implements ContentHeader<K>
 {
     protected final ClusterServerNode _server;
@@ -32,9 +32,9 @@ public class AHCContentHeader<K extends EntryKey>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // External API
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Call implementation
+    /**********************************************************************
      */
     
     @Override
@@ -50,7 +50,7 @@ public class AHCContentHeader<K extends EntryKey>
         try {
             AHCPathBuilder path = _server.rootPath();
             path = _pathFinder.appendStoreEntryPath(path);
-            path = contentId.appendToPath(path);      
+            path = _keyConverter.appendToPath(path, contentId);
             BoundRequestBuilder reqBuilder = path.headRequest(_httpClient);
 
             HeadHandler<K> hh = new HeadHandler<K>(this, _server, startTime);
