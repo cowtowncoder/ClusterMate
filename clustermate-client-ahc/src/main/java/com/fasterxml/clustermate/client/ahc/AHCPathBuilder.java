@@ -94,19 +94,19 @@ public class AHCPathBuilder
       */
      
 	public BoundRequestBuilder putRequest(AsyncHttpClient ahc) {
-		return _addParams(ahc.preparePut(toString()));
+		return _addParams(ahc.preparePut(_url(false)));
 	}
 
 	public BoundRequestBuilder getRequest(AsyncHttpClient ahc) {
-		return _addParams(ahc.prepareGet(toString()));
+		return _addParams(ahc.prepareGet(_url(false)));
 	}
 
 	public BoundRequestBuilder headRequest(AsyncHttpClient ahc) {
-		return _addParams(ahc.prepareHead(toString()));
+		return _addParams(ahc.prepareHead(_url(false)));
 	}
 
      public BoundRequestBuilder deleteRequest(AsyncHttpClient ahc) {
-         return _addParams(ahc.prepareDelete(toString()));
+         return _addParams(ahc.prepareDelete(_url(false)));
     }
 	
 	private BoundRequestBuilder _addParams(BoundRequestBuilder b)
@@ -119,7 +119,7 @@ public class AHCPathBuilder
 		return b;
 	}
 
-	protected String _url()
+	protected String _url(boolean addQueryParams)
 	{
 		if (_path == null) {
 			return _serverPart;
@@ -130,19 +130,21 @@ public class AHCPathBuilder
 		StringBuilder sb = new StringBuilder(100);
 		sb.append(_serverPart);
 		sb.append(_path);
-		final int len = _queryParams.size();
-		if (len > 0) {
-		    sb.append('?');
-              for (int i = 0; i < len; i += 2) {
-                  sb.append(_queryParams.get(i)).append('=');
-                  _urlEncoder.appendEncoded(sb, _queryParams.get(i+1));
-              }
-		}
+		if (addQueryParams) {
+		    final int len = _queryParams.size();
+		    if (len > 0) {
+    		        sb.append('?');
+    		        for (int i = 0; i < len; i += 2) {
+    		            sb.append(_queryParams.get(i)).append('=');
+                      _urlEncoder.appendEncoded(sb, _queryParams.get(i+1));
+                  }
+		    }
+    		}
           return sb.toString();
 	}
 
 	@Override
 	public String toString() {
-		return _url();
+		return _url(true);
 	}
 }

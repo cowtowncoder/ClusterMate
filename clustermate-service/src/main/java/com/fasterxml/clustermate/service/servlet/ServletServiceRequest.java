@@ -22,16 +22,15 @@ public class ServletServiceRequest extends ServiceRequest
     /* Life-cycle
     /**********************************************************************
      */
-    
-    public ServletServiceRequest(HttpServletRequest r)
+
+    public ServletServiceRequest(HttpServletRequest r, String path)
     {
         /* What exactly should we use here? getPathInfo() seems to decode
          * things, so it's not optimal; but getRequestURL() leaves
          * path...
          * 
          */
-//        super(r.getRequestURI());
-        super(r.getPathInfo());
+        super(path);
         _request = r;
     }
 
