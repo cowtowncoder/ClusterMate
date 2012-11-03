@@ -2,7 +2,8 @@ package com.fasterxml.clustermate.api;
 
 /**
  * Interface implemented by server-side request objects, to allow
- * dispatching of requests.
+ * routing/dispatching of requests based on information from path
+ * and related target metadata.
  * Note that all values are handled as-is, without doing any URL decoded (or
  * encoding).
  */

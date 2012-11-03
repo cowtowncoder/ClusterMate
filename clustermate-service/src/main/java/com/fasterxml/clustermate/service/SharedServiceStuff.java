@@ -9,11 +9,11 @@ import com.fasterxml.jackson.dataformat.smile.SmileGenerator;
 import com.fasterxml.jackson.dataformat.smile.SmileParser;
 
 import com.fasterxml.storemate.shared.EntryKey;
-import com.fasterxml.storemate.shared.EntryKeyConverter;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StoreConfig;
 import com.fasterxml.storemate.store.file.FileManager;
 
+import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.clustermate.json.ClusterMateTypesModule;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;

@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.ClusterViewByClient;
 import com.fasterxml.clustermate.client.Loggable;
@@ -19,7 +20,6 @@ import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.*;
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.EntryKey;
-import com.fasterxml.storemate.shared.EntryKeyConverter;
 import com.fasterxml.storemate.shared.util.ByteAggregator;
 
 /**

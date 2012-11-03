@@ -1,9 +1,9 @@
 package com.fasterxml.clustermate.service.store;
 
+import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.shared.EntryKey;
-import com.fasterxml.storemate.shared.EntryKeyConverter;
 import com.fasterxml.storemate.store.Storable;
 
 /**
