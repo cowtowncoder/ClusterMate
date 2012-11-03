@@ -14,6 +14,12 @@ import com.fasterxml.storemate.shared.hash.IncrementalHasher32;
  */
 public abstract class EntryKeyConverter<K extends EntryKey>
 {
+    /*
+    /**********************************************************************
+    /* Factory/conversion methods
+    /**********************************************************************
+     */
+
     /**
      * Method called to reconstruct a {@link VKey} from raw bytes.
      */
@@ -30,16 +36,17 @@ public abstract class EntryKeyConverter<K extends EntryKey>
      */
     public abstract K rawToEntryKey(StorableKey key);
 
+    /*
+    /**********************************************************************
+    /* Hash code calculation
+    /**********************************************************************
+     */
+    
     /**
      * Method called to figure out raw hash code to use for routing request
      * regarding given content key.
      */
     public abstract int routingHashFor(K key);
-
-    /**
-     * Method for appending key information into path, using given path builder.
-     */
-    public abstract <B extends RequestPathBuilder> B appendToPath(B pathBuilder, K key);
     
     public abstract int contentHashFor(ByteContainer bytes);
 
@@ -48,4 +55,15 @@ public abstract class EntryKeyConverter<K extends EntryKey>
      * hash values for content that can not be handled as a single block.
      */
     public abstract IncrementalHasher32 createStreamingContentHasher();
+
+    /*
+    /**********************************************************************
+    /* Path encoding/decoding
+    /**********************************************************************
+     */
+    
+    /**
+     * Method for appending key information into path, using given path builder.
+     */
+    public abstract <B extends RequestPathBuilder> B appendToPath(B pathBuilder, K key);
 }

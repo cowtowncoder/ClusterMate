@@ -43,10 +43,6 @@ public abstract class ServiceRequest
     /* Access to information other than path
     /**********************************************************************
      */
-    
-    public abstract String getQueryParameter(String key);
-
-    public abstract String getHeader(String key);
 
     public abstract InputStream getInputStream() throws IOException;
     
@@ -61,6 +57,12 @@ public abstract class ServiceRequest
     /* Path handling (mostly from DecodableRequestPath)
     /**********************************************************************
      */
+
+    @Override
+    public abstract String getQueryParameter(String key);
+
+    @Override
+    public abstract String getHeader(String key);
     
     @Override
     public String getPath() {

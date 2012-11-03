@@ -33,4 +33,14 @@ public interface DecodableRequestPath
      * and leaves path unchanged.
      */
     public boolean matchPathSegment(String segment);
+
+    /**
+     * Accessor for getting value of specified query parameter
+     */
+    public abstract String getQueryParameter(String key);
+
+    /**
+     * Accessor for getting value of specified request header
+     */
+    public abstract String getHeader(String key);
 }
