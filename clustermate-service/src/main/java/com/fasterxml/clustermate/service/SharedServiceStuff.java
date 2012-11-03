@@ -116,6 +116,10 @@ public abstract class SharedServiceStuff
     /* Data formats
     /**********************************************************************
      */
+
+    public ObjectMapper jsonMapper() {
+        return _jsonMapper;
+    }
     
     public ObjectReader jsonReader(Class<?> type) {
         return _jsonMapper.reader(type);
