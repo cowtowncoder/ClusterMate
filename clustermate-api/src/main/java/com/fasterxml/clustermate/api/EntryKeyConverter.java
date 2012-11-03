@@ -66,4 +66,11 @@ public abstract class EntryKeyConverter<K extends EntryKey>
      * Method for appending key information into path, using given path builder.
      */
     public abstract <B extends RequestPathBuilder> B appendToPath(B pathBuilder, K key);
+
+    /**
+     * Method for extracting key information from the path, using given path builder
+     * that contains relevant remainder of path (i.e. servlet and operation parts
+     * have been handled).
+     */
+    public abstract <P extends DecodableRequestPath> K extractFromPath(P pathBuilder);
 }
