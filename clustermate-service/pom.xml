@@ -77,5 +77,23 @@
       <version>${version.jackson}</version>
     </dependency>
 
+    <!-- Storage of state info using BDB-JE (but not necessarily entry storage) -->
+    <dependency>
+      <groupId>com.sleepycat</groupId>
+      <artifactId>je</artifactId>
+      <version>5.0.34</version>
+    </dependency>
+
   </dependencies>
+
+  <repositories>
+     <!-- Ugh. Oracle can't push to central repo? Need it for BDB-JE jars -->
+     <repository>
+         <id>oracleReleases</id>
+         <name>Oracle Released Java Packages</name>
+         <url>http://download.oracle.com/maven</url>
+         <layout>default</layout>
+     </repository>
+  </repositories>
+
 </project>
