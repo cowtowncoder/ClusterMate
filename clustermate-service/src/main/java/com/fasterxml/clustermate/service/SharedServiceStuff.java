@@ -40,10 +40,7 @@ public abstract class SharedServiceStuff
     
     protected final ObjectMapper _jsonMapper, _smileMapper;
 
-    /**
-     * Lazily constructed path strategy instance
-     */
-    protected RequestPathStrategy _pathStrategy;
+    protected final RequestPathStrategy _pathStrategy;
 
     /*
     /**********************************************************************
@@ -51,10 +48,12 @@ public abstract class SharedServiceStuff
     /**********************************************************************
      */
 
-    protected SharedServiceStuff(TimeMaster timeMaster, FileManager fileManager)
+    protected SharedServiceStuff(TimeMaster timeMaster, FileManager fileManager,
+            RequestPathStrategy pathStrategy)
     {
         _timeMaster = timeMaster;
         _fileManager = fileManager;
+        _pathStrategy = pathStrategy;
 
         /* Ok, JSON/Smile support: need to register type handlers
          * (partly to avoid having to annotate types)
@@ -109,7 +108,9 @@ public abstract class SharedServiceStuff
         return _timeMaster;
     }
 
-    public abstract RequestPathStrategy getPathStrategy();
+    public RequestPathStrategy getPathStrategy() {
+        return _pathStrategy;
+    }
 
     /*
     /**********************************************************************

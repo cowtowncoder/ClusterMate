@@ -19,7 +19,7 @@ import com.fasterxml.storemate.store.backend.StoreBackendConfig;
  * Often aggregated in a container-specific wrapper object (like one used by
  * DropWizard).
  */
-public class ServiceConfig
+public abstract class ServiceConfig
 {
     /*
     /**********************************************************************
@@ -35,9 +35,10 @@ public class ServiceConfig
     public String[] servicePathRoot = new String[] { "v" };
 
     /**
-     * Class that defines how paths to entry points are built.
+     * Method to find {@link RequestPahtStrategy} used for matching
+     * request paths to resources.
      */
-    public Class<? extends RequestPathStrategy> servicePathStrategy = null;
+    public abstract RequestPathStrategy getServicePathStrategy();
 
     /*
     /**********************************************************************
@@ -213,11 +214,9 @@ public class ServiceConfig
     /**********************************************************************
      */
 
-    protected ServiceConfig(Class<? extends StoredEntryConverter<?,?>> ecClass,
-            Class<? extends RequestPathStrategy> rpClass)
+    protected ServiceConfig(Class<? extends StoredEntryConverter<?,?>> ecClass)
     {
         entryConverter = ecClass;
-        servicePathStrategy = rpClass;
     }
 
     /*
@@ -237,12 +236,6 @@ public class ServiceConfig
         return _createInstance(storeBackendType, "storeBackendType",
                 StoreBackendBuilder.class);
     }    
-    
-    public RequestPathStrategy instantiatePathStrategy()
-    {
-        return _createInstance(servicePathStrategy, "servicePathStrategy",
-                RequestPathStrategy.class);
-    }
     
     @SuppressWarnings("unchecked")
     protected <T> T _createInstance(Class<?> implCls, String desc,
