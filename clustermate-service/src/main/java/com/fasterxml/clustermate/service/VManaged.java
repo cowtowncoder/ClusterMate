@@ -11,6 +11,6 @@ package com.fasterxml.clustermate.service;
 public interface VManaged
 {
     public void start() throws java.lang.Exception;
-    
+
     public void stop() throws java.lang.Exception;
 }

@@ -16,6 +16,12 @@ import com.fasterxml.storemate.store.Storable;
  */
 public abstract class StoredEntryConverter<K extends EntryKey, E extends StoredEntry<K>>
 {
+    // // // Key conversion
+
+    public abstract EntryKeyConverter<K> keyConverter();
+    
+    // // // Entry conversion
+    
     public abstract E entryFromStorable(final Storable raw);
 
     public abstract E entryFromStorable(final K key, final Storable raw);
@@ -23,6 +29,8 @@ public abstract class StoredEntryConverter<K extends EntryKey, E extends StoredE
     public abstract E entryFromStorable(K key, Storable raw,
             byte[] buffer, int offset, int length);
 
+    // // // Metadata handling
+    
     /**
      * Method called to construct "custom metadata" section to be
      * used for constructing a new <code>Storable</code> instance.
@@ -30,5 +38,10 @@ public abstract class StoredEntryConverter<K extends EntryKey, E extends StoredE
     public abstract ByteContainer createMetadata(long creationTime,
             LastAccessUpdateMethod lastAccessUpdateMethod, int minTTLSecs, int maxTTLSecs);
     
-    public abstract EntryKeyConverter<K> keyConverter();
+    // // // Last accessed
+    
+    public abstract EntryLastAccessed createLastAccessed(E entry, long accessTime);
+
+    public abstract EntryLastAccessed createLastAccessed(byte[] raw);
+
 }
