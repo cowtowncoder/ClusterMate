@@ -6,8 +6,7 @@ import com.fasterxml.storemate.shared.StorableKey;
 
 /**
  * Simple value class used for containing information for
- * a "sync pull" operation (see {@link com.force.vagabond.server.jaxrs.SyncResource}
- * for details).
+ * a "sync pull" operation.
  */
 public class SyncPullRequest
 {

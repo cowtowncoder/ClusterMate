@@ -44,9 +44,7 @@ public class AHCContentPutter<K extends EntryKey>
     implements ContentPutter<K>
 {
     protected final ClusterServerNode _server;
-    
-    protected final EntryKeyConverter<K> _keyConverter;
-    
+
     public AHCContentPutter(StoreClientConfig<K,?> storeConfig,
             AsyncHttpClient asyncHC, ClusterServerNode server)
     {

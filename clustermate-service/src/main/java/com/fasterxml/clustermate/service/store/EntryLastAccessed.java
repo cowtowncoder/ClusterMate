@@ -33,7 +33,7 @@ public class EntryLastAccessed
     public long entryCreationTime;
 
     /**
-     * Type of entry, from {@link LastAccessUpdateMethod#asByte}.
+     * Type of entry.
      */
     public byte type;
 

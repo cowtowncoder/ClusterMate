@@ -35,7 +35,7 @@ public abstract class ServiceConfig
     public String[] servicePathRoot = new String[] { "v" };
 
     /**
-     * Method to find {@link RequestPahtStrategy} used for matching
+     * Method to find {@link RequestPathStrategy} used for matching
      * request paths to resources.
      */
     public abstract RequestPathStrategy getServicePathStrategy();

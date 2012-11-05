@@ -6,9 +6,8 @@ import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 /**
- * POJO alternative to plain struct style {@link SerializedNodeState};
- * shared by client and server, as it is part of
- * {@link ClusterStatusResponse} message.
+ * POJO used for exchanging node state information between servers;
+ * also stored in the local database.
  */
 public class ActiveNodeState extends NodeState
 {
@@ -172,8 +171,8 @@ public class ActiveNodeState extends NodeState
     ///////////////////////////////////////////////////////////////////////
      */
 
-    public ActiveNodeState withSyncRange(KeyRange newRange, long syncedUpTo) {
-        return new ActiveNodeState(this, newRange, syncedUpTo);
+    public ActiveNodeState withSyncRange(KeyRange newRange, long newSyncedUpTo) {
+        return new ActiveNodeState(this, newRange, newSyncedUpTo);
     }
 
     /**

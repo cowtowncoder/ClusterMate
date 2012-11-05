@@ -21,12 +21,12 @@ public abstract class EntryKeyConverter<K extends EntryKey>
      */
 
     /**
-     * Method called to reconstruct a {@link VKey} from raw bytes.
+     * Method called to reconstruct an {@link EntryKey} from raw bytes.
      */
     public abstract K construct(byte[] rawKey);
 
     /**
-     * Method called to reconstruct a {@link VKey} from raw bytes.
+     * Method called to reconstruct an {@link EntryKey} from raw bytes.
      */
     public abstract K construct(byte[] rawKey, int offset, int length);
     

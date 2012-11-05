@@ -25,8 +25,8 @@ public class StorableKeySerializer extends StdScalarSerializer<StorableKey>
             public IOException withBytes(byte[] buffer, int offset, int length) {
                 try {
                     jgen.writeBinary(buffer, offset, length);
-                } catch (IOException e) {
-                    return e;
+                } catch (IOException e2) {
+                    return e2;
                 }
                 return null;
             }

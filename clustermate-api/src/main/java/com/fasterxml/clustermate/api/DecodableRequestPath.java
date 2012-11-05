@@ -28,7 +28,7 @@ public interface DecodableRequestPath
 
     /**
      * Method for checking that the next path segment (as returned by
-     * {@link #peekPathSegment}) would match given segment; and if so,
+     * {@link #nextPathSegment}) would match given segment; and if so,
      * remove the segment and return true. Otherwise returns null
      * and leaves path unchanged.
      */

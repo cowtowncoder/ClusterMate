@@ -336,7 +336,7 @@ public abstract class StoreClient<K extends EntryKey,
      * (if server compressed it, or received pre-compressed content declared with
      * compression type).
      * 
-     * @param Specified byte range to access, using offsets in uncompressed content
+     * @param range Specified byte range to access, using offsets in uncompressed content
      * 
      * @return Array of bytes returned, if content exists; null if no such content
      *    exists (never PUT, or has been DELETEd)
@@ -367,7 +367,7 @@ public abstract class StoreClient<K extends EntryKey,
      * (if server compressed it, or received pre-compressed content declared with
      * compression type).
      * 
-     * @param Specified byte range to access, using offsets in uncompressed content
+     * @param range Specified byte range to access, using offsets in uncompressed content
      * 
      * @return Original result file, if content exists; null if content was not found but
      *   operation succeeded (throw exception if access operation itself fails)
