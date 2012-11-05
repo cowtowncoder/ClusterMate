@@ -99,30 +99,30 @@ public class StreamingResponseContentImpl
         }
         InputStream in = new FileInputStream(_file);
         // First: LZF has special optimization to use, if we are to copy the whole thing:
-    	if ((_compression == Compression.LZF) && (_dataLength == -1)) {
-    	    LZFInputStream lzfIn = new LZFInputStream(in);
-    	    try {
-    	        lzfIn.readAndWrite(out);
-    	    } finally {
+        if ((_compression == Compression.LZF) && (_dataLength == -1)) {
+    	        LZFInputStream lzfIn = new LZFInputStream(in);
     	        try {
-    	            lzfIn.close();
-    	        } catch (IOException e) { }
-    	    }
-    	    return;
-    	}
+    	            lzfIn.readAndWrite(out);
+    	        } finally {
+    	            try {
+    	                lzfIn.close();
+    	            } catch (IOException e) { }
+    	        }
+    	        return;
+        }
 
-    	// otherwise default handling via explicit copying
+        // otherwise default handling via explicit copying
         final BufferRecycler.Holder bufferHolder = _bufferRecycler.getHolder();        
         final byte[] copyBuffer = bufferHolder.borrowBuffer();
 
         in = Compressors.uncompressingStream(in, _compression);
 
         // First: anything to skip (only the case for range requests)?
-    	if (_dataOffset > 0) {
-    	    long skipped = 0L;
-    	    long toSkip = _dataOffset;
-        	
-    	    while (toSkip > 0) {
+        if (_dataOffset > 0) {
+            long skipped = 0L;
+            long toSkip = _dataOffset;
+
+            while (toSkip > 0) {
     	        long count = in.skip(toSkip);
     	        if (count <= 0L) { // should not occur really...
     	            throw new IOException("Failed to skip more than "+skipped+" bytes (needed to skip "+_dataOffset+")");
@@ -130,39 +130,39 @@ public class StreamingResponseContentImpl
     	        skipped += count;
                 toSkip -= count;
     	    }
-    	}
-    	// Second: output the whole thing, or just subset?
-    	try {
-    	    if (_dataLength < 0) { // all of it
+        }
+        // Second: output the whole thing, or just subset?
+        try {
+            if (_dataLength < 0) { // all of it
                 int count;
                 while ((count = in.read(copyBuffer)) > 0) {
                     out.write(copyBuffer, 0, count);
                 }
                 return;
-    	    }
-    	    // Just some of it
-    	    long left = _dataLength;
+            }
+            // Just some of it
+            long left = _dataLength;
     	    
-    	    while (left > 0) {
+            while (left > 0) {
                 int count = in.read(copyBuffer, 0, (int) Math.min(copyBuffer.length, left));
                 if (count <= 0) {
                     break;
                 }
                 out.write(copyBuffer, 0, count);
                 left -= count;
-    	    }
-    	    // Sanity check; can't fix or add headers as output has been written...
-    	    if (left > 0) {
-    	        LOG.error("Failed to write request Range %d-%d (from File {}): only wrote {} bytes",
+            }
+            // Sanity check; can't fix or add headers as output has been written...
+            if (left > 0) {
+                LOG.error("Failed to write request Range %d-%d (from File {}): only wrote {} bytes",
     	                new Object[] { _dataOffset, _dataOffset+_dataLength+1, _file.getAbsolutePath(),
     	                _dataLength-left });
-    	    }
-    	} finally {
+            }
+        } finally {
             bufferHolder.returnBuffer(copyBuffer);
-    	    try {
-    	        in.close();
-    	    } catch (IOException e) { }
-    	}
+            try {
+                in.close();
+            } catch (IOException e) { }
+        }
     }
 
     /*
