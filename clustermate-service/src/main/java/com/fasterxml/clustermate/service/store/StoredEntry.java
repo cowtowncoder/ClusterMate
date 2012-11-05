@@ -7,16 +7,14 @@ import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.store.Storable;
 
 /**
- * POJO for storing metadata for a single file entry. Also used by
- * {@link com.force.vagabond.server.jaxrs.SyncResource} for returning per-entry
- * information.
+ * POJO for storing metadata for a single file entry.
  */
 public abstract class StoredEntry<K extends EntryKey>
 {
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Public API, field access
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Public API, field access
+    /**********************************************************************
      */
 
     public abstract K getKey();
@@ -27,9 +25,9 @@ public abstract class StoredEntry<K extends EntryKey>
     public abstract int getMaxTTLSecs();
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Public API, derived methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Public API, derived methods
+    /**********************************************************************
      */
 
     /**
@@ -81,9 +79,9 @@ public abstract class StoredEntry<K extends EntryKey>
     public abstract int routingHashUsing(EntryKeyConverter<K> hasher);
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Public API, pass-through methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Public API, pass-through methods
+    /**********************************************************************
      */
     
     public abstract Storable getRaw();

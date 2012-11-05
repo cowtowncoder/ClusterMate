@@ -156,6 +156,19 @@ public abstract class SharedServiceStuff
     /**********************************************************************
      */
 
-    public abstract boolean isRunningTests();
+    /**
+     * Separate flag set by unit tests, to help reduce some log pollution
+     * during tests.
+     *<p>
+     * Oh yes, ugly it is. Dark times live in we....
+     */
+    protected boolean _areWeTesting = false;
+    
+    public void markAsTest() {
+        _areWeTesting = true;
+    }
 
+    public boolean isRunningTests() {
+        return _areWeTesting;
+    }
 }

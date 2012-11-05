@@ -100,11 +100,11 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
                 } else { // inlined
                     IOException e = entry.getRaw().withInlinedData(new WithBytesCallback<IOException>() {
                         @Override
-                        public IOException withBytes(byte[] buffer, int offset, int length) {
+                        public IOException withBytes(byte[] b, int offset, int length) {
                             try {
-                                output.write(buffer, offset, length);
-                            } catch (IOException e) {
-                                return e;
+                                output.write(b, offset, length);
+                            } catch (IOException e2) {
+                                return e2;
                             }
                             return null;
                         }

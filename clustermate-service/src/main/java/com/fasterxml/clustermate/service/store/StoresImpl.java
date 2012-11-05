@@ -40,10 +40,10 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     private final static long LAST_ACCESS_BDB_CACHE_SIZE = 20L * 1024L * 1024L;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Configuration
-    ///////////////////////////////////////////////////////////////////////
-    */
+    /**********************************************************************
+    /* Configuration
+    /**********************************************************************
+     */
 
     protected final TimeMaster _timeMaster;
 
@@ -63,11 +63,11 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      * information.
      */
     private final File _bdbRootForLastAccess;
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Stores
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Stores
+    /**********************************************************************
      */
     
     /**
@@ -93,10 +93,10 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     private LastAccessStore<K, E> _lastAccessStore;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Status
-    ///////////////////////////////////////////////////////////////////////
-    */
+    /**********************************************************************
+    /* Status
+    /**********************************************************************
+     */
 
     /**
      * Marker flag used to indicate whether this store is currently active
@@ -110,10 +110,10 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     protected volatile String _initProblem;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Basic life-cycle
-    ///////////////////////////////////////////////////////////////////////
-    */
+    /**********************************************************************
+    /* Basic life-cycle
+    /**********************************************************************
+     */
      
     public StoresImpl(ServiceConfig config, TimeMaster timeMaster, ObjectMapper jsonMapper,
             StoredEntryConverter<K, E> entryConverter,
@@ -183,10 +183,10 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Explicit initialization, varies for different use cases
-    ///////////////////////////////////////////////////////////////////////
-    */
+    /**********************************************************************
+    /* Explicit initialization, varies for different use cases
+    /**********************************************************************
+     */
 
     /**
      * Method called to forcibly initialize environment as configured,
@@ -270,27 +270,34 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     protected abstract LastAccessStore<K,E> buildAccessStore(Environment env);
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Simple accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Simple accessors
+    /**********************************************************************
      */
 
+    @Override
     public boolean isActive() { return _active.get(); }
 
+    @Override
     public String getInitProblem() { return _initProblem; }
 
+    @Override
     public File getNodeDirectory() { return _bdbRootForNodes; }
 
+    @Override
     public StoredEntryConverter<K, E> getEntryConverter() { return _entryConverter; }
     
+    @Override
     public StorableStore getEntryStore() { return _entryStore; }
+    @Override
     public NodeStateStore getNodeStore() { return _nodeStore; }
+    @Override
     public LastAccessStore<K, E> getLastAccessStore() { return _lastAccessStore; }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
      */
 
     protected void _verifyDirectory(File dir)
