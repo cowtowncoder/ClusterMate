@@ -19,9 +19,9 @@ public abstract class ServiceResponse
     protected StreamingResponseContent _streamingContent;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Low-level response building
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Low-level response building
+    /**********************************************************************
      */
     
     public abstract <RESP extends ServiceResponse> RESP  set(int code, Object entity);
@@ -54,9 +54,9 @@ public abstract class ServiceResponse
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Basic accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Basic accessors
+    /**********************************************************************
      */
 
     public abstract int getStatus();
@@ -65,11 +65,11 @@ public abstract class ServiceResponse
 
     public final boolean hasEntity() { return _entity != null; }
     public final boolean hasStreamingContent() { return _streamingContent != null; }
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // High(er)-level response building; semantic headers
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* High(er)-level response building; semantic headers
+    /**********************************************************************
      */
 
     public abstract ServiceResponse setContentType(String contentType);
@@ -89,9 +89,9 @@ public abstract class ServiceResponse
     public abstract ServiceResponse setContentLength(long length);
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // High(er)-level response building; ok cases
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* High(er)-level response building; ok cases
+    /**********************************************************************
      */
     
     public final ServiceResponse ok() {
@@ -111,11 +111,11 @@ public abstract class ServiceResponse
         return set(HTTPConstants.HTTP_STATUS_OK_PARTIAL, entity)
                 .addHeader(HTTPConstants.HTTP_HEADER_RANGE_FOR_RESPONSE, rangeDesc);
     }
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // High(er)-level response building; error cases
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* High(er)-level response building; error cases
+    /**********************************************************************
      */
 
     public final <RESP extends ServiceResponse> RESP badMethod() {

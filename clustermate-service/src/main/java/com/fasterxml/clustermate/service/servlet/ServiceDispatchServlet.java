@@ -7,11 +7,8 @@ import javax.servlet.http.HttpServletRequest;
 import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
-import com.fasterxml.clustermate.service.cluster.ClusterInfoHandler;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
-import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
-import com.fasterxml.clustermate.service.sync.SyncHandler;
 import com.fasterxml.storemate.shared.EntryKey;
 
 /**
@@ -23,12 +20,15 @@ import com.fasterxml.storemate.shared.EntryKey;
 public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>>
     extends ServletBase
 {
-    protected final ClusterInfoHandler _clusterInfoHandler;
-    protected final StoreHandler<K,E> _storeHandler;
-
     protected final RequestPathStrategy _pathStrategy;
 
     // Delegatees:
+    protected final NodeStatusServlet _nodeStatusServlet;
+
+    protected final StoreEntryServlet<K,E> _storeEntryServlet;
+    // TODO:
+    protected final ServletBase _storeListServlet;
+
     protected final SyncListServlet<K,E> _syncListServlet;
     protected final SyncPullServlet<K,E> _syncPullServlet;
     
@@ -45,29 +45,34 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
      */
     public ServiceDispatchServlet(ClusterViewByServer clusterView,
             SharedServiceStuff stuff,
-            SyncHandler<K,E> syncH,
-            ClusterInfoHandler clusterInfoH,
-            StoreHandler<K,E> storeH)
+            NodeStatusServlet nodeStatusServlet,
+            StoreEntryServlet<K,E> storeEntryServlet, ServletBase storeListServlet,
+            SyncListServlet<K,E> syncListServlet, SyncPullServlet<K,E> syncPullServlet)
     {
-        this(clusterView, null, stuff, syncH, clusterInfoH, storeH);
+        this(clusterView, null, stuff,
+                nodeStatusServlet,
+                syncListServlet, syncPullServlet,
+                storeEntryServlet, storeListServlet);
     }
     
     public ServiceDispatchServlet(ClusterViewByServer clusterView, String servletPathBase,
             SharedServiceStuff stuff,
-            SyncHandler<K,E> syncH,
-            ClusterInfoHandler clusterInfoH,
-            StoreHandler<K,E> storeH)
+            NodeStatusServlet nodeStatusServlet,
+            SyncListServlet<K,E> syncListServlet, SyncPullServlet<K,E> syncPullServlet,
+            StoreEntryServlet<K,E> storeEntryServlet, ServletBase storeListServlet)
     {
         // null -> use servlet path base as-is
         super(clusterView, servletPathBase);
-        _clusterInfoHandler = clusterInfoH;
-        _storeHandler = storeH;
 
         _pathStrategy = stuff.getPathStrategy();
 
-        // Then construct Servlets we delegate stuff to:
-        _syncListServlet = new SyncListServlet<K,E>(stuff, clusterView, syncH);
-        _syncPullServlet = new SyncPullServlet<K,E>(stuff, clusterView, syncH);
+        _nodeStatusServlet = nodeStatusServlet;
+
+        _syncListServlet = syncListServlet;
+        _syncPullServlet = syncPullServlet;
+
+        _storeEntryServlet = storeEntryServlet;
+        _storeListServlet = storeListServlet;
     }
 
     /*
@@ -94,36 +99,93 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
     
     /*
     /**********************************************************************
-    /* API: returning Node status
+    /* Main dispatch methods
     /**********************************************************************
      */
 
     @Override
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response) throws IOException
     {
-        PathType path = _pathStrategy.matchPath(request);
-        if (path != null) {
-            switch (path) {
-            case STORE_ENTRY:
-//                response = _storeHandler.
-                break;
-            case STORE_LIST: // TODO!
-                break;
-            case NODE_STATUS:
-                response = _clusterInfoHandler.getStatus(request, response);
-                break;
-            case SYNC_LIST:
-                _syncListServlet.handleGet(request, response);
-                return;
-            case SYNC_PULL:
-                _syncPullServlet.handleGet(request, response);
-                return;
-            }
-            response = response.badMethod()
-                    .setContentTypeText().setEntity("No GET available for endpoint");
-        } else {
-            response = response.notFound();
+        ServletBase servlet = _matchServlet(request);
+        if (servlet != null) {
+            servlet.handleGet(request, response);
+            return;
         }
+        response = response.notFound();
         response.writeOut(null);
+    }
+
+    @Override
+    public void handleHead(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    {
+        ServletBase servlet = _matchServlet(request);
+        if (servlet != null) {
+            servlet.handleHead(request, response);
+            return;
+        }
+        response = response.notFound();
+        response.writeOut(null);
+    }
+    
+    @Override
+    public void handlePut(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    {
+        ServletBase servlet = _matchServlet(request);
+        if (servlet != null) {
+            servlet.handlePut(request, response);
+            return;
+        }
+        response = response.notFound();
+        response.writeOut(null);
+    }
+
+    @Override
+    public void handlePost(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    {
+        ServletBase servlet = _matchServlet(request);
+        if (servlet != null) {
+            servlet.handlePost(request, response);
+            return;
+        }
+        response = response.notFound();
+        response.writeOut(null);
+    }
+
+    @Override
+    public void handleDelete(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    {
+        ServletBase servlet = _matchServlet(request);
+        if (servlet != null) {
+            servlet.handleDelete(request, response);
+            return;
+        }
+        response = response.notFound();
+        response.writeOut(null);
+    }
+    
+    /*
+    /**********************************************************************
+    /* Helper methods
+    /**********************************************************************
+     */
+
+    protected ServletBase _matchServlet(ServletServiceRequest request)
+    {
+        PathType type = _pathStrategy.matchPath(request);
+        if (type != null) {
+            switch (type) {
+            case NODE_STATUS:
+                return _nodeStatusServlet;
+            case STORE_ENTRY:
+                return _storeEntryServlet;
+            case STORE_LIST:
+                return _storeListServlet;
+            case SYNC_LIST:
+                return _syncListServlet;
+            case SYNC_PULL:
+                return _syncPullServlet;
+            }
+        }
+        return null;
     }
 }
