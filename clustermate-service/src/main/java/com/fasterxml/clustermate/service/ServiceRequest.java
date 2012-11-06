@@ -94,7 +94,7 @@ public abstract class ServiceRequest
     public boolean matchPathSegment(String segment) {
         String str = _currentPath;
         final int len = segment.length();
-        if (str == null || str.startsWith(segment)) {
+        if (str == null || !str.startsWith(segment)) {
             return false;
         }
         // ok; we now it starts with it, but is it followed by a slash?

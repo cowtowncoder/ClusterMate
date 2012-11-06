@@ -152,7 +152,7 @@ public class ServletBase extends HttpServlet
         if (checkSlash
                 && (originalPath.length() > prefixLength)
                 && (expectedPrefix.charAt(prefixLength-1) != '/')
-                && (originalPath.charAt(prefixLength-1) == '/')
+                && (originalPath.charAt(prefixLength) == '/')
         ) {
             ++prefixLength;
         }

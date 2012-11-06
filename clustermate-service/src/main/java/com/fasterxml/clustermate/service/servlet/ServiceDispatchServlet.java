@@ -85,7 +85,7 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
     protected ServletServiceRequest constructRequest(HttpServletRequest orig)
     {
         String path = orig.getRequestURI();
-        
+
         /* First things first: remove servlet path prefix (either override,
          * or one used for registration)
          */
@@ -171,7 +171,9 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
 
     protected ServletBase _matchServlet(ServletServiceRequest request)
     {
+System.out.println("Matching path: "+request.getPath());
         PathType type = _pathStrategy.matchPath(request);
+System.out.println(" type -> "+type);
         if (type != null) {
             switch (type) {
             case NODE_STATUS:
