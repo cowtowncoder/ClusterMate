@@ -68,6 +68,8 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
     
     protected final StoredEntryConverter<K,E> _entryConverter;
 
+    protected final ClusterViewByServer _cluster;
+    
     protected final FileManager _fileManager;
 
     protected final TimeMaster _timeMaster;
@@ -128,6 +130,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
             ClusterViewByServer cluster, int maxToListPerRequest)
     {
         _stores = stores;
+        _cluster = cluster;
         _entryConverter = stuff.getEntryConverter();
         _fileManager = stuff.getFileManager();
         _timeMaster = stuff.getTimeMaster();
@@ -144,6 +147,16 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
 
         _localState = cluster.getLocalState();        
         _maxToListPerRequest = maxToListPerRequest;
+    }
+
+    /*
+    /**********************************************************************
+    /* Simple accessors
+    /**********************************************************************
+     */
+
+    public ClusterViewByServer getCluster() {
+        return _cluster;
     }
     
     /*
