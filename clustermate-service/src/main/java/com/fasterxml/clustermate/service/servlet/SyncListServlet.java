@@ -20,7 +20,7 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
 
     // may need JSON writer for errors:
     protected final ObjectWriter _jsonWriter;
-    
+
     public SyncListServlet(SharedServiceStuff stuff, ClusterViewByServer clusterView,
             SyncHandler<K,E> h)
     {

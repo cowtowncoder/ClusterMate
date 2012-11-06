@@ -81,7 +81,7 @@ public class ServletServiceResponse extends ServiceResponse
     }
  
     @Override
-    public ServiceResponse setContentLength(long length)
+    public ServletServiceResponse setContentLength(long length)
     {
     	// not sure if this would work but:
     	if (length > Integer.MAX_VALUE) {

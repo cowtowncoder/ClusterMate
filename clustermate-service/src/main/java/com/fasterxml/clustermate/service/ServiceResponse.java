@@ -24,9 +24,9 @@ public abstract class ServiceResponse
     ///////////////////////////////////////////////////////////////////////
      */
     
-    public abstract ServiceResponse set(int code, Object entity);
+    public abstract <RESP extends ServiceResponse> RESP  set(int code, Object entity);
 
-    public abstract ServiceResponse setStatus(int code);
+    public abstract <RESP extends ServiceResponse> RESP  setStatus(int code);
     
     public abstract ServiceResponse addHeader(String key, String value);
 
@@ -41,7 +41,7 @@ public abstract class ServiceResponse
      * using default serialization mechanism (usually JSON).
      */
     @SuppressWarnings("unchecked")
-    public final <T extends ServiceResponse> T setEntity(Object e)
+    public final <RESP extends ServiceResponse> RESP setEntity(Object e)
     {
         if (e instanceof StreamingResponseContent) {
             _entity = null;
@@ -50,7 +50,7 @@ public abstract class ServiceResponse
             _entity = e;
             _streamingContent = null;
         }
-        return (T) this;
+        return (RESP) this;
     }
     
     /*
@@ -76,6 +76,10 @@ public abstract class ServiceResponse
 
     public ServiceResponse setContentTypeJson() {
         return setContentType("application/json");
+    }
+
+    public ServiceResponse setContentTypeText() {
+        return setContentType("text/plain");
     }
     
     public final ServiceResponse setBodyCompression(String type) {
@@ -113,30 +117,39 @@ public abstract class ServiceResponse
     // High(er)-level response building; error cases
     ///////////////////////////////////////////////////////////////////////
      */
+
+    public final <RESP extends ServiceResponse> RESP badMethod() {
+        // Method Not Allowed
+        return setStatus(405);
+    }
     
-    public final ServiceResponse badRange(Object entity) {
+    public final <RESP extends ServiceResponse> RESP  badRange(Object entity) {
         // 416 is used for invalid Range requests
         return set(416, entity);
     }
 
-    public final ServiceResponse badRequest(Object entity) {
+    public final <RESP extends ServiceResponse> RESP  badRequest(Object entity) {
         return set(400, entity);
     }
 
-    public final ServiceResponse conflict(Object entity) {
+    public final <RESP extends ServiceResponse> RESP  conflict(Object entity) {
         return set(409, entity);
     }
 
-    public final ServiceResponse gone(Object entity) {
+    public final <RESP extends ServiceResponse> RESP  gone(Object entity) {
         return set(410, entity);
     }
     
     
-    public final ServiceResponse internalError(Object entity) {
+    public final <RESP extends ServiceResponse> RESP  internalError(Object entity) {
         return set(500, entity);
     }
 
-    public final ServiceResponse notFound(Object entity) {
+    public final <RESP extends ServiceResponse> RESP  notFound() {
+        return setStatus(404);
+    }
+    
+    public final <RESP extends ServiceResponse> RESP  notFound(Object entity) {
         return set(404, entity);
     }
 }

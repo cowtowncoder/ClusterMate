@@ -6,6 +6,8 @@ package com.fasterxml.clustermate.api;
  * and related target metadata.
  * Note that all values are handled as-is, without doing any URL decoded (or
  * encoding).
+ *<p>
+ * Note: typically implemented by server-side request objects.
  */
 public interface DecodableRequestPath
 {

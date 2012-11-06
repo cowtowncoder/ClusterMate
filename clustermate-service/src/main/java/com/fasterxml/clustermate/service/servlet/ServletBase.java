@@ -86,11 +86,24 @@ public class ServletBase extends HttpServlet
     /**********************************************************************
      */
 
-    public void handleGet(ServletServiceRequest request, ServletServiceResponse response) throws IOException { }
-    public void handleHead(ServletServiceRequest request, ServletServiceResponse response) throws IOException { }
-    public void handlePut(ServletServiceRequest request, ServletServiceResponse response) throws IOException { }
-    public void handlePost(ServletServiceRequest request, ServletServiceResponse response) throws IOException { }
-    public void handleDelete(ServletServiceRequest request, ServletServiceResponse response) throws IOException { }
+    public void handleGet(ServletServiceRequest request, ServletServiceResponse response) throws IOException {
+        response = response.badMethod()
+                .setContentTypeText().setEntity("No GET available for endpoint");
+        response.writeOut(null);
+    }
+
+    public void handleHead(ServletServiceRequest request, ServletServiceResponse response) throws IOException {
+        
+    }
+    public void handlePut(ServletServiceRequest request, ServletServiceResponse response) throws IOException {
+        
+    }
+    public void handlePost(ServletServiceRequest request, ServletServiceResponse response) throws IOException {
+        
+    }
+    public void handleDelete(ServletServiceRequest request, ServletServiceResponse response) throws IOException {
+        
+    }
 
     /*
     /**********************************************************************
