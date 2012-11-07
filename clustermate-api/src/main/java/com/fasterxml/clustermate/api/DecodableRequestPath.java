@@ -12,13 +12,32 @@ package com.fasterxml.clustermate.api;
 public interface DecodableRequestPath
 {
     /**
-     * Method for returning current path in its entirety (and without URL decoding).
+     * Method for returning current remaning path (not including
+     * parts that have been removed with {@link #nextPathSegment()});
+     * and without additional URL decoding (but may have been decoded,
+     * as per {@link #getDecodedPath()}).
      * Usually used to be able to later on reset path with setPath().
      */
     public String getPath();
 
     /**
-     * Method for resetting currently active path.
+     * Method for returning current remaining path, but first
+     * URL decoding it if necessary (if {@link #isPathDecoded} returns
+     * false).
+     */
+    public String getDecodedPath();
+    
+    /**
+     * Whether path as returned by {@link #getPath} has already been
+     * URL decoded or not.
+     */
+    public boolean isPathDecoded();
+
+    /**
+     * Method for resetting currently active path. Note that the value
+     * must obey same "has been URL decoded" value as what
+     * {@link #isPathDecoded()} returns; not encoding or decoding is done
+     * by this method.
      */
     public void setPath(String fullPath);
 

@@ -123,7 +123,8 @@ public class ServletBase extends HttpServlet
         } else {
             path = _trimPath(path, _basePath, false);
         }
-        return new ServletServiceRequest(orig, path);
+        // false -> path not yet URL decoded
+        return new ServletServiceRequest(orig, path, false);
     }
     
     protected ServletServiceResponse constructResponse(HttpServletResponse orig) {

@@ -26,6 +26,11 @@ public abstract class ServiceRequest
      * Path override assigned by {@link #setPath}, if any.
      */
     protected String _currentPath;
+
+    /**
+     * Whether path we have has been URL decoded or not.
+     */
+    protected final boolean _isPathDecoded;
     
     /*
     /**********************************************************************
@@ -33,10 +38,11 @@ public abstract class ServiceRequest
     /**********************************************************************
      */
 
-    protected ServiceRequest(String origPath)
+    protected ServiceRequest(String origPath, boolean isPathDecoded)
     {
         _originalFullPath = origPath;
         _currentPath = origPath;
+        _isPathDecoded = isPathDecoded;
     }
     
     /*
@@ -69,6 +75,21 @@ public abstract class ServiceRequest
     public String getPath() {
         return _currentPath;
     }
+
+    @Override
+    public String getDecodedPath() {
+        if (_isPathDecoded) {
+            return _currentPath;
+        }
+        if (_currentPath == null) {
+            return null;
+        }
+        return _decodePath(_currentPath);
+    }
+
+    @Override
+    public boolean isPathDecoded() { return _isPathDecoded; }
+    
     
     @Override
     public void setPath(String path) {
@@ -115,4 +136,15 @@ public abstract class ServiceRequest
     /* Helper methods
     /**********************************************************************
      */
+
+    protected String _decodePath(String encodedPath)
+    {
+        int ix = encodedPath.indexOf('%');
+        if (ix < 0) {
+            return encodedPath;
+        }
+//        throw new UnsupportedOperationException("Bad path: "+encodedPath);
+        return encodedPath;
+    }
+
 }

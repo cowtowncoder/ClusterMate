@@ -72,4 +72,29 @@ public abstract class EntryKeyConverter<K extends EntryKey>
      * have been handled).
      */
     public abstract <P extends DecodableRequestPath> K extractFromPath(P pathBuilder);
+
+
+    /*
+    /**********************************************************************
+    /* Helper methods
+    /**********************************************************************
+     */
+    
+    /**
+     * Helper method that will 'clean up' raw hash, so that it
+     * is always a non-zero positive value.
+     */
+    protected int _truncateHash(int hash)
+    {
+        if (hash > 0) {
+            return hash;
+        }
+        if (hash == 0) { // need to mask 0
+            return 1;
+        }
+        return hash & 0x7FFFFFFF;
+    }
+
 }
+
+

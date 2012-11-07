@@ -94,7 +94,8 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
         } else {
             path = _trimPath(path, _basePath, false);
         }
-        return new ServletServiceRequest(orig, path);
+        // false -> not URL decoded
+        return new ServletServiceRequest(orig, path, false);
     }
     
     /*
