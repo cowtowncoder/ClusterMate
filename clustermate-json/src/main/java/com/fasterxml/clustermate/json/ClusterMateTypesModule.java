@@ -1,6 +1,5 @@
 package com.fasterxml.clustermate.json;
 
-import com.fasterxml.clustermate.api.ClientId;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -23,7 +22,7 @@ public class ClusterMateTypesModule extends Module
 
     @Override
     public String getModuleName() {
-        return "StoremateTypes";
+        return "ClusterMateTypes";
     }
 
     @Override
@@ -45,8 +44,8 @@ public class ClusterMateTypesModule extends Module
         sers.addSerializer(KeySpace.class, new KeySpaceSerializer());
         desers.addDeserializer(StorableKey.class, new StorableKeyDeserializer());
         sers.addSerializer(StorableKey.class, new StorableKeySerializer());
-        desers.addDeserializer(ClientId.class, new ClientIdDeserializer());
-        sers.addSerializer(ClientId.class, new ClientIdSerializer(_cfgUseNumerics));
+//        desers.addDeserializer(ClientId.class, new ClientIdDeserializer());
+//        sers.addSerializer(ClientId.class, new ClientIdSerializer(_cfgUseNumerics));
 
         context.addDeserializers(desers);
         context.addSerializers(sers);

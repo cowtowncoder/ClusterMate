@@ -12,7 +12,6 @@ import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.store.*;
 import com.fasterxml.storemate.store.file.FileManager;
 
-import com.fasterxml.clustermate.api.ClientId;
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
@@ -73,8 +72,6 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
      * recently deleted): 204 if true, 404 if false.
      */
     protected final boolean _cfgReportDeletedAsEmpty;
-    
-    protected final ClientId _defaultClientId;
 
     protected final int _cfgDefaultMinTTLSecs;
     protected final int _cfgDefaultMaxTTLSecs;
@@ -102,20 +99,6 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         _entryConverter = stuff.getEntryConverter();
         _cfgDefaultMinTTLSecs = (int) config.cfgDefaultSinceAccessTTL.getMillis();
         _cfgDefaultMaxTTLSecs = (int) config.cfgDefaultMaxTTL.getMillis();
-        
-        int cid = config.defaultClientId;
-        
-        if (cid <= 0) {
-            _defaultClientId = null;
-        } else {
-            ClientId defClient = ClientId.NA;
-            try {
-                defClient = ClientId.valueOf(cid);
-            } catch (IllegalArgumentException e) {
-                LOG.warn("Invalid default Client id ({}): will use 'NA' instead", cid);
-            }
-            _defaultClientId = defClient;
-        }
     }
 
     /*

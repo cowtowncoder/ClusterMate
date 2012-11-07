@@ -73,9 +73,9 @@ public class AHCContentPutter<K extends EntryKey>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Implementation: blocking
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Implementation: blocking
+    /**********************************************************************
      */
 
     /*
@@ -88,7 +88,7 @@ public class AHCContentPutter<K extends EntryKey>
         final String path = resourcePath(_server.resourceEndpoint(), contentId);
         URIBuilder ub = new URIBuilder(path);
         int checksum = content.getChecksum32();
-        addStandardParams(ub, config.getClientId(), checksum);
+        addStandardParams(ub, checksum);
         HttpPut put = new HttpPut(ub.build());
         put.setEntity(new InputStreamEntity(content.asStream(), -1L));
 
@@ -112,8 +112,8 @@ public class AHCContentPutter<K extends EntryKey>
         return CallFailure.general(_server, statusCode, startTime, System.currentTimeMillis(), msg);
     }
 
-//    protected <T extends HttpRequest> T addStandardParams(T request, ClientId clientId)
-    protected URIBuilder addStandardParams(URIBuilder builder, ClientId clientId,
+//    protected <T extends HttpRequest> T addStandardParams(T request)
+    protected URIBuilder addStandardParams(URIBuilder builder,
             int checksum)
     {
         builder.addParameter(Constants.HTTP_QUERY_PARAM_CHECKSUM, 
@@ -170,9 +170,9 @@ public class AHCContentPutter<K extends EntryKey>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Helper classes
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Helper classes
+    /**********************************************************************
      */
 
     protected final static class Generator<K extends EntryKey>

@@ -42,18 +42,6 @@ public abstract class ServiceConfig
 
     /*
     /**********************************************************************
-    /* Features
-    /**********************************************************************
-     */
-
-    /**
-     * Client Id to use if none is provided by client. If set as 0,
-     * missing Client Id is considered an error.
-     */
-    public int defaultClientId;
-
-    /*
-    /**********************************************************************
     /* Cluster configuration
     /**********************************************************************
      */
