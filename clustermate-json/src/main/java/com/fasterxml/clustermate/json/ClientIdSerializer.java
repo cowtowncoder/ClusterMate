@@ -2,12 +2,12 @@ package com.fasterxml.clustermate.json;
 
 import java.io.IOException;
 
+import com.fasterxml.clustermate.api.ClientId;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
 
-import com.fasterxml.storemate.shared.ClientId;
 
 public class ClientIdSerializer extends StdScalarSerializer<ClientId>
 {

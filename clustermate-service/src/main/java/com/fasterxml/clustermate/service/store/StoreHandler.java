@@ -12,6 +12,7 @@ import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.store.*;
 import com.fasterxml.storemate.store.file.FileManager;
 
+import com.fasterxml.clustermate.api.ClientId;
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;

@@ -2,11 +2,11 @@ package com.fasterxml.clustermate.json;
 
 import java.io.IOException;
 
+import com.fasterxml.clustermate.api.ClientId;
 import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 
-import com.fasterxml.storemate.shared.ClientId;
 
 @SuppressWarnings("serial")
 public class ClientIdDeserializer extends StdScalarDeserializer<ClientId>
