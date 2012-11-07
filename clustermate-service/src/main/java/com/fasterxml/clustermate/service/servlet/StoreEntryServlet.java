@@ -74,7 +74,6 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response) throws IOException
     {
         K key = _findKey(request, response);
-System.err.println("Get, key = ["+key+"]");
         if (key != null) { // null means trouble; response has all we need
             _storeHandler.getEntry(request, response, key);
             _addStdHeaders(response);
