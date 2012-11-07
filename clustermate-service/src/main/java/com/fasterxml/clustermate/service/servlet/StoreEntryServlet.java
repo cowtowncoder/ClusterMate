@@ -17,13 +17,13 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  * Servlet that handles basic CRUD operations for individual entries.
  */
 @SuppressWarnings("serial")
-public abstract class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
+public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     extends ServletBase
 {
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Helper objects
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Helper objects
+    /**********************************************************************
      */
     
 //    private final Log LOG = Log.forClass(getClass());
@@ -37,9 +37,9 @@ public abstract class StoreEntryServlet<K extends EntryKey, E extends StoredEntr
     protected final EntryKeyConverter<K> _keyConverter;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life-cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
      */
     
     public StoreEntryServlet(SharedServiceStuff stuff, ClusterViewByServer clusterView,
@@ -54,15 +54,27 @@ public abstract class StoreEntryServlet<K extends EntryKey, E extends StoredEntr
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Delegated methods for more control
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Default implementation for key handling
+    /**********************************************************************
+     */
+
+    protected K _findKey(ServletServiceRequest request, ServletServiceResponse response)
+    {
+        return _keyConverter.extractFromPath(request);
+    }
+    
+    /*
+    /**********************************************************************
+    /* Delegated methods for more control
+    /**********************************************************************
      */
 
     @Override
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response) throws IOException
     {
         K key = _findKey(request, response);
+System.err.println("Get, key = ["+key+"]");
         if (key != null) { // null means trouble; response has all we need
             _storeHandler.getEntry(request, response, key);
             _addStdHeaders(response);
@@ -110,12 +122,4 @@ public abstract class StoreEntryServlet<K extends EntryKey, E extends StoredEntr
         }
         response.writeOut(_jsonWriter);
     }
-
-    /*
-    ///////////////////////////////////////////////////////////////////////
-    // Abstract methods
-    ///////////////////////////////////////////////////////////////////////
-     */
-
-    protected abstract K _findKey(ServletServiceRequest request, ServletServiceResponse response);
 }
