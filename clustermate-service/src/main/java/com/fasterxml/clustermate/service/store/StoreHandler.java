@@ -12,6 +12,7 @@ import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.store.*;
 import com.fasterxml.storemate.store.file.FileManager;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.ServiceRequest;
@@ -34,9 +35,9 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Helper objects
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Helper objects
+    /**********************************************************************
      */
 
     protected final Stores<K,E> _stores;
@@ -50,9 +51,9 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     protected final StoredEntryConverter<K, E> _entryConverter;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Configuration
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Configuration
+    /**********************************************************************
      */
 
     /**
@@ -134,14 +135,14 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     public ServiceResponse getEntry(ServiceRequest request, ServiceResponse response, K key)
             throws StoreException
     {
-        String rangeStr = request.getHeader(HTTPConstants.HTTP_HEADER_RANGE_FOR_REQUEST);
+        String rangeStr = request.getHeader(ClusterMateConstants.HTTP_HEADER_RANGE_FOR_REQUEST);
         ByteRange range;
         try {
             range = request.findByteRange();
         } catch (IllegalArgumentException e) {
             return invalidRange(response, key, rangeStr, e.getMessage());
         }
-        String acceptableEnc = request.getHeader(HTTPConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
+        String acceptableEnc = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
         Storable rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
         if (rawEntry == null) {
             return handleGetForMissing(request, response, key);
@@ -235,7 +236,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         
         // Would we return content as-is? (not compressed, or compressed using something
         // client accepts)
-        String acceptableComp = request.getHeader(HTTPConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
+        String acceptableComp = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
         if (comp == Compression.NONE || comp.isAcceptable(acceptableComp)) {
             size = entry.getStorageLength();
         } else {
@@ -253,12 +254,12 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     public ServiceResponse putEntry(ServiceRequest request, ServiceResponse response,
             K key, InputStream dataIn)
     {
-        final int checksum = _decodeInt(request.getQueryParameter(HTTPConstants.HTTP_QUERY_PARAM_CHECKSUM), 0);
+        final int checksum = _decodeInt(request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CHECKSUM), 0);
         String paramKey = null, paramValue = null;
-        paramKey = HTTPConstants.HTTP_QUERY_PARAM_MIN_SINCE_ACCESS_TTL;
+        paramKey = ClusterMateConstants.HTTP_QUERY_PARAM_MIN_SINCE_ACCESS_TTL;
         paramValue = request.getQueryParameter(paramKey);
         TimeSpan minTTL = _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
-        paramKey = HTTPConstants.HTTP_QUERY_PARAM_MAX_TTL;
+        paramKey = ClusterMateConstants.HTTP_QUERY_PARAM_MAX_TTL;
         paramValue = request.getQueryParameter(paramKey);
         TimeSpan maxTTL = _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
 
@@ -276,7 +277,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     	
         // first things first: ensure that request was correctly sent wrt routing
         Compression inputCompression = Compression.forContentEncoding(request.getHeader(
-                HTTPConstants.HTTP_HEADER_COMPRESSION));
+                ClusterMateConstants.HTTP_HEADER_COMPRESSION));
         // NOTE: in future, may want to allow client to specify "do not compress"; if so,
         // we would pass Compression.NONE explicitly: null means "try to use whatever"
         if (inputCompression == Compression.NONE) {

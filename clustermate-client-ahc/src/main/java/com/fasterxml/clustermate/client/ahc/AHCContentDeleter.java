@@ -69,7 +69,7 @@ public class AHCContentDeleter<K extends EntryKey>
             }
             return null;
         } catch (Exception e) {
-            return CallFailure.internal(_server, startTime, System.currentTimeMillis(), e);
+            return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e);
         }
     }
 }

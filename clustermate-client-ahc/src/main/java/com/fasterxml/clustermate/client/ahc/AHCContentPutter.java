@@ -68,7 +68,7 @@ public class AHCContentPutter<K extends EntryKey>
             return _tryPutAsync
                     (config, endOfTime, contentId, content, startTime, timeout);
         } catch (Exception e) {
-            return CallFailure.internal(_server, startTime, System.currentTimeMillis(), e);
+            return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e);
         }
     }
 

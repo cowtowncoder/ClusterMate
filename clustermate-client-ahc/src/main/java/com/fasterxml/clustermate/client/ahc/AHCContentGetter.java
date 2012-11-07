@@ -3,6 +3,7 @@ package com.fasterxml.clustermate.client.ahc;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 
@@ -13,7 +14,6 @@ import com.fasterxml.storemate.client.call.GetCallResult;
 import com.fasterxml.storemate.client.call.GetContentProcessor;
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.EntryKey;
-import com.fasterxml.storemate.shared.HTTPConstants;
 
 import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
@@ -53,11 +53,11 @@ public class AHCContentGetter<K extends EntryKey>
         path = _keyConverter.appendToPath(path, contentId);       
         BoundRequestBuilder reqBuilder = path.getRequest(_httpClient);
         // plus, allow use of GZIP and LZF
-        reqBuilder = reqBuilder.addHeader(HTTPConstants.HTTP_HEADER_ACCEPT_COMPRESSION,
+        reqBuilder = reqBuilder.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION,
                 "lzf, gzip, identity");
         // and may use range as well
         if (range != null) {
-            reqBuilder = reqBuilder.addHeader(HTTPConstants.HTTP_HEADER_RANGE_FOR_REQUEST,
+            reqBuilder = reqBuilder.addHeader(ClusterMateConstants.HTTP_HEADER_RANGE_FOR_REQUEST,
             		range.asRequestHeader());
         }
         
@@ -89,7 +89,8 @@ public class AHCContentGetter<K extends EntryKey>
             while (t.getCause() != null) {
                 t = t.getCause();
             }
-            return new AHCGetCallResult<T>(CallFailure.internal(_server, startTime, System.currentTimeMillis(), t));
+            return new AHCGetCallResult<T>(CallFailure.clientInternal(_server,
+                    startTime, System.currentTimeMillis(), t));
         }
     }
 }

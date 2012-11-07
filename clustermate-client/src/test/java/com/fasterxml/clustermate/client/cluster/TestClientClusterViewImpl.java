@@ -11,15 +11,15 @@ public class TestClientClusterViewImpl extends ClientTestBase
 {
     protected final KeySpace DEFAULT_SPACE = new KeySpace(360);
 
-    protected final KeyRange range1 = DEFAULT_SPACE.range(0, 120); // 0 - 119
-    protected final KeyRange range2 = DEFAULT_SPACE.range(90, 60); // 90 - 149
-    protected final KeyRange range3 = DEFAULT_SPACE.range(300, 90); // 300 - 29
+    protected final KeyRange RANGE1 = DEFAULT_SPACE.range(0, 120); // 0 - 119
+    protected final KeyRange RANGE2 = DEFAULT_SPACE.range(90, 60); // 90 - 149
+    protected final KeyRange RANGE3 = DEFAULT_SPACE.range(300, 90); // 300 - 29
 
-    protected final ClusterServerNodeImpl node1 = ClusterServerNodeImpl.forTesting(range1);
-    protected final ClusterServerNodeImpl node2 = ClusterServerNodeImpl.forTesting(range2);
-    protected final ClusterServerNodeImpl node3 = ClusterServerNodeImpl.forTesting(range3);
+    protected final ClusterServerNodeImpl NODE1 = ClusterServerNodeImpl.forTesting(RANGE1);
+    protected final ClusterServerNodeImpl NODE2 = ClusterServerNodeImpl.forTesting(RANGE2);
+    protected final ClusterServerNodeImpl NODE3 = ClusterServerNodeImpl.forTesting(RANGE3);
 
-    protected final ClusterServerNodeImpl[] allNodes = new ClusterServerNodeImpl[] { node1, node2, node3 };
+    protected final ClusterServerNodeImpl[] allNodes = new ClusterServerNodeImpl[] { NODE1, NODE2, NODE3 };
     
     public void testSimpleDistanceCalc()
     {
@@ -59,10 +59,10 @@ public class TestClientClusterViewImpl extends ClientTestBase
         ClusterViewByClientImpl<EntryKey> view = ClusterViewByClientImpl.forTesting(DEFAULT_SPACE);
         NodesForKey nodes;
 
-        ClusterServerNodeImpl disabledNode2 = ClusterServerNodeImpl.forTesting(range2);
+        ClusterServerNodeImpl disabledNode2 = ClusterServerNodeImpl.forTesting(RANGE2);
         disabledNode2.updateDisabled(true);
         
-        ClusterServerNodeImpl[] disabledStates = new ClusterServerNodeImpl[] { node1, disabledNode2, node3 };
+        ClusterServerNodeImpl[] disabledStates = new ClusterServerNodeImpl[] { NODE1, disabledNode2, NODE3 };
         
         // 2 ranges overlap; range2 would be closer but is disabled
         nodes = view._calculateNodes(1, DEFAULT_SPACE.hash(100), disabledStates);
@@ -119,7 +119,7 @@ public class TestClientClusterViewImpl extends ClientTestBase
         KeyRange extraRange = DEFAULT_SPACE.range(100, 200);
         ClusterServerNodeImpl extraNode = ClusterServerNodeImpl.forTesting(extraRange);
 
-        ClusterServerNodeImpl[] moreNodes = new ClusterServerNodeImpl[] { node1, node2, node3, extraNode };
+        ClusterServerNodeImpl[] moreNodes = new ClusterServerNodeImpl[] { NODE1, NODE2, NODE3, extraNode };
         assertEquals(360, view._getCoverage(moreNodes));
     }
 }

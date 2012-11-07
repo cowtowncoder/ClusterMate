@@ -6,9 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.storemate.shared.EntryKey;
-import com.fasterxml.storemate.shared.HTTPConstants;
 import com.fasterxml.storemate.shared.IpAndPort;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeState;
@@ -52,9 +52,9 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     protected long _lastUpdated;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life-cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
      */
     
     public ClusterViewByServerImpl(SharedServiceStuff stuff, Stores<K,E> stores,
@@ -102,9 +102,9 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Simple accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Simple accessors
+    /**********************************************************************
      */
     
     /**
@@ -146,9 +146,9 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Advanced accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Advanced accessors
+    /**********************************************************************
      */
 
     @Override
@@ -184,23 +184,23 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Integration with front-end (does it belong here?)
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Integration with front-end (does it belong here?)
+    /**********************************************************************
      */
 
     @Override
     public ServiceResponse addClusterStateHeaders(ServiceResponse response)
     {
         long clusterUpdated = getLastUpdated();
-        return response.addHeader(HTTPConstants.CUSTOM_HTTP_HEADER_LAST_CLUSTER_UPDATE,
+        return response.addHeader(ClusterMateConstants.CUSTOM_HTTP_HEADER_LAST_CLUSTER_UPDATE,
                 clusterUpdated);
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
      */
 
     private int _coveragePct(int absCoverage) {

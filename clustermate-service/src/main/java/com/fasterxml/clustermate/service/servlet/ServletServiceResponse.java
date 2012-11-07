@@ -4,9 +4,9 @@ import java.io.IOException;
 
 import javax.servlet.http.*;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.storemate.shared.HTTPConstants;
 
 /**
  * {@link ServiceResponse} implemented over native
@@ -83,12 +83,12 @@ public class ServletServiceResponse extends ServiceResponse
     @Override
     public ServletServiceResponse setContentLength(long length)
     {
-    	// not sure if this would work but:
-    	if (length > Integer.MAX_VALUE) {
-    	    return addHeader(HTTPConstants.HTTP_HEADER_CONTENT_LENGTH, length);
-    	}
-    	_response.setContentLength((int) length);
-    	return this;
+        // not sure if this would work but:
+        if (length > Integer.MAX_VALUE) {
+            return addHeader(ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH, length);
+        }
+        _response.setContentLength((int) length);
+        return this;
     }
     
     @Override

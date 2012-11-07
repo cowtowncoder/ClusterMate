@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.client.ahc;
 
 import java.io.*;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.clustermate.client.ClusterServerNode;
@@ -10,7 +11,6 @@ import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
 import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.EntryKey;
-import com.fasterxml.storemate.shared.HTTPConstants;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.FluentCaseInsensitiveStringsMap;
@@ -67,7 +67,7 @@ public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
 
     protected int _getContentLength(Response resp)
     {
-        String str = resp.getHeader(HTTPConstants.HTTP_HEADER_CONTENT_LENGTH);
+        String str = resp.getHeader(ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH);
         if (str != null) {
             str = str.trim();
             if (str.length() > 0 && Character.isDigit(str.charAt(0))) {
@@ -78,7 +78,7 @@ public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
                     try {
                         url = String.valueOf(resp.getUri());
                     } catch (Exception e2) { }
-                    logWarn("Invalid '"+HTTPConstants.HTTP_HEADER_CONTENT_LENGTH+"h' header (from URL "+url+"): '"+str+"'");
+                    logWarn("Invalid '"+ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH+"h' header (from URL "+url+"): '"+str+"'");
                 }
             }
         }
@@ -93,7 +93,7 @@ public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
 
     protected BoundRequestBuilder addCheckSum(BoundRequestBuilder reqBuilder, int checksum)
     {
-        reqBuilder = reqBuilder.addQueryParameter(HTTPConstants.HTTP_QUERY_PARAM_CHECKSUM,
+        reqBuilder = reqBuilder.addQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CHECKSUM,
                 (checksum == 0) ? "0" : String.valueOf(checksum));
         return reqBuilder;
     }
@@ -120,7 +120,7 @@ public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
         if (headers == null) {
             return;
         }
-        String versionStr = headers.getFirstValue(HTTPConstants.CUSTOM_HTTP_HEADER_LAST_CLUSTER_UPDATE);
+        String versionStr = headers.getFirstValue(ClusterMateConstants.CUSTOM_HTTP_HEADER_LAST_CLUSTER_UPDATE);
         if (versionStr != null && (versionStr = versionStr.trim()).length() > 0) {
             try {
                 long l = Long.parseLong(versionStr);

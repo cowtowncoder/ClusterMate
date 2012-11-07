@@ -16,8 +16,8 @@ import com.ning.http.client.HttpResponseBodyPart;
 import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.storemate.client.call.GetContentProcessor;
-import com.fasterxml.storemate.shared.HTTPConstants;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.util.ByteAggregator;
 import com.fasterxml.storemate.shared.util.IOUtil;
@@ -158,7 +158,7 @@ public class UncompressingAsyncHandler<T>
     {
         FluentCaseInsensitiveStringsMap headers = (h == null) ? null : h.getHeaders();
         _headers = headers;
-        String comps = (headers == null) ? null : headers.getFirstValue(HTTPConstants.HTTP_HEADER_COMPRESSION);
+        String comps = (headers == null) ? null : headers.getFirstValue(ClusterMateConstants.HTTP_HEADER_COMPRESSION);
         if (comps != null && !comps.isEmpty()) {
             Uncompressor uncomp = null;
             Compression c = Compression.from(comps);

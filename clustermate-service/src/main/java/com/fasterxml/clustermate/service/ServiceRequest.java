@@ -2,9 +2,10 @@ package com.fasterxml.clustermate.service;
 
 import java.io.*;
 
-import com.fasterxml.clustermate.api.DecodableRequestPath;
 import com.fasterxml.storemate.shared.ByteRange;
-import com.fasterxml.storemate.shared.HTTPConstants;
+
+import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.DecodableRequestPath;
 
 /**
  * Interface class that defines abstraction implemented by classes that
@@ -48,7 +49,7 @@ public abstract class ServiceRequest
     
     public ByteRange findByteRange()
     {
-        String rangeStr = getHeader(HTTPConstants.HTTP_HEADER_RANGE_FOR_REQUEST);
+        String rangeStr = getHeader(ClusterMateConstants.HTTP_HEADER_RANGE_FOR_REQUEST);
         return (rangeStr == null) ? null : ByteRange.valueOf(rangeStr);
     }
 

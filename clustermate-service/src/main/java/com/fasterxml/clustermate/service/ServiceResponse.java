@@ -1,9 +1,8 @@
 package com.fasterxml.clustermate.service;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
-import com.fasterxml.storemate.shared.HTTPConstants;
-
 
 /**
  * Interface class that defines interface of (HTTP) Responses
@@ -83,7 +82,7 @@ public abstract class ServiceResponse
     }
     
     public final ServiceResponse setBodyCompression(String type) {
-        return addHeader(HTTPConstants.HTTP_HEADER_COMPRESSION, type);
+        return addHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION, type);
     }
     
     public abstract ServiceResponse setContentLength(long length);
@@ -108,8 +107,8 @@ public abstract class ServiceResponse
 
     public final ServiceResponse partialContent(Object entity, String rangeDesc) {
         // 206 means "partial content"
-        return set(HTTPConstants.HTTP_STATUS_OK_PARTIAL, entity)
-                .addHeader(HTTPConstants.HTTP_HEADER_RANGE_FOR_RESPONSE, rangeDesc);
+        return set(ClusterMateConstants.HTTP_STATUS_OK_PARTIAL, entity)
+                .addHeader(ClusterMateConstants.HTTP_HEADER_RANGE_FOR_RESPONSE, rangeDesc);
     }
 
     /*

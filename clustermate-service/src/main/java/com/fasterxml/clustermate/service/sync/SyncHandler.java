@@ -21,6 +21,7 @@ import com.fasterxml.storemate.store.backend.IterationResult;
 import com.fasterxml.storemate.store.backend.StorableLastModIterationCallback;
 import com.fasterxml.storemate.store.file.FileManager;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
@@ -177,13 +178,13 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         if (sinceL == null) {
             return (OUT) badRequest(response, "Missing path parameter for 'list-since'");
         }
-        Integer keyRangeStart = _findIntParam(request, HTTPConstants.HTTP_QUERY_PARAM_KEYRANGE_START);
+        Integer keyRangeStart = _findIntParam(request, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START);
         if (keyRangeStart == null) {
-            return (OUT) missingArgument(response, HTTPConstants.HTTP_QUERY_PARAM_KEYRANGE_START);
+            return (OUT) missingArgument(response, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START);
         }
-        Integer keyRangeLength = _findIntParam(request, HTTPConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH);
+        Integer keyRangeLength = _findIntParam(request, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH);
         if (keyRangeLength == null) {
-            return (OUT) missingArgument(response, HTTPConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH);
+            return (OUT) missingArgument(response, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH);
         }
         KeyRange range;
         try {
@@ -192,10 +193,10 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
             return (OUT) badRequest(response, "Invalid key-range definition (start '%s', end '%s'): %s",
                     keyRangeStart, keyRangeLength, e.getMessage());
         }
-        String acceptHeader = request.getHeader(HTTPConstants.HTTP_HEADER_ACCEPT);
+        String acceptHeader = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT);
         // what do they request? If not known, serve JSON (assumed to be from browser)
         boolean useSmile = (acceptHeader != null)
-                && acceptHeader.trim().indexOf(HTTPConstants.CONTENT_TYPE_SMILE) >= 0;
+                && acceptHeader.trim().indexOf(ClusterMateConstants.CONTENT_TYPE_SMILE) >= 0;
         long currentTime = _timeMaster.currentTimeMillis();
 
         final long upUntil = currentTime - _cfgSyncGracePeriod.getMillis();
@@ -217,7 +218,7 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
 
         final SyncListResponse<E> resp = new SyncListResponse<E>(entries, timestamp.get());
         final ObjectWriter w = useSmile ? _syncListSmileWriter : _syncListJsonWriter;
-        final String contentType = useSmile ? HTTPConstants.CONTENT_TYPE_SMILE : HTTPConstants.CONTENT_TYPE_JSON;
+        final String contentType = useSmile ? ClusterMateConstants.CONTENT_TYPE_SMILE : ClusterMateConstants.CONTENT_TYPE_JSON;
         
         return (OUT) response.ok(new StreamingEntityImpl(w, resp))
                 .setContentType(contentType);

@@ -12,13 +12,13 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.VManaged;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
-import com.fasterxml.storemate.shared.HTTPConstants;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.RequestPathBuilder;
 import com.fasterxml.storemate.shared.util.IOUtil;
@@ -29,7 +29,7 @@ public class SyncListAccessor implements VManaged
     
     // public just because tests need it
     public final static String ACCEPTED_CONTENT_TYPES
-        = HTTPConstants.CONTENT_TYPE_SMILE + ", " + HTTPConstants.CONTENT_TYPE_JSON;
+        = ClusterMateConstants.CONTENT_TYPE_SMILE + ", " + ClusterMateConstants.CONTENT_TYPE_JSON;
 
     protected final SharedServiceStuff _stuff;
     
@@ -120,7 +120,7 @@ public class SyncListAccessor implements VManaged
         HttpURLConnection conn;
         try {
             conn = prepareGet(urlStr, timeout);
-            conn.setRequestProperty(HTTPConstants.HTTP_HEADER_ACCEPT, ACCEPTED_CONTENT_TYPES);
+            conn.setRequestProperty(ClusterMateConstants.HTTP_HEADER_ACCEPT, ACCEPTED_CONTENT_TYPES);
             conn.connect();
         } catch (Exception e) {
             LOG.warn("fetchSyncList request to {} failed on send with Exception ({}): {}",
@@ -296,9 +296,9 @@ public class SyncListAccessor implements VManaged
         RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(endpoint)
             .addPathSegments(config.servicePathRoot);
         pathBuilder = _stuff.getPathStrategy().appendSyncListPath(pathBuilder);
-        pathBuilder = pathBuilder.addParameter(HTTPConstants.HTTP_QUERY_PARAM_SINCE, String.valueOf(syncedUpTo));
-        pathBuilder = pathBuilder.addParameter(HTTPConstants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
-        pathBuilder = pathBuilder.addParameter(HTTPConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_SINCE, String.valueOf(syncedUpTo));
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
         return pathBuilder.toString();
     }
 

@@ -6,13 +6,13 @@ import java.util.concurrent.TimeoutException;
 import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.CallConfig;
 import com.fasterxml.storemate.client.call.ContentHeader;
 import com.fasterxml.storemate.shared.EntryKey;
-import com.fasterxml.storemate.shared.HTTPConstants;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 /**
@@ -66,7 +66,7 @@ public class AHCContentHeader<K extends EntryKey>
             // call ok?
             if (!IOUtil.isHTTPSuccess(statusCode)) {
             	if (hh.fail != null) {
-                    return new AHCHeadCallResult(CallFailure.internal(_server, startTime, System.currentTimeMillis(), hh.fail));
+                    return new AHCHeadCallResult(CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), hh.fail));
             	}
                 // if not, why not? Any well-known problems? (besides timeout that was handled earlier)
                 return new AHCHeadCallResult(CallFailure.general(_server, statusCode, startTime,
@@ -85,10 +85,10 @@ public class AHCContentHeader<K extends EntryKey>
                 String desc = (lenStr == null) ? "null" : "\""+lenStr+"\"";
                 return new AHCHeadCallResult(CallFailure.formatException(_server,
                         statusCode, startTime, System.currentTimeMillis(),
-                        "Invalid '"+HTTPConstants.HTTP_HEADER_CONTENT_LENGTH+"' value: "+desc));
+                        "Invalid '"+ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH+"' value: "+desc));
             }
         } catch (Exception e) {
-            return new AHCHeadCallResult(CallFailure.internal(_server, startTime, System.currentTimeMillis(), e));
+            return new AHCHeadCallResult(CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e));
         }
     }
 
@@ -134,7 +134,7 @@ public class AHCContentHeader<K extends EntryKey>
         public com.ning.http.client.AsyncHandler.STATE onHeadersReceived(HttpResponseHeaders headers)
         {
             _parent.handleHeaders(_server, headers.getHeaders(), _startTime);
-            contentLength = headers.getHeaders().getFirstValue(HTTPConstants.HTTP_HEADER_CONTENT_LENGTH);
+            contentLength = headers.getHeaders().getFirstValue(ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH);
             return STATE.CONTINUE;
         }
 
