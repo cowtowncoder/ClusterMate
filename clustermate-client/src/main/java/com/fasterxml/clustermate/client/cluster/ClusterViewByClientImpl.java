@@ -9,6 +9,8 @@ import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.KeyHash;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.api.RequestPath;
+import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.client.ClusterViewByClient;
 import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.clustermate.client.NodesForKey;
@@ -16,8 +18,6 @@ import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
 import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
-import com.fasterxml.storemate.shared.RequestPath;
-import com.fasterxml.storemate.shared.RequestPathBuilder;
 
 /**
  * Class that encapsulates view of the cluster, as whole, from

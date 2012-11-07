@@ -14,13 +14,13 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.KeyRange;
+import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.VManaged;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
 import com.fasterxml.storemate.shared.IpAndPort;
-import com.fasterxml.storemate.shared.RequestPathBuilder;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 public class SyncListAccessor implements VManaged

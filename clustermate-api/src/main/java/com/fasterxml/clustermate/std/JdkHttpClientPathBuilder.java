@@ -3,8 +3,8 @@ package com.fasterxml.clustermate.std;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.storemate.shared.IpAndPort;
-import com.fasterxml.storemate.shared.RequestPathBuilder;
 import com.fasterxml.storemate.shared.util.UTF8UrlEncoder;
 
 /**

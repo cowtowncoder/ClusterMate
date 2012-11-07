@@ -2,9 +2,9 @@ package com.fasterxml.clustermate.client;
 
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
-import com.fasterxml.storemate.shared.RequestPathBuilder;
 
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.client.cluster.EntryAccessors;
 
 /**

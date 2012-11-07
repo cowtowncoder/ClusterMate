@@ -1,6 +1,5 @@
 package com.fasterxml.clustermate.api;
 
-import com.fasterxml.storemate.shared.RequestPathBuilder;
 
 /**
  * Type that defines how references are built to access

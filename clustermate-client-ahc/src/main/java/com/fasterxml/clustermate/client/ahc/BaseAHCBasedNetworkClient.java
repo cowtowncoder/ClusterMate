@@ -1,13 +1,13 @@
 package com.fasterxml.clustermate.client.ahc;
 
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.clustermate.client.cluster.EntryAccessors;
 import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
-import com.fasterxml.storemate.shared.RequestPathBuilder;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.AsyncHttpProvider;
