@@ -124,12 +124,12 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
     protected final RequestPathBuilder _appendSegment(String segment, boolean escapeSlash)
     {
           if (_path == null) {
-               _path = _urlEncoder.encode(segment, true);
+               _path = _urlEncoder.encode(segment, escapeSlash);
           } else {
                StringBuilder sb = new StringBuilder(_path);
                sb.append('/');
                if (segment != null && segment.length() > 0) {
-                    sb = _urlEncoder.appendEncoded(sb, segment, true);
+                    sb = _urlEncoder.appendEncoded(sb, segment, escapeSlash);
                }
                _path = sb.toString();
           }

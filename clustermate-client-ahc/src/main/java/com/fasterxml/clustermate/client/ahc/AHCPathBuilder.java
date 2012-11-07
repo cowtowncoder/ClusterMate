@@ -105,12 +105,12 @@ public class AHCPathBuilder
 
     private BoundRequestBuilder _addParams(BoundRequestBuilder b)
     {
-		if (_queryParams != null) {
-			for (int i = 0, len = _queryParams.size(); i < len; i += 2) {
-				b = b.addQueryParameter(_queryParams.get(i), _queryParams.get(i+1));
-			}
-		}
-		return b;
+        if (_queryParams != null) {
+            for (int i = 0, len = _queryParams.size(); i < len; i += 2) {
+                b = b.addQueryParameter(_queryParams.get(i), _queryParams.get(i+1));
+            }
+        }
+        return b;
     }
 
     protected String _url(boolean addQueryParams)
@@ -145,12 +145,12 @@ public class AHCPathBuilder
     protected final RequestPathBuilder _appendSegment(String segment, boolean escapeSlash)
     {
         if (_path == null) {
-            _path = _urlEncoder.encode(segment, true);
+            _path = _urlEncoder.encode(segment, escapeSlash);
         } else {
             StringBuilder sb = new StringBuilder(_path);
             sb.append('/');
             if (segment != null && segment.length() > 0) {
-                sb = _urlEncoder.appendEncoded(sb, segment, true);
+                sb = _urlEncoder.appendEncoded(sb, segment, escapeSlash);
             }
             _path = sb.toString();
         }
