@@ -55,21 +55,15 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
      */
      
     @Override
-    public RequestPathBuilder addPathSegment(String segment)
-    {
-          if (_path == null) {
-               _path = _urlEncoder.encode(segment);
-          } else {
-               StringBuilder sb = new StringBuilder(_path);
-               sb.append('/');
-               if (segment != null && segment.length() > 0) {
-                    sb = _urlEncoder.appendEncoded(sb, segment);
-               }
-               _path = sb.toString();
-          }
-          return this;
+    public RequestPathBuilder addPathSegment(String segment) {
+        return _appendSegment(segment, true);
     }
 
+    @Override
+    public RequestPathBuilder addPathSegmentsRaw(String segments) {
+        return _appendSegment(segments, false);
+    }
+    
     @Override
     public RequestPathBuilder addParameter(String key, String value)
     {
@@ -111,7 +105,7 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
          for (int i = 0; i < len; i += 2) {
              sb.append((i == 0) ? '?' : '&');
              sb.append(_queryParams.get(i)).append('=');
-             _urlEncoder.appendEncoded(sb, _queryParams.get(i+1));
+             _urlEncoder.appendEncoded(sb, _queryParams.get(i+1), true);
          }
          return sb.toString();
     }
@@ -119,5 +113,26 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
     @Override
     public String toString() {
          return _url();
+    }
+
+    /*
+    /*********************************************************************
+    /* Internal methods
+    /*********************************************************************
+     */
+    
+    protected final RequestPathBuilder _appendSegment(String segment, boolean escapeSlash)
+    {
+          if (_path == null) {
+               _path = _urlEncoder.encode(segment, true);
+          } else {
+               StringBuilder sb = new StringBuilder(_path);
+               sb.append('/');
+               if (segment != null && segment.length() > 0) {
+                    sb = _urlEncoder.appendEncoded(sb, segment, true);
+               }
+               _path = sb.toString();
+          }
+          return this;
     }
 }

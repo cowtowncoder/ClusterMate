@@ -11,12 +11,23 @@ public abstract class RequestPathBuilder
 {
     /**
      * Method that will append a single path segment, escaping characters
-     * as necessary.
+     * as necessary, including escaping of slash character so that
+     * the whole value remains parseable path segment.
      *
      * @return Builder instance to use for further calls (may be 'this',
      *   but does not have to be)
      */
     public abstract RequestPathBuilder addPathSegment(String segment);
+
+    /**
+     * Method that will append one or more path segments; contents are
+     * only escaped only for mandatory characters, but slashes are NOT
+     * escaped, so input may contain multiple segments
+     *
+     * @return Builder instance to use for further calls (may be 'this',
+     *   but does not have to be)
+     */
+    public abstract RequestPathBuilder addPathSegmentsRaw(String segments);
 
     /**
      * Convenience method for appending a sequence of path segments,
