@@ -3,6 +3,7 @@ package com.fasterxml.clustermate.service;
 import java.io.*;
 
 import com.fasterxml.storemate.shared.ByteRange;
+import com.fasterxml.storemate.shared.util.UTF8UrlEncoder;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.DecodableRequestPath;
@@ -17,6 +18,8 @@ import com.fasterxml.clustermate.api.DecodableRequestPath;
 public abstract class ServiceRequest
     implements DecodableRequestPath
 {
+    protected final static UTF8UrlEncoder _urlEncoder = new UTF8UrlEncoder(false);
+    
     /**
      * This is the full non-decoded original path of the request.
      */
@@ -139,12 +142,6 @@ public abstract class ServiceRequest
 
     protected String _decodePath(String encodedPath)
     {
-        int ix = encodedPath.indexOf('%');
-        if (ix < 0) {
-            return encodedPath;
-        }
-//        throw new UnsupportedOperationException("Bad path: "+encodedPath);
-        return encodedPath;
+        return _urlEncoder.decode(encodedPath);
     }
-
 }
