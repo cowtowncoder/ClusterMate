@@ -62,13 +62,6 @@ public abstract class ServiceConfig
      */
     @NotNull
     public File metadataDirectory;
-    
-    /**
-     * Class to instantiate to get object used for
-     * constructing new data store entries; customized when extending data model.
-     */
-    @NotNull
-    public Class<? extends StoredEntryConverter<?,?>> entryConverter = null;
 
     /**
      * What is the grace period for syncing: that is, how many seconds do we give
@@ -202,10 +195,7 @@ public abstract class ServiceConfig
     /**********************************************************************
      */
 
-    protected ServiceConfig(Class<? extends StoredEntryConverter<?,?>> ecClass)
-    {
-        entryConverter = ecClass;
-    }
+    protected ServiceConfig() { }
 
     /*
     /**********************************************************************
@@ -213,11 +203,7 @@ public abstract class ServiceConfig
     /**********************************************************************
      */
 
-    public StoredEntryConverter<?,?> instantiateEntryConverter()
-    {
-        return _createInstance(entryConverter, "instantiateEntryConverter",
-                StoredEntryConverter.class);
-    }
+    public abstract StoredEntryConverter<?,?> getEntryConverter();
 
     public StoreBackendBuilder<?> instantiateBackendBuilder()
     {
