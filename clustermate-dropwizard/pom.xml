@@ -1,0 +1,86 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion> 
+  <parent>
+    <groupId>com.fasterxml.clustermate</groupId>
+    <artifactId>clustermate-parent</artifactId>
+    <version>0.6.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>clustermate-dropwizard</artifactId>
+  <name>ClusterMate-DropWizard</name>
+  <packaging>jar</packaging>
+  <description>Foundation for ClusterMate-based services that run on
+DropWizard container.
+  </description>
+
+  <dependencies>
+    <!-- Standard Java APIs -->
+    <dependency> <!--  Bean Validation for Annotations to use on Config objects -->
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>1.0.0.GA</version>
+    </dependency>
+    <dependency> <!-- Servlet API -->
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.5</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency> <!-- JAX-RS API -->
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>jsr311-api</artifactId>
+      <version>1.1.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${version.slf4j}</version>
+    </dependency>
+
+    <!-- Dependies to StoreMate, other CM modules -->
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-shared</artifactId>
+      <version>${version.storemate}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-store</artifactId>
+      <version>${version.storemate}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-service</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Yammer Metrics: needed by resources -->
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>2.1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-annotation</artifactId>
+      <version>2.1.2</version>
+    </dependency>
+
+
+    <!-- plus some additional test dependencies -->
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-backend-bdb-je</artifactId>
+      <version>${version.storemate}</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+</project>

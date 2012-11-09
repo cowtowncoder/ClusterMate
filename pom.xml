@@ -19,6 +19,7 @@
     <module>clustermate-client</module>
     <module>clustermate-client-ahc</module>
     <module>clustermate-service</module>
+    <module>clustermate-dropwizard</module>
   </modules>
 
   <url>https://github.com/cowtowncoder/ClusterMate</url>
