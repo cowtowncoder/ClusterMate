@@ -221,6 +221,9 @@ public abstract class ServiceConfig
 
     public StoreBackendBuilder<?> instantiateBackendBuilder()
     {
+        if (storeBackendType == null) {
+            throw new IllegalStateException("Missing configuration for 'storeBackendType'");
+        }
         return _createInstance(storeBackendType, "storeBackendType",
                 StoreBackendBuilder.class);
     }    
