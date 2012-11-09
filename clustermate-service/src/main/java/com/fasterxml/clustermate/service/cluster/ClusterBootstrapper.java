@@ -130,10 +130,10 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods
-    ///////////////////////////////////////////////////////////////////////
-    */
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
+     */
     
     protected List<NodeDefinition> _readNodeDefs()
             throws IOException

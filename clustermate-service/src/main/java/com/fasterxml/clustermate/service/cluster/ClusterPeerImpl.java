@@ -41,7 +41,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     private final static long SLEEP_FOR_SYNCLIST_ERRORS_MSECS = 5000L;
 
     private final static long SLEEP_FOR_SYNCPULL_ERRORS_MSECS = 3000L;
-    
+
     /**
      * If synclist is empty, we can wait for... say, 10 seconds?
      */
@@ -73,9 +73,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     private final int MAX_FETCH_TRIES = 20;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Helper objects
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Helper objects
+    /**********************************************************************
      */
 
     private final static Logger LOG = LoggerFactory.getLogger(ClusterPeer.class);
@@ -109,17 +109,17 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     protected final TimeMaster _timeMaster;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Configuration
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Configuration
+    /**********************************************************************
      */
 
     protected final SharedServiceStuff _stuff;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Local state
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Local state
+    /**********************************************************************
      */
 
     /**
@@ -146,9 +146,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     protected final byte[] _readBuffer = new byte[8000];
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life-cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
      */
     
     public ClusterPeerImpl(SharedServiceStuff stuff,
@@ -195,9 +195,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Actual synchronization task
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Actual synchronization task
+    /**********************************************************************
      */
     
     /**
@@ -230,9 +230,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // State access
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* State access
+    /**********************************************************************
      */
 
     @Override
@@ -245,11 +245,11 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     public long getSyncedUpTo() {
         return _syncState.getSyncedUpTo();
     }
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Public API
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Public API
+    /**********************************************************************
      */
 
     @Override
@@ -277,9 +277,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Extended accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Extended accessors
+    /**********************************************************************
      */
 
     public ActiveNodeState getSyncState() {
@@ -287,9 +287,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Background synchronization processing
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Background synchronization processing
+    /**********************************************************************
      */
 
     protected void syncLoop()
@@ -401,9 +401,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
      */
 
     /**

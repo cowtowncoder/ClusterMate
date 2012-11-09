@@ -20,7 +20,8 @@ public enum ClusterDefType
      * main configuration file, and includes all cluster nodes along
      * with key range information. This is useful for testing, and simple
      * deployments where cluster setup is unlikely to change, or can be
-     * changed with full restart (and related outage)
+     * changed with full (but usually incremental) restart of nodes of
+     * the cluster.
      */
     STATIC
     ;
