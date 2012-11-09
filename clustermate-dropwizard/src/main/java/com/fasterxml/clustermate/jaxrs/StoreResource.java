@@ -69,6 +69,10 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
         return _storeHandler.getStores();
     }
 
+    public ClusterViewByServer getCluster() {
+        return _clusterView;
+    }
+    
     /*
     /**********************************************************************
     /* Content creation
