@@ -65,7 +65,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
         return _storeHandler;
     }
 
-    protected Stores<K,E> getStores() {
+    public Stores<K,E> getStores() {
         return _storeHandler.getStores();
     }
 
