@@ -12,6 +12,11 @@ package com.fasterxml.clustermate.api;
 public interface DecodableRequestPath
 {
     /**
+     * Accessor for generic type of request.
+     */
+    public OperationType getOperation();
+    
+    /**
      * Method for returning current remaning path (not including
      * parts that have been removed with {@link #nextPathSegment()});
      * and without additional URL decoding (but may have been decoded,

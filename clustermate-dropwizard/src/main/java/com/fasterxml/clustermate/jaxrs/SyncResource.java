@@ -11,6 +11,7 @@ import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.store.StoreException;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.OperationType;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 
@@ -56,7 +57,7 @@ public class SyncResource<K extends EntryKey, E extends StoredEntry<K>>
     	throws StoreException
     {
         JaxrsHttpResponse response = new JaxrsHttpResponse();
-        _syncHandler.listEntries(new JaxrsHttpRequest(uriInfo, headers, ""),
+        _syncHandler.listEntries(new JaxrsHttpRequest(uriInfo, headers, "", OperationType.GET),
                 response, sinceL);
         return response.buildResponse();
     }
@@ -82,7 +83,7 @@ public class SyncResource<K extends EntryKey, E extends StoredEntry<K>>
     	throws StoreException
     {
         JaxrsHttpResponse response = new JaxrsHttpResponse();
-        _syncHandler.pullEntries(new JaxrsHttpRequest(uriInfo, headers, ""), response, in);
+        _syncHandler.pullEntries(new JaxrsHttpRequest(uriInfo, headers, "", OperationType.POST), response, in);
         return response.buildResponse();
     }
 }

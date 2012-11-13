@@ -6,6 +6,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
+import com.fasterxml.clustermate.api.OperationType;
 import com.fasterxml.clustermate.service.ServiceRequest;
 
 public class JaxrsHttpRequest extends ServiceRequest
@@ -18,9 +19,16 @@ public class JaxrsHttpRequest extends ServiceRequest
     
     protected MultivaluedMap<String, String> _qp;
 
-    public JaxrsHttpRequest(UriInfo uriInfo, HttpHeaders headers, String decodedPath)
+    public JaxrsHttpRequest(UriInfo uriInfo, HttpHeaders headers, String decodedPath,
+            String operationType)
     {
-        super(decodedPath, true);
+        this(uriInfo, headers, decodedPath, _resolveOperation(operationType, OperationType.CUSTOM));
+    }
+    
+    public JaxrsHttpRequest(UriInfo uriInfo, HttpHeaders headers, String decodedPath,
+            OperationType operationType)
+    {
+        super(decodedPath, true, operationType);
         _uriInfo = uriInfo;
         _headers = headers;
     }

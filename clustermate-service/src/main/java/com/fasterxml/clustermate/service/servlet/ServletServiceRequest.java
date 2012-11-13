@@ -4,6 +4,7 @@ import java.io.*;
 
 import javax.servlet.http.*;
 
+import com.fasterxml.clustermate.api.OperationType;
 import com.fasterxml.clustermate.service.ServiceRequest;
 
 /**
@@ -30,7 +31,7 @@ public class ServletServiceRequest extends ServiceRequest
          * path...
          * 
          */
-        super(path, pathDecoded);
+        super(path, pathDecoded, _resolveOperation(r.getMethod(), OperationType.CUSTOM));
         _request = r;
     }
 

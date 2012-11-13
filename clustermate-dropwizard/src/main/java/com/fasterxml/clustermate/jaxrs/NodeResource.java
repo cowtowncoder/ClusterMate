@@ -8,6 +8,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.yammer.metrics.annotation.Timed;
 
+import com.fasterxml.clustermate.api.OperationType;
 import com.fasterxml.clustermate.service.cluster.ClusterInfoHandler;
 
 /**
@@ -41,7 +42,7 @@ public class NodeResource
     {
         JaxrsHttpResponse response = new JaxrsHttpResponse();
         // do we need headers? Shouldnt?
-        _handler.getStatus(new JaxrsHttpRequest(uriInfo, null, ""), response);
+        _handler.getStatus(new JaxrsHttpRequest(uriInfo, null, "", OperationType.GET), response);
         return response.buildResponse();
     }
 }

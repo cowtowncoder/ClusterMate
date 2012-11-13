@@ -11,6 +11,7 @@ import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.store.StoreException;
 
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.api.OperationType;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
@@ -87,7 +88,8 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
             InputStream dataIn)
     	throws IOException, StoreException
     {
-        return handlePut(new JaxrsHttpRequest(uriInfo, headers, externalPath), dataIn);
+        return handlePut(new JaxrsHttpRequest(uriInfo, headers, externalPath, OperationType.PUT),
+                dataIn);
     }
 
     // Alias for PUT -- why not!
@@ -99,7 +101,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
             InputStream dataIn)
         throws IOException, StoreException
     {
-        return handlePut(new JaxrsHttpRequest(uriInfo, headers, externalPath), dataIn);
+        return handlePut(new JaxrsHttpRequest(uriInfo, headers, externalPath, OperationType.POST), dataIn);
     }
     
     protected final Response handlePut(JaxrsHttpRequest request, InputStream dataIn)
@@ -129,7 +131,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
             @PathParam("externalPath") String externalPath)
                     throws StoreException
     {
-        JaxrsHttpRequest request = new JaxrsHttpRequest(uriInfo, headers, externalPath);
+        JaxrsHttpRequest request = new JaxrsHttpRequest(uriInfo, headers, externalPath, OperationType.GET);
         JaxrsHttpResponse response = new JaxrsHttpResponse();
         K key = _findKey(request, response);
         if (key != null) {
@@ -148,7 +150,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
             @PathParam("externalPath") String externalPath)
                     throws StoreException
     {
-        JaxrsHttpRequest request = new JaxrsHttpRequest(uriInfo, headers, externalPath);
+        JaxrsHttpRequest request = new JaxrsHttpRequest(uriInfo, headers, externalPath, OperationType.HEAD);
         JaxrsHttpResponse response = new JaxrsHttpResponse();
         K key = _findKey(request, response);
         if (key != null) {
@@ -172,7 +174,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
             @PathParam("externalPath") String externalPath)
     	throws IOException, StoreException
     {
-        JaxrsHttpRequest request = new JaxrsHttpRequest(uriInfo, headers, externalPath);
+        JaxrsHttpRequest request = new JaxrsHttpRequest(uriInfo, headers, externalPath, OperationType.DELETE);
         JaxrsHttpResponse response = new JaxrsHttpResponse();
         K key = _findKey(request, response);
         if (key != null) {
