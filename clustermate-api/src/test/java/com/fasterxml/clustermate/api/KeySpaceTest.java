@@ -8,9 +8,9 @@ public class KeySpaceTest extends ApiTestBase
     protected final KeySpace DEFAULT_SPACE = new KeySpace(360);
 	
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Basic range tests
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Basic range tests
+    /**********************************************************************
      */
 
     public void testToAndFromString()
@@ -99,9 +99,9 @@ public class KeySpaceTest extends ApiTestBase
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Containment
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Containment
+    /**********************************************************************
      */
 
     public void testRangeContains()
@@ -127,9 +127,9 @@ public class KeySpaceTest extends ApiTestBase
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Distance calculations
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Distance calculations
+    /**********************************************************************
      */
 
     public void testDistances()
@@ -151,9 +151,9 @@ public class KeySpaceTest extends ApiTestBase
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Overlaps
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Overlaps
+    /**********************************************************************
      */
 
     public void testNoOverlap()
@@ -236,9 +236,9 @@ public class KeySpaceTest extends ApiTestBase
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Union
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Union
+    /**********************************************************************
      */
 
     public void testUnionDisjoint()
@@ -340,4 +340,43 @@ public class KeySpaceTest extends ApiTestBase
         }
         assertEquals(360, union.getLength());
     }
+
+    /*
+    /**********************************************************************
+    /* Slicing into segments
+    /**********************************************************************
+     */
+
+    public void testSegmentation()
+    {
+        // First, simple neatly divisible space of 360
+
+        // with just single segment/node, full range:
+        assertEquals(DEFAULT_SPACE.fullRange(),
+                DEFAULT_SPACE.calcSegment(0, 1, 1));
+        // or 2 nodes, 2 copies;
+        assertEquals(DEFAULT_SPACE.fullRange(),
+                DEFAULT_SPACE.calcSegment(0, 2, 2));
+        assertEquals(DEFAULT_SPACE.fullRange(),
+                DEFAULT_SPACE.calcSegment(1, 2, 2));
+    
+        // 3 nodes, 2 copies bit more interesting
+        assertEquals(DEFAULT_SPACE.range(0, 240),
+                DEFAULT_SPACE.calcSegment(0, 3, 2));
+        assertEquals(DEFAULT_SPACE.range(120, 240),
+                DEFAULT_SPACE.calcSegment(1, 3, 2));
+        assertEquals(DEFAULT_SPACE.range(240, 240),
+                DEFAULT_SPACE.calcSegment(2, 3, 2));
+
+        // but to test "odd" cases, let's use smaller space
+        KeySpace percentSpace = new KeySpace(100);
+        assertEquals(percentSpace.range(0, 67),
+                percentSpace.calcSegment(0, 3, 2));
+        assertEquals(percentSpace.range(33, 67),
+                percentSpace.calcSegment(1, 3, 2));
+        // here be the difference: to span up to (but NOT including) 33, length must be 66
+        assertEquals(percentSpace.range(67, 66),
+                percentSpace.calcSegment(2, 3, 2));
+    }
+    
 }

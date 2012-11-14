@@ -39,16 +39,16 @@ public class NodeStateStore
     protected final Database _store;
         
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life cycle
+    /**********************************************************************
      */
         
     public NodeStateStore(Environment env, ObjectMapper jsonMapper) throws DatabaseException
     {
         _jsonReader = jsonMapper.reader(ActiveNodeState.class);
         _jsonWriter = jsonMapper.writerWithType(ActiveNodeState.class);
-       _store = env.openDatabase(null, // no TX
+        _store = env.openDatabase(null, // no TX
                 "Nodes", dbConfig(env));
     }
 
@@ -58,9 +58,9 @@ public class NodeStateStore
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Content lookups
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Content lookups
+    /**********************************************************************
      */
 
     /**
@@ -126,9 +126,9 @@ public class NodeStateStore
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Content modification
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Content modification
+    /**********************************************************************
      */
     
     public void upsertEntry(ActiveNodeState entry) throws IOException
@@ -155,9 +155,9 @@ public class NodeStateStore
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
      */
 
     protected DatabaseConfig dbConfig(Environment env)

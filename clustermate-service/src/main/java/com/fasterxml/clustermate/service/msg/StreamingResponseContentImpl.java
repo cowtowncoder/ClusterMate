@@ -83,6 +83,7 @@ public class StreamingResponseContentImpl
         return -1L;
     }
 
+    @SuppressWarnings("resource")
     @Override
     public void writeContent(OutputStream out) throws IOException
     {

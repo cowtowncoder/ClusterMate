@@ -17,7 +17,10 @@ import com.fasterxml.clustermate.service.ServerUtil;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.bdb.NodeStateStore;
+import com.fasterxml.clustermate.service.cfg.ClusterConfig;
+import com.fasterxml.clustermate.service.cfg.KeyRangeAllocationStrategy;
 import com.fasterxml.clustermate.service.cfg.NodeConfig;
+import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**
@@ -34,6 +37,8 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
     
     protected final SharedServiceStuff _stuff;
 
+    protected final ServiceConfig _serviceConfig;
+    
     protected final Stores<K,E> _stores;
     
     /**
@@ -47,9 +52,10 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
     public ClusterBootstrapper(long startTime, SharedServiceStuff stuff, Stores<K,E> stores)
     {
         _stuff = stuff;
+        _serviceConfig = stuff.getServiceConfig();
         _stores = stores;
         _startTime = startTime;
-        _keyspace = new KeySpace(stuff.getServiceConfig().cluster.clusterKeyspaceSize);
+        _keyspace = new KeySpace(_serviceConfig.cluster.clusterKeyspaceSize);
     }
     
     /**
@@ -139,12 +145,59 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
             throws IOException
     {
         ArrayList<NodeDefinition> defs = new ArrayList<NodeDefinition>();
+        ClusterConfig clusterConfig = _serviceConfig.cluster;
+        List<NodeConfig> nodes =  clusterConfig.clusterNodes;
         // And then let's read static definition
-        for (NodeConfig node : _stuff.getServiceConfig().cluster.clusterNodes) {
+        KeyRangeAllocationStrategy strategy = clusterConfig.type;
+        if (strategy == null) {
+            throw new IllegalStateException("Missing 'type' value for ClusterConfig");
+        }
+        final int nodeCount = nodes.size();
+
+        if (nodeCount < 1) {
+            throw new IllegalStateException("Missing node definitions in ClusterConfig");
+        }
+        
+        // one twist: for single-node cluster, allow whatever copy count (simplifies configs)
+        final int copies;
+        if (nodeCount == 1) {
+            copies = 1;
+        } else {
+            copies = clusterConfig.numberOfCopies;
+            // otherwise verify (NOTE: may need to change for dynamic registration)
+            if (copies > nodeCount) {
+                throw new IllegalStateException("Can not require "+copies+" copies with "+nodeCount+" nodes");
+            }
+        }
+        for (int i = 0, end = nodes.size(); i < end; ++i) {
+            NodeConfig node = nodes.get(i);
             IpAndPort ip = node.ipAndPort;
-            KeyRange range = _keyspace.range(node.keyRangeStart, node.keyRangeLength);
+            final int index = (i+1);
+
+            if (ip == null) {
+                throw new IllegalStateException("Missing 'ipAndPort' value for node #"
+                        +index+" (out of "+end+")");
+            }
+            // Range definitions depend on strategy; static or somewhat dynamic...
+            KeyRange range;
+            
+            switch (strategy) {
+            case STATIC:
+                if (node.keyRangeStart == 0 && node.keyRangeLength == 0) {
+                    throw new IllegalStateException("Missing 'keyRangeStart' and/or 'keyRangeLength' for node "
+                            +index+" (out of "+end+"), when using STATIC cluster type");
+                }
+                range = _keyspace.range(node.keyRangeStart, node.keyRangeLength);
+                break;
+            case SIMPLE_LINEAR:
+                range = _keyspace.calcSegment(i, nodeCount, copies);
+                break;
+            case DYNAMIC_WITH_APPEND: // not (yet!) supported
+            default:
+                throw new IllegalStateException("Unsupported (as-of-yet) cluster type: "+strategy);
+            }
             // we'll use same range for both passive and active ranges, with static
-            defs.add(new NodeDefinition(ip, range, range));
+            defs.add(new NodeDefinition(ip, index, range, range));
         }
         return defs;
     }

@@ -9,7 +9,9 @@ import com.fasterxml.storemate.shared.IpAndPort;
 public class NodeDefinition
 {
     protected final IpAndPort _address;
-    
+
+    protected final int _index;
+
     /**
      * Range of keys that this node will actively manage, i.e. will
      * serve to clients, and get updates on.
@@ -30,16 +32,18 @@ public class NodeDefinition
      */
     protected final KeyRange _totalKeyRange;
 
-    public NodeDefinition(IpAndPort address,
+    public NodeDefinition(IpAndPort address, int index,
             KeyRange activeRange, KeyRange passiveRange)
     {
         _address = address;
+        _index = index;
         _activeKeyRange = activeRange;
         _passiveKeyRange = passiveRange;
         _totalKeyRange = activeRange.union(passiveRange);
     }
 
     public IpAndPort getAddress() { return _address; }
+    public int getIndex() { return _index; }
     
     public KeyRange getActiveRange() { return _activeKeyRange; }
     public KeyRange getPassiveRange() { return _passiveKeyRange; }
@@ -51,6 +55,7 @@ public class NodeDefinition
         return new StringBuilder()
             .append("{node @")
             .append(_address.toString())
+            .append("; index: ").append(_index)
             .append("; active: ").append(_activeKeyRange)
             .append(", passive: ").append(_passiveKeyRange)
             .append("}")

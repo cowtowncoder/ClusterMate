@@ -17,6 +17,12 @@ public class ActiveNodeState extends NodeState
     public final IpAndPort address;
 
     /**
+     * Index of the node in the ring; either derived from the
+     * cluster configuration, or assigned externally to the node.
+     */
+    public final int index;
+    
+    /**
      * Timestamp of last update by node itself to this
      * state information; propagated by other nodes, used
      * for determining most recent update. Always time from
@@ -42,15 +48,16 @@ public class ActiveNodeState extends NodeState
     public final long syncedUpTo;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Instance creation, conversions
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Instance creation, conversions
+    /**********************************************************************
      */
 
     // just for (JSON) deserialization
     @SuppressWarnings("unused")
     private ActiveNodeState() {
         this.address = null;
+        this.index = 0;
         this.lastUpdated = 0L;
         this.rangeActive = null;
         this.rangePassive = null;
@@ -60,32 +67,6 @@ public class ActiveNodeState extends NodeState
         this.syncedUpTo = 0L;
     }
     
-    /*
-    // 01-Nov-2012, tatu: Should actually not be needed -- Reflection allows modifying
-    //   immutable fields!
-    
-    @JsonCreator
-    public ActiveNodeState(@JsonProperty("address") IpAndPort address,
-            @JsonProperty("lastUpdated") long lastUpdated,
-            @JsonProperty("rangeActive") KeyRange rangeActive,
-            @JsonProperty("rangePassive") KeyRange rangePassive,
-            @JsonProperty("rangeSync") KeyRange rangeSync,
-            @JsonProperty("disabled") boolean disabled,
-            @JsonProperty("lastSyncAttempt") long lastSyncAttempt,
-            @JsonProperty("syncedUpTo") long syncedUpTo
-        )
-    {
-        this.address = address;
-        this.lastUpdated = lastUpdated;
-        this.rangeActive = rangeActive;
-        this.rangePassive = rangePassive;
-        this.rangeSync = rangeSync;
-        this.disabled = disabled;
-        this.lastSyncAttempt = lastSyncAttempt;
-        this.syncedUpTo = syncedUpTo;
-    }
-*/    
-    
     /**
      * Constructor used for constructing initial entry, when no persisted
      * information is available. As such, will not contain valid sync range
@@ -94,6 +75,7 @@ public class ActiveNodeState extends NodeState
     public ActiveNodeState(NodeDefinition localNode, long creationTime)
     {
         address = localNode.getAddress();
+        index = localNode.getIndex();
         rangeActive = localNode.getActiveRange();
         rangePassive = localNode.getPassiveRange();
         // can't calculate sync range without more info:
@@ -118,6 +100,7 @@ public class ActiveNodeState extends NodeState
             NodeDefinition remoteNode, long updateTime)
     {
         address = remoteNode.getAddress();
+        index = remoteNode.getIndex();
         rangeActive = remoteNode.getActiveRange();
         rangePassive = remoteNode.getPassiveRange();
         lastUpdated = updateTime;
@@ -142,6 +125,7 @@ public class ActiveNodeState extends NodeState
             KeyRange newSyncRange, long newSyncedUpTo)
     {
         address = src.address;
+        index = src.index;
         lastUpdated = src.lastUpdated;
         rangeActive = src.rangeActive;
         rangePassive = src.rangePassive;
@@ -156,6 +140,7 @@ public class ActiveNodeState extends NodeState
             long lastUpdated, long lastSyncAttempt, long syncedUpTo)
     {
         address = src.address;
+        index = src.index;
         this.lastUpdated = lastUpdated;
         rangeActive = src.rangeActive;
         rangePassive = src.rangePassive;
@@ -164,11 +149,11 @@ public class ActiveNodeState extends NodeState
         this.lastSyncAttempt = lastSyncAttempt;
         this.syncedUpTo = syncedUpTo;
     }
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Fluent factories
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Fluent factories
+    /**********************************************************************
      */
 
     public ActiveNodeState withSyncRange(KeyRange newRange, long newSyncedUpTo) {
@@ -213,11 +198,11 @@ public class ActiveNodeState extends NodeState
         }
         return new ActiveNodeState(this, lastUpdated, lastSyncAttempt, timestamp);
     }
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // NodeState methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* NodeState methods
+    /**********************************************************************
      */
 
     @Override
@@ -251,9 +236,9 @@ public class ActiveNodeState extends NodeState
     public long getSyncedUpTo() { return syncedUpTo; }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Standard methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Standard methods
+    /**********************************************************************
      */
 
     @Override

@@ -32,9 +32,9 @@ public final class KeySpace
     protected final int _length;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Construction, factory methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Construction, factory methods
+    /**********************************************************************
      */
 
     /**
@@ -110,11 +110,50 @@ public final class KeySpace
     public KeyHash hash(int fullHash) {
         return new KeyHash(fullHash, _length);
     }
-	
+
+
+    /**
+     * Helper method called to calculate a key range of this space as defined by
+     * slicing properties.
+     * Key space will be divided in <code>segmentCount</code> segments,
+     * and each node will cover C segments, where C is number of copies desired.
+     * The first segment to cover is from index. The only slight complication is that
+     * of handling of key ranges not divisible evenly by number of nodes.
+     * 
+     * @param index Zero-based index of the node
+     * @param segmentCount Number of segments created in the keyspace
+     * @param copies Number of copies of data that must exist; determines span (and overlap)
+     *   of each segment
+     * 
+     * @return Range to allocate
+     */
+    public KeyRange calcSegment(int index, int segmentCount, int copies)
+    {
+        // First trivial case of a full coverage
+        if (copies >= segmentCount) {
+            return fullRange();
+        }
+        // Then see if space is neatly divisible:
+        if ((getLength() % segmentCount) == 0) {
+            int simpleLength = getLength() / segmentCount;
+            return range(index * simpleLength, copies * simpleLength);
+        }
+        // If not, calculate with floating point
+        double segLen = (double) getLength() / segmentCount;
+        int start = (int) Math.round(segLen * index);
+        int end = (int) Math.round(segLen * ((index + copies) % segmentCount));
+
+        if (end < start) { // wrap-around
+            end += getLength();
+        }
+        return range(start, end-start);
+    }
+    
+    
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Simple accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Simple accessors
+    /**********************************************************************
      */
 
     // We will actually serialize KeySpace simply as an int that defines its length
@@ -123,9 +162,9 @@ public final class KeySpace
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Advanced accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Advanced accessors
+    /**********************************************************************
      */
 
     /**
@@ -143,11 +182,11 @@ public final class KeySpace
         }
         return slices.cardinality();
     }
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Overrides
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Overrides
+    /**********************************************************************
      */
 
     @Override
