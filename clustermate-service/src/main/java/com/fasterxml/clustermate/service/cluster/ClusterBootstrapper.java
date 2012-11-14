@@ -220,11 +220,11 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
         
         // Iterate over entries that have been persisted:
         for (ActiveNodeState state : storedStates) {
-            IpAndPort key = state.address;
+            IpAndPort key = state.getAddress();
             // Then: is there config for that entry? If not, skip or remove:
             NodeDefinition def = orphanDefs.remove(key);
             if (def == null) {
-                long staleTimeSecs = (_startTime - state.lastSyncAttempt) / 1000L;
+                long staleTimeSecs = (_startTime - state.getLastSyncAttempt()) / 1000L;
                 if (staleTimeSecs < SECS_IN_24H) {
                     LOG.warn("Unrecognized persisted Node state, key {}: less than 24h old, will skip", key);
                     continue;
@@ -252,7 +252,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
             state = state.withSyncRange(localState);
             if (!_stuff.isRunningTests()) {
                 LOG.warn("Configuration entry without state, key {}: will need to (re)create state (sync range {})",
-                        def.getAddress(), state.rangeSync);
+                        def.getAddress(), state.getRangeSync());
             }
             try {
                 nodeStore.upsertEntry(state);
@@ -260,7 +260,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
                 LOG.error("Failed to update node state entry #{}, must skip. Problem ({}): {}",
                         i, e.getClass().getName(), e.getMessage());
             }
-            result.put(state.address, state);
+            result.put(state.getAddress(), state);
             ++i;
         }
         return result;
@@ -271,7 +271,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
         Iterator<ActiveNodeState> it = nodes.iterator();
         while (it.hasNext()) {
             ActiveNodeState curr = it.next();
-            if (key.equals(curr.address)) {
+            if (key.equals(curr.getAddress())) {
                 it.remove();
                 return curr;
             }
@@ -288,21 +288,21 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
             NodeDefinition remoteDef, ActiveNodeState remoteNode)
     {
         // The main thing is to see if sync range has changed...
-        final KeyRange oldSyncRange = remoteNode.rangeSync;
+        final KeyRange oldSyncRange = remoteNode.getRangeSync();
         KeyRange newSyncRange = localNode.totalRange().intersection(remoteNode.totalRange());
         
-        if (newSyncRange.equals(remoteNode.rangeSync)) {
+        if (newSyncRange.equals(remoteNode.getRangeSync())) {
             LOG.info("Sync range between local and {} unchanged: {}"
-                    ,remoteNode.address, newSyncRange);
+                    ,remoteNode.getAddress(), newSyncRange);
         } else {
-            long syncedTo = remoteNode.syncedUpTo;
+            long syncedTo = remoteNode.getSyncedUpTo();
             // only need to reset if expanding...
             if (oldSyncRange.contains(newSyncRange)) {
                 LOG.info("Sync range between local and {} changed from {} to {}: but new contained in old, no reset"
-                        , new Object[] { remoteNode.address, oldSyncRange, newSyncRange});
+                        , new Object[] { remoteNode.getAddress(), oldSyncRange, newSyncRange});
             } else {
                 LOG.warn("Sync range between local and {} changed from {} to {}; new not completely contained in old, MUST reset"
-                        , new Object[] { remoteNode.address, oldSyncRange, newSyncRange});
+                        , new Object[] { remoteNode.getAddress(), oldSyncRange, newSyncRange});
                 syncedTo = 0L;
             }
             remoteNode = remoteNode.withSyncRange(newSyncRange, syncedTo);

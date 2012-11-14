@@ -184,7 +184,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             t = _syncThread;
             if (t != null) {
                 _syncThread = null;
-                LOG.info("Stop requested for sync thread for peer at {}", _syncState.address);
+                LOG.info("Stop requested for sync thread for peer at {}", _syncState.getAddress());
             }
         }
         if (t != null) {
@@ -223,7 +223,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                     syncLoop();
                 }
             });
-            _syncThread.setName("NodeSync"+_syncState.address);
+            _syncThread.setName("NodeSync"+_syncState.getAddress());
         }
         t.start();
         return true;
@@ -254,12 +254,12 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
 
     @Override
     public IpAndPort getAddress() {
-        return _syncState.address;
+        return _syncState.getAddress();
     }
 
     @Override
     public KeyRange getActiveRange() {
-        return _syncState.rangeActive;
+        return _syncState.getRangeActive();
     }
 
     @Override
@@ -273,7 +273,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     @Override
     public KeyRange getSyncRange() {
-        return _syncState.rangeSync;
+        return _syncState.getRangeSync();
     }
 
     /*
@@ -294,7 +294,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
 
     protected void syncLoop()
     {
-        LOG.info("Starting sync thread for peer at {}", _syncState.address);
+        LOG.info("Starting sync thread for peer at {}", _syncState.getAddress());
         
         // For testing (and only testing!), let's add little bit of
         // virtual sleep (TimeMaster will block threads) before starting
@@ -370,7 +370,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                     _updatePersistentState(listTime, lastProcessed);
                 }
                 // And then sleep a bit, before doing next round of syncing
-                double secsBehind = (_timeMaster.currentTimeMillis() - _syncState.syncedUpTo) / 1000.0;
+                double secsBehind = (_timeMaster.currentTimeMillis() - _syncState.getSyncedUpTo()) / 1000.0;
                 long delay = _calculateSleepBetweenSync(insertedEntryCount, (int) secsBehind);
                 
                 if (delay > 0L) {
@@ -397,7 +397,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                 }
             }
         }
-        LOG.info("Stopped sync thread for peer at {}", _syncState.address);
+        LOG.info("Stopped sync thread for peer at {}", _syncState.getAddress());
     }
     
     /*
@@ -417,7 +417,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     {
         ActiveNodeState orig = _syncState;
         _syncState = _syncState.withLastSyncAttempt(syncStartTime);
-        if (lastSeen > _syncState.syncedUpTo) {
+        if (lastSeen > _syncState.getSyncedUpTo()) {
             _syncState = _syncState.withSyncedUpTo(lastSeen);
         }
         if (_syncState != orig) {
@@ -434,13 +434,13 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     private SyncListResponse<?> _fetchSyncList() throws InterruptedException
     {
         try {
-            return _accessor.fetchSyncList(_syncState.address, TIMEOUT_FOR_SYNCLIST,
-                    _syncState.syncedUpTo, _syncState.rangeSync);
+            return _accessor.fetchSyncList(_syncState.getAddress(), TIMEOUT_FOR_SYNCLIST,
+                    _syncState.getSyncedUpTo(), _syncState.getRangeSync());
         } catch (InterruptedException e) {
             // no point in complaining if we are being shut down:
             if (_running.get()) {
                 LOG.warn("Failed to fetch syncList from {} ({}): {}",
-                        new Object[] { _syncState.address, e.getClass().getName(), e.getMessage()});
+                        new Object[] { _syncState.getAddress(), e.getClass().getName(), e.getMessage()});
             }
         }
         return null;

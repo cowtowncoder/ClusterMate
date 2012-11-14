@@ -4,26 +4,72 @@ import com.fasterxml.storemate.shared.IpAndPort;
 
 public class NodeState
 {
-    protected IpAndPort _address;
-    protected long _lastUpdated;
-    protected KeyRange _rangeActive;
-    protected KeyRange _rangePassive;
-    protected KeyRange _rangeSync;
-    protected boolean _isDisabled;
-    protected long _lastSyncAttempt;
-    protected long _syncedUpTo;
+    /**
+     * End point for node in question
+     */
+    protected IpAndPort address;
+
+    /**
+     * Index of the node in the ring; either derived from the
+     * cluster configuration, or assigned externally to the node.
+     */
+    protected int index;
+    
+    /**
+     * Timestamp of last update by node itself to this
+     * state information; propagated by other nodes, used
+     * for determining most recent update. Always time from
+     * node itself.
+     */
+    protected long lastUpdated;
+    protected KeyRange rangeActive;
+    protected KeyRange rangePassive;
+    protected KeyRange rangeSync;
+    protected boolean disabled;
+    protected long lastSyncAttempt;
+
+    /**
+     * Timestamp of earliest possible new entry to discover: that is, all
+     * entries prior to this timestamp have been synchronized for covered
+     * range.
+     */
+    protected long syncedUpTo;
+
+    /*
+    /**********************************************************************
+    /* Construction
+    /**********************************************************************
+     */
+
+    /**
+     * Default constructor only used by deserializer; must nominally set
+     * fields to default values even thought deserializer will set
+     * actual values afterwards.
+     */
+    protected NodeState()
+    {
+        this.address = null;
+        this.index = 0;
+        this.lastUpdated = 0L;
+        this.rangeActive = null;
+        this.rangePassive = null;
+        this.rangeSync = null;
+        this.disabled = false;
+        this.lastSyncAttempt = 0L;
+        this.syncedUpTo = 0L;
+    }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Accessors
+    /**********************************************************************
      */
     
     /**
      * Public HTTP entry point (host, port) for the node.
      */
     public IpAndPort getAddress() {
-        return _address;
+        return address;
     }
 
     /**
@@ -33,75 +79,77 @@ public class NodeState
      * node itself.
      */
     public long getLastUpdated() {
-        return _lastUpdated;
+        return lastUpdated;
     }
     
     public KeyRange getRangeActive() {
-        return _rangeActive;
+        return rangeActive;
     }
 
     public KeyRange getRangePassive() {
-        return _rangePassive;
+        return rangePassive;
     }
 
     public KeyRange getRangeSync() {
-        return _rangeSync;
+        return rangeSync;
     }
     
     public boolean isDisabled() {
-        return _isDisabled;
+        return disabled;
     }
 
     public long getLastSyncAttempt() {
-        return _lastSyncAttempt;
+        return lastSyncAttempt;
     }
 
     public long getSyncedUpTo() {
-        return _syncedUpTo;
+        return syncedUpTo;
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Mutators (for deserialization only; ok to be protected)
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Mutators (for deserialization only; ok to be protected)
+    /**********************************************************************
      */
 
+    /*
     public void setAddress(IpAndPort v) {
-        _address = v;
+        address = v;
     }
 
     public void setLastUpdated(long v) {
-        _lastUpdated = v;
+        lastUpdated = v;
     }
     
     public void setRangeActive(KeyRange v) {
-        _rangeActive = v;
+        rangeActive = v;
     }
 
     public void setRangePassive(KeyRange v) {
-        _rangePassive = v;
+        rangePassive = v;
     }
 
     public void setRangeSync(KeyRange v) {
-        _rangeSync = v;
+        rangeSync = v;
     }
     
     public void setDisabled(boolean v) {
-        _isDisabled = v;
+        disabled = v;
     }
 
     public void setLastSyncAttempt(long v) {
-         _lastSyncAttempt = v;
+        lastSyncAttempt = v;
     }
 
     public void setSyncedUpTo(long v) {
-        _syncedUpTo = v;
+        syncedUpTo = v;
     }
+    */
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Additional accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Additional accessors
+    /**********************************************************************
      */
 
     public KeyRange totalRange() {

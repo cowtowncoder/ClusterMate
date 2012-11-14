@@ -11,41 +11,6 @@ import com.fasterxml.storemate.shared.IpAndPort;
  */
 public class ActiveNodeState extends NodeState
 {
-    /**
-     * End point for node in question
-     */
-    public final IpAndPort address;
-
-    /**
-     * Index of the node in the ring; either derived from the
-     * cluster configuration, or assigned externally to the node.
-     */
-    public final int index;
-    
-    /**
-     * Timestamp of last update by node itself to this
-     * state information; propagated by other nodes, used
-     * for determining most recent update. Always time from
-     * node itself.
-     */
-    public final long lastUpdated;
-    
-    public final boolean disabled;
-
-    public final KeyRange rangeActive;
-
-    public final KeyRange rangePassive;
-
-    public final KeyRange rangeSync;
-
-    public final long lastSyncAttempt;
-
-    /**
-     * Timestamp of earliest possible new entry to discover: that is, all
-     * entries prior to this timestamp have been synchronized for covered
-     * range.
-     */
-    public final long syncedUpTo;
 
     /*
     /**********************************************************************
@@ -56,15 +21,7 @@ public class ActiveNodeState extends NodeState
     // just for (JSON) deserialization
     @SuppressWarnings("unused")
     private ActiveNodeState() {
-        this.address = null;
-        this.index = 0;
-        this.lastUpdated = 0L;
-        this.rangeActive = null;
-        this.rangePassive = null;
-        this.rangeSync = null;
-        this.disabled = false;
-        this.lastSyncAttempt = 0L;
-        this.syncedUpTo = 0L;
+        super();
     }
     
     /**
