@@ -94,13 +94,6 @@ public final class KeySpace
     public KeyRange fullRange() {
         return new KeyRange(this, 0, _length);
     }
-
-    /*
-    public KeyHash hash(VKey key, VKeyConverter conv) {
-        int hash = conv.routingHashFor(key);
-        return new KeyHash(hash, _length);
-    }
-    */
     
     /**
      * Factory method for constructing {@link KeyHash} instances that
@@ -129,10 +122,15 @@ public final class KeySpace
      */
     public KeyRange calcSegment(int index, int segmentCount, int copies)
     {
-        // First trivial case of a full coverage
-        if (copies >= segmentCount) {
+        // First trivial case of a full coverage for a single node
+        if (segmentCount <= 1) {
             return fullRange();
         }
+        /* but note: with other full coverage cases (2 copies over 2 segments),
+         * we can NOT simply return full range, since starting point must
+         * vary.
+         */
+        
         // Then see if space is neatly divisible:
         if ((getLength() % segmentCount) == 0) {
             int simpleLength = getLength() / segmentCount;
@@ -148,7 +146,6 @@ public final class KeySpace
         }
         return range(start, end-start);
     }
-    
     
     /*
     /**********************************************************************

@@ -357,7 +357,8 @@ public class KeySpaceTest extends ApiTestBase
         // or 2 nodes, 2 copies;
         assertEquals(DEFAULT_SPACE.fullRange(),
                 DEFAULT_SPACE.calcSegment(0, 2, 2));
-        assertEquals(DEFAULT_SPACE.fullRange(),
+        // but note: second one MUST start at different offset!
+        assertEquals(DEFAULT_SPACE.range(180, 360),
                 DEFAULT_SPACE.calcSegment(1, 2, 2));
     
         // 3 nodes, 2 copies bit more interesting

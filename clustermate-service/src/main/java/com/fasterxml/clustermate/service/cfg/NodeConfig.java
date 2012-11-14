@@ -62,7 +62,12 @@ public class NodeConfig
                     +str+"\"");
         }
     }
-    
+
+    // yet another constructor for tests, to use with non-static range settings
+    public NodeConfig(IpAndPort endpoint) {
+        this(endpoint, 0, 0);
+    }
+
     // constructor for unit tests
     public NodeConfig(String endpoint, int keyStart, int keyLength)
     {
