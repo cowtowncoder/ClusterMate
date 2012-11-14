@@ -91,10 +91,10 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
                 localDef = node;
                 continue;
             }
-            LOG.info("peer node: {}", node); // remove once in prod?
+//            LOG.info("peer node: {}", node); // remove once in prod?
             nodeDefs.put(ip, node);
         }
-        // Error: MUST have local node definition
+        // Error: MUST have local node definition (until more dynamic set up is implemented)
         if (localDef == null) {
             throw new IllegalStateException("Could not find Cluster node definitions for local instance (port "
                     +thisInstancePort+")");
@@ -115,13 +115,18 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
                 LOG.warn("No persisted entry for local node: will create and store one");
             }
             localAct = new ActiveNodeState(localDef, _startTime);
-            // also: this works as the "official" set up time...
-            localAct = localAct.withLastUpdated(_startTime);
-            nodes.upsertEntry(localAct);
         } else {
-            // one more thing: force dummy update on restart as well
-            localAct = localAct.withLastUpdated(_startTime);
+            // index may have changed; if so, override
+            if (localAct.getIndex() != localDef.getIndex()) {
+                LOG.warn("Node index of current node changed from {} to {} -- may change key range!",
+                        localAct.getIndex(), localDef.getIndex());
+                localAct = localAct.withIndex(localDef.getIndex());
+            }
         }
+        // one more thing: force dummy update on restart as well (official startup time too)
+        localAct = localAct.withLastUpdated(_startTime);
+        // Either way, need to update persisted version
+        nodes.upsertEntry(localAct);
         
         // then merge entries; create/delete orphans
         Map<IpAndPort,ActiveNodeState> activeState = _mergeStates(nodes,

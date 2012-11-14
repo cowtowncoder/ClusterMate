@@ -22,6 +22,15 @@ public class ActiveNodeState extends NodeState
     @SuppressWarnings("unused")
     private ActiveNodeState() {
         super();
+        this.address = null;
+        this.index = 0;
+        this.lastUpdated = 0L;
+        this.rangeActive = null;
+        this.rangePassive = null;
+        this.rangeSync = null;
+        this.disabled = false;
+        this.lastSyncAttempt = 0L;
+        this.syncedUpTo = 0L;
     }
     
     /**
@@ -107,6 +116,20 @@ public class ActiveNodeState extends NodeState
         this.syncedUpTo = syncedUpTo;
     }
 
+    // used via fluent factory
+    private ActiveNodeState(ActiveNodeState src, int newIndex)
+    {
+        address = src.address;
+        index = newIndex;
+        lastUpdated = src.lastUpdated;
+        rangeActive = src.rangeActive;
+        rangePassive = src.rangePassive;
+        rangeSync = src.rangeSync;
+        disabled = src.disabled;
+        lastSyncAttempt = src.lastSyncAttempt;
+        syncedUpTo = src.syncedUpTo;
+    }
+    
     /*
     /**********************************************************************
     /* Fluent factories
@@ -156,6 +179,13 @@ public class ActiveNodeState extends NodeState
         return new ActiveNodeState(this, lastUpdated, lastSyncAttempt, timestamp);
     }
 
+    public ActiveNodeState withIndex(int newIndex) {
+        if (index == newIndex) {
+            return this;
+        }
+        return new ActiveNodeState(this, index);
+    }
+    
     /*
     /**********************************************************************
     /* NodeState methods

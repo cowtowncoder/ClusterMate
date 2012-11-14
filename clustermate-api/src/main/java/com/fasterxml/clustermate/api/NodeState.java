@@ -72,6 +72,10 @@ public class NodeState
         return address;
     }
 
+    public int getIndex() {
+        return index;
+    }
+    
     /**
      * Timestamp of last update by node itself to this
      * state information; propagated by other nodes, used
