@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.fasterxml.clustermate</groupId>
     <artifactId>clustermate-parent</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.6.0</version>
   </parent>
   <artifactId>clustermate-json</artifactId>
   <name>ClusterMate-json</name>
