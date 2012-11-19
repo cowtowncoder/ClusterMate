@@ -6,7 +6,7 @@ import java.util.Collections;
 /**
  * POJO used as response for GET on cluster status.
  */
-public class ClusterStatusResponse
+public class ClusterStatusMessage
 {
     /**
      * Status of the local node.
@@ -28,9 +28,9 @@ public class ClusterStatusResponse
     public long clusterLastUpdated;
     
     // only for deserialization:
-    protected ClusterStatusResponse() { }
+    protected ClusterStatusMessage() { }
 
-    public ClusterStatusResponse(long lastUpdated,
+    public ClusterStatusMessage(long lastUpdated,
             NodeState local, Collection<NodeState> remote)
     {
         clusterLastUpdated = lastUpdated;

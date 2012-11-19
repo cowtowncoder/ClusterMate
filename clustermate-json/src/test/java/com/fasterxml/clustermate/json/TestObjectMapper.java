@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.json;
 
-import com.fasterxml.clustermate.api.ClusterStatusResponse;
+import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.json.ClusterMateObjectMapper;
 
@@ -22,8 +22,8 @@ public class TestObjectMapper extends JsonTestBase
     public void testClusterStatusResponse() throws Exception
     {
         ClusterMateObjectMapper mapper = new ClusterMateObjectMapper();
-        ClusterStatusResponse resp = mapper.readValue("{\"local\":{}}",
-                ClusterStatusResponse.class);
+        ClusterStatusMessage resp = mapper.readValue("{\"local\":{}}",
+                ClusterStatusMessage.class);
         assertNotNull(resp);
         assertNotNull(resp.local);
     }

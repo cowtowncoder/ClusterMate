@@ -1,52 +1,56 @@
-package com.fasterxml.clustermate.client.cluster;
+package com.fasterxml.clustermate.std;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import com.fasterxml.clustermate.api.ClusterStatusResponse;
+import com.fasterxml.clustermate.api.ClusterStatusAccessor;
+import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
-import com.fasterxml.clustermate.client.Loggable;
-import com.fasterxml.clustermate.client.impl.StoreClientConfig;
-import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 /**
- * Helper class that handles details of getting cluster status information
- * from a store node.
+ * Implementation of {@link ClusterStatusAccessor} that uses JDK
+ * HTTP access functionality.
  */
-public class ClusterStatusAccessor
-    extends Loggable
+public class JdkClusterStatusAccessor extends ClusterStatusAccessor
 {
-    protected final static long MIN_TIMEOUT_MSECS = 10L;
-    
-    protected final StoreClientConfig<?,?> _clientConfig;
+    protected final ClusterStatusAccessor.Converter _converter;
 
-    protected final ObjectMapper _mapper;
+    protected final String[] _basePath;
     
-    public ClusterStatusAccessor(StoreClientConfig<?,?> clientConfig)
+    protected final RequestPathStrategy _paths;
+
+    public JdkClusterStatusAccessor(ClusterStatusAccessor.Converter converter,
+            String[] basePath,
+            RequestPathStrategy paths)
     {
-        super(ClusterStatusAccessor.class);
-        _clientConfig = clientConfig;
-        _mapper = clientConfig.getJsonMapper();
+        _converter = converter;
+        _basePath = basePath;
+        _paths = paths;
     }
 
-    public ClusterStatusResponse getClusterStatus(IpAndPort ip, long timeoutMsecs)
+    @Override
+    public ClusterStatusMessage getClusterStatus(IpAndPort ip, long timeoutMsecs)
+        throws IOException
+    {
+        RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(ip)
+            .addPathSegments(_basePath);
+        pathBuilder = _paths.appendNodeStatusPath(pathBuilder);
+        return getClusterStatus(pathBuilder.toString(), timeoutMsecs);
+    }
+
+    @Override
+    public ClusterStatusMessage getClusterStatus(String endpoint, long timeoutMsecs)
         throws IOException
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         if (timeoutMsecs < MIN_TIMEOUT_MSECS) {
             return null;
         }
-
-        RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(ip)
-            .addPathSegments(_clientConfig.getBasePath());
-        pathBuilder = _clientConfig.getPathStrategy().appendNodeStatusPath(pathBuilder);
-        String endpoint = pathBuilder.toString();
-
         HttpURLConnection conn;
 
         try {
@@ -72,9 +76,9 @@ public class ClusterStatusAccessor
         } catch (IOException e) {
             throw new IOException("Can not access Cluster state using '"+endpoint+"': "+e.getMessage());
         }
-        ClusterStatusResponse result;
+        ClusterStatusMessage result;
         try {
-            result = _mapper.readValue(in, ClusterStatusResponse.class);
+            result = _converter.fromJSON(in);
         } catch (IOException e) {
             throw new IOException("Invalid Cluster state returned by '"+endpoint+"', failed to parse JSON: "+e.getMessage());
         } finally {

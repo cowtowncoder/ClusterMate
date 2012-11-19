@@ -2,7 +2,7 @@ package com.fasterxml.clustermate.service.cluster;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 
-import com.fasterxml.clustermate.api.ClusterStatusResponse;
+import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.service.ServiceRequest;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
@@ -23,7 +23,7 @@ public class ClusterInfoHandler
         _cluster = cluster;
         // Should we indent? Not for prod?
 //        _writer = stuff.jsonWriter(ClusterStatusResponse.class).withDefaultPrettyPrinter();
-        _writer = stuff.jsonWriter(ClusterStatusResponse.class);
+        _writer = stuff.jsonWriter(ClusterStatusMessage.class);
     }
     
     /**
@@ -35,7 +35,7 @@ public class ClusterInfoHandler
     {
         // use streaming impl just so we'll use specific ObjectWriter
         return (RESP) response.ok(new StreamingEntityImpl(_writer,
-                new ClusterStatusResponse(_cluster.getLastUpdated(),
+                new ClusterStatusMessage(_cluster.getLastUpdated(),
                         _cluster.getLocalState(),
                         _cluster.getRemoteStates())))
             .setContentTypeJson();

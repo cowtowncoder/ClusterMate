@@ -3,14 +3,17 @@ package com.fasterxml.clustermate.client.impl;
 import java.io.IOException;
 import java.util.*;
 
-import com.fasterxml.clustermate.api.ClusterStatusResponse;
+import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.IpAndPort;
+
+import com.fasterxml.clustermate.api.ClusterStatusAccessor;
+import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.client.Loggable;
 import com.fasterxml.clustermate.client.NetworkClient;
-import com.fasterxml.clustermate.client.cluster.ClusterStatusAccessor;
 import com.fasterxml.clustermate.client.cluster.ClusterViewByClientImpl;
-import com.fasterxml.storemate.shared.EntryKey;
-import com.fasterxml.storemate.shared.IpAndPort;
+import com.fasterxml.clustermate.json.ClusterMessageConverter;
+import com.fasterxml.clustermate.std.JdkClusterStatusAccessor;
 
 /**
  * Helper class used for constructing and initializing a
@@ -171,8 +174,9 @@ public abstract class StoreClientBootstrapper<
     protected STORE _buildAndInit(int maxWaitSecs, boolean fullInit)
         throws IOException
     {
-        _accessor = new ClusterStatusAccessor(_config);
-
+        _accessor = new JdkClusterStatusAccessor(new ClusterMessageConverter(_config.getJsonMapper()),
+                _config.getBasePath(), _config.getPathStrategy());
+        
         _verifySetup();
         
         final long startTime = System.currentTimeMillis();
@@ -252,7 +256,7 @@ public abstract class StoreClientBootstrapper<
                 final long requestTime = System.currentTimeMillis();
                 long maxTimeout = waitUntil - requestTime;
                 try {
-                    ClusterStatusResponse resp = _accessor.getClusterStatus(ip,
+                    ClusterStatusMessage resp = _accessor.getClusterStatus(ip,
                             Math.min(maxTimeout, BOOTSTRAP_TIMEOUT_MSECS));
                     if (resp == null) {
                         continue;
@@ -303,7 +307,7 @@ public abstract class StoreClientBootstrapper<
             final long requestTime = System.currentTimeMillis();
             long maxTimeout = waitUntil - requestTime;
             try {
-                ClusterStatusResponse resp = _accessor.getClusterStatus(ip,
+                ClusterStatusMessage resp = _accessor.getClusterStatus(ip,
                         Math.min(maxTimeout, BOOTSTRAP_TIMEOUT_MSECS));
                 if (resp == null) {
                     continue;
