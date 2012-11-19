@@ -182,8 +182,7 @@ public final class PartitionId
      * @return True if value is "mnemonic", that is, expressed as 4-character
      *    String; false if not (and is expressed as number)
      */
-    public boolean isMnemonic()
-    {
+    public boolean isMnemonic() {
         return (_value > MAX_NON_MNEMONIC);
     }
     
@@ -195,15 +194,12 @@ public final class PartitionId
         return _value;
     }
 
-    public StringBuilder append(StringBuilder sb)
-    {
-        // TODO: optimize if necessary (can avoid String construction)
+    public StringBuilder append(StringBuilder sb) {
         sb.append(toString());
         return sb;
     }
 
-    public ByteArrayOutputStream append(ByteArrayOutputStream bytes)
-    {
+    public ByteArrayOutputStream append(ByteArrayOutputStream bytes) {
         bytes.write(_value >> 24);
         bytes.write(_value >> 16);
         bytes.write(_value >> 8);
@@ -211,8 +207,7 @@ public final class PartitionId
         return bytes;
     }
 
-    public int append(byte[] buffer, int offset)
-    {
+    public int append(byte[] buffer, int offset) {
         buffer[offset++] = (byte)(_value >> 24);
         buffer[offset++] = (byte)(_value >> 16);
         buffer[offset++] = (byte)(_value >> 8);
