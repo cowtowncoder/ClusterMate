@@ -19,3 +19,7 @@ target
 *.iml
 *.ipr
 *.iws
+
+# Project-specific
+
+test-data
