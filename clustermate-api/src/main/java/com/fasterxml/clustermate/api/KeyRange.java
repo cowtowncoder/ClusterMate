@@ -356,7 +356,7 @@ public class KeyRange implements Comparable<KeyRange>
     }
 
     @Override
-    public int hashCode() { return _length; }
+    public int hashCode() { return _length ^ _start; }
     
     @Override
     public String toString() {

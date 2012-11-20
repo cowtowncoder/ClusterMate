@@ -16,6 +16,7 @@ import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.json.ClusterMessageConverter;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
@@ -46,7 +47,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
      * Information about this node; not included in the list of peer nodes.
      */
     protected NodeState _localState;
-    
+
     /**
      * States of all nodes found during bootstrapping, including the
      * local node.
@@ -86,7 +87,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
 
         _peers = new LinkedHashMap<IpAndPort,ClusterPeerImpl<K,E>>(remoteNodes.size());
         for (Map.Entry<IpAndPort,ActiveNodeState> entry : remoteNodes.entrySet()) {
-            _peers.put(entry.getKey(), new ClusterPeerImpl<K,E>(stuff,
+            _peers.put(entry.getKey(), new ClusterPeerImpl<K,E>(stuff, this,
                     stores.getNodeStore(), stores.getEntryStore(), entry.getValue(),
                     accessor));
         }
@@ -98,6 +99,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     {
         LOG.info("Starting sync threads to peers...");
         int count = 0;
+        // no need to sync yet
         for (final ClusterPeerImpl<?,?> peer : _peers.values()) {
             /* 19-Nov-2012, tatu: This is correct, but need to figure out what to do
              *   when key range specifications change. Although usually ranges shrink,
@@ -108,6 +110,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
                 /* No content syncing needed, but we do want to (try to) inform
                  * these nodes about us becoming online again...
                  */
+                /*
                 if (!_isTesting) { // would slow down tests, skip
                     Thread t = new Thread(new Runnable() {
                         @Override
@@ -117,6 +120,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
                     });
                     t.start();
                 }
+                */
                 continue;
             }
             LOG.info("Shared key range of {} to {}", peer.getSyncRange(), peer.getAddress());
@@ -130,6 +134,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     public synchronized void stop()
     {
         LOG.info("Shutting down sync threads to peers...");
+        
         for (ClusterPeerImpl<?,?> peer : _peers.values()) {
             peer.stop();
         }
@@ -157,13 +162,18 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
 
     @Override
     public NodeState getRemoteState(IpAndPort key) {
-        ClusterPeerImpl<?,?> peer = _peers.get(key);
+        ClusterPeerImpl<?,?> peer;
+        synchronized (_peers) {
+            peer = _peers.get(key);
+        }
         return (peer == null) ? null : peer.getSyncState();
     }
 
     @Override
     public List<ClusterPeer> getPeers() {
-     return new ArrayList<ClusterPeer>(_peers.values());
+        synchronized (_peers) {
+            return new ArrayList<ClusterPeer>(_peers.values());
+        }
     }
 
     @Override
@@ -279,21 +289,43 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         return new ClusterStatusMessage(_timeMaster.currentTimeMillis(),
                 getLastUpdated(), getLocalState(), getRemoteStates());
     }
+
+    @Override
+    public long getHashOverState()
+    {
+        int hash = _keyspace.hashCode();
+        hash ^= _localState.hashCode();
+        for (ClusterPeerImpl<?,?> peer : _peerImpls()) {
+            hash += peer.getSyncState().hashCode();
+        }
+        return hash;
+    }
     
     /*
     /**********************************************************************
-    /* Integration with front-end (does it belong here?)
+    /* Integration with front-end
     /**********************************************************************
      */
 
     @Override
-    public ServiceResponse addClusterStateHeaders(ServiceResponse response)
+    public ServiceResponse addClusterStateInfo(ServiceResponse response)
     {
         long clusterUpdated = getLastUpdated();
         return response.addHeader(ClusterMateConstants.CUSTOM_HTTP_HEADER_LAST_CLUSTER_UPDATE,
                 clusterUpdated);
     }
-    
+
+    @Override
+    public RequestPathBuilder addClusterStateInfo(RequestPathBuilder requestBuilder)
+    {
+        /* Since key range information will be included anyway, all we need here
+         * is just the endpoint name ("caller").
+         */
+        requestBuilder = requestBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CALLER,
+                _localState.getAddress().toString());
+        return requestBuilder;
+    }
+
     /*
     /**********************************************************************
     /* Internal methods
@@ -306,5 +338,11 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
             return 100;
         }
         return (int) ((100.0 * absCoverage) / len);
+    }
+
+    protected List<ClusterPeerImpl<K,E>> _peerImpls() {
+        synchronized (_peers) {
+            return new ArrayList<ClusterPeerImpl<K,E>>(_peers.values());
+        }
     }
 }

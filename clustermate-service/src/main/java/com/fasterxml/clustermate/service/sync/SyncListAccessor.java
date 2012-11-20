@@ -14,10 +14,13 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.KeyRange;
+import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.VManaged;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
 import com.fasterxml.storemate.shared.IpAndPort;
@@ -112,11 +115,16 @@ public class SyncListAccessor implements VManaged
 
     // And then the Real Thing, with basic JDK stuff:
     
-    public SyncListResponse<?> fetchSyncList(IpAndPort endpoint, TimeSpan timeout,
-            long syncedUpTo, KeyRange syncRange)
+    /*
+            _syncState.getAddress(), 
+            _syncState.getSyncedUpTo(), _syncState.getRangeSync());
+     */
+    
+    public SyncListResponse<?> fetchSyncList(ClusterViewByServer cluster,
+            TimeSpan timeout, NodeState remote)
         throws InterruptedException
     {
-        final String urlStr = _buildSyncListUrl(endpoint, syncRange, syncedUpTo);
+        final String urlStr = _buildSyncListUrl(cluster, remote);
         HttpURLConnection conn;
         try {
             conn = prepareGet(urlStr, timeout);
@@ -289,16 +297,27 @@ public class SyncListAccessor implements VManaged
                 new Object[] { operation, urlStr, statusCode, msg});
     }
     
-    protected String _buildSyncListUrl(IpAndPort endpoint, KeyRange syncRange,
-            long syncedUpTo)
+    protected String _buildSyncListUrl(ClusterViewByServer cluster, NodeState remote)
     {
+        final NodeState local = cluster.getLocalState();
+        final long syncedUpTo = remote.getSyncedUpTo();
+
+        /* Need to be sure to pass the full range; remote end can do filtering,
+         * (to reduce range if need be), but it needs to know full range
+         * for initial auto-registration. Although ideally maybe we should
+         * pass active and passive separately... has to do, for now.
+         */
+        final KeyRange syncRange = local.totalRange();
+        
         final ServiceConfig config = _stuff.getServiceConfig();
-        RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(endpoint)
+        RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote.getAddress())
             .addPathSegments(config.servicePathRoot);
         pathBuilder = _stuff.getPathStrategy().appendSyncListPath(pathBuilder);
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_SINCE, String.valueOf(syncedUpTo));
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_SINCE,
+                String.valueOf(syncedUpTo));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
+        pathBuilder = cluster.addClusterStateInfo(pathBuilder);
         return pathBuilder.toString();
     }
 

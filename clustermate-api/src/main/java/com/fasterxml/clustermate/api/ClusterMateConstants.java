@@ -87,6 +87,11 @@ public interface ClusterMateConstants
 
     public final static String HTTP_QUERY_PARAM_KEYRANGE_LENGTH = "keyRangeLength";
 
+    /**
+     * Query parameter used to pass information about calling node.
+     */
+    public final static String HTTP_QUERY_PARAM_CALLER = "caller";
+    
     /*
     /**********************************************************************
     /* Standard HTTP Response codes

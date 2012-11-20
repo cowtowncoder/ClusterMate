@@ -163,7 +163,7 @@ public class ServletBase extends HttpServlet
     protected ServiceResponse _addStdHeaders(ServiceResponse response)
     {
         if (_clusterView != null) {
-            response = _clusterView.addClusterStateHeaders(response);
+            response = _clusterView.addClusterStateInfo(response);
         }
         return response;
     }

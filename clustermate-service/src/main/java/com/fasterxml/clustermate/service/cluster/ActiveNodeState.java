@@ -9,8 +9,12 @@ import com.fasterxml.storemate.shared.IpAndPort;
  * POJO used for exchanging node state information between servers;
  * also stored in the local database.
  */
-public class ActiveNodeState extends NodeState
+public final class ActiveNodeState extends NodeState
 {
+    /**
+     * Lazily calculated value
+     */
+    protected int _hashCode;
 
     /*
     /**********************************************************************
@@ -231,5 +235,59 @@ public class ActiveNodeState extends NodeState
     @Override
     public String toString() {
         return String.valueOf(address);
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (o == this) return true;
+        if (o == null) return false;
+        if (o.getClass() != getClass()) return false;
+        ActiveNodeState other = (ActiveNodeState) o;
+        if (hashCode() != other.hashCode()) { // should be cheap(er)
+            return false;
+        }
+        // but not enough: must verify they are equal...
+        if (index != other.index
+                || disabled != other.disabled) {
+            return false;
+        }
+        if (!address.equals(other.address)) {
+            return false;
+        }
+        if (!_rangesEqual(rangeActive, other.rangeActive)
+                || !_rangesEqual(rangePassive, other.rangePassive)) {
+            return false;
+        }
+        return true;
+    }
+
+    private final static boolean _rangesEqual(KeyRange r1, KeyRange r2) {
+        if (r1 == null) {
+            return (r2 == null);
+        }
+        if (r2 == null) {
+            return false;
+        }
+        return r1.equals(r2);
+    }
+    
+    @Override
+    public int hashCode()
+    {
+        int h = _hashCode;
+        if (h == 0) {
+            h = disabled ? 1 : -1;
+            h += index;
+            h ^= address.hashCode();
+            if (rangeActive != null) {
+                h += rangeActive.hashCode();
+            }
+            if (rangePassive != null) {
+                h ^= rangePassive.hashCode();
+            }
+            _hashCode = h;
+        }
+        return h;
     }
 }

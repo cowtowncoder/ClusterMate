@@ -197,7 +197,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
     protected ServiceResponse _addStdHeaders(ServiceResponse response)
     {
         if (_clusterView != null) {
-            response = _clusterView.addClusterStateHeaders(response);
+            response = _clusterView.addClusterStateInfo(response);
         }
         return response;
     }

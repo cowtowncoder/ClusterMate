@@ -5,6 +5,7 @@ import java.util.*;
 import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.VManaged;
 import com.fasterxml.storemate.shared.IpAndPort;
@@ -31,6 +32,7 @@ public abstract class ClusterViewByServer
 
     public abstract NodeState getRemoteState(IpAndPort key);
 
+    // need generic type to avoid casts when accessing impl
     public abstract List<ClusterPeer> getPeers();
 
     public abstract Collection<NodeState> getRemoteStates();
@@ -62,7 +64,19 @@ public abstract class ClusterViewByServer
      * @return Original response object; only returned to allow call chaining, instance
      *   never different from passed-in argument.
      */
-    public abstract ServiceResponse addClusterStateHeaders(ServiceResponse response);
+    public abstract ServiceResponse addClusterStateInfo(ServiceResponse response);
+
+    /**
+     * Method called to add information about cluster state caller has when making
+     * Sync List request.
+     */
+    public abstract RequestPathBuilder addClusterStateInfo(RequestPathBuilder requestBuilder);
+    
+    /**
+     * Method for calculating hash code over shared date, used for determining
+     * whether state as observed by this node has changed materially.
+     */
+    public abstract long getHashOverState();
     
     /*
     /**********************************************************************

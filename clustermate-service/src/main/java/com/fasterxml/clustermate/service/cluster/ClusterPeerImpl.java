@@ -81,6 +81,8 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
 
     private final static Logger LOG = LoggerFactory.getLogger(ClusterPeer.class);
 
+    protected final ClusterViewByServer _cluster;
+    
     /**
      * Helper object used for doing HTTP requests
      */
@@ -158,12 +160,13 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
     
-    public ClusterPeerImpl(SharedServiceStuff stuff,
+    public ClusterPeerImpl(SharedServiceStuff stuff, ClusterViewByServer cluster,
             NodeStateStore stateStore, StorableStore entryStore,
             ActiveNodeState state,
             ClusterStatusAccessor accessor)
     {
         super();
+        _cluster = cluster;
         _stuff = stuff;
         _syncListAccessor = new SyncListAccessor(stuff);
         _syncState = state;
@@ -467,8 +470,8 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     private SyncListResponse<?> _fetchSyncList() throws InterruptedException
     {
         try {
-            return _syncListAccessor.fetchSyncList(_syncState.getAddress(), TIMEOUT_FOR_SYNCLIST,
-                    _syncState.getSyncedUpTo(), _syncState.getRangeSync());
+            return _syncListAccessor.fetchSyncList(_cluster,
+                    TIMEOUT_FOR_SYNCLIST, _syncState);
         } catch (InterruptedException e) {
             // no point in complaining if we are being shut down:
             if (_running.get()) {
