@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
 import com.fasterxml.clustermate.api.KeyRange;
+import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.VManaged;
 import com.fasterxml.clustermate.service.bdb.NodeStateStore;
@@ -28,7 +29,6 @@ import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.shared.util.IOUtil;
 import com.fasterxml.storemate.store.*;
-import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.util.BoundedInputStream;
 
 public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
@@ -73,26 +73,53 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     private final int MAX_FETCH_TRIES = 20;
 
+    private final static Logger LOG = LoggerFactory.getLogger(ClusterPeer.class);
+    
     /*
     /**********************************************************************
-    /* Helper objects
+    /* Configuration, general helpers
     /**********************************************************************
      */
 
-    private final static Logger LOG = LoggerFactory.getLogger(ClusterPeer.class);
+    protected final SharedServiceStuff _stuff;
 
-    protected final ClusterViewByServer _cluster;
+    /**
+     * This object is necessary to support "virtual time" for test cases.
+     */
+    protected final TimeMaster _timeMaster;
+
+    /*
+    /**********************************************************************
+    /* Operation state of the peer object
+    /**********************************************************************
+     */
     
     /**
-     * Helper object used for doing HTTP requests
+     * Synchronization thread if (and only if) this peer shares part of keyspace
+     * with the local node; otherwise null.
+     * Note that threads may be started and stopped based on changes to cluster
+     * configuration.
      */
-    protected final SyncListAccessor _syncListAccessor;
+    protected Thread _syncThread;
 
     /**
-     * Persistent data store in which we store information regarding
-     * synchronization.
+     * Flag used to request termination of the sync thread.
      */
-    protected final NodeStateStore _stateStore;
+    protected AtomicBoolean _running = new AtomicBoolean(false);
+
+    /**
+     * Let's keep track of number of failures (as per caught exceptions); mostly
+     * so that tests can verify passing, but also potentially for monitoring.
+     */
+    protected AtomicInteger _failCount = new AtomicInteger(0);
+    
+    protected final byte[] _readBuffer = new byte[8000];
+    
+    /*
+    /**********************************************************************
+    /* Helper objects for entry handling
+    /**********************************************************************
+     */
 
     /**
      * And to store fetched missing entities, we need the store
@@ -104,30 +131,34 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     protected final StoredEntryConverter<K,E> _entryConverter;
     
-    protected final FileManager _fileManager;
-
-    /**
-     * This object is necessary to support "virtual time" for test cases.
-     */
-    protected final TimeMaster _timeMaster;
-    
     /*
     /**********************************************************************
-    /* Configuration
+    /* Helper objects for sync handling
     /**********************************************************************
      */
 
-    protected final SharedServiceStuff _stuff;
-
+    protected final ClusterViewByServer _cluster;
+    
     /**
      * Object used to access Node State information, needed to construct
      * view of the cluster.
      */
     protected final ClusterStatusAccessor _statusAccessor;
+
+    /**
+     * Helper object used for doing HTTP requests
+     */
+    protected final SyncListAccessor _syncListAccessor;
+
+    /**
+     * Persistent data store in which we store information regarding
+     * synchronization.
+     */
+    protected final NodeStateStore _stateStore;
     
     /*
     /**********************************************************************
-    /* Local state
+    /* Local information for peer (which for us is external but...)
     /**********************************************************************
      */
 
@@ -135,24 +166,6 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      * Synchronization state of this peer
      */
     protected ActiveNodeState _syncState;
-    
-    /**
-     * Synchronization thread if (and only if) this peer shares part of keyspace
-     * with the local node; otherwise null.
-     * Note that threads may be started and stopped based on changes to cluster
-     * configuration.
-     */
-    protected Thread _syncThread;
-
-    protected AtomicBoolean _running = new AtomicBoolean(false);
-
-    /**
-     * Let's keep track of number of failures (as per caught exceptions); mostly
-     * so that tests can verify passing, but also potentially for monitoring.
-     */
-    protected AtomicInteger _failCount = new AtomicInteger(0);
-    
-    protected final byte[] _readBuffer = new byte[8000];
     
     /*
     /**********************************************************************
@@ -172,7 +185,6 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         _syncState = state;
         _stateStore = stateStore;
         _entryStore = entryStore;
-        _fileManager = stuff.getFileManager();
         _timeMaster = stuff.getTimeMaster();
         _entryConverter = stuff.getEntryConverter();
         _statusAccessor = accessor;
@@ -232,10 +244,6 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             _syncThread = t = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    /* First things first: before syncing, let everyone know we
-                     * are (again?) alive.
-                     */
-                    advertiseAlive();
                     syncLoop();
                 }
             });
@@ -243,15 +251,6 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         }
         t.start();
         return true;
-    }
-
-    /**
-     * Alternative method called with peers that are not neighbors; but
-     * where we still want to sync cluster status information.
-     */
-    public void updateNodeStatusOnce()
-    {
-        // !!! TODO
     }
     
     /*
@@ -332,81 +331,20 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                 _timeMaster.sleep(1L);
             } catch (InterruptedException e) { }
         }
-        /* Simple loop, consisting of steps:
+
+        /* At high level, we have two kinds of tasks, depending on whether
+         * there is any overlap:
          * 
-         * 1. Fetch list of newly inserted/deleted entries from peer (sync/list)
-         * 2a. Find subset of entries unknown to this node, if any
-         * 2b. Fetch unknown entries, possibly with multiple requests
-         * 
-         * and we will also add bit of sleep between requests, depending on how many
-         * entries we get in step 1.
+         * 1. If ranges overlap, we need to do proper sync list/pull handling
+         * 2. If no overlap, we just need to keep an eye towards changes, to
+         *   try to keep whole cluster view up to date (since clients need it)
          */
         while (_running.get()) {
             try {
-                long listTime = _timeMaster.currentTimeMillis();
-                SyncListResponse<?> syncResp = _fetchSyncList();
-                if (syncResp == null) { // only for errors
-                    _timeMaster.sleep(SLEEP_FOR_SYNCLIST_ERRORS_MSECS);
-                    continue;
-                }
-                if (!_running.get()) { // short-circuit during shutdown
-                    continue;
-                }
-
-                // comment out or remove for production; left here during testing:
-//long diff = (listTime - syncResp.lastSeen()) >> 10; // in seconds
-//LOG.warn("Received syncList with {} responses; last timestamp {} secs ago", syncResp.size(), diff);
-                
-                List<SyncListResponseEntry> newEntries = syncResp.entries;
-                int insertedEntryCount = newEntries.size();
-                if (insertedEntryCount == 0) { // nothing to update
-                    // may still need to update timestamp?
-                    _updatePersistentState(listTime, syncResp.lastSeen());
-                    _timeMaster.sleep(SLEEP_FOR_EMPTY_SYNCLIST_MSECS);
-                    continue;
-                }
-                // Ok, we got something, good.
-                // First: handle tombstones we may be getting:
-                @SuppressWarnings("unused")
-                int tombstoneCount = _handleTombstones(newEntries);
-                // then filter out entries that we already have:
-                _filterSeen(newEntries);
-                if (!_running.get()) { // short-circuit during shutdown
-                    continue;
-                }
-                if (newEntries.isEmpty()) { // nope: just update state then
-                    /*
-                    long msecs = syncResp.lastSeen() - _syncState.syncedUpTo;
-                    if (!_stuff.isRunningTests()) {
-                        LOG.warn("No unseen entries out of {} entries: timestamp = {} (+{} sec)",
-                            new Object[] { insertedEntryCount, syncResp.lastSeen(), String.format("%.1f", msecs/1000.0)});
-                    }
-                    */
-                    _updatePersistentState(listTime, syncResp.lastSeen());
-                } else { // yes: need to do batch updates
-                    // but can at least update syncUpTo to first entry, right?
-                    int newCount = newEntries.size();
-                    AtomicInteger rounds = new AtomicInteger(0);
-                    long lastProcessed = _fetchMissing(newEntries, rounds);
-                    int fetched = newCount - newEntries.size();
-        
-                    double secs = (_timeMaster.currentTimeMillis() - listTime) / 1000.0;
-                    String timeDesc = String.format("%.2f", secs);
-                    LOG.info("Fetched {}/{} missing entries from {} in {} seconds ({} rounds)",
-                            new Object[] { fetched, newCount, getAddress(), timeDesc, rounds.get()});
-                    _updatePersistentState(listTime, lastProcessed);
-                }
-                // And then sleep a bit, before doing next round of syncing
-                double secsBehind = (_timeMaster.currentTimeMillis() - _syncState.getSyncedUpTo()) / 1000.0;
-                long delay = _calculateSleepBetweenSync(insertedEntryCount, (int) secsBehind);
-                
-                if (delay > 0L) {
-                    // only bother informing if above 50 msec sleep
-                    if (delay >= 50L) {
-                        LOG.info("With {} listed entries, {} seconds behind, will do {} second sleep",
-                                new Object[] { insertedEntryCount, String.format("%.2f", secsBehind), (delay / 1000L)});
-                    }
-                    _timeMaster.sleep(delay);
+                if (hasOverlap(_cluster.getLocalState(), _syncState)) {
+                    doRealSync();
+                } else {
+                    doMinimalSync();
                 }
             } catch (InterruptedException e) {
                 if (_running.get()) {
@@ -427,13 +365,95 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         LOG.info("Stopped sync thread for peer at {}", _syncState.getAddress());
     }
 
-    /**
-     * Method called to do initial pull/push of cluster status with neighboring
-     * nodes
-     */
-    protected void advertiseAlive()
+    protected void doRealSync() throws Exception
     {
+        /* Sequence for each iterations consists of:
+         * 
+         * 1. Fetch list of newly inserted/deleted entries from peer (sync/list)
+         * 2a. Find subset of entries unknown to this node, if any
+         * 2b. Fetch unknown entries, possibly with multiple requests
+         * 
+         * and we will also add bit of sleep between requests, depending on how many
+         * entries we get in step 1.
+         */
         
+        long listTime = _timeMaster.currentTimeMillis();
+        SyncListResponse<?> syncResp = _fetchSyncList();
+        if (syncResp == null) { // only for errors
+            _timeMaster.sleep(SLEEP_FOR_SYNCLIST_ERRORS_MSECS);
+            return;
+        }
+        if (!_running.get()) { // short-circuit during shutdown
+            return;
+        }
+
+        // comment out or remove for production; left here during testing:
+//long diff = (listTime - syncResp.lastSeen()) >> 10; // in seconds
+//LOG.warn("Received syncList with {} responses; last timestamp {} secs ago", syncResp.size(), diff);
+        
+        List<SyncListResponseEntry> newEntries = syncResp.entries;
+        int insertedEntryCount = newEntries.size();
+        if (insertedEntryCount == 0) { // nothing to update
+            // may still need to update timestamp?
+            _updatePersistentState(listTime, syncResp.lastSeen());
+            _timeMaster.sleep(SLEEP_FOR_EMPTY_SYNCLIST_MSECS);
+            return;
+        }
+        // Ok, we got something, good.
+        // First: handle tombstones we may be getting:
+        @SuppressWarnings("unused")
+        int tombstoneCount = _handleTombstones(newEntries);
+        // then filter out entries that we already have:
+        _filterSeen(newEntries);
+        if (!_running.get()) { // short-circuit during shutdown
+            return;
+        }
+        if (newEntries.isEmpty()) { // nope: just update state then
+            /*
+            long msecs = syncResp.lastSeen() - _syncState.syncedUpTo;
+            if (!_stuff.isRunningTests()) {
+                LOG.warn("No unseen entries out of {} entries: timestamp = {} (+{} sec)",
+                    new Object[] { insertedEntryCount, syncResp.lastSeen(), String.format("%.1f", msecs/1000.0)});
+            }
+            */
+            _updatePersistentState(listTime, syncResp.lastSeen());
+        } else { // yes: need to do batch updates
+            // but can at least update syncUpTo to first entry, right?
+            int newCount = newEntries.size();
+            AtomicInteger rounds = new AtomicInteger(0);
+            long lastProcessed = _fetchMissing(newEntries, rounds);
+            int fetched = newCount - newEntries.size();
+
+            double secs = (_timeMaster.currentTimeMillis() - listTime) / 1000.0;
+            String timeDesc = String.format("%.2f", secs);
+            LOG.info("Fetched {}/{} missing entries from {} in {} seconds ({} rounds)",
+                    new Object[] { fetched, newCount, getAddress(), timeDesc, rounds.get()});
+            _updatePersistentState(listTime, lastProcessed);
+        }
+        // And then sleep a bit, before doing next round of syncing
+        double secsBehind = (_timeMaster.currentTimeMillis() - _syncState.getSyncedUpTo()) / 1000.0;
+        long delay = _calculateSleepBetweenSync(insertedEntryCount, (int) secsBehind);
+        
+        if (delay > 0L) {
+            // only bother informing if above 50 msec sleep
+            if (delay >= 50L) {
+                LOG.info("With {} listed entries, {} seconds behind, will do {} second sleep",
+                        new Object[] { insertedEntryCount, String.format("%.2f", secsBehind), (delay / 1000L)});
+            }
+            _timeMaster.sleep(delay);
+        }
+    }
+
+    /**
+     * Method called when there is no key range overlap, and at most we want to
+     * synchronize cluster view occasionally.
+     */
+    protected void doMinimalSync() throws Exception
+    {
+        LOG.info("doMinimalSync(): let's just... Sleep for a bit");
+        Thread.sleep(30 * 1000L);
+        
+        // !!! TODO: do something!
     }
     
     /*
@@ -769,5 +789,10 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                 LOG.warn("Failed sync-pull for '{}': no old entry. Strange!", header.key);
             }
         }
+    }
+
+    protected final boolean hasOverlap(NodeState state1, NodeState state2)
+    {
+        return state1.totalRange().overlapsWith(state2.totalRange());
     }
 }
