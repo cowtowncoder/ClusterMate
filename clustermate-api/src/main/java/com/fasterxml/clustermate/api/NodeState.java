@@ -35,6 +35,11 @@ public class NodeState
      */
     protected long syncedUpTo;
 
+    /**
+     * Lazily calculated combination of active and passive range
+     */
+    private volatile KeyRange _totalRange;
+    
     /*
     /**********************************************************************
     /* Construction
@@ -156,15 +161,22 @@ public class NodeState
     /**********************************************************************
      */
 
-    public KeyRange totalRange() {
-        KeyRange active = getRangeActive();
-        KeyRange passive = getRangePassive();
-        if (active == null) {
-            return passive;
-        }
-        if (passive == null) {
-            return active;
-        }
-        return active.union(passive);
+    // note: not serialized, hence non-standard naming
+    public KeyRange totalRange()
+    {
+        KeyRange total = _totalRange;
+        if (total == null) {
+            KeyRange active = getRangeActive();
+            KeyRange passive = getRangePassive();
+            if (active == null) {
+                total = passive;
+            } else if (passive == null) {
+                total = active;
+            } else {
+                total = active.union(passive);
+            }
+            _totalRange = total;
+        } 
+        return total;
     }
 }
