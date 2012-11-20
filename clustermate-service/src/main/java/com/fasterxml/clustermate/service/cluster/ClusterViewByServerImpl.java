@@ -274,6 +274,12 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         return _coveragePct(getTotalCoverage());
     }
 
+    @Override
+    public ClusterStatusMessage asMessage() {
+        return new ClusterStatusMessage(_timeMaster.currentTimeMillis(),
+                getLastUpdated(), getLocalState(), getRemoteStates());
+    }
+    
     /*
     /**********************************************************************
     /* Integration with front-end (does it belong here?)

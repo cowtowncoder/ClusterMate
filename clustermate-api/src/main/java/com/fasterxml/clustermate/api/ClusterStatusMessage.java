@@ -4,7 +4,10 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * POJO used as response for GET on cluster status.
+ * POJO used to exchange information on status of the cluster;
+ * that is, settings for nodes that are known by a given server node.
+ * These are exchanged by servers piggy-backed on sync list/pull
+ * requests; and may be POSTed on startup and/or shutdown.
  */
 public class ClusterStatusMessage
 {
@@ -16,21 +19,25 @@ public class ClusterStatusMessage
     public Collection<NodeState> remote;
 
     /**
+     * Timestamp of time when this message was composed.
+     */
+    public long creationTime;
+
+    /**
      * Timestamp of last update to aggregated cluster information by the
-     * serving server node. Used for synchronization such that client
-     * can get indirect updates on what is the latest available time;
-     * and the responses can then be matched. This can be used to both
-     * speed up lookups and reduce unnecessary cluster status lookup calls.
+     * serving server node.
+     * May be used for diagnostic purposes, or possibly optimizing access.
      */
     public long clusterLastUpdated;
     
     // only for deserialization:
     protected ClusterStatusMessage() { }
 
-    public ClusterStatusMessage(long lastUpdated,
+    public ClusterStatusMessage(long creationTime, long lastUpdated,
             NodeState local, Collection<NodeState> remote)
     {
-        clusterLastUpdated = lastUpdated;
+        this.creationTime = creationTime;
+        this.clusterLastUpdated = lastUpdated;
         this.local = local;
         if (remote == null) {
             this.remote = Collections.emptyList();

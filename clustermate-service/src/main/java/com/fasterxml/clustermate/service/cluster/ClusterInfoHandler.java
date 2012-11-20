@@ -17,7 +17,7 @@ public class ClusterInfoHandler
     protected final ClusterViewByServer _cluster;
 
     protected final ObjectWriter _writer;
-
+    
     public ClusterInfoHandler(SharedServiceStuff stuff, ClusterViewByServer cluster)
     {
         _cluster = cluster;
@@ -34,10 +34,7 @@ public class ClusterInfoHandler
     public <RESP extends ServiceResponse> RESP getStatus(ServiceRequest request, RESP response)
     {
         // use streaming impl just so we'll use specific ObjectWriter
-        return (RESP) response.ok(new StreamingEntityImpl(_writer,
-                new ClusterStatusMessage(_cluster.getLastUpdated(),
-                        _cluster.getLocalState(),
-                        _cluster.getRemoteStates())))
+        return (RESP) response.ok(new StreamingEntityImpl(_writer, _cluster.asMessage()))
             .setContentTypeJson();
     }
 }

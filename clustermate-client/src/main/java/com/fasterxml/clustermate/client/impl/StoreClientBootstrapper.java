@@ -270,7 +270,7 @@ public abstract class StoreClientBootstrapper<
                     ClusterViewByClientImpl<K> clusterView = new ClusterViewByClientImpl<K>(
                             config, _httpClient, local.totalRange().getKeyspace());
                     clusterView.updateDirectState(ip, local,
-                            requestTime, System.currentTimeMillis(), resp.clusterLastUpdated);
+                            requestTime, System.currentTimeMillis(), resp.creationTime);
                     for (NodeState stateSec : resp.remote) {
                         clusterView.updateIndirectState(ip, stateSec);
                     }

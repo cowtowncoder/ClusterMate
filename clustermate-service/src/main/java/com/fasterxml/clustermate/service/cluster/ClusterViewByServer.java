@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.service.cluster;
 
 import java.util.*;
 
+import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.service.ServiceResponse;
@@ -50,6 +51,8 @@ public abstract class ClusterViewByServer
     
     public abstract int getTotalCoveragePct();
 
+    public abstract ClusterStatusMessage asMessage();
+    
     /**
      * Method called to add information about cluster state, as piggy-backed
      * on responses other than explicit cluster state requests.
