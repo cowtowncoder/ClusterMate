@@ -52,6 +52,10 @@ public abstract class StoreClientBootstrapper<
      */
     protected final Set<IpAndPort> _nodes = new LinkedHashSet<IpAndPort>();
 
+    /**
+     * Object used to access Node State information, needed to construct
+     * view of the cluster.
+     */
     protected ClusterStatusAccessor _accessor;
 
     /*

@@ -10,9 +10,6 @@ public class ClusterStatusMessage
 {
     /**
      * Status of the local node.
-     *<p> 
-     * Note: since {@link NodeState} is abstract, usually will either
-     * use mr Bean or associate a concrete type.
      */
     public NodeState local;
 

@@ -12,6 +12,7 @@ import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.clustermate.api.ClusterStatusAccessor;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.VManaged;
@@ -83,7 +84,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     /**
      * Helper object used for doing HTTP requests
      */
-    protected final SyncListAccessor _accessor;
+    protected final SyncListAccessor _syncListAccessor;
 
     /**
      * Persistent data store in which we store information regarding
@@ -115,6 +116,12 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
 
     protected final SharedServiceStuff _stuff;
+
+    /**
+     * Object used to access Node State information, needed to construct
+     * view of the cluster.
+     */
+    protected final ClusterStatusAccessor _statusAccessor;
     
     /*
     /**********************************************************************
@@ -126,7 +133,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      * Synchronization state of this peer
      */
     protected ActiveNodeState _syncState;
-
+    
     /**
      * Synchronization thread if (and only if) this peer shares part of keyspace
      * with the local node; otherwise null.
@@ -153,17 +160,19 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     
     public ClusterPeerImpl(SharedServiceStuff stuff,
             NodeStateStore stateStore, StorableStore entryStore,
-            ActiveNodeState state)
+            ActiveNodeState state,
+            ClusterStatusAccessor accessor)
     {
         super();
         _stuff = stuff;
-        _accessor = new SyncListAccessor(stuff);
+        _syncListAccessor = new SyncListAccessor(stuff);
         _syncState = state;
         _stateStore = stateStore;
         _entryStore = entryStore;
         _fileManager = stuff.getFileManager();
         _timeMaster = stuff.getTimeMaster();
         _entryConverter = stuff.getEntryConverter();
+        _statusAccessor = accessor;
     }
 
     @Override
@@ -191,7 +200,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
 //            t.notify();
             t.interrupt();
         }
-        _accessor.stop();
+        _syncListAccessor.stop();
     }
 
     /*
@@ -220,6 +229,10 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             _syncThread = t = new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    /* First things first: before syncing, let everyone know we
+                     * are (again?) alive.
+                     */
+                    advertiseAlive();
                     syncLoop();
                 }
             });
@@ -227,6 +240,15 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         }
         t.start();
         return true;
+    }
+
+    /**
+     * Alternative method called with peers that are not neighbors; but
+     * where we still want to sync cluster status information.
+     */
+    public void updateNodeStatusOnce()
+    {
+        // !!! TODO
     }
     
     /*
@@ -292,6 +314,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
+    /**
+     * Main synchronization loop
+     */
     protected void syncLoop()
     {
         LOG.info("Starting sync thread for peer at {}", _syncState.getAddress());
@@ -304,7 +329,6 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                 _timeMaster.sleep(1L);
             } catch (InterruptedException e) { }
         }
-        
         /* Simple loop, consisting of steps:
          * 
          * 1. Fetch list of newly inserted/deleted entries from peer (sync/list)
@@ -399,6 +423,15 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         }
         LOG.info("Stopped sync thread for peer at {}", _syncState.getAddress());
     }
+
+    /**
+     * Method called to do initial pull/push of cluster status with neighboring
+     * nodes
+     */
+    protected void advertiseAlive()
+    {
+        
+    }
     
     /*
     /**********************************************************************
@@ -434,7 +467,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     private SyncListResponse<?> _fetchSyncList() throws InterruptedException
     {
         try {
-            return _accessor.fetchSyncList(_syncState.getAddress(), TIMEOUT_FOR_SYNCLIST,
+            return _syncListAccessor.fetchSyncList(_syncState.getAddress(), TIMEOUT_FOR_SYNCLIST,
                     _syncState.getSyncedUpTo(), _syncState.getRangeSync());
         } catch (InterruptedException e) {
             // no point in complaining if we are being shut down:
@@ -523,7 +556,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             AtomicInteger status = new AtomicInteger(0);
             InputStream in = null;
             try {
-                in = _accessor.readSyncPullResponse(req, TIMEOUT_FOR_SYNCLIST,
+                in = _syncListAccessor.readSyncPullResponse(req, TIMEOUT_FOR_SYNCLIST,
                          getAddress(), status, payloadSize.get());
 //            } catch (org.apache.http.conn.HttpHostConnectException e) {
             } catch (java.net.ConnectException e) {
@@ -576,7 +609,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                     if (len < headerLength) {
                         throw new IOException("Unexpected end-of-input: got "+len+" bytes; needed "+headerLength);
                     }
-                    SyncPullEntry header = _accessor.decodePullEntry(headerBytes);
+                    SyncPullEntry header = _syncListAccessor.decodePullEntry(headerBytes);
                     payloadLength = header.storageSize;
                     // and then create the actual entry:
                     _pullEntry(reqEntry, header, in);

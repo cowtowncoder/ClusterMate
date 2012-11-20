@@ -1,25 +1,33 @@
 package com.fasterxml.clustermate.service.cluster;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
+import com.fasterxml.storemate.shared.TimeMaster;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.ClusterStatusAccessor;
+import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.json.ClusterMessageConverter;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.bdb.NodeStateStore;
+import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;
+import com.fasterxml.clustermate.std.JdkClusterStatusAccessor;
 
 public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K>>
     extends ClusterViewByServer
+    implements NodeStatusUpdater
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     
@@ -45,12 +53,16 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
      */
     protected final Map<IpAndPort, ClusterPeerImpl<K,E>> _peers;
 
+    protected final TimeMaster _timeMaster;
+    
     /**
      * Timestamp of the last update to aggregated state; used for letting
      * clients know whether to try to access updated cluster information
      */
-    protected long _lastUpdated;
+    protected final AtomicLong _lastUpdated;
 
+    protected final boolean _isTesting;
+    
     /*
     /**********************************************************************
     /* Life-cycle
@@ -65,13 +77,20 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         _localState = local;
         _keyspace = keyspace;
         _stateStore = stores.getNodeStore();
-        
+        _timeMaster = stuff.getTimeMaster();
+        _isTesting = stuff.isRunningTests();
+        ServiceConfig config = stuff.getServiceConfig();
+        ClusterStatusAccessor accessor = new JdkClusterStatusAccessor(new ClusterMessageConverter(
+                stuff.jsonMapper()),
+                config.servicePathRoot, config.getServicePathStrategy());
+
         _peers = new LinkedHashMap<IpAndPort,ClusterPeerImpl<K,E>>(remoteNodes.size());
         for (Map.Entry<IpAndPort,ActiveNodeState> entry : remoteNodes.entrySet()) {
             _peers.put(entry.getKey(), new ClusterPeerImpl<K,E>(stuff,
-                    stores.getNodeStore(), stores.getEntryStore(), entry.getValue()));
+                    stores.getNodeStore(), stores.getEntryStore(), entry.getValue(),
+                    accessor));
         }
-        _lastUpdated = updateTime;
+        _lastUpdated = new AtomicLong(updateTime);
     }
 
     @Override
@@ -79,9 +98,25 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     {
         LOG.info("Starting sync threads to peers...");
         int count = 0;
-        for (ClusterPeerImpl<?,?> peer : _peers.values()) {
+        for (final ClusterPeerImpl<?,?> peer : _peers.values()) {
+            /* 19-Nov-2012, tatu: This is correct, but need to figure out what to do
+             *   when key range specifications change. Although usually ranges shrink,
+             *   not expand, so it may not really matter.
+             */
             if (peer.getSyncRange().empty()) {
                 LOG.info("No shared key range to {}, skipping", peer.getAddress());
+                /* No content syncing needed, but we do want to (try to) inform
+                 * these nodes about us becoming online again...
+                 */
+                if (!_isTesting) { // would slow down tests, skip
+                    Thread t = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            peer.updateNodeStatusOnce();
+                        }
+                    });
+                    t.start();
+                }
                 continue;
             }
             LOG.info("Shared key range of {} to {}", peer.getSyncRange(), peer.getAddress());
@@ -142,9 +177,65 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     
     @Override
     public long getLastUpdated() {
-        return _lastUpdated;
+        return _lastUpdated.get();
     }
 
+    /*
+    /**********************************************************************
+    /* NodeStatusUpdater impl
+    /**********************************************************************
+     */
+
+    /**
+     * Method called with a response to node status request; will update
+     * information we have if more recent information is available.
+     */
+    @Override
+    public void updateStatus(ClusterStatusMessage msg)
+    {
+        final long updateTime = _timeMaster.currentTimeMillis();
+        int mods = 0;
+        NodeState local = msg.local;
+        if (local == null) { // should never occur
+            LOG.info("msg.local is null, should never happen");
+        } else {
+            if (updateStatus(local)) {
+                ++mods;
+            }
+        }
+        if (msg.remote != null) {
+            for (NodeState state : msg.remote) {
+                if (updateStatus(state)) {
+                    ++mods;
+                }
+            }
+        }
+
+        // If any data was changed, update our local state
+        if (mods > 0) {
+            boolean wasChanged;
+            synchronized (_lastUpdated) {
+                long old = _lastUpdated.get();
+                wasChanged = (updateTime > old);
+                if (wasChanged) {
+                    _lastUpdated.set(updateTime);
+                }
+            }
+            if (wasChanged) {
+                LOG.info("updateStatus() with {} changes: updated lastUpdated to: {}", mods, updateTime);
+            } else { // may occur with concurrent updates?
+                LOG.warn("updateStatus() with {} changes: but lastUpdated remains at {}", mods,
+                        _lastUpdated.get());
+            }
+        }
+    }
+
+    protected synchronized boolean updateStatus(NodeState nodeStatus)
+    {
+        // !!! TODO
+        return false;
+    }
+    
     /*
     /**********************************************************************
     /* Advanced accessors
