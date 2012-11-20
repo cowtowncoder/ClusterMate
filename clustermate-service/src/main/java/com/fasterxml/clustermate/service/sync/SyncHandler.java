@@ -193,6 +193,25 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
             return (OUT) badRequest(response, "Invalid key-range definition (start '%s', end '%s'): %s",
                     keyRangeStart, keyRangeLength, e.getMessage());
         }
+
+        /* 20-Nov-2012, tatu: We can now piggyback auto-registration by sending minimal
+         *   info about caller...
+         */
+        IpAndPort caller = null;
+        String str = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CALLER);
+        if (str != null && (str = str.trim()).length() > 0) {
+            try {
+                caller = new IpAndPort(str);
+            } catch (Exception e) {
+                LOG.warn("Invalid value for {}: '{}', problem: {}",
+                        ClusterMateConstants.HTTP_QUERY_PARAM_CALLER,
+                        str, e.getMessage());
+            }
+        }
+        if (caller != null) {
+            _cluster.checkMembership(caller, range);
+        }
+        
         String acceptHeader = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT);
         // what do they request? If not known, serve JSON (assumed to be from browser)
         boolean useSmile = (acceptHeader != null)

@@ -3,6 +3,7 @@ package com.fasterxml.clustermate.service.cluster;
 import java.util.*;
 
 import com.fasterxml.clustermate.api.ClusterStatusMessage;
+import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
@@ -55,6 +56,12 @@ public abstract class ClusterViewByServer
 
     public abstract ClusterStatusMessage asMessage();
     
+    /*
+    /**********************************************************************
+    /* Methods for cluster membership handling
+    /**********************************************************************
+     */
+    
     /**
      * Method called to add information about cluster state, as piggy-backed
      * on responses other than explicit cluster state requests.
@@ -77,6 +84,14 @@ public abstract class ClusterViewByServer
      * whether state as observed by this node has changed materially.
      */
     public abstract long getHashOverState();
+
+    /**
+     * Method called to let cluster check whether given node is known;
+     * and if not, start boostrapping process. This is typically called
+     * as a side effect of another operation, and only contains bare
+     * minimal to get things started.
+     */
+    public abstract void checkMembership(IpAndPort node, KeyRange totalRange);
     
     /*
     /**********************************************************************

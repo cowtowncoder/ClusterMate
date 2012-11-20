@@ -303,7 +303,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     
     /*
     /**********************************************************************
-    /* Integration with front-end
+    /* Cluster membership handling
     /**********************************************************************
      */
 
@@ -326,6 +326,29 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         return requestBuilder;
     }
 
+    @Override
+    public void checkMembership(IpAndPort node, KeyRange totalRange)
+    {
+        // First, a sanity check:
+        if (_localState.getAddress().equals(node)) {
+            LOG.warn("checkMembership() called with local node address; ignoring");
+            return;
+        }
+
+        // Then actual business...
+        boolean alreadySeen;
+        synchronized (_peers) {
+            alreadySeen = _peers.containsKey(node);
+        }
+
+        // !!!! TODO
+        if (alreadySeen) {
+            LOG.info("Already know about end point: "+node+", ignoring");
+        } else {
+            LOG.warn("Did NOT know about end point: "+node+": SOMEONE SHOULD DO SOMETHING!");
+        }
+    }
+    
     /*
     /**********************************************************************
     /* Internal methods

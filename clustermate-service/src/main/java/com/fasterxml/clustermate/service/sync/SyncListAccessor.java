@@ -19,7 +19,6 @@ import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.VManaged;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
-import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
@@ -238,11 +237,11 @@ public class SyncListAccessor implements VManaged
         }            
         return null;
     }
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Helper methpds
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Helper methods
+    /**********************************************************************
      */
     
     protected HttpURLConnection preparePost(String urlStr, TimeSpan timeout)
