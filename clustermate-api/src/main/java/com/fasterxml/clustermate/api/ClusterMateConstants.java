@@ -91,6 +91,12 @@ public interface ClusterMateConstants
      * Query parameter used to pass information about calling node.
      */
     public final static String HTTP_QUERY_PARAM_CALLER = "caller";
+
+    /**
+     * Query parameter used to contain hash code for last received cluster
+     * view.
+     */
+    public final static String HTTP_QUERY_CLUSTER_HASH = "clusterHash";
     
     /*
     /**********************************************************************

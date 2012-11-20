@@ -101,29 +101,11 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         int count = 0;
         // no need to sync yet
         for (final ClusterPeerImpl<?,?> peer : _peers.values()) {
-            /* 19-Nov-2012, tatu: This is correct, but need to figure out what to do
-             *   when key range specifications change. Although usually ranges shrink,
-             *   not expand, so it may not really matter.
+            /* 20-Nov-2012, tatu: Let's create a thread for every peer from now
+             *   on; even if there is currently no sync range, things may change.
+             *   Plus, for fast cluster view updates, may want to share info
+             *   between non-neighbors too.
              */
-            if (peer.getSyncRange().empty()) {
-                LOG.info("No shared key range to {}, skipping", peer.getAddress());
-                /* No content syncing needed, but we do want to (try to) inform
-                 * these nodes about us becoming online again...
-                 */
-                /*
-                if (!_isTesting) { // would slow down tests, skip
-                    Thread t = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            peer.updateNodeStatusOnce();
-                        }
-                    });
-                    t.start();
-                }
-                */
-                continue;
-            }
-            LOG.info("Shared key range of {} to {}", peer.getSyncRange(), peer.getAddress());
             ++count;
             peer.startSyncing();
         }

@@ -155,6 +155,13 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      * synchronization.
      */
     protected final NodeStateStore _stateStore;
+
+    /**
+     * Hash code of contents of the last cluster view we received from
+     * the peer. Used as optimization: cluster view only piggy-backed
+     * on list response if hash differs.
+     */
+    protected int _lastClusterHash;
     
     /*
     /**********************************************************************
@@ -450,7 +457,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     protected void doMinimalSync() throws Exception
     {
-        LOG.info("doMinimalSync(): let's just... Sleep for a bit");
+        LOG.info("doMinimalSync(): let's just... Sleep for a bit (TBD)");
         Thread.sleep(30 * 1000L);
         
         // !!! TODO: do something!
