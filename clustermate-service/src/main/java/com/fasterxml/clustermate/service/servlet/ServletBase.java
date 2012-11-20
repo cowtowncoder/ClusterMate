@@ -11,13 +11,14 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 
 @SuppressWarnings("serial")
 public class ServletBase extends HttpServlet
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    protected final ClusterViewByServer _clusterView;
+    protected final ClusterViewByServerUpdatable _clusterView;
 
     protected final String _basePath;
     
@@ -31,7 +32,7 @@ public class ServletBase extends HttpServlet
     protected ServletBase(ClusterViewByServer clusterView,
             String servletPathBase)
     {
-        _clusterView = clusterView;
+        _clusterView = (ClusterViewByServerUpdatable) clusterView;
         if (servletPathBase != null) {
             /* One tweak: ensure that base path ends with slash, to ensure
              * we are not left with leading slash in path passed.

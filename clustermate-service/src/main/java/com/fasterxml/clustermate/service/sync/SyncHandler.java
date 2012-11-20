@@ -22,6 +22,7 @@ import com.fasterxml.storemate.store.backend.StorableLastModIterationCallback;
 import com.fasterxml.storemate.store.file.FileManager;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
@@ -31,6 +32,7 @@ import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
@@ -63,13 +65,13 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     
+    protected final ClusterViewByServerUpdatable _cluster;
+
     protected final Stores<K,E> _stores;
 
     protected final EntryKeyConverter<K> _keyConverter;
     
     protected final StoredEntryConverter<K,E> _entryConverter;
-
-    protected final ClusterViewByServer _cluster;
     
     protected final FileManager _fileManager;
 
@@ -131,7 +133,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
             ClusterViewByServer cluster, int maxToListPerRequest)
     {
         _stores = stores;
-        _cluster = cluster;
+        _cluster = (ClusterViewByServerUpdatable) cluster;
         _entryConverter = stuff.getEntryConverter();
         _fileManager = stuff.getFileManager();
         _timeMaster = stuff.getTimeMaster();
@@ -186,6 +188,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         if (keyRangeLength == null) {
             return (OUT) missingArgument(response, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH);
         }
+        long clusterHash = _findLongParam(request, ClusterMateConstants.HTTP_QUERY_CLUSTER_HASH);
         KeyRange range;
         try {
             range = _keyspace.range(keyRangeStart, keyRangeLength);
@@ -223,7 +226,6 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         AtomicLong timestamp = new AtomicLong(0L);
         long since = (sinceL == null) ? 0L : sinceL.longValue();
         List<E> entries = _listEntries(range, since, upUntil, _maxToListPerRequest, timestamp);
-
         /*
 System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+"); between "+sinceL+" and "+upUntil+", got "+entries.size()+"/"
 +_stores.getEntryStore().getEntryCount()+" entries... (time: "+_timeMaster.currentTimeMillis()+")");
@@ -235,7 +237,14 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
             lastSeen = upUntil-1;
         }
 
-        final SyncListResponse<E> resp = new SyncListResponse<E>(entries, timestamp.get());
+        // One more thing: is cluster info requested?
+        ClusterStatusMessage clusterStatus;
+        long currentHash = _cluster.getHashOverState();
+        clusterStatus = (clusterHash == 0L || clusterHash != currentHash) ?
+                _cluster.asMessage() : null;
+        
+        final SyncListResponse<E> resp = new SyncListResponse<E>(entries, timestamp.get(),
+                currentHash, clusterStatus);
         final ObjectWriter w = useSmile ? _syncListSmileWriter : _syncListJsonWriter;
         final String contentType = useSmile ? ClusterMateConstants.CONTENT_TYPE_SMILE : ClusterMateConstants.CONTENT_TYPE_JSON;
         
@@ -424,6 +433,19 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         }
     }
 
+    private long _findLongParam(ServiceRequest request, String key)
+    {
+        String str = request.getQueryParameter(key);
+        if (str == null || (str = str.trim()).isEmpty()) {
+            return 0L;
+        }
+        try {
+            return Long.valueOf(str);
+        } catch (IllegalArgumentException e) {
+            return 0L;
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     public <OUT extends ServiceResponse> OUT missingArgument(ServiceResponse response, String argId) {
         return (OUT) badRequest(response, "Missing query parameter '"+argId+"'");

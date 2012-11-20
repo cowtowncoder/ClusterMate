@@ -137,7 +137,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
-    protected final ClusterViewByServer _cluster;
+    protected final ClusterViewByServerUpdatable _cluster;
     
     /**
      * Object used to access Node State information, needed to construct
@@ -161,7 +161,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      * the peer. Used as optimization: cluster view only piggy-backed
      * on list response if hash differs.
      */
-    protected int _lastClusterHash;
+    protected long _lastClusterHash;
     
     /*
     /**********************************************************************
@@ -180,7 +180,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
     
-    public ClusterPeerImpl(SharedServiceStuff stuff, ClusterViewByServer cluster,
+    public ClusterPeerImpl(SharedServiceStuff stuff, ClusterViewByServerUpdatable cluster,
             NodeStateStore stateStore, StorableStore entryStore,
             ActiveNodeState state,
             ClusterStatusAccessor accessor)
@@ -394,6 +394,14 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             return;
         }
 
+        // First things first:
+        if (syncResp.clusterStatus != null) {
+            _cluster.updateWith(syncResp.clusterStatus);
+            _lastClusterHash = syncResp.clusterHash;
+        } else {
+            LOG.info("No additional cluster status received: hash=0x{}", Long.toHexString(syncResp.clusterHash));
+        }
+        
         // comment out or remove for production; left here during testing:
 //long diff = (listTime - syncResp.lastSeen()) >> 10; // in seconds
 //LOG.warn("Received syncList with {} responses; last timestamp {} secs ago", syncResp.size(), diff);
@@ -465,10 +473,16 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     
     /*
     /**********************************************************************
-    /* Internal methods
+    /* Internal methods, cluster state updates
     /**********************************************************************
      */
 
+    /*
+    /**********************************************************************
+    /* Internal methods, other
+    /**********************************************************************
+     */
+    
     /**
      * Helper method called to update persistent state, based on sync list
      * information.
@@ -498,7 +512,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     {
         try {
             return _syncListAccessor.fetchSyncList(_cluster,
-                    TIMEOUT_FOR_SYNCLIST, _syncState);
+                    TIMEOUT_FOR_SYNCLIST, _syncState, _lastClusterHash);
         } catch (InterruptedException e) {
             // no point in complaining if we are being shut down:
             if (_running.get()) {

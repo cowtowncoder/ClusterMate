@@ -21,14 +21,14 @@ import com.fasterxml.clustermate.json.ClusterMessageConverter;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
+import com.fasterxml.clustermate.service.VManaged;
 import com.fasterxml.clustermate.service.bdb.NodeStateStore;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.std.JdkClusterStatusAccessor;
 
 public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K>>
-    extends ClusterViewByServer
-    implements NodeStatusUpdater
+    extends ClusterViewByServerUpdatable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     
@@ -183,7 +183,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
      * information we have if more recent information is available.
      */
     @Override
-    public void updateStatus(ClusterStatusMessage msg)
+    public void updateWith(ClusterStatusMessage msg)
     {
         final long updateTime = _timeMaster.currentTimeMillis();
         int mods = 0;
@@ -224,6 +224,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
 
     protected synchronized boolean updateStatus(NodeState nodeStatus)
     {
+        LOG.info("Should try to update node status for: {}", nodeStatus.getAddress());
         // !!! TODO
         return false;
     }

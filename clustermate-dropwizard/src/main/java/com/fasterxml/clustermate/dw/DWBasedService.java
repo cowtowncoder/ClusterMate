@@ -33,6 +33,7 @@ import com.fasterxml.clustermate.service.cleanup.CleanerUpper;
 import com.fasterxml.clustermate.service.cluster.ClusterBootstrapper;
 import com.fasterxml.clustermate.service.cluster.ClusterInfoHandler;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.service.servlet.NodeStatusServlet;
 import com.fasterxml.clustermate.service.servlet.ServiceDispatchServlet;
 import com.fasterxml.clustermate.service.servlet.StoreEntryServlet;
@@ -87,7 +88,7 @@ public abstract class DWBasedService<
     /**
      * And we better hang on to cluster view as well
      */
-    protected ClusterViewByServer _cluster;
+    protected ClusterViewByServerUpdatable _cluster;
     
     /**
      * Manager object that deals with data expiration and related
@@ -232,7 +233,8 @@ public abstract class DWBasedService<
     protected SyncHandler<K,E> constructSyncHandler(SharedServiceStuff stuff,
             StoresImpl<K,E> stores, ClusterViewByServer cluster)
     {
-        return new SyncHandler<K,E>(_serviceStuff, _stores, _cluster);
+        return new SyncHandler<K,E>(_serviceStuff, _stores,
+                (ClusterViewByServerUpdatable) _cluster);
     }
 
     protected ClusterInfoHandler constructClusterInfoHandler(SharedServiceStuff stuff,

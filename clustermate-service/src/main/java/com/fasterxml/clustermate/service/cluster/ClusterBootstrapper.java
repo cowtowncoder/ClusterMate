@@ -65,7 +65,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
      * @param thisInstancePort Port number this instance is listening to; needed to
      *    find correct cluster configuration
      */
-    public ClusterViewByServer bootstrap(final int thisInstancePort)
+    public ClusterViewByServerUpdatable bootstrap(final int thisInstancePort)
         throws IOException
     {
         // First: need the keyspace definition, to build key ranges

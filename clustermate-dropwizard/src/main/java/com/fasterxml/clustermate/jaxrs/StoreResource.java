@@ -16,6 +16,7 @@ import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
@@ -35,7 +36,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
     
     protected final StoreHandler<K, E> _storeHandler;
 
-    protected final ClusterViewByServer _clusterView;
+    protected final ClusterViewByServerUpdatable _clusterView;
 
     protected final EntryKeyConverter<K> _keyConverter;
     
@@ -49,7 +50,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
             StoreHandler<K, E> storeHandler)
     {
         _storeHandler = storeHandler;
-        _clusterView = clusterView;
+        _clusterView = (ClusterViewByServerUpdatable) clusterView;
         _keyConverter = stuff.getKeyConverter();
     }
 

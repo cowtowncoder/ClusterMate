@@ -19,7 +19,7 @@ import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.VManaged;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
-import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
 import com.fasterxml.storemate.shared.IpAndPort;
@@ -119,11 +119,11 @@ public class SyncListAccessor implements VManaged
             _syncState.getSyncedUpTo(), _syncState.getRangeSync());
      */
     
-    public SyncListResponse<?> fetchSyncList(ClusterViewByServer cluster,
-            TimeSpan timeout, NodeState remote)
+    public SyncListResponse<?> fetchSyncList(ClusterViewByServerUpdatable cluster,
+            TimeSpan timeout, NodeState remote, long lastClusterHash)
         throws InterruptedException
     {
-        final String urlStr = _buildSyncListUrl(cluster, remote);
+        final String urlStr = _buildSyncListUrl(cluster, remote, lastClusterHash);
         HttpURLConnection conn;
         try {
             conn = prepareGet(urlStr, timeout);
@@ -296,7 +296,8 @@ public class SyncListAccessor implements VManaged
                 new Object[] { operation, urlStr, statusCode, msg});
     }
     
-    protected String _buildSyncListUrl(ClusterViewByServer cluster, NodeState remote)
+    protected String _buildSyncListUrl(ClusterViewByServerUpdatable cluster, NodeState remote,
+            long lastClusterHash)
     {
         final NodeState local = cluster.getLocalState();
         final long syncedUpTo = remote.getSyncedUpTo();
@@ -307,7 +308,6 @@ public class SyncListAccessor implements VManaged
          * pass active and passive separately... has to do, for now.
          */
         final KeyRange syncRange = local.totalRange();
-        
         final ServiceConfig config = _stuff.getServiceConfig();
         RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote.getAddress())
             .addPathSegments(config.servicePathRoot);
@@ -317,6 +317,8 @@ public class SyncListAccessor implements VManaged
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
         pathBuilder = cluster.addClusterStateInfo(pathBuilder);
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_CLUSTER_HASH,
+                String.valueOf(lastClusterHash));
         return pathBuilder.toString();
     }
 

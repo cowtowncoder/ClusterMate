@@ -4,6 +4,7 @@ import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**
@@ -28,18 +29,33 @@ public class SyncListResponse<E extends StoredEntry<?>>
      * cases known "empty" time ranges)
      */
     public Long lastSeenTimestamp;
+
+    /**
+     * Hash code server calculates over cluster view information.
+     * Caller may pass it to optionally skip generation and inclusion
+     * of unchanged cluster information.
+     */
+    public long clusterHash;
+
+    /**
+     * Optionally included cluster view.
+     */
+    public ClusterStatusMessage clusterStatus;
     
     public List<SyncListResponseEntry> entries;
-
+    
     public SyncListResponse() { }
     public SyncListResponse(String error) { message = error; }
-    public SyncListResponse(List<E> rawEntries, long lastSeen)
+    public SyncListResponse(List<E> rawEntries, long lastSeen,
+            long clusterHash, ClusterStatusMessage clusterStatus)
     {
         entries = new ArrayList<SyncListResponseEntry>(rawEntries.size());
         for (StoredEntry<?> e : rawEntries) {
             entries.add(SyncListResponseEntry.valueOf(e));
         }
         lastSeenTimestamp = lastSeen;
+        this.clusterStatus = clusterStatus;
+        this.clusterHash = clusterHash;
     }
 
     public int size() {
