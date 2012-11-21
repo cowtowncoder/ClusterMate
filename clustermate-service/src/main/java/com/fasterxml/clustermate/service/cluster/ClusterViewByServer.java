@@ -3,7 +3,7 @@ package com.fasterxml.clustermate.service.cluster;
 import java.util.*;
 
 import com.fasterxml.clustermate.api.*;
-import com.fasterxml.clustermate.service.VManaged;
+import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 /**
@@ -55,4 +55,28 @@ public abstract class ClusterViewByServer
      * whether state as observed by this node has changed materially.
      */
     public abstract long getHashOverState();
+
+    /*
+    /**********************************************************************
+    /* Other misc functionality for adding cluster info on messages
+    /**********************************************************************
+     */
+    
+    /**
+     * Method called to add information about cluster state caller has when making
+     * Sync List request.
+     */
+    public abstract RequestPathBuilder addClusterStateInfo(RequestPathBuilder requestBuilder);
+
+    /**
+     * Method called to add information about cluster state, as piggy-backed
+     * on responses other than explicit cluster state requests.
+     * 
+     * @param response Response to modify
+     * 
+     * @return Original response object; only returned to allow call chaining, instance
+     *   never different from passed-in argument.
+     */
+    public abstract ServiceResponse addClusterStateInfo(ServiceResponse response);
+
 }

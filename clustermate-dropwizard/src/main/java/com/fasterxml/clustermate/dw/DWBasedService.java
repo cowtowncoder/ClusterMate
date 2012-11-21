@@ -166,7 +166,7 @@ public abstract class DWBasedService<
         LOG.info("Initializing cluster configuration (port {})...", port);
         final long startTime = _timeMaster.currentTimeMillis();
         _cluster = new ClusterBootstrapper<K,E>(startTime, _serviceStuff, _stores)
-            .bootstrap(port);
+                .bootstrap(port);
         _managed.add(_cluster);
      
         LOG.info("Cluster configuration setup complete, with {} nodes", _cluster.size());
@@ -229,12 +229,10 @@ public abstract class DWBasedService<
     protected abstract StoreHandler<K,E> constructStoreHandler(SharedServiceStuff serviceStuff,
             Stores<K,E> stores);
 
-
     protected SyncHandler<K,E> constructSyncHandler(SharedServiceStuff stuff,
-            StoresImpl<K,E> stores, ClusterViewByServer cluster)
+            StoresImpl<K,E> stores, ClusterViewByServerUpdatable cluster)
     {
-        return new SyncHandler<K,E>(_serviceStuff, _stores,
-                (ClusterViewByServerUpdatable) _cluster);
+        return new SyncHandler<K,E>(stuff, stores, cluster);
     }
 
     protected ClusterInfoHandler constructClusterInfoHandler(SharedServiceStuff stuff,

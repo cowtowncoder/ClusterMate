@@ -28,7 +28,6 @@ import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ClusterConfig;
 import com.fasterxml.clustermate.service.cfg.NodeConfig;
 import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
-import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerImpl;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
@@ -123,7 +122,7 @@ public abstract class JaxrsStoreTestBase extends TestCase
      * Bit unclean, but tests need to be able to create a light-weight instance
      * of cluster view.
      */
-    protected ClusterViewByServer clusterViewForTesting(SharedServiceStuff stuff,
+    protected ClusterViewByServerImpl<TestKey, StoredEntry<TestKey>> clusterViewForTesting(SharedServiceStuff stuff,
             StoresForTests stores)
     {
         KeySpace keyspace = new KeySpace(360);

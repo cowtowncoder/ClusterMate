@@ -21,7 +21,6 @@ import com.fasterxml.clustermate.json.ClusterMessageConverter;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
-import com.fasterxml.clustermate.service.VManaged;
 import com.fasterxml.clustermate.service.bdb.NodeStateStore;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;

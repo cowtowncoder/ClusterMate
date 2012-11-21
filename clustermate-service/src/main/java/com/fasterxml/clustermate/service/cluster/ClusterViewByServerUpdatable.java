@@ -2,8 +2,6 @@ package com.fasterxml.clustermate.service.cluster;
 
 import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.KeyRange;
-import com.fasterxml.clustermate.api.RequestPathBuilder;
-import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.VManaged;
 import com.fasterxml.storemate.shared.IpAndPort;
 
@@ -20,23 +18,6 @@ public abstract class ClusterViewByServerUpdatable
     /* Methods for cluster membership handling
     /**********************************************************************
      */
-    
-    /**
-     * Method called to add information about cluster state, as piggy-backed
-     * on responses other than explicit cluster state requests.
-     * 
-     * @param response Response to modify
-     * 
-     * @return Original response object; only returned to allow call chaining, instance
-     *   never different from passed-in argument.
-     */
-    public abstract ServiceResponse addClusterStateInfo(ServiceResponse response);
-
-    /**
-     * Method called to add information about cluster state caller has when making
-     * Sync List request.
-     */
-    public abstract RequestPathBuilder addClusterStateInfo(RequestPathBuilder requestBuilder);
     
     /**
      * Method called to let cluster check whether given node is known;
