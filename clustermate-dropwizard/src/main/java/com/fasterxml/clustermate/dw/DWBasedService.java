@@ -33,6 +33,7 @@ import com.fasterxml.clustermate.service.cleanup.CleanerUpper;
 import com.fasterxml.clustermate.service.cluster.ClusterBootstrapper;
 import com.fasterxml.clustermate.service.cluster.ClusterInfoHandler;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServerImpl;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.service.servlet.NodeStatusServlet;
 import com.fasterxml.clustermate.service.servlet.ServiceDispatchServlet;
@@ -165,8 +166,9 @@ public abstract class DWBasedService<
         final int port = dwConfig.getHttpConfiguration().getPort();
         LOG.info("Initializing cluster configuration (port {})...", port);
         final long startTime = _timeMaster.currentTimeMillis();
-        _cluster = new ClusterBootstrapper<K,E>(startTime, _serviceStuff, _stores)
+        ClusterViewByServerImpl<K,E> cl = new ClusterBootstrapper<K,E>(startTime, _serviceStuff, _stores)
                 .bootstrap(port);
+        _cluster = cl;
         _managed.add(_cluster);
      
         LOG.info("Cluster configuration setup complete, with {} nodes", _cluster.size());
