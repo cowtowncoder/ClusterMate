@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.service.cluster;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -196,33 +197,42 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
             LOG.warn("checkMembership() called with local node address; ignoring");
             return;
         }
-
-        // Then actual business...
-        synchronized (_peers) {
-            if (_peers.containsKey(endpoint)) { // already known, no further action
-                return;
+        try {
+            synchronized (_peers) {
+                if (_peers.containsKey(endpoint)) { // already known, no further action
+                    return;
+                }
+                /* How interesting! Someone who we don't even know seems to be joining...
+                 * Two possible cases, then; (a) We are seeing something for which we do
+                 * have data in local DB, just not in config file, or (b) New entry for
+                 * which no data exists.
+                 */
+                ClusterPeerImpl<K,E> peer;
+                ActiveNodeState oldState = _stores.getNodeStore().findEntry(endpoint);
+                // If such data found, assume it's accurate; we'll be updated soon if not
+                if (oldState != null) { 
+                    peer = _createPeer(oldState);
+                    LOG.warn("Request from node {} for which we have info in Local DB, restoring", endpoint);
+                } else {
+                    // But if not found need minimal bootstrapping
+                    ActiveNodeState initialStatus = new ActiveNodeState(_localState,
+                            new NodeDefinition(endpoint, NodeDefinition.INDEX_UNKNOWN,
+                                    totalRange, totalRange),
+                            _timeMaster.currentTimeMillis());
+                    peer = _createPeer(initialStatus);
+                    LOG.warn("Request from node {} for which we have no information, bootstrap with range of {}",
+                            endpoint, totalRange);
+                }
+                _peers.put(endpoint, peer);
+                peer.startSyncing();
+                /* No need to update local DB, since we really have little new information;
+                 * should be getting it via sync-list by this node, or from other peers,
+                 * depending on whether we are neighbors or not.
+                 */
             }
-            /* How interesting! Someone who we don't even know seems to be joining...
-             * If so, add a sort of placeholder; more info should be forthcoming
-             * soon -- here all we know is maximum range, which is not necessarily
-             * exact. But should be enough to bootstrap things, and avoid losing
-             * synchronization. Plus clients are more likely to be handed over
-             * quickly.
-             */
-            LOG.warn("New node {} making sync request -- need to bootstrap: using total range of {}, unknown index",
-                    endpoint, totalRange);
-            ActiveNodeState initialStatus = new ActiveNodeState(_localState,
-                    // note: we don't know its index... 0 means "not known"
-                    new NodeDefinition(endpoint, NodeDefinition.INDEX_UNKNOWN,
-                            totalRange, totalRange),
-                    _timeMaster.currentTimeMillis());
-            ClusterPeerImpl<K,E> peer = _createPeer(initialStatus);
-            _peers.put(endpoint, peer);
-
-            // And then start the thread
-            peer.startSyncing();
+        } catch (IOException e) {
+            LOG.warn("Failed to update Node status for "+endpoint+": "+e.getMessage(), e);
         }
-        LOG.info("Started q new Peer thread for {}", endpoint);
     }
     
     /**
@@ -269,7 +279,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         }
     }
 
-    protected synchronized boolean updateStatus(NodeState nodeStatus, boolean forSender)
+    protected boolean updateStatus(NodeState nodeStatus, boolean forSender)
     {
         // First: do we have info for the node?
         final IpAndPort endpoint = nodeStatus.getAddress();
@@ -284,21 +294,56 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         }
         ClusterPeerImpl<K,E> peer;
 
-        synchronized (_peers) {
-            peer = _peers.get(endpoint);
-            if (peer == null) { // Interesting: need to add a new entry
-                LOG.warn("Status for new node {} received: must create a peer", endpoint);
-                ActiveNodeState initialStatus = new ActiveNodeState(_localState, nodeStatus,
-                        _timeMaster.currentTimeMillis());
-                 peer = _createPeer(initialStatus);
-                _peers.put(endpoint, peer);
-                LOG.info("Started q new Peer thread for {}", endpoint);
-            } else { // more common, just update...
-// !!! TODO
-                LOG.info("Should try to update node status for: {}", nodeStatus.getAddress());
+        try {
+            synchronized (_peers) {
+                peer = _peers.get(endpoint);
+                if (peer == null) { // Interesting: need to add a new entry
+                    LOG.warn("Status for new node {} received: must create a peer", endpoint);
+                    ActiveNodeState initialStatus = new ActiveNodeState(_localState, nodeStatus,
+                            _timeMaster.currentTimeMillis());
+                    _addNewPeer(initialStatus);
+                } else { // more common, just update...
+    // !!! TODO
+                    LOG.info("Should try to update node status for: {}", nodeStatus.getAddress());
+                }
             }
+        } catch (IOException e) {
+            LOG.warn("Failed to update Node status for "+endpoint+": "+e.getMessage(), e);
         }
         return false;
+    }
+
+    protected void _addNewPeer(ActiveNodeState initialStatus) throws IOException
+    {
+        final IpAndPort endpoint = initialStatus.getAddress();
+
+        /* Ok: let's also see if we have old state information in the
+         * local DB. If we do, we may be able to avoid syncing from
+         * the beginning of time; and/or obtain actual key range.
+         */
+        NodeStateStore stateStore = _stores.getNodeStore();
+        // TODO: should perhaps also find by index + range?
+        ActiveNodeState oldState = stateStore.findEntry(endpoint);
+
+        ClusterPeerImpl<K,E> peer = null;
+        // First common case: info was persisted earlier; we just "unthaw it"
+        if (oldState != null) {
+            if (oldState.equals(initialStatus)) {
+                peer = _createPeer(oldState);
+                _peers.put(endpoint, peer);
+                LOG.info("Restoring node {} from persisted data: no change", endpoint);
+            } else {
+                // Some changes; but is the sync range unaffected?
+            }
+        } else { // No info, just create with info we received
+            
+        }
+
+        if (peer != null) {
+            _peers.put(endpoint, peer);
+            peer.startSyncing();
+            LOG.info("Started a new Peer thread for {}", endpoint);
+        }
     }
     
     /*

@@ -231,6 +231,11 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
             if (def == null) {
                 long staleTimeSecs = (_startTime - state.getLastSyncAttempt()) / 1000L;
                 if (staleTimeSecs < SECS_IN_24H) {
+                    /* Skipping means that (a) we will leave the entry in the local DB, in case
+                     * it MAY be useful via explicit info via cluster; but
+                     * (b) will NOT include in current active state. Latter is
+                     * useful in gracefully expiring information.
+                     */
                     LOG.warn("Unrecognized persisted Node state, key {}: less than 24h old, will skip", key);
                     continue;
                 }

@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.service.sync;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -89,9 +90,6 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
     
     protected final ObjectReader _jsonSyncPullReader;
 
-    // Mostly/only used for debugging...
-    protected final NodeState _localState;
-
     /*
     /**********************************************************************
     /* Configuration
@@ -147,8 +145,6 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
 
         // error responses always as JSON:
         _errorJsonWriter = stuff.jsonWriter();
-
-        _localState = cluster.getLocalState();        
         _maxToListPerRequest = maxToListPerRequest;
     }
 
@@ -225,11 +221,25 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
 
         AtomicLong timestamp = new AtomicLong(0L);
         long since = (sinceL == null) ? 0L : sinceL.longValue();
-        List<E> entries = _listEntries(range, since, upUntil, _maxToListPerRequest, timestamp);
+        
+        /* One more thing: let's sanity check that our key range overlaps request
+         * range. If not, can avoid (possibly huge) database scan.
+         */
+        NodeState localState = _cluster.getLocalState();        
+        List<E> entries;
+
+        KeyRange localRange = localState.totalRange();
+        if (localRange.overlapsWith(range)) {
+            entries = _listEntries(range, since, upUntil, _maxToListPerRequest, timestamp);
         /*
 System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+"); between "+sinceL+" and "+upUntil+", got "+entries.size()+"/"
 +_stores.getEntryStore().getEntryCount()+" entries... (time: "+_timeMaster.currentTimeMillis()+")");
 */
+        } else {
+            LOG.warn("Sync list request by {} for range {}; does not overlap with local range of {}; skipping",
+                    caller, range, localRange);
+            entries = Collections.emptyList();
+        }
         
         // one more twist; if no entries found, can sync up to 'upUntil' time...
         long lastSeen = timestamp.get();

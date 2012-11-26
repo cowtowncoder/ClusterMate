@@ -269,6 +269,21 @@ public final class ActiveNodeState extends NodeState
         return String.valueOf(address);
     }
 
+    /**
+     * Equality is specifically defined to encompass just a subset of information:
+     *<ul>
+     * <li>Endpoint (ip+port)
+     *  </li>
+     * <li>Disabled?
+     *  </li>
+     * <li>Active Range
+     *  </li>
+     * <li>Passive Range
+     *  </li>
+     * <li>Index
+     *  </li>
+     *</ul>
+     */
     @Override
     public boolean equals(Object o)
     {
