@@ -399,7 +399,12 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             _cluster.updateWith(syncResp.clusterStatus);
             _lastClusterHash = syncResp.clusterHash;
         } else {
-            LOG.info("No additional cluster status received: hash=0x{}", Long.toHexString(syncResp.clusterHash));
+            // This is fine, as long as hashes match
+            if (syncResp.clusterHash != _lastClusterHash) {
+                LOG.warn("Did not get cluster status from {} even though hashes differ 0x{} (old) vs 0x{} (response)",
+                        _syncState.getAddress(),
+                        Long.toHexString(_lastClusterHash), Long.toHexString(syncResp.clusterHash));
+            }
         }
         
         // comment out or remove for production; left here during testing:

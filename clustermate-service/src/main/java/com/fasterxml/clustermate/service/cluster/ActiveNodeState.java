@@ -66,7 +66,7 @@ public final class ActiveNodeState extends NodeState
      * @param updateTime Timestamp when last update was made; usually passed
      *    as 0L
      */
-    public ActiveNodeState(ActiveNodeState localNode,
+    public ActiveNodeState(NodeState localNode,
             NodeDefinition remoteNode, long updateTime)
     {
         address = remoteNode.getAddress();
@@ -90,6 +90,38 @@ public final class ActiveNodeState extends NodeState
         syncedUpTo = 0L;
     }
 
+    /**
+     * Constructor called when creating a peer node from information returned
+     * piggy-backed on Sync List response.
+     */
+    public ActiveNodeState(NodeState localNode,
+            NodeState remoteNode, long updateTime)
+    {
+        if (localNode.getAddress().equals(remoteNode.getAddress())) { // sanity check
+            throw new IllegalArgumentException("Trying to create Peer with both end points as: "+localNode.getAddress());
+        }
+        
+        address = remoteNode.getAddress();
+        index = remoteNode.getIndex();
+        rangeActive = remoteNode.getRangeActive();
+        rangePassive = remoteNode.getRangePassive();
+        lastUpdated = updateTime;
+
+        // need to know total range of remove node
+        KeyRange remoteRange = rangeActive.union(rangePassive);
+        KeyRange localRange = localNode.totalRange();
+
+        // any overlap?
+        if (remoteRange.overlapsWith(localRange)) { // yes!
+            rangeSync = remoteRange.union(localRange);
+        } else { // nope; create empty sync range
+            rangeSync = remoteRange.withLength(0);
+        }
+        disabled = remoteNode.isDisabled();
+        lastSyncAttempt = 0L;
+        syncedUpTo = 0L;
+    }
+    
     // used via fluent factory
     private ActiveNodeState(ActiveNodeState src,
             KeyRange newSyncRange, long newSyncedUpTo)

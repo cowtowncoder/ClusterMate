@@ -8,6 +8,12 @@ import com.fasterxml.storemate.shared.IpAndPort;
  */
 public class NodeDefinition
 {
+    /**
+     * Index in ring is one-based (unlike most things), so that default int value
+     * of 0 can be used for "not known".
+     */
+    public final static int INDEX_UNKNOWN = 0;
+    
     protected final IpAndPort _address;
 
     protected final int _index;
