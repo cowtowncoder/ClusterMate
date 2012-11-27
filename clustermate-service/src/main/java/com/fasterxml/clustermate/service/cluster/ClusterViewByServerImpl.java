@@ -279,12 +279,21 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         }
     }
 
-    protected boolean updateStatus(NodeState nodeStatus, boolean forSender)
+    /**
+     * Method called for each node status entry in cluster status information message.
+     * 
+     * @param nodeStatus Status to use for updating node state.
+     * @param byNodeItself True if the status is from the node itself; true for 'local'
+     *   entry in status message.
+     *   
+     * @return True if there was a status update
+     */
+    protected boolean updateStatus(NodeState nodeStatus, boolean byNodeItself)
     {
         // First: do we have info for the node?
         final IpAndPort endpoint = nodeStatus.getAddress();
         if (endpoint == null) {
-            LOG.warn("Missing endpoint info (sender? "+forSender+"); need to skip update");
+            LOG.warn("Missing endpoint info (sender? "+byNodeItself+"); need to skip update");
             return false;
         }
         // also, local state must be produced locally; ignore what others think
@@ -299,12 +308,15 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
                 peer = _peers.get(endpoint);
                 if (peer == null) { // Interesting: need to add a new entry
                     LOG.warn("Status for new node {} received: must create a peer", endpoint);
-                    ActiveNodeState initialStatus = new ActiveNodeState(_localState, nodeStatus,
-                            _timeMaster.currentTimeMillis());
-                    _addNewPeer(initialStatus);
+                    // node: should not ever occur for node itself... but...
+                    _updateMissingPeer(nodeStatus, byNodeItself);
                 } else { // more common, just update...
-    // !!! TODO
-                    LOG.info("Should try to update node status for: {}", nodeStatus.getAddress());
+                    // But first, see that information is more up-to-date
+                    ActiveNodeState currentState = peer.getSyncState();
+                    if (currentState.getLastUpdated() >= nodeStatus.getLastUpdated()) {
+                        return false;
+                    }
+                    return _updateExistingPeer(nodeStatus, byNodeItself, peer);
                 }
             }
         } catch (IOException e) {
@@ -313,15 +325,33 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         return false;
     }
 
-    protected void _addNewPeer(ActiveNodeState initialStatus) throws IOException
+    /**
+     * Method called when we get information on a peer for which we have
+     * peer object and status information; so generally just need to merge
+     * it.
+     */
+    protected boolean _updateExistingPeer(NodeState nodeStatus, boolean forSender,
+            ClusterPeerImpl<K,E> peer) throws IOException
     {
-        final IpAndPort endpoint = initialStatus.getAddress();
+        final IpAndPort endpoint = nodeStatus.getAddress();
 
+        return false;
+    }
+    
+    /**
+     * Method called when we get information on a peer for which we do not
+     * have peer thread.
+     */
+    protected void _updateMissingPeer(NodeState nodeStatus, boolean forSender) throws IOException
+    {
+        final IpAndPort endpoint = nodeStatus.getAddress();
         /* Ok: let's also see if we have old state information in the
          * local DB. If we do, we may be able to avoid syncing from
          * the beginning of time; and/or obtain actual key range.
          */
         NodeStateStore stateStore = _stores.getNodeStore();
+        ActiveNodeState initialStatus = new ActiveNodeState(_localState, nodeStatus,
+                _timeMaster.currentTimeMillis());
         // TODO: should perhaps also find by index + range?
         ActiveNodeState oldState = stateStore.findEntry(endpoint);
 
