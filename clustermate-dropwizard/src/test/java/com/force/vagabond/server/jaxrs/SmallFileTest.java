@@ -9,8 +9,10 @@ import com.fasterxml.storemate.store.StorableStore;
 
 import com.fasterxml.clustermate.jaxrs.StoreResource;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.msg.PutResponse;
 import com.fasterxml.clustermate.service.store.StoredEntry;
+import com.fasterxml.clustermate.service.util.StatsCollectingOutputStream;
 
 import com.force.vagabond.server.jaxrs.testutil.*;
 
@@ -63,8 +65,15 @@ public class SmallFileTest extends JaxrsStoreTestBase
 
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();
-        resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
+        // and ensure we get diagnostics too
+        OperationDiagnostics stats = new OperationDiagnostics();
+        resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1, stats);
+        assertNotNull(stats.getEntry());
         assertEquals(200, response.getStatus());
+        StatsCollectingOutputStream statsOut = new StatsCollectingOutputStream(new ByteArrayOutputStream(), stats);
+        response.getStreamingContent().writeContent(statsOut);
+        assertEquals(SMALL_DATA.length, stats.getBytesTransferred());
+
         // and now last-accessed should be set
         assertEquals(1234L, resource.getStores().getLastAccessStore().findLastAccessTime(INTERNAL_KEY1,
                 LastAccessUpdateMethod.INDIVIDUAL));
