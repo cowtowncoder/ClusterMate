@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -105,63 +106,68 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
      */
 
     @Override
-    public void handleGet(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics metadata) throws IOException
     {
         ServletBase servlet = _matchServlet(request);
         if (servlet != null) {
-            servlet.handleGet(request, response);
+            servlet.handleGet(request, response, metadata);
             return;
         }
         response = response.notFound();
-        response.writeOut(null);
+        response.writeOut(null, null);
     }
 
     @Override
-    public void handleHead(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handleHead(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics metadata) throws IOException
     {
         ServletBase servlet = _matchServlet(request);
         if (servlet != null) {
-            servlet.handleHead(request, response);
+            servlet.handleHead(request, response, metadata);
             return;
         }
         response = response.notFound();
-        response.writeOut(null);
-    }
-    
-    @Override
-    public void handlePut(ServletServiceRequest request, ServletServiceResponse response) throws IOException
-    {
-        ServletBase servlet = _matchServlet(request);
-        if (servlet != null) {
-            servlet.handlePut(request, response);
-            return;
-        }
-        response = response.notFound();
-        response.writeOut(null);
+        response.writeOut(null, null);
     }
 
     @Override
-    public void handlePost(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handlePut(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics metadata) throws IOException
     {
         ServletBase servlet = _matchServlet(request);
         if (servlet != null) {
-            servlet.handlePost(request, response);
+            servlet.handlePut(request, response, metadata);
             return;
         }
         response = response.notFound();
-        response.writeOut(null);
+        response.writeOut(null, null);
     }
 
     @Override
-    public void handleDelete(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handlePost(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics metadata) throws IOException
     {
         ServletBase servlet = _matchServlet(request);
         if (servlet != null) {
-            servlet.handleDelete(request, response);
+            servlet.handlePost(request, response, metadata);
             return;
         }
         response = response.notFound();
-        response.writeOut(null);
+        response.writeOut(null, null);
+    }
+
+    @Override
+    public void handleDelete(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics metadata) throws IOException
+    {
+        ServletBase servlet = _matchServlet(request);
+        if (servlet != null) {
+            servlet.handleDelete(request, response, metadata);
+            return;
+        }
+        response = response.notFound();
+        response.writeOut(null, null);
     }
     
     /*

@@ -65,6 +65,11 @@ public abstract class ServiceResponse
     public final boolean hasEntity() { return _entity != null; }
     public final boolean hasStreamingContent() { return _streamingContent != null; }
 
+    @SuppressWarnings("unchecked")
+    public <T> T getEntity() {
+        return (T) _entity;
+    }
+    
     /*
     /**********************************************************************
     /* High(er)-level response building; semantic headers

@@ -48,8 +48,8 @@ public class MediumFileTest extends JaxrsStoreTestBase
         // then try adding said entry
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1, calcChecksum(BIG_DATA),
-                new ByteArrayInputStream(BIG_DATA), null, null);
+                INTERNAL_KEY1, calcChecksum(BIG_DATA), new ByteArrayInputStream(BIG_DATA),
+                null, null, null);
         assertEquals(200, response.getStatus());
         // verify we got a file...
         assertSame(PutResponse.class, response.getEntity().getClass());

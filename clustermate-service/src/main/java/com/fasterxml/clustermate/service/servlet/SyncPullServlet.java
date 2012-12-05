@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.storemate.shared.EntryKey;
 
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -30,11 +31,13 @@ public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
     }
     
     @Override
-    public void handlePost(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handlePost(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics metadata) throws IOException
     {
-        _syncHandler.pullEntries(request, response, request.getInputStream());
+        _syncHandler.pullEntries(request, response, request.getInputStream(), metadata);
         _addStdHeaders(response);
-        response.writeOut(_jsonWriter);
+        // pass metadata to track number of bytes returned...
+        response.writeOut(_jsonWriter, metadata);
     }
 
 }

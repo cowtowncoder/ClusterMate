@@ -54,11 +54,11 @@ public class SyncResource<K extends EntryKey, E extends StoredEntry<K>>
     @Timed
     public Response listEntries(@Context UriInfo uriInfo, @Context HttpHeaders headers,
             @QueryParam("since") Long sinceL)
-    	throws StoreException
+        throws StoreException
     {
         JaxrsHttpResponse response = new JaxrsHttpResponse();
         _syncHandler.listEntries(new JaxrsHttpRequest(uriInfo, headers, "", OperationType.GET),
-                response, sinceL);
+                response, sinceL, null);
         return response.buildResponse();
     }
     
@@ -80,10 +80,11 @@ public class SyncResource<K extends EntryKey, E extends StoredEntry<K>>
     @Timed
     public Response pullEntries(@Context UriInfo uriInfo, @Context HttpHeaders headers,
             InputStream in)
-    	throws StoreException
+        throws StoreException
     {
         JaxrsHttpResponse response = new JaxrsHttpResponse();
-        _syncHandler.pullEntries(new JaxrsHttpRequest(uriInfo, headers, "", OperationType.POST), response, in);
+        _syncHandler.pullEntries(new JaxrsHttpRequest(uriInfo, headers, "", OperationType.POST), response, in,
+                null);
         return response.buildResponse();
     }
 }

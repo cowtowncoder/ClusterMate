@@ -3,6 +3,7 @@ package com.fasterxml.clustermate.service.cluster;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.clustermate.api.ClusterStatusMessage;
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.ServiceRequest;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
@@ -31,7 +32,8 @@ public class ClusterInfoHandler
      * by this node.
      */
     @SuppressWarnings("unchecked")
-    public <RESP extends ServiceResponse> RESP getStatus(ServiceRequest request, RESP response)
+    public <RESP extends ServiceResponse> RESP getStatus(ServiceRequest request, RESP response,
+            OperationDiagnostics metadata)
     {
         // use streaming impl just so we'll use specific ObjectWriter
         return (RESP) response.ok(new StreamingEntityImpl(_writer, _cluster.asMessage()))

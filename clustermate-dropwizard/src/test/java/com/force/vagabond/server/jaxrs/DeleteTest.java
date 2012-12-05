@@ -49,12 +49,12 @@ public class DeleteTest extends JaxrsStoreTestBase
         // first: create 2 entries:
         FakeHttpResponse response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1, calcChecksum(DATA1),
-                new ByteArrayInputStream(DATA1), null, null);
+                INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
+                null, null, null);
         assertEquals(200, response.getStatus());
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY2, calcChecksum(DATA2),
-                new ByteArrayInputStream(DATA2), null, null);
+                INTERNAL_KEY2, calcChecksum(DATA2), new ByteArrayInputStream(DATA2),
+                null, null, null);
         assertEquals(200, response.getStatus());
         assertEquals(2, entries.getEntryCount());
 
@@ -163,8 +163,8 @@ public class DeleteTest extends JaxrsStoreTestBase
         // first: create the entry
         FakeHttpResponse response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1, calcChecksum(DATA1),
-                new ByteArrayInputStream(DATA1), null, null);
+                INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
+                null, null, null);
         assertEquals(200, response.getStatus());
         assertEquals(1, entries.getEntryCount());
 
@@ -182,8 +182,8 @@ public class DeleteTest extends JaxrsStoreTestBase
         // but then an attempt to "re-PUT" entry must fail with 410 (not conflict)
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1, calcChecksum(DATA1),
-                new ByteArrayInputStream(DATA1), null, null);
+                INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
+                null, null, null);
         assertEquals(410, response.getStatus());
         PutResponse<?> pr = (PutResponse<?>) response.getEntity();
         verifyMessage("Failed PUT: trying to recreate", pr.message);

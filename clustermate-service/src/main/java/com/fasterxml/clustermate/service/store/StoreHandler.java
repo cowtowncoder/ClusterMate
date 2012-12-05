@@ -15,12 +15,14 @@ import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.ServiceRequest;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.msg.*;
+import com.fasterxml.clustermate.service.util.StatsCollectingInputStream;
 
 /**
  * Class that handles coordination between front-end service layer (servlet,
@@ -114,10 +116,16 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     /* Content access (GET)
     /**********************************************************************
      */
-    
-    // public since tests need to call it
+
     public ServiceResponse getEntry(ServiceRequest request, ServiceResponse response, K key)
-            throws StoreException
+        throws StoreException
+    {
+        return getEntry(request, response, key, null);
+    }
+    
+    public ServiceResponse getEntry(ServiceRequest request, ServiceResponse response, K key,
+            OperationDiagnostics metadata)
+        throws StoreException
     {
         String rangeStr = request.getHeader(ClusterMateConstants.HTTP_HEADER_RANGE_FOR_REQUEST);
         ByteRange range;
@@ -128,9 +136,13 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         }
         String acceptableEnc = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
         Storable rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
+        if (metadata != null) {
+            metadata.setEntry(rawEntry);
+        }
         if (rawEntry == null) {
             return handleGetForMissing(request, response, key);
         }
+
         // second: did we get a tombstone?
         if (rawEntry.isDeleted()) {
             ServiceResponse resp = handleGetForDeleted(request, response, key, rawEntry);
@@ -194,14 +206,23 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
+    public ServiceResponse getEntryStats(ServiceRequest request, ServiceResponse response, K key)
+        throws StoreException
+    {
+        return getEntryStats(request, response, key, null);
+    }
+    
     // public for calling from unit tests
-    public ServiceResponse getEntryStats(ServiceRequest request,
-            ServiceResponse response, K key)
-    	throws StoreException
+    public ServiceResponse getEntryStats(ServiceRequest request, ServiceResponse response, K key,
+            OperationDiagnostics metadata)
+        throws StoreException
     {
         // Do we need special handling for Range requests? (GET only?)
     	// Should this update last-accessed as well? (for now, won't)
         Storable rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
+        if (metadata != null) {
+            metadata.setEntry(rawEntry);
+        }
         if (rawEntry == null) {
             return response.notFound(new GetErrorResponse<K>(key, "No entry found for key '"+key+"'"));
         }
@@ -238,6 +259,12 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     public ServiceResponse putEntry(ServiceRequest request, ServiceResponse response,
             K key, InputStream dataIn)
     {
+        return putEntry(request, response, key, dataIn, null);
+    }
+    
+    public ServiceResponse putEntry(ServiceRequest request, ServiceResponse response,
+            K key, InputStream dataIn, OperationDiagnostics metadata)
+    {
         final int checksum = _decodeInt(request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CHECKSUM), 0);
         String paramKey = null, paramValue = null;
         paramKey = ClusterMateConstants.HTTP_QUERY_PARAM_MIN_SINCE_ACCESS_TTL;
@@ -248,17 +275,22 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         TimeSpan maxTTL = _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
 
         return putEntry(request, response, key, checksum, dataIn,
-                minTTL, maxTTL);
+                minTTL, maxTTL, metadata);
     }   
 
     // Public due to unit tests
     public ServiceResponse putEntry(ServiceRequest request, ServiceResponse response,
             K key, int checksum,// 32-bit hash by client
             InputStream dataIn,
-            TimeSpan minTTLSinceAccess, TimeSpan maxTTL)
+            TimeSpan minTTLSinceAccess, TimeSpan maxTTL,
+            OperationDiagnostics stats)
     {
         final long  creationTime = _timeMaster.currentTimeMillis();
-    	
+        // 05-Dec-2012, tatu: May want to keep track of bytes read:
+        if (stats != null) {
+            dataIn = new StatsCollectingInputStream(dataIn, stats);
+        }
+
         // first things first: ensure that request was correctly sent wrt routing
         Compression inputCompression = Compression.forContentEncoding(request.getHeader(
                 ClusterMateConstants.HTTP_HEADER_COMPRESSION));
@@ -303,6 +335,9 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         // And then check whether it was a dup put; and if so, that checksums match
         Storable prev = result.getPreviousEntry();
         if (prev != null) {
+            if (stats != null) {
+                stats.setEntry(result.getNewEntry());
+            }
             _logDuplicatePut(key);
             // first: will not allow "recreating" a soft-deleted entry
             if (prev.isDeleted()) {
@@ -319,6 +354,8 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
                         +(prev.isDeleted() ? "undelete" : "overwrite")
                         +" entry '"+key+"' but "+prob));
             }
+        } else if (stats != null) {
+            stats.setEntry(result.getNewEntry());
         }
         return response.ok(PutResponse.ok(key, result.getNewEntry()));
     }
@@ -349,9 +386,15 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
-    // public for calling from unit tests
     public ServiceResponse removeEntry(ServiceRequest request, ServiceResponse response, K key)
-            throws IOException, StoreException
+        throws IOException, StoreException
+    {
+        return removeEntry(request, response, key, null);
+    }
+    
+    public ServiceResponse removeEntry(ServiceRequest request, ServiceResponse response, K key,
+            OperationDiagnostics metadata)
+        throws IOException, StoreException
     {
         StorableDeletionResult result = _stores.getEntryStore().softDelete(key.asStorableKey(), true, true);
         /* Even without match, we can claim it is ok... should we?
@@ -362,7 +405,11 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         
         // also: if deletion succeeded, may need to delete actual physical file:
         if (result != null && result.hadEntry()) {
-            E entry = _entryConverter.entryFromStorable(key, result.getEntry());
+            Storable rawEntry = result.getEntry();
+            if (metadata != null) {
+                metadata.setEntry(rawEntry);
+            }
+            E entry = _entryConverter.entryFromStorable(key, rawEntry);
             creationTime = entry.getCreationTime();
         }
         return response.ok(new DeleteResponse<K>(key, creationTime));

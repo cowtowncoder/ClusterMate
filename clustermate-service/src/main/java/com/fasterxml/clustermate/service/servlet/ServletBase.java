@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 
@@ -53,31 +54,31 @@ public class ServletBase extends HttpServlet
     @Override
     public final void doGet(HttpServletRequest req0, HttpServletResponse resp0) throws IOException
     {
-        handleGet(constructRequest(req0), constructResponse(resp0));
+        handleGet(constructRequest(req0), constructResponse(resp0), constructMetadata());
     }
 
     @Override
     public final void doHead(HttpServletRequest req0, HttpServletResponse resp0) throws IOException
     {
-        handleHead(constructRequest(req0), constructResponse(resp0));
+        handleHead(constructRequest(req0), constructResponse(resp0), constructMetadata());
     }
     
     @Override
     public final void doPost(HttpServletRequest req0, HttpServletResponse resp0) throws IOException
     {
-        handlePost(constructRequest(req0), constructResponse(resp0));
+        handlePost(constructRequest(req0), constructResponse(resp0), constructMetadata());
     }
     
     @Override
     public final void doPut(HttpServletRequest req0, HttpServletResponse resp0) throws IOException
     {
-        handlePut(constructRequest(req0), constructResponse(resp0));
+        handlePut(constructRequest(req0), constructResponse(resp0), constructMetadata());
     }
 
     @Override
     public final void doDelete(HttpServletRequest req0, HttpServletResponse resp0) throws IOException
     {
-        handleDelete(constructRequest(req0), constructResponse(resp0));
+        handleDelete(constructRequest(req0), constructResponse(resp0), constructMetadata());
     }
 
     /*
@@ -86,24 +87,31 @@ public class ServletBase extends HttpServlet
     /**********************************************************************
      */
 
-    public void handleGet(ServletServiceRequest request, ServletServiceResponse response) throws IOException {
+    public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats)
+        throws IOException
+    {
         response = response.badMethod()
                 .setContentTypeText().setEntity("No GET available for endpoint");
-        response.writeOut(null);
+        // no need to track bytes returned since it's not real payload
+        response.writeOut(null, null);
     }
 
-    public void handleHead(ServletServiceRequest request, ServletServiceResponse response) throws IOException {
-        
-    }
-    public void handlePut(ServletServiceRequest request, ServletServiceResponse response) throws IOException {
-        
-    }
-    public void handlePost(ServletServiceRequest request, ServletServiceResponse response) throws IOException {
-        
-    }
-    public void handleDelete(ServletServiceRequest request, ServletServiceResponse response) throws IOException {
-        
-    }
+    public void handleHead(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats)
+        throws IOException { }
+
+    public void handlePut(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats)
+        throws IOException { }
+
+    public void handlePost(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats)
+        throws IOException { }
+
+    public void handleDelete(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats)
+        throws IOException { }
 
     /*
     /**********************************************************************
@@ -125,6 +133,15 @@ public class ServletBase extends HttpServlet
         }
         // false -> path not yet URL decoded
         return new ServletServiceRequest(orig, path, false);
+    }
+
+    /**
+     * Overridable factory method that is used for creating optional
+     * {@link OperationDiagnostics} object to pass through, to collect
+     * statistics.
+     */
+    protected OperationDiagnostics constructMetadata() {
+        return null;
     }
     
     protected ServletServiceResponse constructResponse(HttpServletResponse orig) {

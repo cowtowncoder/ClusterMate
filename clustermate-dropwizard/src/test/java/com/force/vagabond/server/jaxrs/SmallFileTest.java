@@ -52,9 +52,8 @@ public class SmallFileTest extends JaxrsStoreTestBase
         // then try adding said entry
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1, calcChecksum(SMALL_DATA),
-                new ByteArrayInputStream(SMALL_DATA),
-                null, null);
+                INTERNAL_KEY1, calcChecksum(SMALL_DATA), new ByteArrayInputStream(SMALL_DATA),
+                null, null, null);
         assertEquals(200, response.getStatus());
         // can we count on this getting updated? Seems to be, FWIW
         assertEquals(1, entries.getEntryCount());
@@ -134,9 +133,8 @@ public class SmallFileTest extends JaxrsStoreTestBase
         // then try adding said entry
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1, calcChecksum(SMALL_DATA),
-                new ByteArrayInputStream(SMALL_DATA),
-                null, null);
+                INTERNAL_KEY1, calcChecksum(SMALL_DATA), new ByteArrayInputStream(SMALL_DATA),
+                null, null, null);
         assertEquals(200, response.getStatus());
         // can we count on this getting updated? Seems to be, FWIW
         assertEquals(1, entries.getEntryCount());
@@ -208,9 +206,9 @@ public class SmallFileTest extends JaxrsStoreTestBase
 
         FakeHttpResponse response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1,
-                calcChecksum(SMALL_DATA),
-                new ByteArrayInputStream(SMALL_DATA), null, null);
+                INTERNAL_KEY1, calcChecksum(SMALL_DATA),
+                new ByteArrayInputStream(SMALL_DATA),
+                null, null, null);
         assertEquals(200, response.getStatus());
         // can we count on this getting updated? Seems to be, FWIW
         assertEquals(1, entries.getEntryCount());
@@ -218,8 +216,8 @@ public class SmallFileTest extends JaxrsStoreTestBase
         // Ok: first, is ok to try to PUT again
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1, calcChecksum(SMALL_DATA),
-                new ByteArrayInputStream(SMALL_DATA), null, null);
+                INTERNAL_KEY1, calcChecksum(SMALL_DATA), new ByteArrayInputStream(SMALL_DATA),
+                null, null, null);
         if (response.getStatus() != 200) {
             PutResponse<?> presp = (PutResponse<?>) response.getEntity();
             fail("Failed with response code of "+response.getStatus()+"; fail="+presp.message);
@@ -232,8 +230,8 @@ public class SmallFileTest extends JaxrsStoreTestBase
         final byte[] SMALL_DATA2 = SMALL_STRING2.getBytes("UTF-8");
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1, calcChecksum(SMALL_DATA2),
-                new ByteArrayInputStream(SMALL_DATA2), null, null);
+                INTERNAL_KEY1, calcChecksum(SMALL_DATA2), new ByteArrayInputStream(SMALL_DATA2),
+                null, null, null);
         // 409 == CONFLICT, due to mismatch of content checksums
         assertEquals(409, response.getStatus());
         PutResponse<?> pr = (PutResponse<?>) response.getEntity();
@@ -266,9 +264,8 @@ public class SmallFileTest extends JaxrsStoreTestBase
         // and then verify that it is stored as if not compressed
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1, calcChecksum(SMALL_DATA_LZF),
-                new ByteArrayInputStream(SMALL_DATA_LZF),
-                null, null);
+                INTERNAL_KEY1, calcChecksum(SMALL_DATA_LZF), new ByteArrayInputStream(SMALL_DATA_LZF),
+                null, null, null);
 
         // verify we get expected error
         assertSame(PutResponse.class, response.getEntity().getClass());
@@ -312,9 +309,8 @@ public class SmallFileTest extends JaxrsStoreTestBase
             .addHeader("Content-Encoding", "lzf");
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(request, response,
-                INTERNAL_KEY1, calcChecksum(STRING_BYTES),
-                new ByteArrayInputStream(STRING_BYTES),
-                null, null);
+                INTERNAL_KEY1, calcChecksum(STRING_BYTES), new ByteArrayInputStream(STRING_BYTES),
+                null, null, null);
 
         // verify we get expected error
         assertSame(PutResponse.class, response.getEntity().getClass());

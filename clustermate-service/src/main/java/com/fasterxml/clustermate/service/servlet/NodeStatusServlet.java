@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
 
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.cluster.ClusterInfoHandler;
 
 /**
@@ -33,10 +34,12 @@ public class NodeStatusServlet extends ServletBase
      */
 
     @Override
-    public void handleGet(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics metadata) throws IOException
     {
-        response = _handler.getStatus(request, response);
-        response.writeOut(null);
+        response = _handler.getStatus(request, response, metadata);
+        // since we are counting response bytes, do pass metadata here:
+        response.writeOut(null, metadata);
     }
 
     /*

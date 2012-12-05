@@ -42,7 +42,7 @@ public class NodeResource
     {
         JaxrsHttpResponse response = new JaxrsHttpResponse();
         // do we need headers? Shouldnt?
-        _handler.getStatus(new JaxrsHttpRequest(uriInfo, null, "", OperationType.GET), response);
+        _handler.getStatus(new JaxrsHttpRequest(uriInfo, null, "", OperationType.GET), response, null);
         return response.buildResponse();
     }
 }

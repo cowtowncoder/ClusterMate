@@ -333,8 +333,10 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     protected boolean _updateExistingPeer(NodeState nodeStatus, boolean forSender,
             ClusterPeerImpl<K,E> peer) throws IOException
     {
-        final IpAndPort endpoint = nodeStatus.getAddress();
+//        final IpAndPort endpoint = nodeStatus.getAddress();
 
+        // !!! TODO: actual updating...
+        
         return false;
     }
     

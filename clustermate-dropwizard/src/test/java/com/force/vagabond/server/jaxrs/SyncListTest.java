@@ -44,7 +44,8 @@ public class SyncListTest extends JaxrsStoreTestBase
         resource.getHandler().getEntry(new FakeHttpRequest(), response, KEY1);
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response, KEY1,
-                calcChecksum(SMALL_DATA), new ByteArrayInputStream(SMALL_DATA), null, null);
+                calcChecksum(SMALL_DATA), new ByteArrayInputStream(SMALL_DATA),
+                null, null, null);
         assertEquals(200, response.getStatus());
         assertEquals(1, entries.getEntryCount());
 
@@ -59,7 +60,7 @@ public class SyncListTest extends JaxrsStoreTestBase
         syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ClusterMateConstants.CONTENT_TYPE_SMILE);
         
         response = new FakeHttpResponse();
-        syncH.listEntries(syncReq, response, creationTime);
+        syncH.listEntries(syncReq, response, creationTime, null);
         assertTrue(response.hasStreamingContent());
         assertEquals(200, response.getStatus());
         assertEquals(ClusterMateConstants.CONTENT_TYPE_SMILE, response.getContentType());
@@ -98,15 +99,18 @@ public class SyncListTest extends JaxrsStoreTestBase
 
         FakeHttpResponse response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response, KEY1,
-                hash, new ByteArrayInputStream(SMALL_DATA), null, null);
+                hash, new ByteArrayInputStream(SMALL_DATA),
+                null, null, null);
         assertEquals(200, response.getStatus());
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response, KEY2,
-                hash, new ByteArrayInputStream(SMALL_DATA), null, null);
+                hash, new ByteArrayInputStream(SMALL_DATA),
+                null, null, null);
         assertEquals(200, response.getStatus());
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response, KEY3,
-                hash, new ByteArrayInputStream(SMALL_DATA), null, null);
+                hash, new ByteArrayInputStream(SMALL_DATA),
+                null, null, null);
         assertEquals(200, response.getStatus());
         
         assertEquals(3, entries.getEntryCount());
@@ -119,7 +123,7 @@ public class SyncListTest extends JaxrsStoreTestBase
         syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ClusterMateConstants.CONTENT_TYPE_SMILE);
         
         response = new FakeHttpResponse();
-        syncH.listEntries(syncReq, response, creationTime);
+        syncH.listEntries(syncReq, response, creationTime, null);
         assertTrue(response.hasStreamingContent());
         assertEquals(200, response.getStatus());
         assertEquals(ClusterMateConstants.CONTENT_TYPE_SMILE, response.getContentType());

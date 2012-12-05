@@ -8,6 +8,7 @@ import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.TimeMaster;
 
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoreHandler;
@@ -71,22 +72,25 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
      */
 
     @Override
-    public void handleGet(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats) throws IOException
     {
         K key = _findKey(request, response);
         if (key != null) { // null means trouble; response has all we need
-            _storeHandler.getEntry(request, response, key);
+            _storeHandler.getEntry(request, response, key, stats);
             _addStdHeaders(response);
         }
-        response.writeOut(_jsonWriter);
+        // we are tracking response bytes, so pass non-null
+        response.writeOut(_jsonWriter, stats);
     }
 
     @Override
-    public void handleHead(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handleHead(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats) throws IOException
     {
         K key = _findKey(request, response);
         if (key != null) {
-            _storeHandler.getEntryStats(request, response, key);
+            _storeHandler.getEntryStats(request, response, key, stats);
             _addStdHeaders(response);
         }
         // note: should be enough to just add headers; no content to write
@@ -94,31 +98,37 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
 
     // We'll allow POST as an alias to PUT
     @Override
-    public void handlePost(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handlePost(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats) throws IOException
     {
-        handlePut(request, response);
+        handlePut(request, response, stats);
     }
     
     @Override
-    public void handlePut(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handlePut(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats) throws IOException
     {
         K key = _findKey(request, response);
         if (key != null) {
             _storeHandler.putEntry(request, response, key,
-                    request.getNativeRequest().getInputStream());
+                    request.getNativeRequest().getInputStream(),
+                    stats);
             _addStdHeaders(response);
         }
-        response.writeOut(_jsonWriter);
+        // not tracking response bytes, so second -> null
+        response.writeOut(_jsonWriter, null);
     }
 
     @Override
-    public void handleDelete(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handleDelete(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics metadata) throws IOException
     {
         K key = _findKey(request, response);
         if (key != null) {
-            _storeHandler.removeEntry(request, response, key);
+            _storeHandler.removeEntry(request, response, key, metadata);
             _addStdHeaders(response);
         }
-        response.writeOut(_jsonWriter);
+        // not tracking response bytes, so second -> null
+        response.writeOut(_jsonWriter, null);
     }
 }

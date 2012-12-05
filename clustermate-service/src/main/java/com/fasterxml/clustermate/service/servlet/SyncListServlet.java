@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.storemate.shared.EntryKey;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -31,7 +32,8 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
     }
 
     @Override
-    public void handleGet(ServletServiceRequest request, ServletServiceResponse response) throws IOException
+    public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats) throws IOException
     {
         String str = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_SINCE);
         if (str == null) {
@@ -44,10 +46,11 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
             if (since < 0L) {
                 response = _syncHandler.invalidArgument(response, ClusterMateConstants.HTTP_QUERY_PARAM_SINCE, str);
             } else {
-                response = _syncHandler.listEntries(request, response, since);
+                response = _syncHandler.listEntries(request, response, since, stats);
                 _addStdHeaders(response);
             }
         }
-        response.writeOut(_jsonWriter);
+        // we will track response bytes, so pass second arg
+        response.writeOut(_jsonWriter, stats);
     }
 }

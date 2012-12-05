@@ -28,6 +28,7 @@ import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.ServiceRequest;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
@@ -170,7 +171,8 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
      */
     @SuppressWarnings("unchecked")
     public <OUT extends ServiceResponse> OUT listEntries(ServiceRequest request, OUT response,
-            Long sinceL) throws StoreException
+            Long sinceL, OperationDiagnostics metadata)
+        throws StoreException
     {
         // simple validation first
         if (sinceL == null) {
@@ -277,8 +279,8 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
      */
     @SuppressWarnings("unchecked")
     public <OUT extends ServiceResponse> OUT  pullEntries(ServiceRequest request, OUT response,
-            InputStream in)
-        throws StoreException
+            InputStream in,
+            OperationDiagnostics metadata) throws StoreException
     {
         SyncPullRequest requestEntity = null;
         try {

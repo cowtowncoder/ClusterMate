@@ -5,6 +5,7 @@ import java.io.OutputStream;
 
 import javax.ws.rs.core.StreamingOutput;
 
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
 
 /**
@@ -15,8 +16,16 @@ public class StreamingContentAsStreamingOutput implements StreamingOutput
 {
     protected final StreamingResponseContent _content;
 
+    protected final OperationDiagnostics _metadata;
+    
     public StreamingContentAsStreamingOutput(StreamingResponseContent content) {
+        this(content, null);
+    }
+    
+    public StreamingContentAsStreamingOutput(StreamingResponseContent content,
+            OperationDiagnostics metadata) {
         _content = content;
+        _metadata = metadata;
     }
     
     @Override

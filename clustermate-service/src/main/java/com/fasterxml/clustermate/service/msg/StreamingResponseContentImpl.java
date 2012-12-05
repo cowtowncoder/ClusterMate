@@ -37,7 +37,7 @@ public class StreamingResponseContentImpl
     private final long _dataOffset;
 	
     private final long _dataLength;
-
+    
     public StreamingResponseContentImpl(ByteContainer data, ByteRange range)
     {
         if (data == null) {

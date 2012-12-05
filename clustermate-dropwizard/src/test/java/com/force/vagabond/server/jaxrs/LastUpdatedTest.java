@@ -56,18 +56,18 @@ public class LastUpdatedTest extends JaxrsStoreTestBase
         // then try adding entries
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                KEY1A, calcChecksum(DATA1A_BYTES),
-                new ByteArrayInputStream(DATA1A_BYTES), null, null);
+                KEY1A, calcChecksum(DATA1A_BYTES), new ByteArrayInputStream(DATA1A_BYTES),
+                null, null, null);
         assertEquals(200, response.getStatus());
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                KEY2, calcChecksum(DATA2_BYTES),
-                new ByteArrayInputStream(DATA2_BYTES), null, null);
+                KEY2, calcChecksum(DATA2_BYTES), new ByteArrayInputStream(DATA2_BYTES),
+                null, null, null);
         assertEquals(200, response.getStatus());
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                KEY1B, calcChecksum(DATA1B_BYTES),
-                new ByteArrayInputStream(DATA1B_BYTES), null, null);
+                KEY1B, calcChecksum(DATA1B_BYTES), new ByteArrayInputStream(DATA1B_BYTES),
+                null, null, null);
         assertEquals(200, response.getStatus());
 
         // find entries; should not yet have last-accessed timestamps

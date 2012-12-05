@@ -54,7 +54,7 @@ public class LargeFileTest extends JaxrsStoreTestBase
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(request, response,
                 INTERNAL_KEY1, calcChecksum(BIG_DATA), new ByteArrayInputStream(BIG_DATA),
-                null, null);
+                null, null, null);
         assertEquals(200, response.getStatus());
         // verify we got a file...
         assertSame(PutResponse.class, response.getEntity().getClass());
@@ -130,9 +130,8 @@ public class LargeFileTest extends JaxrsStoreTestBase
             .addHeader("Content-Encoding", "gzip");
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(request, response,
-                INTERNAL_KEY1, calcChecksum(BIG_DATA_GZIP),
-                new ByteArrayInputStream(BIG_DATA_GZIP),
-                null, null);
+                INTERNAL_KEY1, calcChecksum(BIG_DATA_GZIP), new ByteArrayInputStream(BIG_DATA_GZIP),
+                null, null, null);
 
         // verify we got a file, and that its size is the same as what we passed
         assertSame(PutResponse.class, response.getEntity().getClass());
@@ -201,7 +200,7 @@ public class LargeFileTest extends JaxrsStoreTestBase
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(request, response,
                 INTERNAL_KEY1, calcChecksum(BIG_DATA_RAW), new ByteArrayInputStream(BIG_DATA_RAW),
-                 null, null);
+                null, null, null);
 
         // verify we get expected error
         assertSame(PutResponse.class, response.getEntity().getClass());
