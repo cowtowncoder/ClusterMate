@@ -11,7 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.yammer.dropwizard.Service;
-import com.yammer.dropwizard.bundles.AssetsBundle;
+import com.yammer.dropwizard.assets.AssetsBundle;
+import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.lifecycle.Managed;
 
@@ -111,20 +112,16 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
-    protected DWBasedService(String name, TimeMaster timings)
+    protected DWBasedService(TimeMaster timings)
     {
-        this(name, timings, false);
+        this(timings, false);
     }
 
-    protected DWBasedService(String name, TimeMaster timings, boolean testMode)
+    protected DWBasedService(TimeMaster timings, boolean testMode)
     {
-        super(name);
+        super();
         _timeMaster = timings;
         _testMode = testMode;
-
-        // Static stuff from under /html (except for root  level things
-        // like /index.html that need special handling)
-        addBundle(new AssetsBundle("/html"));
     }
 
     /*
@@ -133,9 +130,14 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
+    public void initialize(Bootstrap<CONF> bootstrap) {
+        // Static stuff from under /html (except for root  level things
+        // like /index.html that need special handling)
+        bootstrap.addBundle(new AssetsBundle("/html"));
+    }
+    
     @Override
-    protected void initialize(CONF dwConfig,
-            Environment environment) throws IOException
+    public void run(CONF dwConfig, Environment environment) throws IOException
     {
         // first things first: we need to get start()/stop() calls, so:
         environment.manage(this);
