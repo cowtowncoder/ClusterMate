@@ -39,7 +39,7 @@ public class NodeStatusServlet extends ServletBase
     {
         response = _handler.getStatus(request, response, metadata);
         // since we are counting response bytes, do pass metadata here:
-        response.writeOut(null, metadata);
+        response.writeOut(null);
     }
 
     /*

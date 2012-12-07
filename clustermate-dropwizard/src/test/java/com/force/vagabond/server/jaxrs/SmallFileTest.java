@@ -70,9 +70,9 @@ public class SmallFileTest extends JaxrsStoreTestBase
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1, stats);
         assertNotNull(stats.getEntry());
         assertEquals(200, response.getStatus());
-        StatsCollectingOutputStream statsOut = new StatsCollectingOutputStream(new ByteArrayOutputStream(), stats);
+        StatsCollectingOutputStream statsOut = new StatsCollectingOutputStream(new ByteArrayOutputStream());
         response.getStreamingContent().writeContent(statsOut);
-        assertEquals(SMALL_DATA.length, stats.getBytesTransferred());
+        assertEquals(SMALL_DATA.length, statsOut.getBytesWritten());
 
         // and now last-accessed should be set
         assertEquals(1234L, resource.getStores().getLastAccessStore().findLastAccessTime(INTERNAL_KEY1,

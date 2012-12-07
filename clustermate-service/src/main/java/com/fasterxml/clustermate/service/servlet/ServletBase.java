@@ -94,7 +94,7 @@ public class ServletBase extends HttpServlet
         response = response.badMethod()
                 .setContentTypeText().setEntity("No GET available for endpoint");
         // no need to track bytes returned since it's not real payload
-        response.writeOut(null, null);
+        response.writeOut(null);
     }
 
     public void handleHead(ServletServiceRequest request, ServletServiceResponse response,

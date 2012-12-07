@@ -71,7 +71,7 @@ public class FakeHttpRequest extends ServiceRequest
     }
 
     @Override
-    public InputStream getInputStream() {
+    public InputStream getNativeInputStream() {
         throw new UnsupportedOperationException();
     }
 }

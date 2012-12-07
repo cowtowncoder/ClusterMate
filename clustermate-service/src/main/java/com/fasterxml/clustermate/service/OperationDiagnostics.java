@@ -11,8 +11,6 @@ public class OperationDiagnostics
     protected final long _nanoStart;
     
     protected Storable _entry;
-
-    protected long _bytesTransferred;
     
     /*
     /**********************************************************************
@@ -32,16 +30,6 @@ public class OperationDiagnostics
         _entry = e;
         return this;
     }
-
-    public OperationDiagnostics addBytesTransferred(int amt) {
-        _bytesTransferred += amt;
-        return this;
-    }
-
-    public OperationDiagnostics addBytesTransferred(long amt) {
-        _bytesTransferred += amt;
-        return this;
-    }
     
     /*
     /**********************************************************************
@@ -50,8 +38,6 @@ public class OperationDiagnostics
      */
     
     public Storable getEntry() { return _entry; }
-
-    public long getBytesTransferred() { return _bytesTransferred; }
 
     /**
      * Accessor for number of nanoseconds spent since construction of this object

@@ -10,6 +10,7 @@ import com.fasterxml.storemate.shared.util.UTF8UrlEncoder;
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.DecodableRequestPath;
 import com.fasterxml.clustermate.api.OperationType;
+import com.fasterxml.clustermate.service.util.StatsCollectingInputStream;
 
 /**
  * Interface class that defines abstraction implemented by classes that
@@ -52,6 +53,8 @@ public abstract class ServiceRequest
      * Whether path we have has been URL decoded or not.
      */
     protected final boolean _isPathDecoded;
+
+    protected StatsCollectingInputStream _input;
     
     /*
     /**********************************************************************
@@ -74,7 +77,14 @@ public abstract class ServiceRequest
     /**********************************************************************
      */
 
-    public abstract InputStream getInputStream() throws IOException;
+    public final InputStream getInputStream() throws IOException {
+        if (_input == null) {
+            _input = new StatsCollectingInputStream(getNativeInputStream());
+        }
+        return _input;
+    }
+
+    public abstract InputStream getNativeInputStream() throws IOException;
     
     public ByteRange findByteRange()
     {
@@ -82,6 +92,16 @@ public abstract class ServiceRequest
         return (rangeStr == null) ? null : ByteRange.valueOf(rangeStr);
     }
 
+    /*
+    /**********************************************************************
+    /* Statistics
+    /**********************************************************************
+     */
+
+    public long getBytesRead() {
+        return (_input == null) ? 0L : _input.getBytesRead();
+    }
+    
     /*
     /**********************************************************************
     /* Path handling (mostly from DecodableRequestPath)

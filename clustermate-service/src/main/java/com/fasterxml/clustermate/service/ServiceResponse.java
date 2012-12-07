@@ -13,9 +13,30 @@ import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
  */
 public abstract class ServiceResponse
 {
+    /**
+     * Raw entity to serialize and return, if any.
+     *<p>
+     * Note that either this OR <code>_streamingContent</code> can be non-null.
+     */
     protected Object _entity;
 
+    /**
+     * Content to write out, if any.
+     *<p>
+     * Note that either this OR <code>_entity</code> can be non-null.
+     */
     protected StreamingResponseContent _streamingContent;
+
+    /*
+    /**********************************************************************
+    /* Statistics
+    /**********************************************************************
+     */
+
+    /**
+     * Accessor for number of bytes written through this response.
+     */
+    public abstract long getBytesWritten();
     
     /*
     /**********************************************************************

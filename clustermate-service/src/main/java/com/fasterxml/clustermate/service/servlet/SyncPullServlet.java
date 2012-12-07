@@ -36,8 +36,7 @@ public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
     {
         _syncHandler.pullEntries(request, response, request.getInputStream(), metadata);
         _addStdHeaders(response);
-        // pass metadata to track number of bytes returned...
-        response.writeOut(_jsonWriter, metadata);
+        response.writeOut(_jsonWriter);
     }
 
 }

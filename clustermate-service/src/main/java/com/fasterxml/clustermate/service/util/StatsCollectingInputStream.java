@@ -2,22 +2,23 @@ package com.fasterxml.clustermate.service.util;
 
 import java.io.*;
 
-import com.fasterxml.clustermate.service.OperationDiagnostics;
-
 public class StatsCollectingInputStream extends FilterInputStream
 {
-    protected final OperationDiagnostics _metadata;
+    protected long _bytesRead;
     
-    public StatsCollectingInputStream(InputStream in, OperationDiagnostics metadata) {
+    public StatsCollectingInputStream(InputStream in) {
         super(in);
-        _metadata = metadata;
     }
 
+    public long getBytesRead() {
+        return _bytesRead;
+    }
+    
     @Override
     public int read() throws IOException {
         int c = in.read();
         if (c >= 0) {
-            _metadata.addBytesTransferred(1);
+            ++_bytesRead;
         }
         return c;
     }
@@ -26,7 +27,7 @@ public class StatsCollectingInputStream extends FilterInputStream
     public int read(byte[] b) throws IOException {
         int count = in.read(b);
         if (count > 0) {
-            _metadata.addBytesTransferred(count);
+            _bytesRead += count;
         }
         return count;
     }
@@ -35,7 +36,7 @@ public class StatsCollectingInputStream extends FilterInputStream
     public int read(byte[] b, int off, int len) throws IOException {
         int count = in.read(b, off, len);
         if (count > 0) {
-            _metadata.addBytesTransferred(count);
+            _bytesRead += count;
         }
         return count;
     }
@@ -44,7 +45,7 @@ public class StatsCollectingInputStream extends FilterInputStream
     public long skip(long n) throws IOException {
         long count = in.skip(n);
         if (count > 0L) {
-            _metadata.addBytesTransferred(count);
+            _bytesRead += count;
         }
         return count;
     }

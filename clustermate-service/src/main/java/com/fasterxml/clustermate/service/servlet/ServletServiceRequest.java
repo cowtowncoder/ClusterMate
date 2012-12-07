@@ -42,7 +42,7 @@ public class ServletServiceRequest extends ServiceRequest
      */
 
     @Override
-    public InputStream getInputStream() throws IOException {
+    public InputStream getNativeInputStream() throws IOException {
         return _request.getInputStream();
     }
 

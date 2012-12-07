@@ -80,8 +80,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             _storeHandler.getEntry(request, response, key, stats);
             _addStdHeaders(response);
         }
-        // we are tracking response bytes, so pass non-null
-        response.writeOut(_jsonWriter, stats);
+        response.writeOut(_jsonWriter);
     }
 
     @Override
@@ -115,8 +114,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
                     stats);
             _addStdHeaders(response);
         }
-        // not tracking response bytes, so second -> null
-        response.writeOut(_jsonWriter, null);
+        response.writeOut(_jsonWriter);
     }
 
     @Override
@@ -128,7 +126,6 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             _storeHandler.removeEntry(request, response, key, metadata);
             _addStdHeaders(response);
         }
-        // not tracking response bytes, so second -> null
-        response.writeOut(_jsonWriter, null);
+        response.writeOut(_jsonWriter);
     }
 }

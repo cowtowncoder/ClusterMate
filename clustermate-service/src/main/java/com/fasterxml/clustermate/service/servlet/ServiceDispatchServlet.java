@@ -115,7 +115,7 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
             return;
         }
         response = response.notFound();
-        response.writeOut(null, null);
+        response.writeOut(null);
     }
 
     @Override
@@ -128,7 +128,7 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
             return;
         }
         response = response.notFound();
-        response.writeOut(null, null);
+        response.writeOut(null);
     }
 
     @Override
@@ -141,7 +141,7 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
             return;
         }
         response = response.notFound();
-        response.writeOut(null, null);
+        response.writeOut(null);
     }
 
     @Override
@@ -154,7 +154,7 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
             return;
         }
         response = response.notFound();
-        response.writeOut(null, null);
+        response.writeOut(null);
     }
 
     @Override
@@ -167,7 +167,7 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
             return;
         }
         response = response.notFound();
-        response.writeOut(null, null);
+        response.writeOut(null);
     }
     
     /*

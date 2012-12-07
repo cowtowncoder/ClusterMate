@@ -21,6 +21,9 @@ public class FakeHttpResponse extends ServiceResponse
      */
 
     @Override
+    public long getBytesWritten() { return -1L; }
+    
+    @Override
     public int getStatus() {
         return statusCode;
     }

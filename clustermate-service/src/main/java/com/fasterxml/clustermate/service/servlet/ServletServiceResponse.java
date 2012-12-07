@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import javax.servlet.http.*;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.util.StatsCollectingOutputStream;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -27,6 +26,8 @@ public class ServletServiceResponse extends ServiceResponse
      * keep track of it here.
      */
     protected int _statusCode;
+
+    protected StatsCollectingOutputStream _output;
     
     /*
     /**********************************************************************
@@ -39,20 +40,19 @@ public class ServletServiceResponse extends ServiceResponse
         _response = r;
     }
 
-    public void writeOut(ObjectWriter writer, OperationDiagnostics metadata) throws IOException
+    public void writeOut(ObjectWriter writer) throws IOException
     {
-        OutputStream out = _response.getOutputStream();
-        if (metadata != null) {
-            out = new StatsCollectingOutputStream(out, metadata);
+        if (_output == null) {
+            _output = new StatsCollectingOutputStream(_response.getOutputStream());
         }
         if (_streamingContent != null) {
             long len = _streamingContent.getLength();
             if (len >= 0L) {
-                this.setContentLength(len);
+                setContentLength(len);
             }
-            _streamingContent.writeContent(out);
+            _streamingContent.writeContent(_output);
         } else if (_entity != null) {
-            writer.writeValue(out, _entity);
+            writer.writeValue(_output, _entity);
         }
     }
     
@@ -62,6 +62,11 @@ public class ServletServiceResponse extends ServiceResponse
     /**********************************************************************
      */
 
+    @Override
+    public long getBytesWritten() {
+        return (_output == null) ? 0L : _output.getBytesWritten();
+    }
+    
     @Override
     public int getStatus() {
         return _statusCode;

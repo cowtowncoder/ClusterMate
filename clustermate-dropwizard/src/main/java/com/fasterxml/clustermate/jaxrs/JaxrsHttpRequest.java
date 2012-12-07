@@ -34,7 +34,7 @@ public class JaxrsHttpRequest extends ServiceRequest
     }
 
     @Override
-    public InputStream getInputStream() throws IOException {
+    public InputStream getNativeInputStream() throws IOException {
         // must be directly assigned...
         throw new IOException("No InputStream available via "+getClass().getName()+" instance");
     }

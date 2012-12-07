@@ -50,7 +50,6 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
                 _addStdHeaders(response);
             }
         }
-        // we will track response bytes, so pass second arg
-        response.writeOut(_jsonWriter, stats);
+        response.writeOut(_jsonWriter);
     }
 }

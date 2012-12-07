@@ -22,7 +22,6 @@ import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.msg.*;
-import com.fasterxml.clustermate.service.util.StatsCollectingInputStream;
 
 /**
  * Class that handles coordination between front-end service layer (servlet,
@@ -286,10 +285,6 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics stats)
     {
         final long  creationTime = _timeMaster.currentTimeMillis();
-        // 05-Dec-2012, tatu: May want to keep track of bytes read:
-        if (stats != null) {
-            dataIn = new StatsCollectingInputStream(dataIn, stats);
-        }
 
         // first things first: ensure that request was correctly sent wrt routing
         Compression inputCompression = Compression.forContentEncoding(request.getHeader(

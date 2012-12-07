@@ -47,6 +47,12 @@ public class JaxrsHttpResponse extends ServiceResponse
      */
 
     @Override
+    public long getBytesWritten() {
+        // TODO: implement... how?
+        return 0L;
+    }
+    
+    @Override
     public int getStatus() {
         return _statusCode;
     }
