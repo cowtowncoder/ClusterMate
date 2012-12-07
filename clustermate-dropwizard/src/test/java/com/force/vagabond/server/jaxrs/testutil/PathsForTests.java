@@ -18,6 +18,7 @@ public class PathsForTests extends RequestPathStrategy
 
     protected final static String SECOND_SEGMENT_STORE_ENTRY = "entry";
     protected final static String SECOND_SEGMENT_STORE_LIST = "list";
+    protected final static String SECOND_SEGMENT_STORE_STATUS = "status";
 
     protected final static String SECOND_SEGMENT_NODE_STATUS = "status";
 
@@ -71,6 +72,9 @@ public class PathsForTests extends RequestPathStrategy
             }
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_STORE_LIST)) {
                 return PathType.STORE_LIST;
+            }
+            if (pathDecoder.matchPathSegment(SECOND_SEGMENT_STORE_STATUS)) {
+                return PathType.STORE_STATUS;
             }
         } else if (pathDecoder.matchPathSegment(FIRST_SEGMENT_NODE)) {
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_NODE_STATUS)) {

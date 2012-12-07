@@ -191,6 +191,8 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
                 return _syncListServlet;
             case SYNC_PULL:
                 return _syncPullServlet;
+            case STORE_STATUS: // is this needed?
+                return null;
             }
         }
         return null;

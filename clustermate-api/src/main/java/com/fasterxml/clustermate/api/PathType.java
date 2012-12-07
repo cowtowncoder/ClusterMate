@@ -8,6 +8,7 @@ public enum PathType
     // access to stored entries
     STORE_ENTRY,
     STORE_LIST,
+    STORE_STATUS, // diagnostics interface
 
     // access to node status
     NODE_STATUS,
