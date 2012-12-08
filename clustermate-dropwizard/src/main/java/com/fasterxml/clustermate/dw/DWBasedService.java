@@ -209,8 +209,6 @@ public abstract class DWBasedService<
      * Overridable method that is used for getting helper object used for
      * constructing {@link StoredEntry} instances to store in the
      * entry metadata store (currently BDB).
-     * Default implementation delegates to {@link VagabondDWConfig}, to
-     * allow for configuration overrides
      */
     protected abstract StoredEntryConverter<K,E> constructEntryConverter(SCONFIG config,
             Environment environment);
@@ -368,7 +366,7 @@ public abstract class DWBasedService<
         if (backendConfig == null) { // no overrides, use databinding
             Class<? extends StoreBackendConfig> cfgType = b.getConfigClass();
             if (v.storeBackendConfig == null) {
-                throw new IllegalStateException("Missing 'VagabondServiceConfig.storeBackendConfig");
+                throw new IllegalStateException("Missing 'v.storeBackendConfig");
             }
             backendConfig = stuff.convertValue(v.storeBackendConfig, cfgType);
         }

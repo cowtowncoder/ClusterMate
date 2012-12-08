@@ -1,9 +1,10 @@
-package com.force.vagabond.server.jaxrs;
+package com.fasterxml.clustermate.jaxrs;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import com.fasterxml.clustermate.jaxrs.StoreResource;
+import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.msg.DeleteResponse;
 import com.fasterxml.clustermate.service.msg.PutResponse;
@@ -12,7 +13,6 @@ import com.fasterxml.storemate.store.AdminStorableStore;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
  
-import com.force.vagabond.server.jaxrs.testutil.*;
 
 /**
  * Unit tests to verify basic functioning of DELETE operation

@@ -256,7 +256,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         }
         _lastAccessEnv = new Environment(_bdbRootForLastAccess, lastAccessEnvConfig(allowCreate, writeAccess));
         try {
-//            _lastAccessStore = new VagabondLastAccessStore(_lastAccessEnv, _entryConverter);
             _lastAccessStore = buildAccessStore(_lastAccessEnv);
         } catch (DatabaseException e) {
             _initProblem = "Failed to open Last-access store: "+e.getMessage();

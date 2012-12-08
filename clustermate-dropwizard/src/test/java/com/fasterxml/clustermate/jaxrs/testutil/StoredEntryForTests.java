@@ -1,4 +1,4 @@
-package com.force.vagabond.server.jaxrs.testutil;
+package com.fasterxml.clustermate.jaxrs.testutil;
 
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;

@@ -1,17 +1,17 @@
-package com.force.vagabond.server.jaxrs;
+package com.fasterxml.clustermate.jaxrs;
 
 import java.io.*;
 
 import org.junit.Assert;
 
 import com.fasterxml.clustermate.jaxrs.StoreResource;
+import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.msg.PutResponse;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreConfig;
 
-import com.force.vagabond.server.jaxrs.testutil.*;
 
 public class LargeFileTest extends JaxrsStoreTestBase
 {

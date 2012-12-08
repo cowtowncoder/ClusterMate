@@ -1,15 +1,15 @@
-package com.force.vagabond.server.jaxrs;
+package com.fasterxml.clustermate.jaxrs;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import com.fasterxml.clustermate.jaxrs.StoreResource;
+import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.storemate.store.StorableStore;
 
-import com.force.vagabond.server.jaxrs.testutil.*;
 
 /**
  * Tests to verify correct handling of 'last updated' timestamps

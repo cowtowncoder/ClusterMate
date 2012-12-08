@@ -60,7 +60,7 @@ public abstract class StoreClientConfig<
     }
 
     /**
-     * Accessor getting the base path (or "root" path) for Vagabond services
+     * Accessor getting the base path (or "root" path) for services
      * to access. Relative paths are built from this path by appending.
      */
     public String[] getBasePath() {

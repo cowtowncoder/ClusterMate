@@ -7,12 +7,12 @@ import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.store.Storable;
 
 /**
- * Converter used by Vagabond store for handling conversions between
+ * Converter used by store for handling conversions between
  * low-level {@link Storable} (things stored in StoreMate store),
- * and Vagabond-level {@link StoredEntry} instances.
+ * and ClusterMate-level {@link StoredEntry} instances.
  *<p>
  * Custom sub-classing is needed to support additional metadata for
- * Vagabond-based systems.
+ * systems implementations.
  */
 public abstract class StoredEntryConverter<K extends EntryKey, E extends StoredEntry<K>>
 {

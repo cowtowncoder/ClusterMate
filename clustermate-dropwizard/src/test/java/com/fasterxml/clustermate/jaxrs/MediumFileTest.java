@@ -1,4 +1,4 @@
-package com.force.vagabond.server.jaxrs;
+package com.fasterxml.clustermate.jaxrs;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -6,12 +6,12 @@ import java.io.IOException;
 import org.junit.Assert;
 
 import com.fasterxml.clustermate.jaxrs.StoreResource;
+import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.msg.PutResponse;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.store.StorableStore;
 
-import com.force.vagabond.server.jaxrs.testutil.*;
 
 public class MediumFileTest extends JaxrsStoreTestBase
 {

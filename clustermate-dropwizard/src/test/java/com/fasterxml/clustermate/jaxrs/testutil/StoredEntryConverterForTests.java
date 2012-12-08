@@ -1,4 +1,4 @@
-package com.force.vagabond.server.jaxrs.testutil;
+package com.fasterxml.clustermate.jaxrs.testutil;
 
 import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.shared.StorableKey;
@@ -28,9 +28,9 @@ public class StoredEntryConverterForTests
     protected final TestKeyConverter _keyConverter;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life-cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
      */
 
     public StoredEntryConverterForTests(TestKeyConverter keyConverter) {
@@ -38,9 +38,9 @@ public class StoredEntryConverterForTests
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Pass-through methods for key construction
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Pass-through methods for key construction
+    /**********************************************************************
      */
 
     @Override
@@ -49,9 +49,9 @@ public class StoredEntryConverterForTests
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Conversions for metadata section
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Conversions for metadata section
+    /**********************************************************************
      */
     
     /**
@@ -73,9 +73,9 @@ public class StoredEntryConverterForTests
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Actual VEntry conversions
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Actual VEntry conversions
+    /**********************************************************************
      */
     
     @Override
@@ -112,9 +112,9 @@ public class StoredEntryConverterForTests
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Other conversions
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Other conversions
+    /**********************************************************************
      */
 
     @Override
@@ -137,9 +137,9 @@ public class StoredEntryConverterForTests
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods, data extraction
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Internal methods, data extraction
+    /**********************************************************************
      */
 
     protected int _extractVersion(TestKey key, byte[] buffer, int offset, int length) {
@@ -200,21 +200,14 @@ public class StoredEntryConverterForTests
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods, error reporting
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
      */
     
-    protected void _badData(final TestKey key, String msg)
-    {
-        throw new IllegalArgumentException("Bad Vagabond metadata (key "+key+"): "+msg);
+    protected void _badData(final TestKey key, String msg) {
+        throw new IllegalArgumentException("Bad metadata (key "+key+"): "+msg);
     }
-
-    /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods, other
-    ///////////////////////////////////////////////////////////////////////
-     */
     
     protected TestKey _key(StorableKey rawKey) {
         return _keyConverter.rawToEntryKey(rawKey);

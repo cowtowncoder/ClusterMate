@@ -1,4 +1,4 @@
-package com.force.vagabond.server.jaxrs.testutil;
+package com.fasterxml.clustermate.jaxrs.testutil;
 
 import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.store.StoreHandler;

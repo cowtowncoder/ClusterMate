@@ -77,11 +77,11 @@ public class SyncListAccessor implements StartAndStoppable
             TimeSpan timeout)
         throws InterruptedException
     {
-        String url = endpoint.getEndpoint() + VagabondConstants.PATH_SYNC_LIST + "/" + syncedUpTo;
+        String url = endpoint.getEndpoint() + Constants.PATH_SYNC_LIST + "/" + syncedUpTo;
         
         Request req = _asyncHttpClient.prepareGet(url)
-                .addQueryParameter(VagabondConstants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()))
-                .addQueryParameter(VagabondConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()))
+                .addQueryParameter(Constants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()))
+                .addQueryParameter(Constants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()))
                 .addHeader(HttpHeaders.ACCEPT, ACCEPTED_CONTENT_TYPES)
                 .build();
         // small responses; let's simply buffer, simpler error handling:
@@ -166,7 +166,7 @@ public class SyncListAccessor implements StartAndStoppable
             int expectedPayloadSize)
         throws IOException
     {
-        String url = endpoint.getEndpoint() + VagabondConstants.PATH_SYNC_PULL;
+        String url = endpoint.getEndpoint() + Constants.PATH_SYNC_PULL;
         byte[] reqPayload = _syncPullRequestWriter.writeValueAsBytes(request);
         
         HttpPost post = new HttpPost(url);

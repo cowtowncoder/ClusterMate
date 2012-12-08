@@ -1,4 +1,4 @@
-package com.force.vagabond.server.jaxrs;
+package com.fasterxml.clustermate.jaxrs;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -7,11 +7,11 @@ import com.fasterxml.storemate.store.StorableStore;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.KeyRange;
+import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 import com.fasterxml.clustermate.service.sync.SyncListResponse;
 
-import com.force.vagabond.server.jaxrs.testutil.*;
 
 /**
  * Test case(s) to verify that we can handle basic pull list request

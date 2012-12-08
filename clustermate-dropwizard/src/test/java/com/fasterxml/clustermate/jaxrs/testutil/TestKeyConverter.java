@@ -1,4 +1,4 @@
-package com.force.vagabond.server.jaxrs.testutil;
+package com.fasterxml.clustermate.jaxrs.testutil;
 
 import com.fasterxml.clustermate.api.DecodableRequestPath;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
@@ -12,7 +12,7 @@ import com.fasterxml.storemate.shared.util.UTF8Encoder;
 import com.fasterxml.storemate.shared.util.WithBytesCallback;
 
 /**
- * Vagabond implementation of {@link EntryKeyConverter}.
+ * Test implementation of {@link EntryKeyConverter}.
  *<p>
  * In addition class implements encoding and decoding of the entry keys
  * (of type {@link TestKey}): uses {@link StoreTestConstants#V_QUERY_PARAM_PARTITION_ID}
@@ -43,9 +43,9 @@ public class TestKeyConverter
     protected final BlockHasher32 _hasher;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life-cycle of converter
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle of converter
+    /**********************************************************************
      */
 
     protected TestKeyConverter(PartitionId defaultClientId) {
@@ -66,9 +66,9 @@ public class TestKeyConverter
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Basic EntryKeyConverter impl
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Basic EntryKeyConverter impl
+    /**********************************************************************
      */
 
     @Override
@@ -107,9 +107,9 @@ public class TestKeyConverter
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // VKey construction, conversions
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Key construction, conversions
+    /**********************************************************************
      */
 
     /**
@@ -179,9 +179,9 @@ public class TestKeyConverter
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Path handling
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Path handling
+    /**********************************************************************
      */
     
     @SuppressWarnings("unchecked")
@@ -229,11 +229,11 @@ public class TestKeyConverter
 //System.err.println("Non-group key: path ("+filename.length()+"): '"+filename+"'");
         return construct(clientId, filename);
     }
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Hash code calculation
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Hash code calculation
+    /**********************************************************************
      */
 
     protected int rawHashForRouting(TestKey key, BlockHasher32 hasher)

@@ -1,4 +1,4 @@
-package com.force.vagabond.server.jaxrs;
+package com.fasterxml.clustermate.jaxrs;
 
 import java.io.*;
 import java.util.*;
@@ -24,6 +24,7 @@ import com.fasterxml.storemate.store.impl.StorableStoreImpl;
 
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeDefinition;
+import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ClusterConfig;
 import com.fasterxml.clustermate.service.cfg.NodeConfig;
@@ -31,7 +32,6 @@ import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerImpl;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
-import com.force.vagabond.server.jaxrs.testutil.*;
 
 /**
  * Shared base class for unit tests; contains shared utility methods.
@@ -51,9 +51,9 @@ public abstract class JaxrsStoreTestBase extends TestCase
     protected final StoredEntryConverterForTests _entryConverter = new StoredEntryConverterForTests(_keyConverter);
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Configuration setting helpers
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Configuration setting helpers
+    /**********************************************************************
      */
 
     protected ServiceConfigForTests createSimpleTestConfig(String testSuffix, boolean cleanUp)
@@ -62,7 +62,7 @@ public abstract class JaxrsStoreTestBase extends TestCase
         // BDB and file store settings:
         File testRoot = getTestScratchDir(testSuffix, cleanUp);
         ServiceConfigForTests config = new ServiceConfigForTests();
-        config.metadataDirectory = new File(testRoot, "bdb-vagabond");
+        config.metadataDirectory = new File(testRoot, "bdb-cmtest");
         config.storeConfig.dataRootForFiles = new File(testRoot, "files");
         // shorten sync grace period to 5 seconds for tests:
         config.cfgSyncGracePeriod = new TimeSpan("5s");
@@ -85,9 +85,9 @@ public abstract class JaxrsStoreTestBase extends TestCase
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Store creation
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Store creation
+    /**********************************************************************
      */
 
     protected StoreResourceForTests<TestKey, StoredEntry<TestKey>>
@@ -136,9 +136,9 @@ public abstract class JaxrsStoreTestBase extends TestCase
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Other factory methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Other factory methods
+    /**********************************************************************
      */
     
     protected TestKey contentKey(PartitionId clientId, String fullPath) {
@@ -157,9 +157,9 @@ public abstract class JaxrsStoreTestBase extends TestCase
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Methods for file, directory handling
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Methods for file, directory handling
+    /**********************************************************************
      */
 	
     /**
@@ -224,9 +224,9 @@ public abstract class JaxrsStoreTestBase extends TestCase
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Test methods: data generation
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Test methods: data generation
+    /**********************************************************************
      */
 	
     protected String biggerCompressibleData(int size)
@@ -281,9 +281,9 @@ public abstract class JaxrsStoreTestBase extends TestCase
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Test methods: message validation
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Test methods: message validation
+    /**********************************************************************
      */
 
     protected void verifyException(Exception e, String expected)
@@ -300,9 +300,9 @@ public abstract class JaxrsStoreTestBase extends TestCase
     }
 	
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Log setup
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Log setup
+    /**********************************************************************
      */
 
     /**
@@ -314,9 +314,9 @@ public abstract class JaxrsStoreTestBase extends TestCase
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Checksum calculation
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Checksum calculation
+    /**********************************************************************
      */
 
     protected int calcChecksum(byte[] data) {

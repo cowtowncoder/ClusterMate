@@ -1,4 +1,4 @@
-package com.force.vagabond.server.jaxrs.testutil;
+package com.fasterxml.clustermate.jaxrs.testutil;
 
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.StorableKey;
