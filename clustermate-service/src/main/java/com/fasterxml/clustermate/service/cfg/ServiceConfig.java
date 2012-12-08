@@ -32,7 +32,7 @@ public abstract class ServiceConfig
      * using configurable 
      */
     @NotNull
-    public String[] servicePathRoot = new String[] { "v" };
+    public String[] servicePathRoot;
 
     /**
      * Method to find {@link RequestPathStrategy} used for matching
@@ -194,8 +194,6 @@ public abstract class ServiceConfig
     /* Construction
     /**********************************************************************
      */
-
-    protected ServiceConfig() { }
 
     protected ServiceConfig(String[] root) {
         servicePathRoot = root;

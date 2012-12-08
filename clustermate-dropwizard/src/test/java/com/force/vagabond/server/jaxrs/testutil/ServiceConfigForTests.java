@@ -11,6 +11,10 @@ import com.fasterxml.storemate.store.backend.StoreBackendConfig;
 public class ServiceConfigForTests
     extends ServiceConfig
 {
+    // not a big deal since we don't use real client; otherwise would
+    // need to match
+    protected final static String[] TEST_SVC_ROOT = new String[] { "cmtest" };
+    
     protected RequestPathStrategy _requestPathStrategy;
     protected String defaultPartition;
 
@@ -19,7 +23,7 @@ public class ServiceConfigForTests
     }
 
     public ServiceConfigForTests(RequestPathStrategy paths) {
-        super();
+        super(TEST_SVC_ROOT);
         _requestPathStrategy = paths;
     }
 
