@@ -197,6 +197,10 @@ public abstract class ServiceConfig
 
     protected ServiceConfig() { }
 
+    protected ServiceConfig(String[] root) {
+        servicePathRoot = root;
+    }
+    
     /*
     /**********************************************************************
     /* Other access methods
