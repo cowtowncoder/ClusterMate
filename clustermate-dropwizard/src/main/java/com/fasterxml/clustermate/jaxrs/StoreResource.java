@@ -24,7 +24,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  * a JAX-RS container, exposing basic CRUD (PUT, GET, DELETE)
  * entry points.
  */
-@Path("/v/store/entry")
+@Path("/prefix/store/entry")
 public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>>
 {
     /*
@@ -92,7 +92,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
                 dataIn);
     }
 
-    // Alias for PUT -- why not!
+    // Alias for PUT (why not)
     @POST @Timed
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{externalPath: .*}")
