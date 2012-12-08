@@ -87,7 +87,7 @@ public abstract class ServiceResponse
     public final boolean hasStreamingContent() { return _streamingContent != null; }
 
     @SuppressWarnings("unchecked")
-    public <T> T getEntity() {
+    public final <T> T getEntity() {
         return (T) _entity;
     }
     
