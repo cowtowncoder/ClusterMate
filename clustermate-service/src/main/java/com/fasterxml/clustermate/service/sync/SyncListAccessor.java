@@ -17,7 +17,7 @@ import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
-import com.fasterxml.clustermate.service.VManaged;
+import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
@@ -25,7 +25,7 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
-public class SyncListAccessor implements VManaged
+public class SyncListAccessor implements StartAndStoppable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     

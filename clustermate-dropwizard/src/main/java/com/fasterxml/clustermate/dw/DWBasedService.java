@@ -28,7 +28,7 @@ import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.jaxrs.IndexResource;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
-import com.fasterxml.clustermate.service.VManaged;
+import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cleanup.CleanerUpper;
 import com.fasterxml.clustermate.service.cluster.ClusterBootstrapper;
@@ -60,9 +60,9 @@ public abstract class DWBasedService<
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     /**
-     * List of {@link VManaged} objects we will dispatch start/stop calls to.
+     * List of {@link StartAndStoppable} objects we will dispatch start/stop calls to.
      */
-    protected List<VManaged> _managed = Collections.emptyList();
+    protected List<StartAndStoppable> _managed = Collections.emptyList();
     
     /**
      * Marker flag used to indicate cases when service is run in test
@@ -144,7 +144,7 @@ public abstract class DWBasedService<
 
         final SCONFIG config = dwConfig.getServiceConfig();
         
-        _managed = new ArrayList<VManaged>();
+        _managed = new ArrayList<StartAndStoppable>();
 
         StoredEntryConverter<K,E> entryConverter = constructEntryConverter(config, environment);
         FileManager files = constructFileManager(config);
@@ -384,7 +384,7 @@ public abstract class DWBasedService<
     public void start() throws Exception
     {
         LOG.info("Starting up {} VManaged objects", _managed.size());
-        for (VManaged managed : _managed) {
+        for (StartAndStoppable managed : _managed) {
             LOG.info("Starting up: {}", managed.getClass().getName());
             managed.start();
         }
@@ -399,7 +399,7 @@ public abstract class DWBasedService<
         int count = _managed.size();
         LOG.info("Stopping {} VManaged objects", _managed.size());
         while (--count >= 0) {
-            VManaged managed = _managed.remove(count);
+            StartAndStoppable managed = _managed.remove(count);
             String desc = managed.getClass().getName();
             try {
                 LOG.info("Stopping: {}", desc);

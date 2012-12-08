@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
-import com.fasterxml.clustermate.service.VManaged;
+import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.storemate.shared.EntryKey;
@@ -21,7 +21,7 @@ import com.fasterxml.storemate.shared.TimeMaster;
  * processing, related to data storage and expiration.
  */
 public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
-    implements Runnable, VManaged
+    implements Runnable, StartAndStoppable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 

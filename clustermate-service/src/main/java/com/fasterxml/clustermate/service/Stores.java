@@ -15,7 +15,7 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
  * that a clustered service needs.
  */
 public abstract class Stores<K extends EntryKey, E extends StoredEntry<K>>
-    implements VManaged
+    implements StartAndStoppable
 {
     public abstract boolean isActive();
 

@@ -8,7 +8,7 @@ package com.fasterxml.clustermate.service;
  * does not implement it, to keep interaction decoupled form DW to
  * work on other containers as well.
  */
-public interface VManaged
+public interface StartAndStoppable
 {
     public void start() throws java.lang.Exception;
 

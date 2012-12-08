@@ -16,7 +16,7 @@ import com.fasterxml.clustermate.api.ClusterStatusAccessor;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
-import com.fasterxml.clustermate.service.VManaged;
+import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.bdb.NodeStateStore;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
@@ -33,7 +33,7 @@ import com.fasterxml.storemate.store.util.BoundedInputStream;
 
 public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     extends ClusterPeer
-    implements VManaged
+    implements StartAndStoppable
 {
     /**
      * If access to peer's sync/list fails, wait for this duration before
