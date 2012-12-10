@@ -198,6 +198,26 @@ public abstract class ServiceConfig
     protected ServiceConfig(String[] root) {
         servicePathRoot = root;
     }
+
+    /*
+    /**********************************************************************
+    /* Programmatic overrides
+    /**********************************************************************
+     */
+
+    public ServiceConfig overrideSyncGracePeriod(String periodDesc) {
+        try {
+            cfgSyncGracePeriod = new TimeSpan(periodDesc);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid delay description '"+periodDesc+"': "+e.getMessage());
+        }
+        return this;
+    }
+
+    public ServiceConfig overrideStoreBackendConfig(StoreBackendConfig cfg) {
+        _storeBackendConfigOverride = cfg;
+        return this;
+    }
     
     /*
     /**********************************************************************
