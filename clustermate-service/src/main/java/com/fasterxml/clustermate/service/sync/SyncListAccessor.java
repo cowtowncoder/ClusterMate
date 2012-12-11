@@ -199,11 +199,11 @@ public class SyncListAccessor implements StartAndStoppable
     {
         final String urlStr = _buildSyncPullUrl(endpoint);
         byte[] reqPayload = _syncPullRequestWriter.writeValueAsBytes(request);
-
+        
         HttpURLConnection conn;
         OutputStream out = null;
         try {
-            conn = preparePost(urlStr, timeout);
+            conn = preparePost(urlStr, timeout, ClusterMateConstants.CONTENT_TYPE_JSON);
             conn.connect();
             out = conn.getOutputStream();
             out.write(reqPayload);
@@ -244,22 +244,23 @@ public class SyncListAccessor implements StartAndStoppable
     /**********************************************************************
      */
     
-    protected HttpURLConnection preparePost(String urlStr, TimeSpan timeout)
-    	throws IOException
+    protected HttpURLConnection preparePost(String urlStr, TimeSpan timeout,
+            String contentType)
+        throws IOException
     {
-    	return prepareHttpMethod(urlStr, timeout, "POST", true);
+        return prepareHttpMethod(urlStr, timeout, "POST", true, contentType);
     }
 
     protected HttpURLConnection prepareGet(String urlStr, TimeSpan timeout)
-    	throws IOException
+            throws IOException
     {
-    	return prepareHttpMethod(urlStr, timeout, "GET", false);
+        return prepareHttpMethod(urlStr, timeout, "GET", false, null);
     }
     
     protected HttpURLConnection prepareHttpMethod(String urlStr, TimeSpan timeout,
-    		String methodName, boolean sendInput)
-    	throws IOException
-	{
+            String methodName, boolean sendInput, String contentType)
+        throws IOException
+    {
         URL url = new URL(urlStr);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod(methodName);
@@ -267,6 +268,10 @@ public class SyncListAccessor implements StartAndStoppable
         conn.setUseCaches(false);
         conn.setDoOutput(sendInput);
         conn.setDoInput(true); // we always read response
+        if (contentType != null) { // should also indicate content type...
+            conn.setRequestProperty(ClusterMateConstants.HTTP_HEADER_CONTENT_TYPE, contentType);
+        }
+        
         // how about timeouts... JDK one does not give us whole-operation granularity but:
         int timeoutMs = (int) timeout.getMillis();
         // let's give only half to connect; more likely we detect down servers on connect

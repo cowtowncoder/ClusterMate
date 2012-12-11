@@ -17,6 +17,8 @@ public class ServletServiceRequest extends ServiceRequest
      * Underlying response object exposed by Servlet API.
      */
     protected final HttpServletRequest _request;
+
+    protected InputStream _nativeStream;
     
     /*
     /**********************************************************************
@@ -43,7 +45,10 @@ public class ServletServiceRequest extends ServiceRequest
 
     @Override
     public InputStream getNativeInputStream() throws IOException {
-        return _request.getInputStream();
+        if (_nativeStream == null) {
+            _nativeStream = _request.getInputStream();
+        }
+        return _nativeStream;
     }
 
     @Override
