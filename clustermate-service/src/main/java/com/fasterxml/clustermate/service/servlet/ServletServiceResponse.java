@@ -1,12 +1,12 @@
 package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
 import javax.servlet.http.*;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.service.ServiceResponse;
-import com.fasterxml.clustermate.service.util.StatsCollectingOutputStream;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
@@ -25,8 +25,10 @@ public class ServletServiceResponse extends ServiceResponse
      * keep track of it here.
      */
     protected int _statusCode;
+    
+    protected long _responseLength;
 
-    protected StatsCollectingOutputStream _output;
+    protected OutputStream _output;
     
     /*
     /**********************************************************************
@@ -42,7 +44,7 @@ public class ServletServiceResponse extends ServiceResponse
     public void writeOut(ObjectWriter writer) throws IOException
     {
         if (_output == null) {
-            _output = new StatsCollectingOutputStream(_response.getOutputStream());
+            _output = _response.getOutputStream();
         }
         if (_streamingContent != null) {
             long len = _streamingContent.getLength();
@@ -63,7 +65,7 @@ public class ServletServiceResponse extends ServiceResponse
 
     @Override
     public long getBytesWritten() {
-        return (_output == null) ? 0L : _output.getBytesWritten();
+        return _responseLength;
     }
     
     @Override
@@ -94,6 +96,7 @@ public class ServletServiceResponse extends ServiceResponse
     @Override
     public ServletServiceResponse setContentLength(long length)
     {
+        _responseLength = length;        
         // not sure if this would work but:
         if (length > Integer.MAX_VALUE) {
             return addHeader(ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH, length);
