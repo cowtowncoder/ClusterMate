@@ -9,7 +9,6 @@ import com.fasterxml.storemate.shared.IpAndPort;
  * except for the local node itself.
  */
 public abstract class ClusterPeer 
-//    implements VManaged
 {
     /*
     /**********************************************************************
