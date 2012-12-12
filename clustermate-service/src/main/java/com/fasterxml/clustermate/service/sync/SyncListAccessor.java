@@ -199,11 +199,14 @@ public class SyncListAccessor implements StartAndStoppable
     {
         final String urlStr = _buildSyncPullUrl(endpoint);
         byte[] reqPayload = _syncPullRequestWriter.writeValueAsBytes(request);
+        final int reqLength = reqPayload.length;
         
         HttpURLConnection conn;
         OutputStream out = null;
         try {
             conn = preparePost(urlStr, timeout, ClusterMateConstants.CONTENT_TYPE_JSON);
+            // since we do know length in advance, let's just do this:
+            conn.setFixedLengthStreamingMode(reqLength);
             conn.connect();
             out = conn.getOutputStream();
             out.write(reqPayload);
