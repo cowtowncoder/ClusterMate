@@ -124,7 +124,7 @@ public abstract class ServiceResponse
     }
     
     public final ServiceResponse ok(Object entity) {
-        return setEntity(entity);
+        return ok().setEntity(entity);
     }
 
     public final ServiceResponse noContent() {
