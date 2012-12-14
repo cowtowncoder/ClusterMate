@@ -379,11 +379,16 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             LOG.info("Stopped sync thread for peer at {} -- testing, all done!", _syncState.getAddress());
             return;
         }
-        LOG.info("Stopped sync thread for peer at {}: let's do bye-bye", _syncState.getAddress());
+        // And send the byebye message if peer is NOT (known to be) disabled
+        if (_syncState.isDisabled()) {
+            LOG.info("Stopped sync thread for peer at {}: is disabled, no need to send bye-bye", _syncState.getAddress());
+            return;
+        }
+        LOG.info("Stopped sync thread for peer at {}: let's send bye-bye", _syncState.getAddress());
         long start = System.currentTimeMillis();
         _syncListAccessor.sendStatusUpdate(_cluster, TIMEOUT_FOR_BYEBYE,
                 _syncState.getAddress(), ClusterMateConstants.STATE_INACTIVE);
-        LOG.info("Bye-bye message to {} sent in {} msec", System.currentTimeMillis()-start);
+        LOG.info("Bye-bye message to {} sent in {} msec", _syncState.getAddress(), System.currentTimeMillis()-start);
     }
 
     protected void doRealSync() throws Exception

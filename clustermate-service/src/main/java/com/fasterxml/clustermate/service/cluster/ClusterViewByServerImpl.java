@@ -214,7 +214,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         if (peer == null) {
             LOG.warn("Unknown node {} reported being deactivated; ignoring", endpoint);
         } else {
-            LOG.warn("Node {} reported being deactivated: marked as such");
+            LOG.warn("Node {} reported being deactivated: marked as such", endpoint);
         }
     }
     
