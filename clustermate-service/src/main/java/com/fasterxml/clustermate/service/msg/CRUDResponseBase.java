@@ -7,22 +7,23 @@ import com.fasterxml.storemate.shared.EntryKey;
 
 /**
  * Base class used by various response messages (mostly errors,
- * but not just them); used so caller can try to extract
+ * but not just them) used with main CRD operations (single-entry
+ * create/retrive/delete) used so caller can try to extract
  * more specific error information, beyond HTTP status code.
  */
 @JsonIgnoreProperties(ignoreUnknown=true)
 @JsonPropertyOrder({ "message", "key" })
-public class ResponseBase<K extends EntryKey>
+public class CRUDResponseBase<K extends EntryKey>
 {
     public String key;
 
     public String message;
 
-    protected ResponseBase() { }
-    protected ResponseBase(K key) {
+    protected CRUDResponseBase() { }
+    protected CRUDResponseBase(K key) {
         this(key, null);
     }
-    protected ResponseBase(K key, String message) {
+    protected CRUDResponseBase(K key, String message) {
         this.key = (key == null) ? "" : key.toString();
         this.message = message;
     }

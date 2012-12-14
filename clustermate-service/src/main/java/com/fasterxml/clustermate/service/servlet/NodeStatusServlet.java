@@ -33,18 +33,25 @@ public class NodeStatusServlet extends ServletBase
     /**********************************************************************
      */
 
+    /**
+     * GET is used for simple access of cluster status
+     */
     @Override
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics metadata) throws IOException
     {
         response = _handler.getStatus(request, response, metadata);
-        // since we are counting response bytes, do pass metadata here:
         response.writeOut(null);
     }
 
-    /*
-    /**********************************************************************
-    /* TODO: API for sending pro-active updates? (Node shutting down)
-    /**********************************************************************
+    /**
+     * POST is used for simple hello/goodbye style notifications.
      */
+    @Override
+    public void handlePost(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics metadata) throws IOException
+    {
+        response = _handler.handlePost(request, response, metadata);
+        response.writeOut(null);
+    }
 }

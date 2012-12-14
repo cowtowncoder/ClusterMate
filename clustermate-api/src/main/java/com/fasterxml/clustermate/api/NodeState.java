@@ -25,9 +25,11 @@ public class NodeState
     protected KeyRange rangeActive;
     protected KeyRange rangePassive;
     protected KeyRange rangeSync;
-    protected boolean disabled;
     protected long lastSyncAttempt;
 
+    protected boolean disabled;
+    protected long disabledUpdated;
+    
     /**
      * Timestamp of earliest possible new entry to discover: that is, all
      * entries prior to this timestamp have been synchronized for covered
@@ -105,6 +107,10 @@ public class NodeState
     
     public boolean isDisabled() {
         return disabled;
+    }
+
+    public long getDisabledUpdated() {
+        return disabledUpdated;
     }
 
     public long getLastSyncAttempt() {

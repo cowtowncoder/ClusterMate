@@ -93,10 +93,21 @@ public interface ClusterMateConstants
     public final static String HTTP_QUERY_PARAM_CALLER = "caller";
 
     /**
+     * Query parameter that indicates state of the caller
+     */
+    public final static String HTTP_QUERY_PARAM_STATE = "state";
+    
+    /**
      * Query parameter used to contain hash code for last received cluster
      * view.
      */
     public final static String HTTP_QUERY_CLUSTER_HASH = "clusterHash";
+
+    /**
+     * Query parameter that contains timestamp defined by sender and indicates
+     * timestamp relevant to the message (such as status update).
+     */
+    public final static String HTTP_QUERY_PARAM_TIMESTAMP = "timestamp";
     
     /*
     /**********************************************************************
@@ -119,4 +130,14 @@ public interface ClusterMateConstants
     public final static String CONTENT_TYPE_JSON = "application/json";
     
     public final static String CONTENT_TYPE_SMILE = "application/x-jackson-smile";
+
+    /*
+    /**********************************************************************
+    /* Other constants
+    /**********************************************************************
+     */
+
+    public final static String STATE_ACTIVE = "active";
+
+    public final static String STATE_INACTIVE = "inactive";
 }

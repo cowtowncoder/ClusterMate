@@ -17,7 +17,7 @@ public abstract class ClusterStatusAccessor
 
     public abstract ClusterStatusMessage getClusterStatus(String endpoint, long timeoutMsecs)
         throws IOException;
-
+    
     /**
      * Simple interface for thing used to serialize payload of cluster status end point.
      */

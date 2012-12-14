@@ -45,7 +45,7 @@ public class PathsForTests extends RequestPathStrategy
     public <K extends RequestPathBuilder> K appendNodeStatusPath(K nodeRoot) {
         return (K) _nodePath(nodeRoot).addPathSegment(SECOND_SEGMENT_NODE_STATUS);
     }
-
+    
     @Override
     public <K extends RequestPathBuilder> K appendSyncListPath(K nodeRoot) {
         return (K) _syncPath(nodeRoot).addPathSegment(SECOND_SEGMENT_SYNC_LIST);

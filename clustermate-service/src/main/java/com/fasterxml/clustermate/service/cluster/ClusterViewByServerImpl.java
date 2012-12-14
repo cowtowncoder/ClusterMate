@@ -190,6 +190,35 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
      */
 
     @Override
+    public void nodeActivated(IpAndPort endpoint, long timestamp, KeyRange totalRange)
+    {
+        // for now, no real difference so:
+        checkMembership(endpoint, totalRange);
+    }
+
+    @Override
+    public void nodeDeactivated(IpAndPort endpoint, long timestamp)
+    {
+        // First, a sanity check:
+        if (_localState.getAddress().equals(endpoint)) { // just sanity check
+            LOG.warn("checkMembership() called with local node address; ignoring");
+            return;
+        }
+        ClusterPeerImpl<K,E> peer;
+        synchronized (_peers) {
+            peer = _peers.get(endpoint);
+            if (peer != null) {
+                peer.markDisabled(timestamp, true);
+            }
+        }
+        if (peer == null) {
+            LOG.warn("Unknown node {} reported being deactivated; ignoring", endpoint);
+        } else {
+            LOG.warn("Node {} reported being deactivated: marked as such");
+        }
+    }
+    
+    @Override
     public void checkMembership(IpAndPort endpoint, KeyRange totalRange)
     {
         // First, a sanity check:

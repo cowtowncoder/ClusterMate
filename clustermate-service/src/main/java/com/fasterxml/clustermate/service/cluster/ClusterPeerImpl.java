@@ -12,6 +12,7 @@ import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.NodeState;
@@ -51,6 +52,11 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     // no real hurry, so just use 10 seconds
     private final static TimeSpan TIMEOUT_FOR_SYNCLIST = new TimeSpan(10L, TimeUnit.SECONDS);
 
+    /**
+     * Lowish timeout for "bye bye" message, so it won't block shutdown
+     */
+    private final static TimeSpan TIMEOUT_FOR_BYEBYE = new TimeSpan(250L, TimeUnit.MILLISECONDS);
+    
     /**
      * We will limit maximum estimate response size to some reasonable
      * limit: starting with 250 megs. The idea is to use big enough sizes
@@ -369,7 +375,15 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                 }
             }
         }
-        LOG.info("Stopped sync thread for peer at {}", _syncState.getAddress());
+        if (_stuff.isRunningTests()) {
+            LOG.info("Stopped sync thread for peer at {} -- testing, all done!", _syncState.getAddress());
+            return;
+        }
+        LOG.info("Stopped sync thread for peer at {}: let's do bye-bye", _syncState.getAddress());
+        long start = System.currentTimeMillis();
+        _syncListAccessor.sendStatusUpdate(_cluster, TIMEOUT_FOR_BYEBYE,
+                _syncState.getAddress(), ClusterMateConstants.STATE_INACTIVE);
+        LOG.info("Bye-bye message to {} sent in {} msec", System.currentTimeMillis()-start);
     }
 
     protected void doRealSync() throws Exception
@@ -482,6 +496,24 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
+    /**
+     * Method called to indicate that the node should (or should not) be
+     * disabled.
+     */
+    public void markDisabled(long timestamp, boolean isDisabled)
+    {
+        ActiveNodeState state = _syncState.withDisabled(timestamp, isDisabled);
+        if (state != _syncState) {
+            _syncState = state;
+            try {
+                _stateStore.upsertEntry(state);
+            } catch (Exception e) {
+                LOG.error("Failed to update node state (disabled to {}) for {}. Problem ({}): {}",
+                        isDisabled, _syncState, e.getClass().getName(), e.getMessage());
+            }
+        }
+    }
+    
     /*
     /**********************************************************************
     /* Internal methods, other

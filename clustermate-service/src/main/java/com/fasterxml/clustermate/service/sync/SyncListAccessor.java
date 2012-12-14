@@ -241,6 +241,39 @@ public class SyncListAccessor implements StartAndStoppable
         return null;
     }
 
+    /**
+     * Helper method used for sending simple status update message, usually
+     * done when service starts up or shuts down.
+     */
+    public boolean sendStatusUpdate(ClusterViewByServerUpdatable cluster,
+            TimeSpan timeout, IpAndPort remote, String newStatus)
+    {
+        final String urlStr = _buildNodeStatusUpdateUrl(cluster, remote);
+        HttpURLConnection conn;
+        try {
+            conn = preparePost(urlStr, timeout, ClusterMateConstants.CONTENT_TYPE_JSON);
+            // since we do know length in advance, let's just do this:
+            conn.setDoInput(false);
+            conn.setDoOutput(false);
+            conn.connect();
+        } catch (Exception e) {
+            LOG.warn("sendStatusUpdate request to {} failed on send with Exception ({}): {}",
+                    urlStr, e.getClass().getName(), e.getMessage());
+            return false;
+        }
+        int statusCode;
+        try {
+            statusCode = conn.getResponseCode();
+        } catch (IOException e) {
+            statusCode = -1;
+        }
+        if (IOUtil.isHTTPSuccess(statusCode)) {
+            return true;
+        }
+        LOG.warn("sendStatusUpdate request to {} failed with response code of {}", urlStr, statusCode);
+        return false;
+    }
+    
     /*
     /**********************************************************************
     /* Helper methods
@@ -303,7 +336,7 @@ public class SyncListAccessor implements StartAndStoppable
         LOG.warn("Failed to process {} response from '{}': status code {}, response excerpt: {}",
                 new Object[] { operation, urlStr, statusCode, msg});
     }
-    
+
     protected String _buildSyncListUrl(ClusterViewByServerUpdatable cluster, NodeState remote,
             long lastClusterHash)
     {
@@ -324,12 +357,28 @@ public class SyncListAccessor implements StartAndStoppable
                 String.valueOf(syncedUpTo));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
+        // this will include 'caller' param:
         pathBuilder = cluster.addClusterStateInfo(pathBuilder);
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_CLUSTER_HASH,
                 String.valueOf(lastClusterHash));
         return pathBuilder.toString();
     }
-
+    
+    protected String _buildNodeStatusUpdateUrl(ClusterViewByServerUpdatable cluster, IpAndPort remote)
+    {
+        final KeyRange syncRange = cluster.getLocalState().totalRange();
+        RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote)
+            .addPathSegments(_stuff.getServiceConfig().servicePathRoot);
+        pathBuilder = _stuff.getPathStrategy().appendNodeStatusPath(pathBuilder);
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_TIMESTAMP,
+                String.valueOf(_stuff.getTimeMaster().currentTimeMillis()));
+        // this will include 'caller' param:
+        pathBuilder = cluster.addClusterStateInfo(pathBuilder);
+        return pathBuilder.toString();
+    }
+    
     protected String _buildSyncPullUrl(IpAndPort endpoint)
     {
         final ServiceConfig config = _stuff.getServiceConfig();

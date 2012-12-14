@@ -1,5 +1,5 @@
 /**
- * Package that contains server-side service abstractions, such
- * as POJOs that represent responses.
+ * Package that contains server-side service abstractions for POJOs
+ * used for response Objects.
  */
 package com.fasterxml.clustermate.service.msg;

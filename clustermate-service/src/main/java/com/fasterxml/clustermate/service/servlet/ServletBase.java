@@ -147,7 +147,7 @@ public class ServletBase extends HttpServlet
     protected ServletServiceResponse constructResponse(HttpServletResponse orig) {
         return new ServletServiceResponse(orig);
     }
-
+    
     /*
     /**********************************************************************
     /* Helper methods, other

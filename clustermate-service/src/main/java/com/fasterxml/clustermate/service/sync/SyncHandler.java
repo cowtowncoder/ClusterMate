@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.skife.config.TimeSpan;
-import org.slf4j.*;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -28,6 +27,7 @@ import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.service.HandlerBase;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.ServiceRequest;
 import com.fasterxml.clustermate.service.ServiceResponse;
@@ -44,6 +44,7 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
  * process.
  */
 public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
+    extends HandlerBase
 {
     /**
      * Since 'list sync' operation can potentially scan through sizable
@@ -64,8 +65,6 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
     /* Helper objects
     /**********************************************************************
      */
-
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
     
     protected final ClusterViewByServerUpdatable _cluster;
 
@@ -198,17 +197,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         /* 20-Nov-2012, tatu: We can now piggyback auto-registration by sending minimal
          *   info about caller...
          */
-        IpAndPort caller = null;
-        String str = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CALLER);
-        if (str != null && (str = str.trim()).length() > 0) {
-            try {
-                caller = new IpAndPort(str);
-            } catch (Exception e) {
-                LOG.warn("Invalid value for {}: '{}', problem: {}",
-                        ClusterMateConstants.HTTP_QUERY_PARAM_CALLER,
-                        str, e.getMessage());
-            }
-        }
+        IpAndPort caller = getCallerQueryParam(request);
         if (caller != null) {
             _cluster.checkMembership(caller, range);
         }
@@ -432,32 +421,6 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
     /**********************************************************************
      */
 
-    private Integer _findIntParam(ServiceRequest request, String key)
-    {
-        String str = request.getQueryParameter(key);
-        if (str == null || (str = str.trim()).isEmpty()) {
-            return null;
-        }
-        try {
-            return Integer.valueOf(str);
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
-    private long _findLongParam(ServiceRequest request, String key)
-    {
-        String str = request.getQueryParameter(key);
-        if (str == null || (str = str.trim()).isEmpty()) {
-            return 0L;
-        }
-        try {
-            return Long.valueOf(str);
-        } catch (IllegalArgumentException e) {
-            return 0L;
-        }
-    }
-    
     @SuppressWarnings("unchecked")
     public <OUT extends ServiceResponse> OUT missingArgument(ServiceResponse response, String argId) {
         return (OUT) badRequest(response, "Missing query parameter '"+argId+"'");

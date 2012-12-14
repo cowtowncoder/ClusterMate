@@ -3,7 +3,6 @@ package com.fasterxml.clustermate.service.cluster;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.NodeDefinition;
 import com.fasterxml.clustermate.api.NodeState;
-import com.fasterxml.storemate.shared.IpAndPort;
 
 /**
  * POJO used for exchanging node state information between servers;
@@ -33,6 +32,7 @@ public final class ActiveNodeState extends NodeState
         this.rangePassive = null;
         this.rangeSync = null;
         this.disabled = false;
+        this.disabledUpdated = 0L;
         this.lastSyncAttempt = 0L;
         this.syncedUpTo = 0L;
     }
@@ -51,6 +51,7 @@ public final class ActiveNodeState extends NodeState
         // can't calculate sync range without more info:
         rangeSync = rangeActive.withLength(0);
         disabled = false; // assume nodes start as active
+        disabledUpdated = creationTime;
         lastUpdated = 0L;
         lastSyncAttempt = creationTime;
         syncedUpTo = 0L;
@@ -86,6 +87,7 @@ public final class ActiveNodeState extends NodeState
             rangeSync = remoteRange.withLength(0);
         }
         disabled = false; // assume nodes start as active
+        disabledUpdated = updateTime;        
         lastSyncAttempt = 0L;
         syncedUpTo = 0L;
     }
@@ -118,6 +120,7 @@ public final class ActiveNodeState extends NodeState
             rangeSync = remoteRange.withLength(0);
         }
         disabled = remoteNode.isDisabled();
+        disabledUpdated = updateTime;
         lastSyncAttempt = 0L;
         syncedUpTo = 0L;
     }
@@ -133,6 +136,7 @@ public final class ActiveNodeState extends NodeState
         rangePassive = src.rangePassive;
         rangeSync = newSyncRange;
         disabled = src.disabled;
+        disabledUpdated = src.disabledUpdated;
         lastSyncAttempt = src.lastSyncAttempt;
         syncedUpTo = newSyncedUpTo;
     }
@@ -148,6 +152,7 @@ public final class ActiveNodeState extends NodeState
         rangePassive = src.rangePassive;
         rangeSync = src.rangeSync;
         disabled = src.disabled;
+        disabledUpdated = src.disabledUpdated;
         this.lastSyncAttempt = lastSyncAttempt;
         this.syncedUpTo = syncedUpTo;
     }
@@ -162,6 +167,23 @@ public final class ActiveNodeState extends NodeState
         rangePassive = src.rangePassive;
         rangeSync = src.rangeSync;
         disabled = src.disabled;
+        disabledUpdated = src.disabledUpdated;
+        lastSyncAttempt = src.lastSyncAttempt;
+        syncedUpTo = src.syncedUpTo;
+    }
+
+    // used via fluent factory
+    private ActiveNodeState(ActiveNodeState src, boolean disabled,
+            long disabledUpdated)
+    {
+        address = src.address;
+        index = src.index;
+        lastUpdated = src.lastUpdated;
+        rangeActive = src.rangeActive;
+        rangePassive = src.rangePassive;
+        rangeSync = src.rangeSync;
+        this.disabled = disabled;
+        this.disabledUpdated = disabledUpdated;
         lastSyncAttempt = src.lastSyncAttempt;
         syncedUpTo = src.syncedUpTo;
     }
@@ -221,42 +243,13 @@ public final class ActiveNodeState extends NodeState
         }
         return new ActiveNodeState(this, index);
     }
-    
-    /*
-    /**********************************************************************
-    /* NodeState methods
-    /**********************************************************************
-     */
 
-    @Override
-    public IpAndPort getAddress() { return address; }
-
-    /**
-     * Timestamp of last update by node itself to this
-     * state information; propagated by other nodes, used
-     * for determining most recent update. Always time from
-     * node itself.
-     */
-    @Override
-    public long getLastUpdated() { return lastUpdated; }
-    
-    @Override
-    public KeyRange getRangeActive() { return rangeActive; }
-
-    @Override
-    public KeyRange getRangePassive() { return rangePassive; }
-
-    @Override
-    public KeyRange getRangeSync() { return rangeSync; }
-    
-    @Override
-    public boolean isDisabled() { return disabled; }
-
-    @Override
-    public long getLastSyncAttempt() { return lastSyncAttempt; }
-
-    @Override
-    public long getSyncedUpTo() { return syncedUpTo; }
+    public ActiveNodeState withDisabled(long timestamp, boolean state) {
+        if (disabled == state && this.disabledUpdated == timestamp) {
+            return this;
+        }
+        return new ActiveNodeState(this, state, timestamp);
+    }
 
     /*
     /**********************************************************************

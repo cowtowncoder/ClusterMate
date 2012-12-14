@@ -27,8 +27,12 @@ public abstract class RequestPathStrategy
 
     public abstract <B extends RequestPathBuilder> B appendStoreListPath(B nodeRoot);
 
+    // // Node status, related:
+    
     public abstract <B extends RequestPathBuilder> B appendNodeStatusPath(B nodeRoot);
-
+    
+    // // Sync handling:
+    
     public abstract <B extends RequestPathBuilder> B appendSyncListPath(B nodeRoot);
 
     public abstract <B extends RequestPathBuilder> B appendSyncPullPath(B nodeRoot);

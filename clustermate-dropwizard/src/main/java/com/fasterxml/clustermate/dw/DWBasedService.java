@@ -238,7 +238,7 @@ public abstract class DWBasedService<
     }
 
     protected ClusterInfoHandler constructClusterInfoHandler(SharedServiceStuff stuff,
-            ClusterViewByServer cluster)
+            ClusterViewByServerUpdatable cluster)
     {
         return new ClusterInfoHandler(stuff, cluster);
     }

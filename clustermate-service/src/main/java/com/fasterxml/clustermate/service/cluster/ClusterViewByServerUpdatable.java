@@ -33,4 +33,16 @@ public abstract class ClusterViewByServerUpdatable
      * any available.
      */
     public abstract void updateWith(ClusterStatusMessage msg);
+
+    /**
+     * Method called when we have received an indication that specified node
+     * is being activated (is starting up)
+     */
+    public abstract void nodeActivated(IpAndPort node, long timestamp, KeyRange totalRange);
+
+    /**
+     * Method called when we have received an indication that specified node
+     * is being deactivated (is shutting down).
+     */
+    public abstract void nodeDeactivated(IpAndPort node, long timestamp);
 }

@@ -8,7 +8,7 @@ import com.fasterxml.storemate.store.Storable;
  * Simple value class used to return information on a successful
  * PUT request
  */
-public class PutResponse<K extends EntryKey> extends ResponseBase<K>
+public class PutResponse<K extends EntryKey> extends CRUDResponseBase<K>
 {
     public Compression compression;
 	
