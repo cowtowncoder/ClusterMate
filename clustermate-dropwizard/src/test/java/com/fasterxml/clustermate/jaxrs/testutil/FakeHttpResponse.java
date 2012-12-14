@@ -10,7 +10,8 @@ import com.fasterxml.clustermate.service.msg.StreamingResponseContentImpl;
 
 public class FakeHttpResponse extends ServiceResponse
 {
-    protected int statusCode = 200;
+    // Left empty, which is IMPORTANT so that it is identical to impl prod uses!
+    protected int statusCode;
     
     protected Map<String,String> _headers;
 
