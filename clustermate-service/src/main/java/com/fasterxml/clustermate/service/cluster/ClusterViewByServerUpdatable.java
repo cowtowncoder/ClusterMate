@@ -25,7 +25,7 @@ public abstract class ClusterViewByServerUpdatable
      * as a side effect of another operation, and only contains bare
      * minimal to get things started.
      */
-    public abstract void checkMembership(IpAndPort node, KeyRange totalRange);
+    public abstract void checkMembership(IpAndPort node, long timestamp, KeyRange totalRange);
 
     /**
      * Method called to update cluster view information based on a message

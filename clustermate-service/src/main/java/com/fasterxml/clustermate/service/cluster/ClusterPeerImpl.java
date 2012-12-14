@@ -322,6 +322,10 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     public ActiveNodeState getSyncState() {
         return _syncState;
     }
+
+    public boolean isDisabled() {
+        return _syncState.isDisabled();
+    }
     
     /*
     /**********************************************************************
@@ -507,6 +511,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     public void markDisabled(long timestamp, boolean isDisabled)
     {
+        if (timestamp <= 0L) { // optional
+            timestamp = _syncState.getDisabledUpdated();
+        }
         ActiveNodeState state = _syncState.withDisabled(timestamp, isDisabled);
         if (state != _syncState) {
             _syncState = state;

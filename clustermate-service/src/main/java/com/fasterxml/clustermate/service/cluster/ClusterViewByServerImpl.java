@@ -41,11 +41,6 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     protected final KeySpace _keyspace;
   
     protected final Stores<K,E> _stores;
-    /**
-     * Persistent data store in which we store information regarding
-     * synchronization.
-     */
-//    protected final NodeStateStore _stateStore;
     
     /**
      * Information about this node; not included in the list of peer nodes.
@@ -193,7 +188,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     public void nodeActivated(IpAndPort endpoint, long timestamp, KeyRange totalRange)
     {
         // for now, no real difference so:
-        checkMembership(endpoint, totalRange);
+        checkMembership(endpoint, timestamp, totalRange);
     }
 
     @Override
@@ -219,7 +214,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     }
     
     @Override
-    public void checkMembership(IpAndPort endpoint, KeyRange totalRange)
+    public void checkMembership(IpAndPort endpoint, long timestamp, KeyRange totalRange)
     {
         // First, a sanity check:
         if (_localState.getAddress().equals(endpoint)) {
@@ -228,7 +223,12 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         }
         try {
             synchronized (_peers) {
-                if (_peers.containsKey(endpoint)) { // already known, no further action
+                ClusterPeerImpl<K,E> peer = _peers.get(endpoint);
+                if (peer != null) { // already known...
+                    if (peer.isDisabled()) { // but do we enable it?
+                        peer.markDisabled(timestamp, false);
+                        LOG.info("Node {} activated due to received request", endpoint);
+                    }
                     return;
                 }
                 /* How interesting! Someone who we don't even know seems to be joining...
@@ -236,7 +236,6 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
                  * have data in local DB, just not in config file, or (b) New entry for
                  * which no data exists.
                  */
-                ClusterPeerImpl<K,E> peer;
                 ActiveNodeState oldState = _stores.getNodeStore().findEntry(endpoint);
                 // If such data found, assume it's accurate; we'll be updated soon if not
                 if (oldState != null) { 

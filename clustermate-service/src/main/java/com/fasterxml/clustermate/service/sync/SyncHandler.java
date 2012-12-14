@@ -199,7 +199,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
          */
         IpAndPort caller = getCallerQueryParam(request);
         if (caller != null) {
-            _cluster.checkMembership(caller, range);
+            _cluster.checkMembership(caller, 0L, range);
         }
         
         String acceptHeader = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT);
