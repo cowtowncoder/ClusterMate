@@ -1,0 +1,11 @@
+Project: ClusterMate
+
+0.8.2:
+
+Changes:
+
+...
+
+0.8.1 (16-Dec-2012)
+
+Baseline version (no earlier release notes)
