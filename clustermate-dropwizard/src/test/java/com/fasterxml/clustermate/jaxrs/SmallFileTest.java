@@ -7,6 +7,7 @@ import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.jaxrs.StoreResource;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
@@ -51,8 +52,9 @@ public class SmallFileTest extends JaxrsStoreTestBase
         // and more fundamentally, verify store had it:
         // then try adding said entry
         response = new FakeHttpResponse();
+        final int inputHash = calcChecksum(SMALL_DATA);
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
-                INTERNAL_KEY1, calcChecksum(SMALL_DATA), new ByteArrayInputStream(SMALL_DATA),
+                INTERNAL_KEY1, inputHash, new ByteArrayInputStream(SMALL_DATA),
                 null, null, null);
         assertEquals(200, response.getStatus());
         // can we count on this getting updated? Seems to be, FWIW
@@ -68,6 +70,12 @@ public class SmallFileTest extends JaxrsStoreTestBase
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1, stats);
         assertNotNull(stats.getEntry());
         assertEquals(200, response.getStatus());
+
+        // As per Issue #6, we should get Etag back:
+        String etag = response.getHeader(ClusterMateConstants.HTTP_HEADER_ETAG);
+        String expEtag = "\"" + inputHash + "\"";
+        assertEquals(expEtag, etag);
+        
         /*
         StatsCollectingOutputStream statsOut = new StatsCollectingOutputStream(new ByteArrayOutputStream());
         response.getStreamingContent().writeContent(statsOut);
@@ -83,7 +91,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         assertTrue(response.hasInlinedData());
         byte[] data = collectOutput(response);
         assertEquals(SMALL_STRING, new String(data, "UTF-8"));
-
+        
         Storable raw = entries.findEntry(INTERNAL_KEY1.asStorableKey());
         assertNotNull(raw);
         // too small to be compressed, so:
@@ -108,6 +116,24 @@ public class SmallFileTest extends JaxrsStoreTestBase
         assertNotNull(entry);
         assertEquals(accessTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
 
+        // and as per Issue #7: should be able to use Conditional GET too:
+        response = new FakeHttpResponse();
+        stats = new OperationDiagnostics();
+        FakeHttpRequest req = new FakeHttpRequest();
+        req.addHeader(ClusterMateConstants.HTTP_HEADER_ETAG_NO_MATCH,  expEtag);
+        resource.getHandler().getEntry(req, response, INTERNAL_KEY1, stats);
+        assertNotNull(stats.getEntry());
+        assertEquals(304, response.getStatus());
+
+        // but Etag must match so
+        response = new FakeHttpResponse();
+        stats = new OperationDiagnostics();
+        req = new FakeHttpRequest();
+        req.addHeader(ClusterMateConstants.HTTP_HEADER_ETAG_NO_MATCH,  "\"1234\"");
+        resource.getHandler().getEntry(req, response, INTERNAL_KEY1, stats);
+        assertNotNull(stats.getEntry());
+        assertEquals(200, response.getStatus());
+        
         // need to also close things after done, to exit test
         entries.stop();
     }

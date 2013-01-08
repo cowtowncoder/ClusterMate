@@ -43,6 +43,12 @@ public interface ClusterMateConstants
     public final static String HTTP_HEADER_RANGE_FOR_REQUEST = "Range";
     
     public final static String HTTP_HEADER_RANGE_FOR_RESPONSE = "Content-Range";
+
+    // // Support for Etag-based caching
+    
+    public final static String HTTP_HEADER_ETAG = "Etag";
+
+    public final static String HTTP_HEADER_ETAG_NO_MATCH = "If-None-Match";
     
     /*
     /**********************************************************************

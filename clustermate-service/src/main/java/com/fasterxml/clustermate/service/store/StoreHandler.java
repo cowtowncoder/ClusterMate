@@ -149,6 +149,12 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
                 return resp;
             }
         }
+
+        // [issue #7]: Conditional GET with Etag
+        if (_notChanged(request, rawEntry)) {
+            return response.notChanged();
+        }
+        
         final long accessTime = _timeMaster.currentTimeMillis();
         final E entry = _entryConverter.entryFromStorable(rawEntry);
 
@@ -192,11 +198,47 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         } else {
             response = response.partialContent(output, range.asResponseHeader());
         }
+        // Issue #6: Need to provide Etag, if content hash available
+        int contentHash = rawEntry.getContentHash();
+        if (contentHash != StoreConstants.NO_CHECKSUM) {
+            StringBuilder sb = new StringBuilder();
+            sb.append('"');
+            sb.append(contentHash);
+            sb.append('"');
+            response = response.addHeader(ClusterMateConstants.HTTP_HEADER_ETAG, sb.toString());
+        }
+        
         // also need to let client know we left compression in there:
         if (skipCompression) {
             response = response.setBodyCompression(comp.asContentEncoding());
         }
         return response;
+    }
+
+    protected boolean _notChanged(ServiceRequest request, Storable rawEntry)
+    {
+        // First: entry must have hash value to compare against
+        int contentHash = rawEntry.getContentHash();
+        if (contentHash != StoreConstants.NO_CHECKSUM) {
+            String rangeStr = request.getHeader(ClusterMateConstants.HTTP_HEADER_ETAG_NO_MATCH);
+            if (rangeStr != null) {
+                rangeStr = rangeStr.trim();
+                if (rangeStr.length() > 2 && rangeStr.charAt(0) == '"') {
+                    int ix = rangeStr.lastIndexOf('"');
+                    if (ix > 0) {
+                        rangeStr = rangeStr.substring(1, ix);
+                        try {
+                            // Parse as Long to allow for both signed and unsigned representations
+                            // of 32-bit hash value
+                            long l = Long.parseLong(rangeStr);
+                            int i = (int) l;
+                            return (i == contentHash);
+                        } catch (IllegalArgumentException e) { }
+                    }
+                }
+            }
+        }
+        return false;
     }
     
     /*

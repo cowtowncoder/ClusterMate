@@ -170,6 +170,10 @@ public abstract class ServiceResponse
         return set(500, entity);
     }
 
+    public final <RESP extends ServiceResponse> RESP  notChanged() {
+        return setStatus(304);
+    }
+    
     public final <RESP extends ServiceResponse> RESP  notFound() {
         return setStatus(404);
     }

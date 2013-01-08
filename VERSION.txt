@@ -4,7 +4,8 @@ Project: ClusterMate
 
 Changes:
 
-...
+#6: Provide Etag for GET, when content hash known
+#7: Support conditional GET with Etag
 
 0.8.1 (16-Dec-2012)
 
