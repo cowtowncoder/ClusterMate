@@ -1,6 +1,10 @@
 Project: ClusterMate
 
-0.8.2:
+0.8.3 (...)
+
+...
+
+0.8.2 (10-Jan-2012)
 
 Changes:
 
