@@ -74,7 +74,7 @@ public interface ClusterMateConstants
 
     /*
     /**********************************************************************
-    /* Query parameters, StoreMate-specific
+    /* Query parameters, ClusterMate-specific
     /**********************************************************************
      */
 
@@ -119,6 +119,12 @@ public interface ClusterMateConstants
      * Query parameter that defines type of items/entries to list.
      */
     public final static String HTTP_QUERY_PARAM_TYPE = "type";
+
+    /**
+     * Query parameter that defines what was the last traversed item, if any,
+     * when listing entries.
+     */
+    public final static String HTTP_QUERY_PARAM_LAST_SEEN = "lastSeen";
     
     /*
     /**********************************************************************

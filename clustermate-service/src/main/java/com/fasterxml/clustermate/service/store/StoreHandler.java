@@ -2,30 +2,19 @@ package com.fasterxml.clustermate.service.store;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.skife.config.TimeSpan;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.store.*;
 import com.fasterxml.storemate.store.backend.IterationAction;
-import com.fasterxml.storemate.store.backend.IterationResult;
 import com.fasterxml.storemate.store.backend.StorableIterationCallback;
 import com.fasterxml.storemate.store.file.FileManager;
 
-import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.clustermate.api.ClusterStatusMessage;
-import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.api.KeyHash;
-import com.fasterxml.clustermate.api.KeyRange;
-import com.fasterxml.clustermate.api.KeySpace;
-import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.service.HandlerBase;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
@@ -35,10 +24,9 @@ import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
-import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
 import com.fasterxml.clustermate.service.msg.*;
-import com.fasterxml.clustermate.service.sync.SyncListResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
@@ -85,6 +73,8 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
 
     protected final StoredEntryConverter<K, E> _entryConverter;
 
+    protected final ObjectMapper _objectMapper;
+    
     protected final ObjectWriter _listJsonWriter;
     
     protected final ObjectWriter _listSmileWriter;
@@ -131,6 +121,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         _keyConverter = stuff.getKeyConverter();
         _cfgCompressionEnabled = stuff.getStoreConfig().compressionEnabled;
 
+        _objectMapper = stuff.jsonMapper();
         _listJsonWriter = stuff.jsonWriter();
         _listSmileWriter = stuff.smileWriter();
 
@@ -506,15 +497,13 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
      * @param request 
      * @param response
      * @param prefix Path prefix to use for filtering out entries not to list
-     * @param lastSeen (optional) Key of the last entry returned, and is NOT to be returned
      * @param metadata Diagnostic information to update, if any
      * 
      * @return Modified response object
      */
     @SuppressWarnings("unchecked")
     public <OUT extends ServiceResponse> OUT listEntries(ServiceRequest request, OUT response,
-            final K prefix, StorableKey lastSeen,
-            OperationDiagnostics metadata)
+            final K prefix, OperationDiagnostics metadata)
         throws StoreException
     {
         // simple validation first
@@ -536,6 +525,20 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
                     _cluster.getLocalState().totalRange());
         }
 
+        // Then extract 'lastSeen', if it's passed:
+        StorableKey lastSeen = null;
+        String b64str = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_LAST_SEEN);
+        if (b64str != null && b64str.length() > 0) {
+            try {
+                // Jackson can do base64 decoding, and this is the easiest way
+                byte[] lastSeenRaw = _objectMapper.convertValue(b64str, byte[].class);
+                lastSeen = new StorableKey(lastSeenRaw);
+            } catch (Exception e) {
+                return (OUT) badRequest(response, "Invalid '"+ClusterMateConstants.HTTP_QUERY_PARAM_LAST_SEEN
+                        +"' value; not valid base64 encoded byte sequence");
+            }
+        }
+        
         // Otherwise can start listing
         boolean useSmile = _acceptSmileContentType(request);
         final StorableKey rawPrefix = prefix.asStorableKey();

@@ -8,6 +8,7 @@ import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
 import com.fasterxml.clustermate.service.msg.StreamingResponseContentImpl;
 
+@SuppressWarnings("unchecked")
 public class FakeHttpResponse extends ServiceResponse
 {
     // Left empty, which is IMPORTANT so that it is identical to impl prod uses!
