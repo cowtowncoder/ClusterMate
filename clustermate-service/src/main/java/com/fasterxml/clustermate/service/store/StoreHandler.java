@@ -1,6 +1,10 @@
 package com.fasterxml.clustermate.service.store;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
@@ -10,10 +14,19 @@ import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.store.*;
+import com.fasterxml.storemate.store.backend.IterationAction;
+import com.fasterxml.storemate.store.backend.IterationResult;
+import com.fasterxml.storemate.store.backend.StorableIterationCallback;
 import com.fasterxml.storemate.store.file.FileManager;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.api.KeyHash;
+import com.fasterxml.clustermate.api.KeyRange;
+import com.fasterxml.clustermate.api.KeySpace;
+import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.service.HandlerBase;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.ServiceRequest;
@@ -21,19 +34,38 @@ import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
+import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
 import com.fasterxml.clustermate.service.msg.*;
+import com.fasterxml.clustermate.service.sync.SyncListResponse;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * Class that handles coordination between front-end service layer (servlet,
  * jax-rs) and back-end storage layer.
  */
 public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
+    extends HandlerBase
 {
     // Do we want these output? Not for production, at least...
     // TODO: Externalize
     private final static boolean LOG_DUP_PUTS = false;
 
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
+    /**
+     * Let's not allow unlimited number of entries to traverse, no matter what.
+     */
+    private final static int MAX_MAX_ENTRIES = 500;
+
+    /**
+     * And for now strict time limit of 5 seconds
+     */
+    private final static long MAX_LIST_TIME_MSECS = 5000L;
+
+    private final static ListLimits DEFAULT_LIST_LIMITS =
+            ListLimits.defaultLimits()
+                .withMaxEntries(MAX_MAX_ENTRIES)
+                .withMaxMsecs(MAX_LIST_TIME_MSECS);
 
     /*
     /**********************************************************************
@@ -41,6 +73,8 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
+    protected final ClusterViewByServer _cluster;
+    
     protected final Stores<K,E> _stores;
 
     protected final FileManager _fileManager;
@@ -51,12 +85,16 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
 
     protected final StoredEntryConverter<K, E> _entryConverter;
 
+    protected final ObjectWriter _listJsonWriter;
+    
+    protected final ObjectWriter _listSmileWriter;
+    
     /*
     /**********************************************************************
     /* Configuration
     /**********************************************************************
      */
-
+    
     /**
      * Whether server-side (auto-)compression is enabled or not.
      */
@@ -83,14 +121,18 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
-    public StoreHandler(SharedServiceStuff stuff, Stores<K,E> stores)
+    public StoreHandler(SharedServiceStuff stuff, Stores<K,E> stores,
+            ClusterViewByServer cluster)
     {
+        _cluster = cluster;
         _stores = stores;
         _fileManager = stuff.getFileManager();
         _timeMaster = stuff.getTimeMaster();
         _keyConverter = stuff.getKeyConverter();
-
         _cfgCompressionEnabled = stuff.getStoreConfig().compressionEnabled;
+
+        _listJsonWriter = stuff.jsonWriter();
+        _listSmileWriter = stuff.smileWriter();
 
         final ServiceConfig config = stuff.getServiceConfig();
 
@@ -454,6 +496,157 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
 
     /*
     /**********************************************************************
+    /* Listing entries
+    /**********************************************************************
+     */
+    
+    /**
+     * End point clients use to list entries with given name prefix, 
+     * 
+     * @param request 
+     * @param response
+     * @param prefix Path prefix to use for filtering out entries not to list
+     * @param lastSeen (optional) Key of the last entry returned, and is NOT to be returned
+     * @param metadata Diagnostic information to update, if any
+     * 
+     * @return Modified response object
+     */
+    @SuppressWarnings("unchecked")
+    public <OUT extends ServiceResponse> OUT listEntries(ServiceRequest request, OUT response,
+            final K prefix, StorableKey lastSeen,
+            OperationDiagnostics metadata)
+        throws StoreException
+    {
+        // simple validation first
+        if (prefix == null) {
+            return (OUT) badRequest(response, "Missing path parameter for 'listEntries'");
+        }
+        ListType listType = ListType.find(request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE));
+        if (listType == null) {
+            return (OUT) badRequest(response, "Missing or invalid query parameter '"
+                    +ClusterMateConstants.HTTP_QUERY_PARAM_TYPE+"'");
+        }
+
+        /* First a sanity check: prefix should map to our active or passive range.
+         * If not, we should not have any data to list; so let's (for now?) fail request:
+         */
+        int rawHash = _keyConverter.routingHashFor(prefix);
+        if (!_cluster.getLocalState().inAnyRange(rawHash)) {
+            return (OUT) badRequest(response, "Invalid prefix: not in key range (%s) of node",
+                    _cluster.getLocalState().totalRange());
+        }
+
+        // Otherwise can start listing
+        boolean useSmile = _acceptSmileContentType(request);
+        final StorableKey rawPrefix = prefix.asStorableKey();
+        final ListLimits limits = DEFAULT_LIST_LIMITS;
+        ListResponse<?> listResponse = null;
+        
+        switch (listType) {
+        case entries:
+            listResponse = new ListResponse<ListItem>(_listItems(rawPrefix, lastSeen, limits));
+            break;
+        case ids:
+            listResponse = new ListResponse<StorableKey>(_listIds(rawPrefix, lastSeen, limits));
+            break;
+        case names:
+            {
+                List<StorableKey> ids = _listIds(rawPrefix, lastSeen, limits);
+                ArrayList<String> names = new ArrayList<String>(ids.size());
+                for (StorableKey id : ids) {
+                    names.add(id.toString());
+                }
+                listResponse = new ListResponse<String>(names);
+            }
+            break;
+        }
+        final ObjectWriter w = useSmile ? _listSmileWriter : _listJsonWriter;
+        final String contentType = useSmile ? ClusterMateConstants.CONTENT_TYPE_SMILE : ClusterMateConstants.CONTENT_TYPE_JSON;
+        
+        return (OUT) response.ok(new StreamingEntityImpl(w, listResponse))
+                .setContentType(contentType);
+    }    
+
+    protected List<ListItem> _listItems(final StorableKey prefix, StorableKey lastSeen,
+            ListLimits limits)
+        throws StoreException
+    {
+        final long maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
+        final int maxEntries = limits.getMaxEntries();
+        final ArrayList<ListItem> result = new ArrayList<ListItem>(100);
+
+        // we could check if all entries were iterated (with result code); for now we won't
+        /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(new StorableIterationCallback() {
+            public int counter; // to avoid checking systime too often
+
+            @Override
+            public IterationAction verifyKey(StorableKey key) {
+                if (!key.hasPrefix(prefix)) {
+                    return IterationAction.TERMINATE_ITERATION;
+                }
+                if ((++counter & 15) == 0) { // check for every 16 items
+                    if (!result.isEmpty()) { // do NOT terminate after at least one entry included
+                        if (_timeMaster.currentTimeMillis() >= maxTime) {
+                            return IterationAction.TERMINATE_ITERATION;
+                        }
+                    }
+                }
+                return IterationAction.PROCESS_ENTRY;
+            }
+            @Override
+            public IterationAction processEntry(Storable entry) throws StoreException {
+                result.add(new ListItem(entry.getKey()));
+                if (result.size() >= maxEntries) {
+                    return IterationAction.TERMINATE_ITERATION;
+                }
+                return IterationAction.PROCESS_ENTRY;
+            }
+            
+        }, lastSeen);
+        
+        return result;
+    }
+
+    protected List<StorableKey> _listIds(final StorableKey prefix, StorableKey lastSeen,
+            ListLimits limits)
+        throws StoreException
+    {
+        final long maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
+        final int maxEntries = limits.getMaxEntries();
+        final ArrayList<StorableKey> result = new ArrayList<StorableKey>(100);
+        
+        // we could check if all entries were iterated (with result code); for now we won't
+        /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(new StorableIterationCallback() {
+            public int counter; // to avoid checking systime too often
+
+            @Override
+            public IterationAction verifyKey(StorableKey key) {
+                if (!key.hasPrefix(prefix)) {
+                    return IterationAction.TERMINATE_ITERATION;
+                }
+                result.add(key);
+                if (result.size() >= maxEntries) {
+                    return IterationAction.TERMINATE_ITERATION;
+                }
+                if (((++counter & 15) == 0) // check for every 16 items
+                    && _timeMaster.currentTimeMillis() >= maxTime) {
+                        return IterationAction.TERMINATE_ITERATION;
+                }
+                // no need for entry; key has all the data
+                return IterationAction.SKIP_ENTRY;
+            }
+            @Override
+            public IterationAction processEntry(Storable entry) throws StoreException {
+                // should never get called
+                throw new IllegalStateException();
+            }
+            
+        }, lastSeen);
+        return result;
+    }
+    
+    /*
+    /**********************************************************************
     /* Customizable handling for deleted and missing entries
     /**********************************************************************
      */
@@ -508,6 +701,12 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
+    @SuppressWarnings("unchecked")
+    @Override
+    protected <OUT extends ServiceResponse> OUT _badRequest(ServiceResponse response, String msg) {
+        return (OUT) response.badRequest(msg).setContentTypeText();
+    }
+    
     private ServiceResponse invalidRange(ServiceResponse response,
             K key, String value, String errorMsg)
     {

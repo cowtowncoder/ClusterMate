@@ -114,6 +114,11 @@ public interface ClusterMateConstants
      * timestamp relevant to the message (such as status update).
      */
     public final static String HTTP_QUERY_PARAM_TIMESTAMP = "timestamp";
+
+    /**
+     * Query parameter that defines type of items/entries to list.
+     */
+    public final static String HTTP_QUERY_PARAM_TYPE = "type";
     
     /*
     /**********************************************************************

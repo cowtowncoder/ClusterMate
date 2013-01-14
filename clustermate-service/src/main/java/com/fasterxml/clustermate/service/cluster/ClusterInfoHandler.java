@@ -109,31 +109,12 @@ public class ClusterInfoHandler
     /* Helper methods, error responses
     /**********************************************************************
      */
-    
-    @SuppressWarnings("unchecked")
-    public <OUT extends ServiceResponse> OUT missingArgument(ServiceResponse response, String argId) {
-        return (OUT) badRequest(response, "Missing query parameter '"+argId+"'");
-    }
 
     @SuppressWarnings("unchecked")
-    public <OUT extends ServiceResponse> OUT invalidArgument(ServiceResponse response, String argId, String argValue)
-    {
-        if (argValue == null) {
-            return (OUT) missingArgument(response, argId);
-        }
-        return (OUT) badRequest(response, "Invalid query parameter '"+argId+"': value '"+argValue+"'");
-    }
-    
-    @SuppressWarnings("unchecked")
-    public <OUT extends ServiceResponse> OUT badRequest(ServiceResponse response, String errorTemplate, Object... args) {
-        return (OUT) badRequest(response, String.format(errorTemplate, args));
-    }
-
-    @SuppressWarnings("unchecked")
-    private <OUT extends ServiceResponse> OUT badRequest(ServiceResponse response, String error) {
+    @Override
+    protected <OUT extends ServiceResponse> OUT _badRequest(ServiceResponse response, String msg) {
         return (OUT) response
-                .badRequest(new ErrorResponse(error))
+                .badRequest(new ErrorResponse(msg))
                 .setContentTypeJson();
     }
-
 }

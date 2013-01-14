@@ -6,10 +6,10 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.storemate.shared.IpAndPort;
 
-public class HandlerBase
+public abstract class HandlerBase
 {
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
-    
+
     /*
     /**********************************************************************
     /* Helper methods, query param handling
@@ -57,4 +57,46 @@ public class HandlerBase
             return null;
         }
     }
+
+    /*
+    /**********************************************************************
+    /* Helper methods, header handling
+    /**********************************************************************
+     */
+    
+    protected boolean _acceptSmileContentType(ServiceRequest request) {
+        String acceptHeader = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT);
+        // what do they request? If not known, serve JSON (assumed to be from browser)
+        return (acceptHeader != null)
+                && acceptHeader.trim().indexOf(ClusterMateConstants.CONTENT_TYPE_SMILE) >= 0;
+    }
+    
+    /*
+    /**********************************************************************
+    /* Helper methods, error processing
+    /**********************************************************************
+     */
+    
+    // public since it's called from SyncListServlet
+    @SuppressWarnings("unchecked")
+    public <OUT extends ServiceResponse> OUT missingArgument(ServiceResponse response, String argId) {
+        return (OUT) badRequest(response, "Missing query parameter '"+argId+"'");
+    }
+
+    // public since it's called from SyncListServlet
+    @SuppressWarnings("unchecked")
+    public <OUT extends ServiceResponse> OUT invalidArgument(ServiceResponse response, String argId, String argValue)
+    {
+        if (argValue == null) {
+            return (OUT) missingArgument(response, argId);
+        }
+        return (OUT) badRequest(response, "Invalid query parameter '"+argId+"': value '"+argValue+"'");
+    }
+
+    protected <OUT extends ServiceResponse> OUT badRequest(ServiceResponse response, String errorTemplate, Object... args) {
+        String msg = (args == null || args.length == 0) ? errorTemplate : String.format(errorTemplate, args);
+        return _badRequest(response, msg);
+    }
+
+    protected abstract <OUT extends ServiceResponse> OUT _badRequest(ServiceResponse response, String msg);
 }

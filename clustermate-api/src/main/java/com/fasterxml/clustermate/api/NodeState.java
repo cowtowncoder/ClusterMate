@@ -121,6 +121,14 @@ public class NodeState
         return syncedUpTo;
     }
 
+    public boolean inAnyRange(KeyHash key) {
+        return totalRange().contains(key);
+    }
+
+    public boolean inAnyRange(int routingHash) {
+        return totalRange().contains(routingHash);
+    }
+    
     /*
     /**********************************************************************
     /* Mutators (for deserialization only; ok to be protected)

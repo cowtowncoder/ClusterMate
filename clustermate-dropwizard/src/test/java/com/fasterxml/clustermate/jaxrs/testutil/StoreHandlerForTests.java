@@ -1,15 +1,17 @@
 package com.fasterxml.clustermate.jaxrs.testutil;
 
 import com.fasterxml.clustermate.service.*;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
 public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<TestKey>>
 {
     public StoreHandlerForTests(SharedServiceStuff stuff,
-            Stores<TestKey, StoredEntry<TestKey>> stores)
+            Stores<TestKey, StoredEntry<TestKey>> stores,
+            ClusterViewByServer cluster)
     {
-        super(stuff, stores);
+        super(stuff, stores, cluster);
     }
     
     @Override

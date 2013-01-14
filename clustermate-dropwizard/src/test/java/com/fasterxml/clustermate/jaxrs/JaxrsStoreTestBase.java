@@ -115,7 +115,8 @@ public abstract class JaxrsStoreTestBase extends TestCase
         stuff.markAsTest();
         stores.initAndOpen(false);
         return new StoreResourceForTests<TestKey, StoredEntry<TestKey>>(clusterViewForTesting(stuff, stores),
-                        new StoreHandlerForTests(stuff, stores), stuff);
+                        new StoreHandlerForTests(stuff, stores, null),
+                        stuff);
     }
 
     /**

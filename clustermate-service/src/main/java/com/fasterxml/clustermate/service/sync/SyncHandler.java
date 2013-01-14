@@ -21,12 +21,7 @@ import com.fasterxml.storemate.store.backend.IterationResult;
 import com.fasterxml.storemate.store.backend.StorableLastModIterationCallback;
 import com.fasterxml.storemate.store.file.FileManager;
 
-import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.clustermate.api.ClusterStatusMessage;
-import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.api.KeyRange;
-import com.fasterxml.clustermate.api.KeySpace;
-import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.service.HandlerBase;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.ServiceRequest;
@@ -95,8 +90,6 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
     /* Configuration
     /**********************************************************************
      */
-    
-    protected final KeySpace _keyspace;
 
     /**
      * We will list entries up until N seconds from current time; this to reduce
@@ -135,7 +128,6 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         _entryConverter = stuff.getEntryConverter();
         _fileManager = stuff.getFileManager();
         _timeMaster = stuff.getTimeMaster();
-        _keyspace = cluster.getKeySpace();
         _keyConverter = stuff.getKeyConverter();
         _cfgSyncGracePeriod = stuff.getServiceConfig().cfgSyncGracePeriod;
         _syncListJsonWriter = stuff.jsonWriter().withDefaultPrettyPrinter();
@@ -188,7 +180,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         long clusterHash = _findLongParam(request, ClusterMateConstants.HTTP_QUERY_CLUSTER_HASH);
         KeyRange range;
         try {
-            range = _keyspace.range(keyRangeStart, keyRangeLength);
+            range = _cluster.getKeySpace().range(keyRangeStart, keyRangeLength);
         } catch (Exception e) {
             return (OUT) badRequest(response, "Invalid key-range definition (start '%s', end '%s'): %s",
                     keyRangeStart, keyRangeLength, e.getMessage());
@@ -201,11 +193,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         if (caller != null) {
             _cluster.checkMembership(caller, 0L, range);
         }
-        
-        String acceptHeader = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT);
-        // what do they request? If not known, serve JSON (assumed to be from browser)
-        boolean useSmile = (acceptHeader != null)
-                && acceptHeader.trim().indexOf(ClusterMateConstants.CONTENT_TYPE_SMILE) >= 0;
+        boolean useSmile = _acceptSmileContentType(request);
         long currentTime = _timeMaster.currentTimeMillis();
 
         final long upUntil = currentTime - _cfgSyncGracePeriod.getMillis();
@@ -422,28 +410,8 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
      */
 
     @SuppressWarnings("unchecked")
-    public <OUT extends ServiceResponse> OUT missingArgument(ServiceResponse response, String argId) {
-        return (OUT) badRequest(response, "Missing query parameter '"+argId+"'");
-    }
-
-    @SuppressWarnings("unchecked")
-    public <OUT extends ServiceResponse> OUT invalidArgument(ServiceResponse response, String argId, String argValue)
-    {
-        if (argValue == null) {
-            return (OUT) missingArgument(response, argId);
-        }
-        return (OUT) badRequest(response, "Invalid query parameter '"+argId+"': value '"+argValue+"'");
-    }
-    
-    @SuppressWarnings("unchecked")
-    public <OUT extends ServiceResponse> OUT badRequest(ServiceResponse response, String errorTemplate, Object... args) {
-        return (OUT) badRequest(response, String.format(errorTemplate, args));
-    }
-
-    @SuppressWarnings("unchecked")
-    private <OUT extends ServiceResponse> OUT badRequest(ServiceResponse response, String error) {
-        return (OUT) response
-                .badRequest(new SyncListResponse<E>(error))
-                .setContentTypeJson();
+    @Override
+    protected <OUT extends ServiceResponse> OUT _badRequest(ServiceResponse response, String msg) {
+        return (OUT) response.badRequest(new SyncListResponse<E>(msg)).setContentTypeJson();
     }
 }
