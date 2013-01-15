@@ -196,6 +196,11 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
                 break;
             case SIMPLE_LINEAR:
                 range = _keyspace.calcSegment(i, nodeCount, copies);
+                // sanity check: no empty segments
+                if (range.getLength() == 0) {
+                    throw new IllegalStateException("Empty range calculated for node "+index+" (of "+nodeCount
+                            +"), keyspace "+_keyspace);
+                }
                 break;
             case DYNAMIC_WITH_APPEND: // not (yet!) supported
             default:

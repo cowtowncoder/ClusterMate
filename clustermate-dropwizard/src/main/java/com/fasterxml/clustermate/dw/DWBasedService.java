@@ -130,6 +130,7 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
+    @Override
     public void initialize(Bootstrap<CONF> bootstrap) {
         // Static stuff from under /html (except for root  level things
         // like /index.html that need special handling)
@@ -182,7 +183,7 @@ public abstract class DWBasedService<
         LOG.info("Creating handlers for service endpoints");
         ClusterInfoHandler nodeH = constructClusterInfoHandler(_serviceStuff, _cluster);
         SyncHandler<K,E> syncH = constructSyncHandler(_serviceStuff, _stores, _cluster);
-        _storeHandler = constructStoreHandler(_serviceStuff, _stores);
+        _storeHandler = constructStoreHandler(_serviceStuff, _stores, _cluster);
         
         LOG.info("Adding service end points");
         addServiceEndpoints(_serviceStuff, environment,
@@ -229,7 +230,7 @@ public abstract class DWBasedService<
      */
 
     protected abstract StoreHandler<K,E> constructStoreHandler(SharedServiceStuff serviceStuff,
-            Stores<K,E> stores);
+            Stores<K,E> stores, ClusterViewByServer cluster);
 
     protected SyncHandler<K,E> constructSyncHandler(SharedServiceStuff stuff,
             StoresImpl<K,E> stores, ClusterViewByServerUpdatable cluster)
