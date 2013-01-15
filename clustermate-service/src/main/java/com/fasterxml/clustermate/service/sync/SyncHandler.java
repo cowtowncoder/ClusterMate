@@ -204,7 +204,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         /* One more thing: let's sanity check that our key range overlaps request
          * range. If not, can avoid (possibly huge) database scan.
          */
-        NodeState localState = _cluster.getLocalState();        
+        NodeState localState = _cluster.getLocalState();
         List<E> entries;
 
         KeyRange localRange = localState.totalRange();

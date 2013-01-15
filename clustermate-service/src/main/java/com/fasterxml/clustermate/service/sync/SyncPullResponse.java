@@ -9,8 +9,10 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.util.BufferRecycler;
 import com.fasterxml.storemate.shared.util.IOUtil;
 import com.fasterxml.storemate.shared.util.WithBytesCallback;
+import com.fasterxml.storemate.store.StoreConfig;
 import com.fasterxml.storemate.store.file.FileManager;
 
 import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
@@ -33,9 +35,21 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
     
     private final static byte LENGTH_HEADER_BYTE = (byte) 0xFE;
     private final static byte LENGTH_TRAILER_BYTE = (byte) 0xFD;
-   
-    private final static Logger LOG = LoggerFactory.getLogger(SyncPullResponse.class);
+
+    /**
+     * When it rains it pours: errors love company. So to reduce noise during
+     * shitstorms let's only print up to N errors per round.
+     */
+    protected final static int MAX_ERRORS_PER_PULL = 3;
     
+    // will use 16k recyclable read buffers
+    private final static int BUFFER_LENGTH = 16000;
+    
+    private final static Logger LOG = LoggerFactory.getLogger(SyncPullResponse.class);
+
+    // and here's how recycling will work
+    protected final static BufferRecycler _readBuffers = new BufferRecycler(BUFFER_LENGTH);
+
     private final FileManager _fileManager;
     
     /**
@@ -63,8 +77,8 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
     public void writeContent(final OutputStream output) throws IOException
     {
         final int count = _entries.size();
+        int warningsPrinted = 0;
         try {
-            byte[] buffer = null;
             for (int i = 0; i < count; ++i) {
                 E entry  = _entries.get(i);
 
@@ -82,41 +96,31 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
                             metadata.length, entry.getKey());
                     continue;
                 }
-                _writeLength(output, metadata.length);
-                output.write(metadata);
-
                 // first: if state is DELETED, may need special handling? Or just skip...
                 if (entry.isDeleted()) {
+                    _writeLength(output, metadata.length);
+                    output.write(metadata);
                     continue;
                 }
-                
-                // inlined or File?
-                if (entry.hasExternalData()) { // external File
-                    File f = entry.getRaw().getExternalFile(_fileManager);
-                    if (buffer == null) {
-                        buffer = new byte[8000];
-                    }
-                    _copyFile(f, output, buffer, entry.getStorageLength());
-                } else { // inlined
-                    IOException e = entry.getRaw().withInlinedData(new WithBytesCallback<IOException>() {
-                        @Override
-                        public IOException withBytes(byte[] b, int offset, int length) {
-                            try {
-                                output.write(b, offset, length);
-                            } catch (IOException e2) {
-                                return e2;
-                            }
-                            return null;
-                        }
-                    });
-                    if (e != null) {
-                        throw e;
+                String warning;
+                if (entry.hasExternalData()) {
+                    warning = _writeExternal(output, entry, metadata);
+                } else {
+                    warning = _writeInlined(output, entry, metadata);
+                }
+                if (++warningsPrinted <= MAX_ERRORS_PER_PULL) {
+                    if (warningsPrinted < MAX_ERRORS_PER_PULL) {
+                        LOG.error("Failed to include pull entry {}/{}, reason: {}", i, count, warning);
+                    } else {
+                        LOG.error("Failed to include pull entry {}/{}, reason: {} -- NOTE: max warnings ({}) reached, will suppress rest"
+                                , i, count, warning, MAX_ERRORS_PER_PULL);
                     }
                 }
             }
             // and finally, write end marker
             _writeLength(output, SyncHandler.LENGTH_EOF);
             output.flush();
+        } catch (FileNotFoundException e) {
         } catch (IOException e) {
             LOG.error("I/O problem during writing of "+count+" sync-pull entries: "+e.getMessage(), e);
             throw e;
@@ -126,9 +130,57 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
         }
     }
 
-    private void _copyFile(File f, OutputStream out, byte[] buffer, final long size) throws IOException
+    private String _writeExternal(final OutputStream output, E entry, byte[] metadata)
+        throws IOException
     {
-        FileInputStream in = new FileInputStream(f);
+        File f = entry.getRaw().getExternalFile(_fileManager);
+        FileInputStream in;
+        try {
+            in = new FileInputStream(f);
+        } catch (FileNotFoundException e) {
+            /* 15-Jan-2012, tatu: It is possible (rarely, but still) that cleanup process could
+             *   delete data file before its metadata, and although sync list should try to
+             *   suppress these, some may sneak. So let's take preventive action here so
+             *   we won't have poison pills.
+             */
+            // We must still add something: "null" will have to do as indicator for missing entry
+            _writeLength(output, 0);
+            return "Missing file '"+f.getAbsolutePath()+"'";
+        }
+        _writeLength(output, metadata.length);
+        output.write(metadata);
+        _copyFile(f, in, output, entry.getStorageLength());
+        return null;
+    }
+
+    private String _writeInlined(final OutputStream output, E entry, byte[] metadata)
+        throws IOException
+    {
+        _writeLength(output, metadata.length);
+        output.write(metadata);
+        IOException e = entry.getRaw().withInlinedData(new WithBytesCallback<IOException>() {
+            @Override
+            public IOException withBytes(byte[] b, int offset, int length) {
+                try {
+                    output.write(b, offset, length);
+                } catch (IOException e2) {
+                    return e2;
+                }
+                return null;
+            }
+        });
+        if (e != null) {
+            throw e;
+        }
+        return null;
+    }
+    
+    private void _copyFile(File f, FileInputStream in, OutputStream out, final long size)
+        throws IOException
+    {
+        BufferRecycler.Holder bufferHolder = _readBuffers.getHolder();        
+        final byte[] buffer = bufferHolder.borrowBuffer(BUFFER_LENGTH);
+
         long copied = 0;
 
         try {
@@ -138,6 +190,7 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
                 copied += count;
             }
         } finally {
+            bufferHolder.returnBuffer(buffer);
             try {
                 in.close();
             } catch (IOException e) { }

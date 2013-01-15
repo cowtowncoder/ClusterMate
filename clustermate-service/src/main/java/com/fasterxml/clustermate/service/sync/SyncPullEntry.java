@@ -16,9 +16,9 @@ public class SyncPullEntry
     public StorableKey key;
 
     public long creationTime;
-    
+
     public int minTTLSecs, maxTTLSecs;
-    
+
     public long size, storageSize;
 
     public int checksum, checksumForCompressed;
@@ -27,7 +27,7 @@ public class SyncPullEntry
 
     public Compression compression;
     public LastAccessUpdateMethod lastAccessMethod;
-    
+
     public SyncPullEntry() { }
 
     SyncPullEntry(StoredEntry<?> src)
