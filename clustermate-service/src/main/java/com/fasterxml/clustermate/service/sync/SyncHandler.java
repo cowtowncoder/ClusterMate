@@ -98,6 +98,8 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
      * arrival times of entries.
      */
     protected final TimeSpan _cfgSyncGracePeriod;
+
+    protected final TimeSpan _cfgMaxTimeToLiveMsecs;
     
     /**
      * We will limit number of entries listed in couple of ways; count limitation
@@ -130,6 +132,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         _timeMaster = stuff.getTimeMaster();
         _keyConverter = stuff.getKeyConverter();
         _cfgSyncGracePeriod = stuff.getServiceConfig().cfgSyncGracePeriod;
+        _cfgMaxTimeToLiveMsecs = stuff.getServiceConfig().cfgMaxMaxTTL;
         _syncListJsonWriter = stuff.jsonWriter().withDefaultPrettyPrinter();
         _syncListSmileWriter = stuff.smileWriter();
         _syncPullSmileWriter = stuff.smileWriter();
@@ -200,6 +203,17 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
 
         AtomicLong timestamp = new AtomicLong(0L);
         long since = (sinceL == null) ? 0L : sinceL.longValue();
+
+        /* [Issue#8] Let's impose minimum timestamp to consider, to try to avoid
+         * exposing potentially obsolete entries (ones that are due to cleanup
+         * and will disappear anyway).
+         */
+        long minSince = currentTime - _cfgMaxTimeToLiveMsecs.getMillis();
+        if (minSince > since) {
+            LOG.warn("Sync list 'since' argument of {} updated to {}, to use maximum TTL of {}",
+                    since, minSince, _cfgMaxTimeToLiveMsecs);
+            since = minSince;
+        }
         
         /* One more thing: let's sanity check that our key range overlaps request
          * range. If not, can avoid (possibly huge) database scan.

@@ -2,7 +2,7 @@ Project: ClusterMate
 
 0.8.3 (...)
 
-...
+#8: Fix problems with file auto-cleaning, dangling metadata, failing sync pulls
 
 0.8.2 (10-Jan-2012)
 

@@ -87,6 +87,8 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
         _cluster = cluster;
         _timeMaster = stuff.getTimeMaster();
         _delayBetweenCleanups = stuff.getServiceConfig().cfgDelayBetweenCleanup;
+        // Important: start with LocalEntryCleaner (to try to avoid dangling files),
+        // then do FileCleaner
         _tasks = new CleanupTask[] {
                 new FileCleaner(stuff, _shutdown),
                 new LocalEntryCleaner<K,E>(stuff, stores, _shutdown)
@@ -137,6 +139,7 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
             }
             final long startTime = _timeMaster.currentTimeMillis();
             // ok, run...
+            LOG.info("Starting cleanup tasks ({})", _tasks.length);
             _nextStartTime.set(startTime + _delayBetweenCleanups.getMillis());
             for (CleanupTask<?> task : _tasks) {
                 _currentTask.set(task);
