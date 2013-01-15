@@ -172,6 +172,8 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
             // otherwise verify (NOTE: may need to change for dynamic registration)
             if (copies > nodeCount) {
                 throw new IllegalStateException("Can not require "+copies+" copies with "+nodeCount+" nodes");
+            } else if (copies < 1) {
+                throw new IllegalStateException("Missing 'numbedOfCopies' setting in ClusterConfig");
             }
         }
         for (int i = 0, end = nodes.size(); i < end; ++i) {
@@ -199,7 +201,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
                 // sanity check: no empty segments
                 if (range.getLength() == 0) {
                     throw new IllegalStateException("Empty range calculated for node "+index+" (of "+nodeCount
-                            +"), keyspace "+_keyspace);
+                            +" nodes), keyspace="+_keyspace+", "+copies+" copies");
                 }
                 break;
             case DYNAMIC_WITH_APPEND: // not (yet!) supported
