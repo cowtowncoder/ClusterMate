@@ -33,7 +33,7 @@ public class ClusterConfig
      * 3 (higher redundancy) or 2 (lower), although other values are legal
      * too (1 means there is no redundancy).
      */
-    @Min(0)
+    @Min(1)
     @Max(Integer.MAX_VALUE)
     public int numberOfCopies;
 
