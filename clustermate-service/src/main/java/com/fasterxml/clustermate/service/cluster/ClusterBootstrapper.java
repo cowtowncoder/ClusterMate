@@ -173,7 +173,11 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
             if (copies > nodeCount) {
                 throw new IllegalStateException("Can not require "+copies+" copies with "+nodeCount+" nodes");
             } else if (copies < 1) {
-                throw new IllegalStateException("Missing 'numbedOfCopies' setting in ClusterConfig");
+                // Ok for STATIC, but not for others
+                if (strategy != KeyRangeAllocationStrategy.STATIC) {
+                    throw new IllegalStateException("Missing 'numbedOfCopies' setting in ClusterConfig (required with strategy "
+                            +strategy+")");
+                }
             }
         }
         for (int i = 0, end = nodes.size(); i < end; ++i) {
