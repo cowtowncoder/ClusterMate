@@ -44,9 +44,9 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
     /**
      * Since 'list sync' operation can potentially scan through sizable
      * chunk of the store, let's limit actual time allowed to be spent
-     * on that. For now, 200 msecs seems reasonable.
+     * on that. For now, 400 msecs seems reasonable.
      */
-    private final static long MAX_LIST_PROC_TIME_IN_MSECS = 200L;
+    private final static long MAX_LIST_PROC_TIME_IN_MSECS = 400L;
 
     /**
      * End marker we use to signal end of response
