@@ -88,6 +88,7 @@ public class LocalEntryCleaner<K extends EntryKey, E extends StoredEntry<K>>
                 final StoredEntry<K> entry = _entryFactory.entryFromStorable(raw);
                 if (raw.isDeleted()) {
                     if (entry.insertedBefore(tombstoneThreshold)) {
+                        delete(raw.getKey());
                         stats.addExpiredTombstone();
                     } else {
                         stats.addRemainingTombstone();
