@@ -131,8 +131,9 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         _cfgReportDeletedAsEmpty = config.cfgReportDeletedAsEmpty;
 
         _entryConverter = stuff.getEntryConverter();
-        _cfgDefaultMinTTLSecs = (int) config.cfgDefaultSinceAccessTTL.getMillis();
-        _cfgDefaultMaxTTLSecs = (int) config.cfgDefaultMaxTTL.getMillis();
+        // seconds used (over millis) to fit in 32-bit int when stored
+        _cfgDefaultMinTTLSecs = (int) (config.cfgDefaultSinceAccessTTL.getMillis() / 1000L);
+        _cfgDefaultMaxTTLSecs = (int) (config.cfgDefaultMaxTTL.getMillis() / 1000L);
     }
 
     /*
