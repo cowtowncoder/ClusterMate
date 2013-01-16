@@ -45,6 +45,9 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
     {
         final FileCleanupStats stats = new FileCleanupStats();
 
+        LOG.info("Starting file cleanup: will nuke any dirs older than {}",
+                _timeMaster.timeDesc(_maxTimeToLiveMsecs));
+        
         // iterate over all but the last directory; last considered current
         List<DirByDate> dateDirs = _fileManager.listMainDataDirs(stats);
         final int dirCount = dateDirs.size();
