@@ -90,8 +90,8 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
         // Important: start with LocalEntryCleaner (to try to avoid dangling files),
         // then do FileCleaner
         _tasks = new CleanupTask[] {
-                new FileCleaner(stuff, _shutdown),
-                new LocalEntryCleaner<K,E>(stuff, stores, _shutdown)
+                new LocalEntryCleaner<K,E>(stuff, stores, _shutdown),
+                new FileCleaner(stuff, _shutdown)
         };
     }
 
@@ -145,15 +145,16 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
                 _currentTask.set(task);
                 try {
                     Object result = task.cleanUp();
-                    LOG.info("Clean up task {} complete, result: {}",
-                            task.getClass().getName(), result);
+                    long took = _timeMaster.currentTimeMillis() - startTime;
+                    LOG.info("Clean up task {} complete in {}, result: {}",
+                            task.getClass().getName(), _timeMaster.timeDesc(took), result);
                 } catch (Exception e) {
                     LOG.warn("Problems running clean up task of type "+task.getClass().getName()+": "+e.getMessage(), e);
                 }
             }
             _currentTask.set(null);
-            long took = _timeMaster.currentTimeMillis() - startTime;
-            LOG.info("Completing clean up tasks in {}", _timeMaster.timeDesc(took));
+            long tookAll = _timeMaster.currentTimeMillis() - startTime;
+            LOG.info("Completing clean up tasks in {}", _timeMaster.timeDesc(tookAll));
         }
     }
 
