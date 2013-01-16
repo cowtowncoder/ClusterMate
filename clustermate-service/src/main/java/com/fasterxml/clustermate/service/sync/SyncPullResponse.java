@@ -9,10 +9,10 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.shared.util.BufferRecycler;
 import com.fasterxml.storemate.shared.util.IOUtil;
 import com.fasterxml.storemate.shared.util.WithBytesCallback;
-import com.fasterxml.storemate.store.StoreConfig;
 import com.fasterxml.storemate.store.file.FileManager;
 
 import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
@@ -108,9 +108,20 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
                 } else {
                     warning = _writeInlined(output, entry, metadata);
                 }
+                if (warning == null) { // ok, no problem
+                    continue;
+                }
+
                 if (++warningsPrinted <= MAX_ERRORS_PER_PULL) {
                     if (warningsPrinted < MAX_ERRORS_PER_PULL) {
                         LOG.error("Failed to include pull entry {}/{}, reason: {}", i, count, warning);
+                        /*
+long age = System.currentTimeMillis() - entry.getLastModifiedTime();
+long ttl = 1000L * entry.getMaxTTLSecs();
+if (1 == warningsPrinted) LOG.error("AGE of failed entry (raw mod time "+entry.getLastModifiedTime()+"): "+TimeMaster.timeDesc(age)
+        +", max TTL "+TimeMaster.timeDesc(ttl));
+                        
+                        */
                     } else {
                         LOG.error("Failed to include pull entry {}/{}, reason: {} -- NOTE: max warnings ({}) reached, will suppress rest"
                                 , i, count, warning, MAX_ERRORS_PER_PULL);
