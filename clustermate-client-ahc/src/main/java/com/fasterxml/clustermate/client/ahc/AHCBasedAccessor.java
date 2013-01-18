@@ -7,8 +7,8 @@ import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.Loggable;
+import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
-import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.EntryKey;
 

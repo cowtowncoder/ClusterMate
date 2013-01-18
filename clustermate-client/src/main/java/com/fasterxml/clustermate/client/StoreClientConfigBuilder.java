@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.client.impl;
+package com.fasterxml.clustermate.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -11,7 +11,7 @@ import com.fasterxml.clustermate.client.operation.OperationConfig;
 import com.fasterxml.clustermate.json.ClusterMateObjectMapper;
 
 /**
- * Builder class for creating immutable {@link StoreClientConfig}
+ * Base class for builder class for creating immutable {@link StoreClientConfig}
  * instances.
  */
 public abstract class StoreClientConfigBuilder<

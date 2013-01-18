@@ -1,8 +1,8 @@
 package com.fasterxml.clustermate.client.ahc;
 
 import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.cluster.EntryAccessors;
-import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 
 import com.fasterxml.storemate.client.call.ContentDeleter;
 import com.fasterxml.storemate.client.call.ContentGetter;

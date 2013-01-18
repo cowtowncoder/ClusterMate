@@ -11,7 +11,7 @@ import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 import com.fasterxml.clustermate.client.ClusterServerNode;
-import com.fasterxml.clustermate.client.impl.StoreClientConfig;
+import com.fasterxml.clustermate.client.StoreClientConfig;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;

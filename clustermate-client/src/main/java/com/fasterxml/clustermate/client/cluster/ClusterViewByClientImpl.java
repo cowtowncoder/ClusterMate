@@ -14,8 +14,8 @@ import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.client.ClusterViewByClient;
 import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.clustermate.client.NodesForKey;
+import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
-import com.fasterxml.clustermate.client.impl.StoreClientConfig;
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
 

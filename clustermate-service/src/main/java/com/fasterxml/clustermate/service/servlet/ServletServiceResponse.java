@@ -73,12 +73,14 @@ public class ServletServiceResponse extends ServiceResponse
         return _statusCode;
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public ServletServiceResponse set(int code, Object entity)
     {
         return setStatus(code).setEntity(entity);
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public ServletServiceResponse setStatus(int code)
     {

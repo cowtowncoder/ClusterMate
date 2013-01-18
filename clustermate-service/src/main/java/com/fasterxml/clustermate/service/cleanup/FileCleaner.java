@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.clustermate.service.SharedServiceStuff;
+import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.file.*;
 
 /**
@@ -46,7 +47,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
         final FileCleanupStats stats = new FileCleanupStats();
 
         LOG.info("Starting file cleanup: will nuke any dirs older than {}",
-                _timeMaster.timeDesc(_maxTimeToLiveMsecs));
+                TimeMaster.timeDesc(_maxTimeToLiveMsecs));
         
         // iterate over all but the last directory; last considered current
         List<DirByDate> dateDirs = _fileManager.listMainDataDirs(stats);

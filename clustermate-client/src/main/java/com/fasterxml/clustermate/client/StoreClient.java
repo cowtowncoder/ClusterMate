@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.client.impl;
+package com.fasterxml.clustermate.client;
 
 import java.io.File;
 import java.util.*;
@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.operation.DeleteOperationResult;
 import com.fasterxml.clustermate.client.operation.GetOperationResult;
 import com.fasterxml.clustermate.client.operation.HeadOperationResult;
