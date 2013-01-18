@@ -3,14 +3,17 @@
 ClusterMate project implements basic components of a multi-node storage system
 using single-node storage components provided by
 [StoreMate](https://github.com/cowtowncoder/StoreMate) project.
+It is designed as a toolkit for building distributed storage systems, either for stand-alone systems or as base for other distributed systems (like message queues).
 
-Check out [Project Wiki](ClusterMate/wiki) for complete description.
+Check out [Project Wiki](ClusterMate/wiki) for more.
 
 # Status
 
-Project getting ready for its first release -- mostly working, unit tested.
+Project is complete to the degree that other systems can be built on it.
 
-Stay tuned!
+Publicly available projects that build on ClusterMate include:
+
+* [TransiStore](https://github.com/FasterXML/TransiStore) is a distributes temporary data storage: useful for things like storing intermediate results for Map/Reduce systems, or for buffering large database result sets.
 
 # Features
 
