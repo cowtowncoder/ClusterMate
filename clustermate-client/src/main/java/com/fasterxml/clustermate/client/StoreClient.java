@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.client.operation.ContentLister;
 import com.fasterxml.clustermate.client.operation.DeleteOperationResult;
 import com.fasterxml.clustermate.client.operation.GetOperationResult;
 import com.fasterxml.clustermate.client.operation.HeadOperationResult;
@@ -879,6 +880,22 @@ public abstract class StoreClient<K extends EntryKey,
         }
         // we are all done and this'll be a failure...
         return result.addFailed(retries);
+    }
+
+    /*
+    /**********************************************************************
+    /* Actual Client API, low-level operations: List entry ids, metadata
+    /**********************************************************************
+     */
+
+    /**
+     * Method called to start iterating over entries with given key prefix.
+     * Result object is basically an iterator, and no actual access occurs
+     * before methods are called on iterator.
+     */
+    public ContentLister<K> listContent(CONFIG config, K prefix)
+    {
+        return new ContentLister<K>(config, prefix);
     }
     
     /*
