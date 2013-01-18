@@ -26,17 +26,17 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Configuration
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Configuration
+    /**********************************************************************
      */
     
     protected final TimeSpan _delayBetweenCleanups;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Related helper objects
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Related helper objects
+    /**********************************************************************
      */
 
     protected final TimeMaster _timeMaster;
@@ -47,9 +47,9 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     protected ClusterViewByServer _cluster;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Other state
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Other state
+    /**********************************************************************
      */
 
     /**
@@ -76,9 +76,9 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     protected final CleanupTask<?>[] _tasks;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life-cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
      */
     
     public CleanerUpper(SharedServiceStuff stuff, Stores<K,E> stores,
@@ -118,9 +118,9 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Main loop
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Main loop
+    /**********************************************************************
      */
 
     @Override
@@ -147,21 +147,21 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
                     Object result = task.cleanUp();
                     long took = _timeMaster.currentTimeMillis() - startTime;
                     LOG.info("Clean up task {} complete in {}, result: {}",
-                            task.getClass().getName(), _timeMaster.timeDesc(took), result);
+                            task.getClass().getName(), TimeMaster.timeDesc(took), result);
                 } catch (Exception e) {
                     LOG.warn("Problems running clean up task of type "+task.getClass().getName()+": "+e.getMessage(), e);
                 }
             }
             _currentTask.set(null);
             long tookAll = _timeMaster.currentTimeMillis() - startTime;
-            LOG.info("Completing clean up tasks in {}", _timeMaster.timeDesc(tookAll));
+            LOG.info("Completing clean up tasks in {}", TimeMaster.timeDesc(tookAll));
         }
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Other methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Other methods
+    /**********************************************************************
      */
 
     /**
@@ -179,6 +179,6 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
         if (msecs < 0L) {
             msecs = 0L;
         }
-        return "Waiting for "+_timeMaster.timeDesc(msecs)+" until next cleanup round";
+        return "Waiting for "+TimeMaster.timeDesc(msecs)+" until next cleanup round";
     }
 }

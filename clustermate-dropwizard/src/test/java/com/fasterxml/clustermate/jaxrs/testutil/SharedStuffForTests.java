@@ -16,9 +16,9 @@ public class SharedStuffForTests extends SharedServiceStuff
     private final StoredEntryConverter<TestKey, StoredEntry<TestKey>> _entryConverter;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life-cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
      */
 
     public SharedStuffForTests(ServiceConfigForTests config, TimeMaster timeMaster,
@@ -29,11 +29,11 @@ public class SharedStuffForTests extends SharedServiceStuff
         _serviceConfig = config;
         _entryConverter = entryConverter;
     }
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Basic config access
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Basic config access
+    /**********************************************************************
      */
 
     @SuppressWarnings("unchecked")
@@ -47,11 +47,13 @@ public class SharedStuffForTests extends SharedServiceStuff
      return _serviceConfig.storeConfig;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public StoredEntryConverter<TestKey, StoredEntry<TestKey>> getEntryConverter() {
         return _entryConverter;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public EntryKeyConverter<TestKey> getKeyConverter() {
         return _entryConverter.keyConverter();

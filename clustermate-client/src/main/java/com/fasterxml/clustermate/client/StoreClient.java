@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.client.impl;
+package com.fasterxml.clustermate.client;
 
 import java.io.File;
 import java.util.*;
@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.client.*;
+import com.fasterxml.clustermate.client.operation.ContentLister;
 import com.fasterxml.clustermate.client.operation.DeleteOperationResult;
 import com.fasterxml.clustermate.client.operation.GetOperationResult;
 import com.fasterxml.clustermate.client.operation.HeadOperationResult;
@@ -66,25 +66,25 @@ public abstract class StoreClient<K extends EntryKey,
     protected final static long MIN_LENGTH_FOR_CHUNKED = 64 * 1024;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Configuration
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Configuration
+    /**********************************************************************
      */
 
     protected final CONFIG _config;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Helper objects, HTTP
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Helper objects, HTTP
+    /**********************************************************************
      */
 
     protected final NetworkClient<K> _httpClient;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Helper objects, other
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Helper objects, other
+    /**********************************************************************
      */
 
     protected final ClusterStatusAccessor _statusAccessor;
@@ -92,9 +92,9 @@ public abstract class StoreClient<K extends EntryKey,
     protected EntryKeyConverter<K> _keyConverter;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life-cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
      */
     
     /**
@@ -105,17 +105,17 @@ public abstract class StoreClient<K extends EntryKey,
     protected final AtomicBoolean _stopRequested = new AtomicBoolean(false);
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // State
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* State
+    /**********************************************************************
      */
     
     protected final ClusterViewByClient<K> _clusterView;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life-cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life-cycle
+    /**********************************************************************
      */
 
     protected StoreClient(CONFIG config,
@@ -174,9 +174,9 @@ public abstract class StoreClient<K extends EntryKey,
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Simple accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Simple accessors
+    /**********************************************************************
      */
 
     /**
@@ -191,9 +191,9 @@ public abstract class StoreClient<K extends EntryKey,
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Main update loop used for keeping up to date with Cluster Status
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Main update loop used for keeping up to date with Cluster Status
+    /**********************************************************************
      */
 
     /**
@@ -238,9 +238,9 @@ public abstract class StoreClient<K extends EntryKey,
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Actual Client API: convenience wrappers
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Actual Client API: convenience wrappers
+    /**********************************************************************
      */
 
     /**
@@ -427,9 +427,9 @@ public abstract class StoreClient<K extends EntryKey,
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Actual Client API, low-level operations: PUT
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Actual Client API, low-level operations: PUT
+    /**********************************************************************
      */
 
     /**
@@ -572,11 +572,11 @@ public abstract class StoreClient<K extends EntryKey,
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Actual Client API, low-level operations: GET.
-    // NOTE: division between streaming (incremental), full-read is ugly,
-    // but somewhat necessary for efficient operation
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Actual Client API, low-level operations: GET.
+    /* NOTE: division between streaming (incremental), full-read is ugly,
+    /* but somewhat necessary for efficient operation
+    /**********************************************************************
      */
 
     /**
@@ -742,9 +742,9 @@ public abstract class StoreClient<K extends EntryKey,
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Actual Client API, low-level operations: HEAD
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Actual Client API, low-level operations: HEAD
+    /**********************************************************************
      */
 
     public HeadOperationResult headContent(CONFIG config, K key)
@@ -881,11 +881,27 @@ public abstract class StoreClient<K extends EntryKey,
         // we are all done and this'll be a failure...
         return result.addFailed(retries);
     }
+
+    /*
+    /**********************************************************************
+    /* Actual Client API, low-level operations: List entry ids, metadata
+    /**********************************************************************
+     */
+
+    /**
+     * Method called to start iterating over entries with given key prefix.
+     * Result object is basically an iterator, and no actual access occurs
+     * before methods are called on iterator.
+     */
+    public ContentLister<K> listContent(CONFIG config, K prefix)
+    {
+        return new ContentLister<K>(config, prefix);
+    }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Actual Client API, low-level operations: DELETE
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Actual Client API, low-level operations: DELETE
+    /**********************************************************************
      */
     
     /**
@@ -1029,9 +1045,9 @@ public abstract class StoreClient<K extends EntryKey,
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Helper methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Helper methods
+    /**********************************************************************
      */
 
     protected boolean allowRetries() {

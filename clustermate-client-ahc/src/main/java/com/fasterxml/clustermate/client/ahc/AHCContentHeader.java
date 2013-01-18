@@ -8,7 +8,7 @@ import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.client.ClusterServerNode;
-import com.fasterxml.clustermate.client.impl.StoreClientConfig;
+import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.CallConfig;
 import com.fasterxml.storemate.client.call.ContentHeader;

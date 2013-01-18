@@ -57,6 +57,7 @@ public class JaxrsHttpResponse extends ServiceResponse
         return _statusCode;
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public JaxrsHttpResponse set(int code, Object entity)
     {
@@ -64,6 +65,7 @@ public class JaxrsHttpResponse extends ServiceResponse
         return setEntity(entity);
     }
     
+    @SuppressWarnings("unchecked")
     @Override
     public JaxrsHttpResponse setStatus(int code)
     {

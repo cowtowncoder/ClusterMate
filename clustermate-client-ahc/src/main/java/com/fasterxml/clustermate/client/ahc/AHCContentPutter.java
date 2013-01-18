@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.client.ClusterServerNode;
-import com.fasterxml.clustermate.client.impl.StoreClientConfig;
+import com.fasterxml.clustermate.client.StoreClientConfig;
 
 import com.fasterxml.storemate.client.*;
 import com.fasterxml.storemate.client.call.CallConfig;

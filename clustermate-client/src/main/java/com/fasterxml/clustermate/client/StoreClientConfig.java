@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.client.impl;
+package com.fasterxml.clustermate.client;
 
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
@@ -7,6 +7,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.client.call.CallConfig;
 import com.fasterxml.storemate.shared.EntryKey;
 
+/**
+ * Base class for configuration types used with {@link StoreClient} implementations.
+ *
+ * @param <K> Type of keys used for retrieving entries from Store
+ * @param <CONFIG> Recursive definition needed due to Java Generics oddities: sub-class of this base class
+ */
 public abstract class StoreClientConfig<
     K extends EntryKey,
     CONFIG extends StoreClientConfig<K, CONFIG>
