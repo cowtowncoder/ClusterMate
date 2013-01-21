@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.KeyRange;
+import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.clustermate.service.HandlerBase;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.ServiceRequest;

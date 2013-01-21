@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.api;
 
 import java.io.*;
 
+import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 /**

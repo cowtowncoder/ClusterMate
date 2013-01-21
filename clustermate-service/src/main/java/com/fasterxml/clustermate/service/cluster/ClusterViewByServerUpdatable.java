@@ -1,7 +1,7 @@
 package com.fasterxml.clustermate.service.cluster;
 
-import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.KeyRange;
+import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.storemate.shared.IpAndPort;
 

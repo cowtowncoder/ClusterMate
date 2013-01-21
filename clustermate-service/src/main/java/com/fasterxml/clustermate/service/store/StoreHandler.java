@@ -15,6 +15,8 @@ import com.fasterxml.storemate.store.backend.StorableIterationCallback;
 import com.fasterxml.storemate.store.file.FileManager;
 
 import com.fasterxml.clustermate.api.*;
+import com.fasterxml.clustermate.api.msg.ListItem;
+import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.service.HandlerBase;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.OperationDiagnostics;

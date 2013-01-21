@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.client.operation.ContentLister;
+import com.fasterxml.clustermate.client.operation.StoreEntryLister;
 import com.fasterxml.clustermate.client.operation.DeleteOperationResult;
 import com.fasterxml.clustermate.client.operation.GetOperationResult;
 import com.fasterxml.clustermate.client.operation.HeadOperationResult;
@@ -859,9 +859,9 @@ public abstract class StoreClient<K extends EntryKey,
      * Result object is basically an iterator, and no actual access occurs
      * before methods are called on iterator.
      */
-    public ContentLister<K> listContent(CONFIG config, K prefix)
+    public StoreEntryLister<K> listContent(CONFIG config, K prefix)
     {
-        return new ContentLister<K>(config, _clusterView, prefix);
+        return new StoreEntryLister<K>(config, _clusterView, prefix);
     }
     
     /*

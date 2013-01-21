@@ -13,12 +13,12 @@ import com.fasterxml.storemate.shared.TimeMaster;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
-import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeDefinition;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
+import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.clustermate.json.ClusterMessageConverter;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;

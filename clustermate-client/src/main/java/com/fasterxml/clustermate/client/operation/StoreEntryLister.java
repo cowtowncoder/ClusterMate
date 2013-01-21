@@ -1,15 +1,8 @@
 package com.fasterxml.clustermate.client.operation;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
-import com.fasterxml.clustermate.client.ClusterServerNode;
-import com.fasterxml.clustermate.client.ClusterViewByClient;
-import com.fasterxml.clustermate.client.NodeFailure;
-import com.fasterxml.clustermate.client.NodesForKey;
-import com.fasterxml.clustermate.client.StoreClient;
-import com.fasterxml.clustermate.client.StoreClientConfig;
+import com.fasterxml.clustermate.client.*;
 import com.fasterxml.storemate.client.CallFailure;
 import com.fasterxml.storemate.client.call.HeadCallResult;
 import com.fasterxml.storemate.shared.EntryKey;
@@ -23,7 +16,7 @@ import com.fasterxml.storemate.shared.EntryKey;
  * and each individual operation can only return up to certain number of
  * entries.
  */
-public class ContentLister<K extends EntryKey>
+public class StoreEntryLister<K extends EntryKey>
 {
     public final static int DEFAULT_MAX_ENTRIES = 100;
     
@@ -36,7 +29,7 @@ public class ContentLister<K extends EntryKey>
      */
     protected final K _prefix;
 
-    public ContentLister(StoreClientConfig<K,?> config, ClusterViewByClient<K> cluster,
+    public StoreEntryLister(StoreClientConfig<K,?> config, ClusterViewByClient<K> cluster,
             K prefix) {
         this._clientConfig = config;
         _cluster = cluster;

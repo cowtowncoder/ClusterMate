@@ -1,7 +1,7 @@
 package com.fasterxml.clustermate.json;
 
-import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.clustermate.json.ClusterMateObjectMapper;
 
 /**

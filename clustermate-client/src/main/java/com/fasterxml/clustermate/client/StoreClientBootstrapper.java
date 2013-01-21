@@ -7,8 +7,8 @@ import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
-import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.clustermate.client.cluster.ClusterViewByClientImpl;
 import com.fasterxml.clustermate.json.ClusterMessageConverter;
 import com.fasterxml.clustermate.std.JdkClusterStatusAccessor;

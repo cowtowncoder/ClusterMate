@@ -1,10 +1,12 @@
-package com.fasterxml.clustermate.service.msg;
+package com.fasterxml.clustermate.api.msg;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
+/**
+ * Response message type for List requests.
+ * 
+ * @param <T> Type of entries; either simple id ({@link StorableKey}) or full {@link ListItem}
+ */
 public class ListResponse<T> // not a CRUD request/response
 {
     /**

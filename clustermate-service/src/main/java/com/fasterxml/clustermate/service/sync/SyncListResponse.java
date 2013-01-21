@@ -4,7 +4,7 @@ import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import com.fasterxml.clustermate.api.ClusterStatusMessage;
+import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**

@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
-import com.fasterxml.clustermate.api.ClusterStatusMessage;
+import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 
 /**
  * Jackson-based Converter implementation; added in this package

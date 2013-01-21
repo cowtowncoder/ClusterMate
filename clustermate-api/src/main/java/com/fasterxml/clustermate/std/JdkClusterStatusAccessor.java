@@ -6,9 +6,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
-import com.fasterxml.clustermate.api.ClusterStatusMessage;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
+import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.IOUtil;
 

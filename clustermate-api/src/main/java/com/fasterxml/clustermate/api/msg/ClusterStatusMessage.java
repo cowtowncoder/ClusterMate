@@ -1,7 +1,9 @@
-package com.fasterxml.clustermate.api;
+package com.fasterxml.clustermate.api.msg;
 
 import java.util.Collection;
 import java.util.Collections;
+
+import com.fasterxml.clustermate.api.NodeState;
 
 /**
  * POJO used to exchange information on status of the cluster;

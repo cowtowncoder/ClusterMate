@@ -3,6 +3,7 @@ package com.fasterxml.clustermate.service.cluster;
 import java.util.*;
 
 import com.fasterxml.clustermate.api.*;
+import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.storemate.shared.IpAndPort;
 
