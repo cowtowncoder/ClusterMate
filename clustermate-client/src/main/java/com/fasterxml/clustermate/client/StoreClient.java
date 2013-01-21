@@ -26,40 +26,6 @@ public abstract class StoreClient<K extends EntryKey,
     extends Loggable
 {
     /**
-     * This is just a simple "just-in-case" threshold to prevent message
-     * flooding with retries; if things won't work with 5 retries (and initial
-     * try, meaning 6 calls), we are probably hosed enough to give up
-     * individual operations.
-     */
-    protected final int MAX_RETRIES_FOR_PUT = 5;
-
-    /**
-     * This is just a simple "just-in-case" threshold to prevent message
-     * flooding with retries.
-     * Assuming client can still retry operation, use slightly lower
-     * value than for PUTs
-     */
-    private final int MAX_RETRIES_FOR_GET = 3;
-
-    /**
-     * This is just a simple "just-in-case" threshold to prevent message
-     * flooding with retries. Since DELETEs are bit more disposable,
-     * let's use lower limit as well.
-     */
-    private final int MAX_RETRIES_FOR_DELETE = 3;
-
-    /**
-     * Limit calls for cluster status to once every two seconds
-     */
-    private final static long MIN_DELAY_BETWEEN_STATUS_CALLS_MSECS = 2000L;
-
-    /**
-     * Add modest amount of delay between rounds of calls when we have failures,
-     * just to reduce congestion during overloads
-     */ 
-    private final static long DELAY_BETWEEN_RETRY_ROUNDS_MSECS = 250L;
-
-    /**
      * Let's use Chunked Transfer-Encoding for larger payloads; cut-off
      * point is arbitrary, choose nice round number of 64k.
      */
@@ -206,7 +172,7 @@ public abstract class StoreClient<K extends EntryKey,
             while (!_stopRequested.get()) {
                 final long startTime = System.currentTimeMillis();
                 // throttle amount of work...
-                final long nextCall = startTime + MIN_DELAY_BETWEEN_STATUS_CALLS_MSECS;
+                final long nextCall = startTime + StoreClientConfig.MIN_DELAY_BETWEEN_STATUS_CALLS_MSECS;
                 try {
                     updateOnce();
                 } catch (Exception e) {
@@ -543,7 +509,7 @@ public abstract class StoreClient<K extends EntryKey,
 
         // But from now on, keep on retrying, up to... N times (start with 1, as we did first retry)
         long prevStartTime = secondRoundStart;
-        for (int i = 1; (i <= MAX_RETRIES_FOR_PUT) && !retries.isEmpty(); ++i) {
+        for (int i = 1; (i <= StoreClientConfig.MAX_RETRIES_FOR_PUT) && !retries.isEmpty(); ++i) {
             final long currStartTime = System.currentTimeMillis();
             _doDelay(prevStartTime, currStartTime, endOfTime);
             // and off we go again...
@@ -707,7 +673,7 @@ public abstract class StoreClient<K extends EntryKey,
         }
 
         long prevStartTime = secondRoundStart;
-        for (int i = 1; (i <= MAX_RETRIES_FOR_GET) && !retries.isEmpty(); ++i) {
+        for (int i = 1; (i <= StoreClientConfig.MAX_RETRIES_FOR_GET) && !retries.isEmpty(); ++i) {
             final long currStartTime = System.currentTimeMillis();
             _doDelay(prevStartTime, currStartTime, endOfTime);
             Iterator<NodeFailure> it = retries.iterator();
@@ -850,7 +816,7 @@ public abstract class StoreClient<K extends EntryKey,
         }
 
         long prevStartTime = secondRoundStart;
-        for (int i = 1; (i <= MAX_RETRIES_FOR_GET) && !retries.isEmpty(); ++i) {
+        for (int i = 1; (i <= StoreClientConfig.MAX_RETRIES_FOR_GET) && !retries.isEmpty(); ++i) {
             final long currStartTime = System.currentTimeMillis();
             _doDelay(prevStartTime, currStartTime, endOfTime);
             Iterator<NodeFailure> it = retries.iterator();
@@ -1016,7 +982,7 @@ public abstract class StoreClient<K extends EntryKey,
         }
 
         long prevStartTime = secondRoundStart;
-        for (int i = 1; (i <= MAX_RETRIES_FOR_DELETE) && !retries.isEmpty(); ++i) {
+        for (int i = 1; (i <= StoreClientConfig.MAX_RETRIES_FOR_DELETE) && !retries.isEmpty(); ++i) {
             final long currStartTime = System.currentTimeMillis();
             _doDelay(prevStartTime, currStartTime, endOfTime);
             // and off we go again...
@@ -1071,8 +1037,8 @@ public abstract class StoreClient<K extends EntryKey,
         if (timeSpent < 1000L) {
             long timeLeft = endTime - currTime;
             // also, only wait if we still have some time; and then modest amount (250 mecs)
-            if (timeLeft >= (4 * DELAY_BETWEEN_RETRY_ROUNDS_MSECS)) {
-                Thread.sleep(DELAY_BETWEEN_RETRY_ROUNDS_MSECS);
+            if (timeLeft >= (4 * StoreClientConfig.DELAY_BETWEEN_RETRY_ROUNDS_MSECS)) {
+                Thread.sleep(StoreClientConfig.DELAY_BETWEEN_RETRY_ROUNDS_MSECS);
             }
         }
     }

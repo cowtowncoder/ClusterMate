@@ -106,7 +106,7 @@ public class ContentLister<K extends EntryKey>
             while (it.hasNext()) {
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, key);
+                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, _prefix);
                 if (gotten.succeeded()) {
                     if (gotten.hasContentLength()) {
                         return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
@@ -131,7 +131,7 @@ public class ContentLister<K extends EntryKey>
                 if (System.currentTimeMillis() >= lastValidTime) {
                     return result.addFailed(retries);
                 }
-                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, key);
+                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, _prefix);
                 if (gotten.succeeded()) {
                     if (gotten.hasContentLength()) {
                         return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
@@ -150,7 +150,7 @@ public class ContentLister<K extends EntryKey>
         }
 
         long prevStartTime = secondRoundStart;
-        for (int i = 1; (i <= StoreClient.MAX_RETRIES_FOR_GET) && !retries.isEmpty(); ++i) {
+        for (int i = 1; (i <= StoreClientConfig.MAX_RETRIES_FOR_GET) && !retries.isEmpty(); ++i) {
             final long currStartTime = System.currentTimeMillis();
             _doDelay(prevStartTime, currStartTime, endOfTime);
             Iterator<NodeFailure> it = retries.iterator();
@@ -160,7 +160,7 @@ public class ContentLister<K extends EntryKey>
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, key);
+                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, _prefix);
                 if (gotten.succeeded()) {
                     if (gotten.hasContentLength()) {
                         return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
@@ -180,5 +180,38 @@ public class ContentLister<K extends EntryKey>
         }
         // we are all done and this'll be a failure...
         return result.addFailed(retries);
+    }
+
+    /*
+    /**********************************************************************
+    /* Helper methods
+    /**********************************************************************
+     */
+
+    protected boolean allowRetries() {
+        return _clientConfig.getOperationConfig().getAllowRetries();
+    }
+    
+    protected <T> List<T> _add(List<T> list, T entry)
+    {
+        if (list == null) {
+            list = new LinkedList<T>();
+        }
+        list.add(entry);
+        return list;
+    }
+    
+    protected void _doDelay(long startTime, long currTime, long endTime)
+        throws InterruptedException
+    {
+        long timeSpent = currTime - startTime;
+        // only add delay if we have had quick failures (signaling overload)
+        if (timeSpent < 1000L) {
+            long timeLeft = endTime - currTime;
+            // also, only wait if we still have some time; and then modest amount (250 mecs)
+            if (timeLeft >= (4 * StoreClientConfig.DELAY_BETWEEN_RETRY_ROUNDS_MSECS)) {
+                Thread.sleep(StoreClientConfig.DELAY_BETWEEN_RETRY_ROUNDS_MSECS);
+            }
+        }
     }
 }

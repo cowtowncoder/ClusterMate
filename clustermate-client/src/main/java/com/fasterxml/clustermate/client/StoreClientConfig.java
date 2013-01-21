@@ -18,6 +18,40 @@ public abstract class StoreClientConfig<
     CONFIG extends StoreClientConfig<K, CONFIG>
 >
 {
+    /**
+     * This is just a simple "just-in-case" threshold to prevent message
+     * flooding with retries; if things won't work with 5 retries (and initial
+     * try, meaning 6 calls), we are probably hosed enough to give up
+     * individual operations.
+     */
+    public final static int MAX_RETRIES_FOR_PUT = 5;
+
+    /**
+     * This is just a simple "just-in-case" threshold to prevent message
+     * flooding with retries.
+     * Assuming client can still retry operation, use slightly lower
+     * value than for PUTs
+     */
+    public final static int MAX_RETRIES_FOR_GET = 3;
+
+    /**
+     * This is just a simple "just-in-case" threshold to prevent message
+     * flooding with retries. Since DELETEs are bit more disposable,
+     * let's use lower limit as well.
+     */
+    public final static int MAX_RETRIES_FOR_DELETE = 3;
+
+    /**
+     * Limit calls for cluster status to once every two seconds
+     */
+    public final static long MIN_DELAY_BETWEEN_STATUS_CALLS_MSECS = 2000L;
+
+    /**
+     * Add modest amount of delay between rounds of calls when we have failures,
+     * just to reduce congestion during overloads
+     */ 
+    public final static long DELAY_BETWEEN_RETRY_ROUNDS_MSECS = 250L;
+
     // // // Core configuration settings
 
     protected final EntryKeyConverter<K> _keyConverter;
