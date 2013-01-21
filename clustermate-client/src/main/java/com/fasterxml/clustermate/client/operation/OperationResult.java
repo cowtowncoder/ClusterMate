@@ -6,24 +6,22 @@ import com.fasterxml.clustermate.client.NodeFailure;
 /**
  * Class used for returning information about operation success (or lack thereof).
  */
-public abstract class OperationResult<T extends OperationResult<T>>
+public interface OperationResult<T extends OperationResult<T>>
 {
-    protected OperationResult() { }
-    
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Accessors
+    /**********************************************************************
      */
     
-    public abstract OperationConfig getConfig();
+    public OperationConfig getConfig();
 
     /**
      * Simple accessor for checking whether call succeeded to minimum degree
      * required, or not. This means that we had at least minimal required number
      * of succesful individual calls.
      */
-    public abstract boolean succeededMinimally();
+    public boolean succeededMinimally();
 
     /**
      * Simple accessor for checking whether call succeeded well
@@ -32,22 +30,22 @@ public abstract class OperationResult<T extends OperationResult<T>>
      * up to {@link #succeededMaximally()} level; or just return
      * and declare success.
      */
-    public abstract boolean succeededOptimally();
+    public boolean succeededOptimally();
 
     /**
      * Simple accessor for checking whether call succeeded as well as it
      * could; meaning that no further calls should be made, even if
      * more nodes were available.
      */
-    public abstract boolean succeededMaximally();
+    public boolean succeededMaximally();
     
-    public abstract int getFailCount();
-    public abstract int getIgnoreCount();
+    public int getFailCount();
+    public int getIgnoreCount();
 
-    public abstract int getSuccessCount();
+    public int getSuccessCount();
 
-    public abstract Iterable<NodeFailure> getFailures();
-    public abstract Iterable<ClusterServerNode> getIgnoredServers();
+    public Iterable<NodeFailure> getFailures();
+    public Iterable<ClusterServerNode> getIgnoredServers();
 
-    public abstract NodeFailure getFirstFail();
+    public NodeFailure getFirstFail();
 }

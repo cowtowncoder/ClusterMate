@@ -31,7 +31,7 @@ public abstract class StoreClient<K extends EntryKey,
      * try, meaning 6 calls), we are probably hosed enough to give up
      * individual operations.
      */
-    private final int MAX_RETRIES_FOR_PUT = 5;
+    protected final int MAX_RETRIES_FOR_PUT = 5;
 
     /**
      * This is just a simple "just-in-case" threshold to prevent message
@@ -895,7 +895,7 @@ public abstract class StoreClient<K extends EntryKey,
      */
     public ContentLister<K> listContent(CONFIG config, K prefix)
     {
-        return new ContentLister<K>(config, prefix);
+        return new ContentLister<K>(config, _clusterView, prefix);
     }
     
     /*

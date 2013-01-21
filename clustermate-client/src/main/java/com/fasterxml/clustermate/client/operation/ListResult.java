@@ -5,7 +5,13 @@ package com.fasterxml.clustermate.client.operation;
  * about success of individual call, as well as sequence of listed
  * entries in case of successful call.
  */
-public class ListResult
+public class ListResult<T> extends ReadOperationResult<ListResult<T>>
 {
+    // TODO: result entries
+    
+    public ListResult(OperationConfig config)
+    {
+        super(config);
+    }
 
 }

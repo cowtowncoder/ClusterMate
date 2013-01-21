@@ -9,8 +9,8 @@ import com.fasterxml.clustermate.client.NodeFailure;
 /**
  * Intermediate base class to simplify actual result implementations.
  */
-public abstract class OperationResultImpl<T extends OperationResult<T>>
-    extends OperationResult<T>
+public abstract class OperationResultImpl<T extends OperationResultImpl<T>>
+    implements OperationResult<T>
 {
     protected final OperationConfig _config;
 
@@ -28,9 +28,9 @@ public abstract class OperationResultImpl<T extends OperationResult<T>>
     protected final Collection<ClusterServerNode> _ignored;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Construction, initialization
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Construction, initialization
+    /**********************************************************************
      */
     
     protected OperationResultImpl(OperationConfig config)
@@ -67,9 +67,9 @@ public abstract class OperationResultImpl<T extends OperationResult<T>>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Accessors
+    /**********************************************************************
      */
 
     @Override
@@ -127,9 +127,9 @@ public abstract class OperationResultImpl<T extends OperationResult<T>>
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Overrides
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Overrides
+    /**********************************************************************
      */
 
     @Override

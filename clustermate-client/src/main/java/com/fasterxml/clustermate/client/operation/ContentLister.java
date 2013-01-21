@@ -1,6 +1,17 @@
 package com.fasterxml.clustermate.client.operation;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.ClusterViewByClient;
+import com.fasterxml.clustermate.client.NodeFailure;
+import com.fasterxml.clustermate.client.NodesForKey;
+import com.fasterxml.clustermate.client.StoreClient;
 import com.fasterxml.clustermate.client.StoreClientConfig;
+import com.fasterxml.storemate.client.CallFailure;
+import com.fasterxml.storemate.client.call.HeadCallResult;
 import com.fasterxml.storemate.shared.EntryKey;
 
 /**
@@ -14,15 +25,160 @@ import com.fasterxml.storemate.shared.EntryKey;
  */
 public class ContentLister<K extends EntryKey>
 {
+    public final static int DEFAULT_MAX_ENTRIES = 100;
+    
     protected final StoreClientConfig<K,?> _clientConfig;
+
+    protected final ClusterViewByClient<K> _cluster;
     
     /**
      * Prefix of entries to list.
      */
     protected final K _prefix;
 
-    public ContentLister(StoreClientConfig<K,?> config, K prefix) {
-        _clientConfig = config;
+    public ContentLister(StoreClientConfig<K,?> config, ClusterViewByClient<K> cluster,
+            K prefix) {
+        this._clientConfig = config;
+        _cluster = cluster;
         _prefix = prefix;
+    }
+
+    public ListResult<K> listMore() throws InterruptedException
+    {
+        return listMore(DEFAULT_MAX_ENTRIES);
+    }
+        
+    public ListResult<K> listMore(int maxToList) throws InterruptedException
+    {
+        final long startTime = System.currentTimeMillis();
+
+        // First things first: find Server nodes to talk to:
+        NodesForKey nodes = _cluster.getNodesFor(_prefix);
+        // then result
+        ListResult<K> result = new ListResult<K>(_clientConfig.getOperationConfig());
+        
+        // One sanity check: if not enough server nodes to talk to, can't succeed...
+        int nodeCount = nodes.size();
+        if (nodeCount < 1) {
+            return result; // or Exception?
+        }
+        
+        // Then figure out how long we have for the whole operation; use same timeout as GET
+        final long endOfTime = startTime + _clientConfig.getOperationConfig().getGetOperationTimeoutMsecs();
+        final long lastValidTime = endOfTime - _clientConfig.getCallConfig().getMinimumTimeoutMsecs();
+
+        // Ok: first round; try HEAD from every enabled store (or, if only one try, all)
+        final boolean noRetries = !allowRetries();
+        List<NodeFailure> retries = null;
+        for (int i = 0; i < nodeCount; ++i) {
+            ClusterServerNode server = nodes.node(i);
+            if (!server.isDisabled() || noRetries) {
+                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, _prefix);
+                if (gotten.failed()) {
+                    CallFailure fail = gotten.getFailure();
+                    if (fail.isRetriable()) {
+                        retries = _add(retries, new NodeFailure(server, fail));
+                    } else {
+                        result.addFailed(new NodeFailure(server, fail));
+                    }
+                    continue;
+                }
+                if (gotten.hasContentLength()) {
+                    return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
+                }
+                // it not, it's 404, missing entry. Neither fail nor really success...
+                result = result.addMissing(server);
+            }
+        }
+        if (noRetries) { // if no retries, bail out quickly
+            return result.addFailed(retries);
+        }
+        
+        final long secondRoundStart = System.currentTimeMillis();
+        // Do we need any delay in between?
+        _doDelay(startTime, secondRoundStart, endOfTime);
+        
+        // Otherwise: go over retry list first, and if that's not enough, try disabled
+        if (retries == null) {
+            retries = new LinkedList<NodeFailure>();
+        } else {
+            Iterator<NodeFailure> it = retries.iterator();
+            while (it.hasNext()) {
+                NodeFailure retry = it.next();
+                ClusterServerNode server = (ClusterServerNode) retry.getServer();
+                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, key);
+                if (gotten.succeeded()) {
+                    if (gotten.hasContentLength()) {
+                        return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
+                    }
+                    // it not, it's 404, missing entry. Neither fail nor really success...
+                    result = result.addMissing(server);
+                    it.remove();
+                } else {
+                    CallFailure fail = gotten.getFailure();
+                    retry.addFailure(fail);
+                    if (!fail.isRetriable()) {
+                        result.addFailed(retry);
+                        it.remove();
+                    }
+                }
+            }
+        }
+        // if no success, add disabled nodes in the mix
+        for (int i = 0; i < nodeCount; ++i) {
+            ClusterServerNode server = nodes.node(i);
+            if (server.isDisabled()) {
+                if (System.currentTimeMillis() >= lastValidTime) {
+                    return result.addFailed(retries);
+                }
+                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, key);
+                if (gotten.succeeded()) {
+                    if (gotten.hasContentLength()) {
+                        return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
+                    }
+                    // it not, it's 404, missing entry. Neither fail nor really success...
+                    result = result.addMissing(server);
+                } else {
+                    CallFailure fail = gotten.getFailure();
+                    if (fail.isRetriable()) {
+                        retries.add(new NodeFailure(server, fail));
+                    } else {
+                        result.addFailed(new NodeFailure(server, fail));
+                    }
+                }
+            }
+        }
+
+        long prevStartTime = secondRoundStart;
+        for (int i = 1; (i <= StoreClient.MAX_RETRIES_FOR_GET) && !retries.isEmpty(); ++i) {
+            final long currStartTime = System.currentTimeMillis();
+            _doDelay(prevStartTime, currStartTime, endOfTime);
+            Iterator<NodeFailure> it = retries.iterator();
+            while (it.hasNext()) {
+                if (System.currentTimeMillis() >= lastValidTime) {
+                    return result.addFailed(retries);
+                }
+                NodeFailure retry = it.next();
+                ClusterServerNode server = (ClusterServerNode) retry.getServer();
+                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, key);
+                if (gotten.succeeded()) {
+                    if (gotten.hasContentLength()) {
+                        return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
+                    }
+                    // it not, it's 404, missing entry. Neither fail nor really success...
+                    result = result.addMissing(server);
+                    it.remove();
+                } else {
+                    CallFailure fail = gotten.getFailure();
+                    retry.addFailure(fail);
+                    if (!fail.isRetriable()) {
+                        result.addFailed(retry);
+                        it.remove();
+                    }
+                }
+            }
+        }
+        // we are all done and this'll be a failure...
+        return result.addFailed(retries);
     }
 }
