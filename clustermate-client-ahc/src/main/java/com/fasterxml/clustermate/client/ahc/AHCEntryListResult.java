@@ -1,17 +1,10 @@
 package com.fasterxml.clustermate.client.ahc;
 
 import com.fasterxml.storemate.client.CallFailure;
-import com.fasterxml.storemate.client.call.GetCallResult;
+import com.fasterxml.storemate.client.call.EntryListResult;
 import com.ning.http.client.HttpResponseHeaders;
 
-/**
- * Container for results of a single GET call to a server node.
- * Note that at most one of '_fail' and '_result' can be non-null; however,
- * it is possible for both to be null: this occurs in cases where
- * communication to server(s) succeeds, but no content was found
- * (either 404, or deleted content).
- */
-public final class AHCGetCallResult<T> extends GetCallResult<T>
+public class AHCEntryListResult<T> extends EntryListResult<T>
 {
     protected HttpResponseHeaders _headers;
 
@@ -21,16 +14,16 @@ public final class AHCGetCallResult<T> extends GetCallResult<T>
     /**********************************************************************
      */
     
-    public AHCGetCallResult(int status, T result) {
+    public AHCEntryListResult(int status, T result) {
         super(status, result);
     }
 
-    public AHCGetCallResult(CallFailure fail) {
+    public AHCEntryListResult(CallFailure fail) {
         super(fail);
     }
 
-    public static <T> AHCGetCallResult<T> notFound() {
-        return new AHCGetCallResult<T>(404, null);
+    public static <T> AHCEntryListResult<T> notFound() {
+        return new AHCEntryListResult<T>(404, null);
     }
 
     public void setHeaders(HttpResponseHeaders h) {

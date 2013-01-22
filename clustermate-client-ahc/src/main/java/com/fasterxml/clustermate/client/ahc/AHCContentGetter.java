@@ -85,12 +85,8 @@ public class AHCContentGetter<K extends EntryKey>
             }
             return new AHCGetCallResult<T>(statusCode, resp);
         } catch (Exception e) {
-            Throwable t = e;
-            while (t.getCause() != null) {
-                t = t.getCause();
-            }
             return new AHCGetCallResult<T>(CallFailure.clientInternal(_server,
-                    startTime, System.currentTimeMillis(), t));
+                    startTime, System.currentTimeMillis(), _unwrap(e)));
         }
     }
 }

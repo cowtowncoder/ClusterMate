@@ -1,13 +1,14 @@
 package com.fasterxml.clustermate.client.ahc;
 
 import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.EntryAccessors;
 import com.fasterxml.clustermate.client.StoreClientConfig;
-import com.fasterxml.clustermate.client.cluster.EntryAccessors;
 
 import com.fasterxml.storemate.client.call.ContentDeleter;
 import com.fasterxml.storemate.client.call.ContentGetter;
 import com.fasterxml.storemate.client.call.ContentHeader;
 import com.fasterxml.storemate.client.call.ContentPutter;
+import com.fasterxml.storemate.client.call.EntryLister;
 import com.fasterxml.storemate.shared.EntryKey;
 
 import com.ning.http.client.AsyncHttpClient;
@@ -44,4 +45,8 @@ public class AHCEntryAccessors<K extends EntryKey> implements EntryAccessors<K>
         return new AHCContentDeleter<K>(_storeConfig, _ahc, server);
     }
 
+    @Override
+    public EntryLister<K> entryLister(ClusterServerNode server) {
+        return new AHCEntryLister<K>(_storeConfig, _ahc, server);
+    }
 }

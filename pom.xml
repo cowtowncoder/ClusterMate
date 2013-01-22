@@ -44,7 +44,7 @@
     <javac.target.version>1.6</javac.target.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     
-    <version.storemate>0.8.9-SNAPSHOT</version.storemate>
+    <version.storemate>0.8.9</version.storemate>
     <version.jackson>2.1.2</version.jackson>
     <version.slf4j>1.7.2</version.slf4j>
 

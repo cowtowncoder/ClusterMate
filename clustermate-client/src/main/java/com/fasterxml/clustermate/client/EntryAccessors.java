@@ -1,10 +1,6 @@
-package com.fasterxml.clustermate.client.cluster;
+package com.fasterxml.clustermate.client;
 
-import com.fasterxml.clustermate.client.ClusterServerNode;
-import com.fasterxml.storemate.client.call.ContentDeleter;
-import com.fasterxml.storemate.client.call.ContentGetter;
-import com.fasterxml.storemate.client.call.ContentHeader;
-import com.fasterxml.storemate.client.call.ContentPutter;
+import com.fasterxml.storemate.client.call.*;
 import com.fasterxml.storemate.shared.EntryKey;
 
 /**
@@ -21,4 +17,5 @@ public interface EntryAccessors<K extends EntryKey>
 
     public abstract ContentDeleter<K> entryDeleter(ClusterServerNode server);
 
+    public abstract EntryLister<K> entryLister(ClusterServerNode server);
 }

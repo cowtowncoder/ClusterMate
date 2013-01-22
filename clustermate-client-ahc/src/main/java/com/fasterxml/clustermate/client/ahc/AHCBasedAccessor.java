@@ -132,4 +132,18 @@ public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
             }
         }
     }
+
+    /*
+    /**********************************************************************
+    /* Other
+    /**********************************************************************
+     */
+
+    protected static Throwable _unwrap(Throwable t)
+    {
+        while (t.getCause() != null) {
+            t = t.getCause();
+        }
+        return t;
+    }
 }

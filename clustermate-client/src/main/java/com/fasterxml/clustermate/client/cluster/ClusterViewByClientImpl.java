@@ -12,6 +12,7 @@ import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.api.RequestPath;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.client.ClusterViewByClient;
+import com.fasterxml.clustermate.client.EntryAccessors;
 import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.clustermate.client.NodesForKey;
 import com.fasterxml.clustermate.client.StoreClientConfig;

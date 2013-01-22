@@ -8,6 +8,7 @@ import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.RequestPath;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.EntryAccessors;
 import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.storemate.client.call.ContentDeleter;
 import com.fasterxml.storemate.client.call.ContentGetter;
