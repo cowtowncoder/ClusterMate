@@ -359,7 +359,7 @@ public class SyncListAccessor implements StartAndStoppable
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
         // this will include 'caller' param:
         pathBuilder = cluster.addClusterStateInfo(pathBuilder);
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_CLUSTER_HASH,
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CLUSTER_HASH,
                 String.valueOf(lastClusterHash));
         return pathBuilder.toString();
     }

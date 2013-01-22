@@ -17,17 +17,12 @@ import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.api.msg.ListResponse;
-import com.fasterxml.clustermate.service.HandlerBase;
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
-import com.fasterxml.clustermate.service.OperationDiagnostics;
-import com.fasterxml.clustermate.service.ServiceRequest;
-import com.fasterxml.clustermate.service.ServiceResponse;
-import com.fasterxml.clustermate.service.SharedServiceStuff;
-import com.fasterxml.clustermate.service.Stores;
+import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
 import com.fasterxml.clustermate.service.msg.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
@@ -545,7 +540,13 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         // Otherwise can start listing
         boolean useSmile = _acceptSmileContentType(request);
         final StorableKey rawPrefix = prefix.asStorableKey();
-        final ListLimits limits = DEFAULT_LIST_LIMITS;
+        ListLimits limits = DEFAULT_LIST_LIMITS;
+
+        String maxStr = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_MAX_ENTRIES);
+        if (maxStr != null) {
+            limits = limits.withMaxEntries(_decodeInt(maxStr, limits.getMaxEntries()));
+        }
+        
         ListResponse<?> listResponse = null;
         
         switch (listType) {

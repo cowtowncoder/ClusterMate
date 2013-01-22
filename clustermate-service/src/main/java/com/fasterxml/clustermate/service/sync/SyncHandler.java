@@ -181,7 +181,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         if (keyRangeLength == null) {
             return (OUT) missingArgument(response, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH);
         }
-        long clusterHash = _findLongParam(request, ClusterMateConstants.HTTP_QUERY_CLUSTER_HASH);
+        long clusterHash = _findLongParam(request, ClusterMateConstants.HTTP_QUERY_PARAM_CLUSTER_HASH);
         KeyRange range;
         try {
             range = _cluster.getKeySpace().range(keyRangeStart, keyRangeLength);

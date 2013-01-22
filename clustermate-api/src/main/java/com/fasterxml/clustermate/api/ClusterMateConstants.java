@@ -107,7 +107,7 @@ public interface ClusterMateConstants
      * Query parameter used to contain hash code for last received cluster
      * view.
      */
-    public final static String HTTP_QUERY_CLUSTER_HASH = "clusterHash";
+    public final static String HTTP_QUERY_PARAM_CLUSTER_HASH = "clusterHash";
 
     /**
      * Query parameter that contains timestamp defined by sender and indicates
@@ -119,6 +119,12 @@ public interface ClusterMateConstants
      * Query parameter that defines type of items/entries to list.
      */
     public final static String HTTP_QUERY_PARAM_TYPE = "type";
+
+    /**
+     * Query parameter that defines maximum number of entries caller wishes
+     * to list.
+     */
+    public final static String HTTP_QUERY_PARAM_MAX_ENTRIES = "maxEntries";
 
     /**
      * Query parameter that defines what was the last traversed item, if any,

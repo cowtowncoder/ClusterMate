@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.client.ahc;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.storemate.client.CallFailure;
 import com.fasterxml.storemate.client.call.EntryListResult;
 import com.ning.http.client.HttpResponseHeaders;
@@ -23,7 +24,7 @@ public class AHCEntryListResult<T> extends EntryListResult<T>
     }
 
     public static <T> AHCEntryListResult<T> notFound() {
-        return new AHCEntryListResult<T>(404, null);
+        return new AHCEntryListResult<T>(ClusterMateConstants.HTTP_STATUS_NOT_FOUND, null);
     }
 
     public void setHeaders(HttpResponseHeaders h) {

@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.client.ahc;
 
+import java.io.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -7,8 +8,10 @@ import java.util.concurrent.TimeoutException;
 import com.fasterxml.storemate.client.CallFailure;
 import com.fasterxml.storemate.client.call.*;
 import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.storemate.shared.ListType;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 
@@ -32,19 +35,25 @@ public class AHCEntryLister<K extends EntryKey>
 
     @Override
     public <T> EntryListResult<T> tryList(CallConfig config, long endOfTime,
-            K prefix, int maxResults, ContentConverter<T> converter)
+            K prefix, ListType type, int maxResults,
+            ContentConverter<T> converter)
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
-        final long timeout = Math.min(endOfTime - startTime, config.getDeleteCallTimeoutMsecs());
+        final long timeout = Math.min(endOfTime - startTime, config.getGetCallTimeoutMsecs());
         if (timeout < config.getMinimumTimeoutMsecs()) {
             return failed(CallFailure.timeout(_server, startTime, startTime));
         }
         AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendStoreEntryPath(path);
-        path = _keyConverter.appendToPath(path, prefix);      
-        BoundRequestBuilder reqBuilder = path.deleteRequest(_httpClient);
+        path = _pathFinder.appendStoreListPath(path);
+        path = _keyConverter.appendToPath(path, prefix);
+        BoundRequestBuilder reqBuilder = path
+                .listRequest(_httpClient)
+                .addQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_MAX_ENTRIES, String.valueOf(maxResults))
+                .addQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE, type.toString())
+                ;
 
+        InputStream in = null;
         try {
             Future<Response> futurama = _httpClient.executeRequest(reqBuilder.build());
             // First, see if we can get the answer without time out...
@@ -67,8 +76,14 @@ public class AHCEntryLister<K extends EntryKey>
                 String msg = getExcerpt(resp, config.getMaxExcerptLength());
                 return failed(CallFailure.general(_server, statusCode, startTime, System.currentTimeMillis(), msg));
             }
-            return null;
+            in = resp.getResponseBodyAsStream();
+            return new AHCEntryListResult<T>(ClusterMateConstants.HTTP_STATUS_OK, converter.convert(in));
         } catch (Exception e) {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e2) { }
+            }
             return failed(CallFailure.clientInternal(_server,
                     startTime, System.currentTimeMillis(), _unwrap(e)));
         }

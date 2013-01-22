@@ -103,6 +103,10 @@ public class AHCPathBuilder
         return _addParams(ahc.prepareDelete(_url(false)));
     }
 
+    public BoundRequestBuilder listRequest(AsyncHttpClient ahc) {
+        return _addParams(ahc.prepareGet(_url(false)));
+    }
+
     private BoundRequestBuilder _addParams(BoundRequestBuilder b)
     {
         if (_queryParams != null) {
