@@ -7,6 +7,7 @@ import com.fasterxml.storemate.client.call.ContentDeleter;
 import com.fasterxml.storemate.client.call.ContentGetter;
 import com.fasterxml.storemate.client.call.ContentHeader;
 import com.fasterxml.storemate.client.call.ContentPutter;
+import com.fasterxml.storemate.client.call.EntryLister;
 import com.fasterxml.storemate.shared.EntryKey;
 
 /**
@@ -92,4 +93,6 @@ public interface ClusterServerNode
     public abstract <K extends EntryKey> ContentHeader<K> entryHeader();
 
     public abstract <K extends EntryKey> ContentDeleter<K> entryDeleter();
+
+    public abstract <K extends EntryKey> EntryLister<K> entryLister();
 }

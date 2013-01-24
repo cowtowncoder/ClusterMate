@@ -14,6 +14,7 @@ import com.fasterxml.storemate.client.call.ContentDeleter;
 import com.fasterxml.storemate.client.call.ContentGetter;
 import com.fasterxml.storemate.client.call.ContentHeader;
 import com.fasterxml.storemate.client.call.ContentPutter;
+import com.fasterxml.storemate.client.call.EntryLister;
 import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
 
@@ -79,15 +80,16 @@ public class ClusterServerNodeImpl
     private final AtomicLong _lastClusterUpdateAvailable = new AtomicLong(1L);
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Entry accessor handling
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Entry accessor handling
+    /**********************************************************************
      */
     
     protected final ContentPutter<?> _entryPutter;
     protected final ContentGetter<?> _entryGetter;
     protected final ContentHeader<?> _entryHeader;
     protected final ContentDeleter<?> _entryDeleter;
+    protected final EntryLister<?> _entryLister;
     
     /*
     /**********************************************************************
@@ -109,6 +111,7 @@ public class ClusterServerNodeImpl
         _entryGetter = entryAccessors.entryGetter(this);
         _entryHeader = entryAccessors.entryHeader(this);
         _entryDeleter = entryAccessors.entryDeleter(this);
+        _entryLister = entryAccessors.entryLister(this);
     }
 
     // only for test usage
@@ -125,6 +128,7 @@ public class ClusterServerNodeImpl
         _entryGetter = null;
         _entryHeader = null;
         _entryDeleter = null;
+        _entryLister = null;
     }
     
     protected static ClusterServerNodeImpl forTesting(KeyRange range) {
@@ -308,5 +312,11 @@ public class ClusterServerNodeImpl
     @Override
     public <K extends EntryKey> ContentDeleter<K> entryDeleter() {
         return (ContentDeleter<K>) _entryDeleter;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <K extends EntryKey> EntryLister<K> entryLister() {
+        return (EntryLister<K>) _entryLister;
     }
 }

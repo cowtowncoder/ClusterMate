@@ -4,6 +4,8 @@ import java.util.*;
 
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.storemate.client.CallFailure;
+import com.fasterxml.storemate.client.call.ContentConverter;
+import com.fasterxml.storemate.client.call.EntryListResult;
 import com.fasterxml.storemate.client.call.HeadCallResult;
 import com.fasterxml.storemate.shared.EntryKey;
 
@@ -36,19 +38,20 @@ public class StoreEntryLister<K extends EntryKey>
         _prefix = prefix;
     }
 
-    public ListResult<K> listMore() throws InterruptedException
+    public ListOperationResult<K> listMore(ContentConverter<K> conv) throws InterruptedException
     {
-        return listMore(DEFAULT_MAX_ENTRIES);
+        return listMore(conv, DEFAULT_MAX_ENTRIES);
     }
         
-    public ListResult<K> listMore(int maxToList) throws InterruptedException
+    public ListOperationResult<K> listMore(ContentConverter<K> conv,
+            int maxToList) throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
 
         // First things first: find Server nodes to talk to:
         NodesForKey nodes = _cluster.getNodesFor(_prefix);
         // then result
-        ListResult<K> result = new ListResult<K>(_clientConfig.getOperationConfig());
+        ListOperationResult<K> result = new ListOperationResult<K>(_clientConfig.getOperationConfig());
         
         // One sanity check: if not enough server nodes to talk to, can't succeed...
         int nodeCount = nodes.size();
@@ -66,7 +69,8 @@ public class StoreEntryLister<K extends EntryKey>
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
             if (!server.isDisabled() || noRetries) {
-                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, _prefix);
+                EntryListResult<K> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
+                        _prefix, conv.getType(), maxToList, conv);
                 if (gotten.failed()) {
                     CallFailure fail = gotten.getFailure();
                     if (fail.isRetriable()) {
@@ -76,11 +80,7 @@ public class StoreEntryLister<K extends EntryKey>
                     }
                     continue;
                 }
-                if (gotten.hasContentLength()) {
-                    return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
-                }
-                // it not, it's 404, missing entry. Neither fail nor really success...
-                result = result.addMissing(server);
+                return new EntryListResult<K>(gotten);
             }
         }
         if (noRetries) { // if no retries, bail out quickly
