@@ -2,7 +2,9 @@ package com.fasterxml.clustermate.client.operation;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
+import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.client.call.ContentConverter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -15,7 +17,7 @@ public abstract class ListEntryConverter
         return new IdConverter(mapper);
     }
  
-    static class IdConverter implements ContentConverter<StorableKey>
+    static class IdConverter implements ContentConverter<List<StorableKey>>
     {
         protected final ObjectReader _reader;
         
@@ -26,13 +28,13 @@ public abstract class ListEntryConverter
         //return ListType.ids;
         
         @Override
-        public StorableKey convert(InputStream in) throws IOException {
+        public List<StorableKey> convert(ContentType contentType, InputStream in) throws IOException {
             byte[] raw = _reader.readValue(in);
             return new StorableKey(raw);
         }
 
         @Override
-        public StorableKey convert(byte[] buffer, int offset, int length)
+        public List<StorableKey> convert(ContentType contentType, byte[] buffer, int offset, int length)
                 throws IOException {
             byte[] raw = _reader.readValue(buffer, offset, length);
             return new StorableKey(raw);

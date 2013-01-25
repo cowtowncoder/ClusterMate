@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.api.ListType;
 import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.client.operation.*;
 import com.fasterxml.storemate.shared.ByteRange;
@@ -854,9 +855,9 @@ public abstract class StoreClient<K extends EntryKey,
      * Result object is basically an iterator, and no actual access occurs
      * before methods are called on iterator.
      */
-    public StoreEntryLister<K> listContent(CONFIG config, K prefix)
+    public <T> StoreEntryLister<K,T> listContent(CONFIG config, K prefix, ListType itemType)
     {
-        return new StoreEntryLister<K>(config, _clusterView, prefix);
+        return new StoreEntryLister<K,T>(config, _clusterView, prefix, itemType);
     }
     
     /*

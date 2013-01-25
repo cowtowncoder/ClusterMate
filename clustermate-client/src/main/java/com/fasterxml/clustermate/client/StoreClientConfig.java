@@ -112,9 +112,9 @@ public abstract class StoreClientConfig<
     }
     
     public ObjectMapper getJsonMapper() {
-    	return _jsonMapper;
+        return _jsonMapper;
     }
-
+    
     /**
      * Accessor for per-call configuration settings.
      */

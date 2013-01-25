@@ -551,10 +551,10 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         
         switch (listType) {
         case entries:
-            listResponse = new ListResponse<ListItem>(_listItems(rawPrefix, lastSeen, limits));
+            listResponse = new ListResponse.ItemListResponse(_listItems(rawPrefix, lastSeen, limits));
             break;
         case ids:
-            listResponse = new ListResponse<StorableKey>(_listIds(rawPrefix, lastSeen, limits));
+            listResponse = new ListResponse.IdListResponse(_listIds(rawPrefix, lastSeen, limits));
             break;
         case names:
             {
@@ -563,7 +563,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
                 for (StorableKey id : ids) {
                     names.add(id.toString());
                 }
-                listResponse = new ListResponse<String>(names);
+                listResponse = new ListResponse.NameListResponse(names);
             }
             break;
         }

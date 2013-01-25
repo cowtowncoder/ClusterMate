@@ -1,11 +1,15 @@
 package com.fasterxml.clustermate.client.call;
 
+import java.util.List;
+
+import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.CallFailure;
 
-public abstract class EntryListResult<T>
+public abstract class ListCallResult<T>
     extends CallResult
 {
-    protected final T _result;
+    protected final List<T> _items;
 
     /*
     /**********************************************************************
@@ -13,18 +17,24 @@ public abstract class EntryListResult<T>
     /**********************************************************************
      */
     
-    public EntryListResult(int status, T result)
+    public ListCallResult(ListResponse<T> resp)
     {
-        super(status);
-        _result = result;
+        super(ClusterMateConstants.HTTP_STATUS_OK);
+        _items = resp.items;
     }
 
-    public EntryListResult(CallFailure fail)
+    public ListCallResult(CallFailure fail)
     {
         super(fail);
-        _result = null;
+        _items = null;
     }
 
+    public ListCallResult(int statusCode)
+    {
+        super(statusCode);
+        _items = null;
+    }
+    
     /*
     /**********************************************************************
     /* CallResult impl
@@ -40,5 +50,5 @@ public abstract class EntryListResult<T>
     /**********************************************************************
      */
     
-    public T getResult() { return _result; }
+    public List<T> getItems() { return _items; }
 }

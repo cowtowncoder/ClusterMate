@@ -2,12 +2,16 @@ package com.fasterxml.clustermate.api.msg;
 
 import java.util.List;
 
+import com.fasterxml.clustermate.api.ListType;
+import com.fasterxml.storemate.shared.StorableKey;
+
 /**
  * Response message type for List requests.
  * 
- * @param <T> Type of entries; either simple id ({@link StorableKey}) or full {@link ListItem}
+ * @param <T> Type of entries; either simple id ({@link StorableKey}),
+ *    textual name ({@link java.lang.String}) or full {@link ListItem}.
  */
-public class ListResponse<T> // not a CRUD request/response
+public abstract class ListResponse<T> // not a CRUD request/response
 {
     /**
      * Error message for failed requests
@@ -19,6 +23,24 @@ public class ListResponse<T> // not a CRUD request/response
      */
     public List<T> items;
 
+    public ListResponse() { }
     public ListResponse(String msg) { message = msg; }
     public ListResponse(List<T> i) { items = i; }
+
+    public abstract ListType type();
+    
+    public static final class IdListResponse extends ListResponse<StorableKey> {
+        @Override public ListType type() { return ListType.ids; }
+        public IdListResponse(List<StorableKey> ids) { super(ids); }
+    }
+
+    public static final class NameListResponse extends ListResponse<String> {
+        @Override public ListType type() { return ListType.names; }
+        public NameListResponse(List<String> names) { super(names); }
+    }
+
+    public static final class ItemListResponse extends ListResponse<ListItem> {
+        @Override public ListType type() { return ListType.entries; }
+        public ItemListResponse(List<ListItem> entries) { super(entries); }
+    }
 }

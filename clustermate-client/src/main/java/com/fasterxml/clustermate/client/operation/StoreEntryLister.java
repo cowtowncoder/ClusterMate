@@ -6,8 +6,7 @@ import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.ListType;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.ContentConverter;
-import com.fasterxml.clustermate.client.call.EntryListResult;
-import com.fasterxml.clustermate.client.call.HeadCallResult;
+import com.fasterxml.clustermate.client.call.ListCallResult;
 
 /**
  * Value class that is used as result type for content list operation.
@@ -17,8 +16,11 @@ import com.fasterxml.clustermate.client.call.HeadCallResult;
  * This is necessary as list operations may return large number of entries,
  * and each individual operation can only return up to certain number of
  * entries.
+ *
+ * @param <K> Type of keys used for ClusterMate-based system
+ * @param <T> Type of list items to return
  */
-public class StoreEntryLister<K extends EntryKey>
+public class StoreEntryLister<K extends EntryKey,T>
 {
     public final static int DEFAULT_MAX_ENTRIES = 100;
     
@@ -30,20 +32,27 @@ public class StoreEntryLister<K extends EntryKey>
      * Prefix of entries to list.
      */
     protected final K _prefix;
+    
+    /**
+     * Type of items of the result list.
+     */
+    protected final ListType _itemType;
 
     public StoreEntryLister(StoreClientConfig<K,?> config, ClusterViewByClient<K> cluster,
-            K prefix) {
+            K prefix, ListType itemType)
+    {
         this._clientConfig = config;
         _cluster = cluster;
         _prefix = prefix;
+        _itemType = itemType;
     }
 
-    public ListOperationResult<K> listMore(ContentConverter<K> conv, ListType itemType) throws InterruptedException
+    public ListOperationResult<T> listMore(ContentConverter<T> conv, ListType itemType) throws InterruptedException
     {
         return listMore(conv, itemType, DEFAULT_MAX_ENTRIES);
     }
         
-    public ListOperationResult<K> listMore(ContentConverter<K> conv, ListType itemType,
+    public ListOperationResult<T> listMore(ContentConverter<T> conv, ListType itemType,
             int maxToList) throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
@@ -51,7 +60,7 @@ public class StoreEntryLister<K extends EntryKey>
         // First things first: find Server nodes to talk to:
         NodesForKey nodes = _cluster.getNodesFor(_prefix);
         // then result
-        ListOperationResult<K> result = new ListOperationResult<K>(_clientConfig.getOperationConfig());
+        ListOperationResult<T> result = new ListOperationResult<T>(_clientConfig.getOperationConfig());
         
         // One sanity check: if not enough server nodes to talk to, can't succeed...
         int nodeCount = nodes.size();
@@ -69,8 +78,8 @@ public class StoreEntryLister<K extends EntryKey>
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
             if (!server.isDisabled() || noRetries) {
-                EntryListResult<K> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
-                        _prefix, maxToList, conv);
+                ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
+                        _prefix, _itemType, maxToList, conv);
                 if (gotten.failed()) {
                     CallFailure fail = gotten.getFailure();
                     if (fail.isRetriable()) {
@@ -80,7 +89,7 @@ public class StoreEntryLister<K extends EntryKey>
                     }
                     continue;
                 }
-                return new EntryListResult<K>(gotten);
+                return result.setItems(server, gotten);
             }
         }
         if (noRetries) { // if no retries, bail out quickly
@@ -99,21 +108,16 @@ public class StoreEntryLister<K extends EntryKey>
             while (it.hasNext()) {
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, _prefix);
+                ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
+                        _prefix, _itemType, maxToList, conv);
                 if (gotten.succeeded()) {
-                    if (gotten.hasContentLength()) {
-                        return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
-                    }
-                    // it not, it's 404, missing entry. Neither fail nor really success...
-                    result = result.addMissing(server);
+                    return result.addFailed(retries).setItems(server, gotten);
+                }
+                CallFailure fail = gotten.getFailure();
+                retry.addFailure(fail);
+                if (!fail.isRetriable()) {
+                    result.addFailed(retry);
                     it.remove();
-                } else {
-                    CallFailure fail = gotten.getFailure();
-                    retry.addFailure(fail);
-                    if (!fail.isRetriable()) {
-                        result.addFailed(retry);
-                        it.remove();
-                    }
                 }
             }
         }
@@ -124,20 +128,16 @@ public class StoreEntryLister<K extends EntryKey>
                 if (System.currentTimeMillis() >= lastValidTime) {
                     return result.addFailed(retries);
                 }
-                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, _prefix);
+                ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
+                        _prefix, _itemType, maxToList, conv);
                 if (gotten.succeeded()) {
-                    if (gotten.hasContentLength()) {
-                        return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
-                    }
-                    // it not, it's 404, missing entry. Neither fail nor really success...
-                    result = result.addMissing(server);
+                    return result.addFailed(retries).setItems(server, gotten);
+                }
+                CallFailure fail = gotten.getFailure();
+                if (fail.isRetriable()) {
+                    retries.add(new NodeFailure(server, fail));
                 } else {
-                    CallFailure fail = gotten.getFailure();
-                    if (fail.isRetriable()) {
-                        retries.add(new NodeFailure(server, fail));
-                    } else {
-                        result.addFailed(new NodeFailure(server, fail));
-                    }
+                    result.addFailed(new NodeFailure(server, fail));
                 }
             }
         }
@@ -153,21 +153,16 @@ public class StoreEntryLister<K extends EntryKey>
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                HeadCallResult gotten = server.entryHeader().tryHead(_clientConfig.getCallConfig(), endOfTime, _prefix);
+                ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
+                        _prefix, _itemType, maxToList, conv);
                 if (gotten.succeeded()) {
-                    if (gotten.hasContentLength()) {
-                        return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
-                    }
-                    // it not, it's 404, missing entry. Neither fail nor really success...
-                    result = result.addMissing(server);
+                    return result.addFailed(retries).setItems(server, gotten);
+                }
+                CallFailure fail = gotten.getFailure();
+                retry.addFailure(fail);
+                if (!fail.isRetriable()) {
+                    result.addFailed(retry);
                     it.remove();
-                } else {
-                    CallFailure fail = gotten.getFailure();
-                    retry.addFailure(fail);
-                    if (!fail.isRetriable()) {
-                        result.addFailed(retry);
-                        it.remove();
-                    }
                 }
             }
         }
@@ -185,10 +180,10 @@ public class StoreEntryLister<K extends EntryKey>
         return _clientConfig.getOperationConfig().getAllowRetries();
     }
     
-    protected <T> List<T> _add(List<T> list, T entry)
+    protected <T0> List<T0> _add(List<T0> list, T0 entry)
     {
         if (list == null) {
-            list = new LinkedList<T>();
+            list = new LinkedList<T0>();
         }
         list.add(entry);
         return list;

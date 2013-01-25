@@ -34,7 +34,7 @@ public class AHCEntryLister<K extends EntryKey>
     }
 
     @Override
-    public <T> EntryListResult<T> tryList(CallConfig config, long endOfTime,
+    public <T> ListCallResult<T> tryList(CallConfig config, long endOfTime,
             K prefix, ListType type, int maxResults,
             ContentConverter<T> converter)
     {
@@ -89,7 +89,7 @@ public class AHCEntryLister<K extends EntryKey>
         }
     }
 
-    protected <T> EntryListResult<T> failed(CallFailure fail) {
+    protected <T> ListCallResult<T> failed(CallFailure fail) {
         return new AHCEntryListResult<T>(fail);
     }
 }

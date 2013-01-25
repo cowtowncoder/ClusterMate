@@ -31,7 +31,6 @@ public class GetOperationResult<T> extends ReadOperationResult<GetOperationResul
         return this;
     }
     
-    
     // // // Extended API
 
     public T getContents() { return _contents; }
