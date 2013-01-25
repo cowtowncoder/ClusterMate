@@ -1,15 +1,15 @@
 package com.fasterxml.clustermate.client.ahc;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.EntryAccessors;
 import com.fasterxml.clustermate.client.StoreClientConfig;
+import com.fasterxml.clustermate.client.call.ContentDeleter;
+import com.fasterxml.clustermate.client.call.ContentGetter;
+import com.fasterxml.clustermate.client.call.ContentHeader;
+import com.fasterxml.clustermate.client.call.ContentPutter;
+import com.fasterxml.clustermate.client.call.EntryLister;
 
-import com.fasterxml.storemate.client.call.ContentDeleter;
-import com.fasterxml.storemate.client.call.ContentGetter;
-import com.fasterxml.storemate.client.call.ContentHeader;
-import com.fasterxml.storemate.client.call.ContentPutter;
-import com.fasterxml.storemate.client.call.EntryLister;
-import com.fasterxml.storemate.shared.EntryKey;
 
 import com.ning.http.client.AsyncHttpClient;
 

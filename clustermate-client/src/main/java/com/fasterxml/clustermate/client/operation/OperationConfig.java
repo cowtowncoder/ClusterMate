@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.client.operation;
 
-import com.fasterxml.storemate.client.call.CallConfig;
+import com.fasterxml.clustermate.client.call.CallConfig;
 
 public class OperationConfig
 {

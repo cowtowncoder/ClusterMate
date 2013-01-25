@@ -5,12 +5,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.*;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.bdb.LastAccessStore;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
-import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;

@@ -6,16 +6,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
+import com.fasterxml.clustermate.client.call.*;
 
-import com.fasterxml.storemate.client.*;
-import com.fasterxml.storemate.client.call.CallConfig;
-import com.fasterxml.storemate.client.call.ContentPutter;
-import com.fasterxml.storemate.client.call.PutContentProvider;
 import com.fasterxml.storemate.shared.ByteContainer;
-import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.util.IOUtil;
 import com.fasterxml.storemate.shared.util.WithBytesCallback;
 

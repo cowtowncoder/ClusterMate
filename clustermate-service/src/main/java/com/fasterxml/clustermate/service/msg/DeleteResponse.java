@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.service.msg;
 
-import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.clustermate.api.EntryKey;
 
 /**
  * POJO returned as a result of successful DELETE request

@@ -19,11 +19,6 @@ ClusterMate-based service.
       <artifactId>storemate-shared</artifactId>
       <version>${version.storemate}</version>
     </dependency>
-    <dependency>
-      <groupId>com.fasterxml.storemate</groupId>
-      <artifactId>storemate-client-base</artifactId>
-      <version>${version.storemate}</version>
-    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.clustermate</groupId>

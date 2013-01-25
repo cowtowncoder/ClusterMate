@@ -6,6 +6,7 @@ import java.io.IOException;
 import com.fasterxml.storemate.store.StorableStore;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -57,13 +58,13 @@ public class SyncListTest extends JaxrsStoreTestBase
         syncReq.addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START, ""+localRange.getStart());
         syncReq.addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, ""+localRange.getLength());
         // JSON or Smile? Either should be fine...
-        syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ClusterMateConstants.CONTENT_TYPE_SMILE);
+        syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ContentType.SMILE.toString());
         
         response = new FakeHttpResponse();
         syncH.listEntries(syncReq, response, creationTime, null);
         assertTrue(response.hasStreamingContent());
         assertEquals(200, response.getStatus());
-        assertEquals(ClusterMateConstants.CONTENT_TYPE_SMILE, response.getContentType());
+        assertEquals(ContentType.SMILE.toString(), response.getContentType());
         byte[] data = response.getStreamingContentAsBytes();
 
         SyncListResponse<?> syncList = resource._stuff.smileReader(SyncListResponse.class).readValue(data);
@@ -120,13 +121,13 @@ public class SyncListTest extends JaxrsStoreTestBase
         final KeyRange localRange = resource.getKeyRange();
         syncReq.addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START, ""+localRange.getStart());
         syncReq.addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, ""+localRange.getLength());
-        syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ClusterMateConstants.CONTENT_TYPE_SMILE);
+        syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ContentType.SMILE.toString());
         
         response = new FakeHttpResponse();
         syncH.listEntries(syncReq, response, creationTime, null);
         assertTrue(response.hasStreamingContent());
         assertEquals(200, response.getStatus());
-        assertEquals(ClusterMateConstants.CONTENT_TYPE_SMILE, response.getContentType());
+        assertEquals(ContentType.SMILE.toString(), response.getContentType());
         byte[] data = response.getStreamingContentAsBytes();
 
         SyncListResponse<StoredEntry<?>> syncList = resource._stuff.smileReader(SyncListResponse.class).readValue(data);

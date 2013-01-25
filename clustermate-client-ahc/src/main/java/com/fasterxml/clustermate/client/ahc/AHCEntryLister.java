@@ -5,15 +5,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.fasterxml.storemate.client.CallFailure;
-import com.fasterxml.storemate.client.call.*;
-import com.fasterxml.storemate.shared.EntryKey;
-import com.fasterxml.storemate.shared.ListType;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.ListType;
+import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
+import com.fasterxml.clustermate.client.call.*;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;

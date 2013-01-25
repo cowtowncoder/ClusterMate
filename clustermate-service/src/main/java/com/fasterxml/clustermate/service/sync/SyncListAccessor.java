@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
@@ -31,7 +32,7 @@ public class SyncListAccessor implements StartAndStoppable
     
     // public just because tests need it
     public final static String ACCEPTED_CONTENT_TYPES
-        = ClusterMateConstants.CONTENT_TYPE_SMILE + ", " + ClusterMateConstants.CONTENT_TYPE_JSON;
+        = ContentType.SMILE.toString() + ", " + ContentType.JSON.toString();
 
     protected final SharedServiceStuff _stuff;
     
@@ -204,7 +205,7 @@ public class SyncListAccessor implements StartAndStoppable
         HttpURLConnection conn;
         OutputStream out = null;
         try {
-            conn = preparePost(urlStr, timeout, ClusterMateConstants.CONTENT_TYPE_JSON);
+            conn = preparePost(urlStr, timeout, ContentType.JSON);
             // since we do know length in advance, let's just do this:
             conn.setFixedLengthStreamingMode(reqLength);
             conn.connect();
@@ -251,7 +252,7 @@ public class SyncListAccessor implements StartAndStoppable
         final String urlStr = _buildNodeStatusUpdateUrl(cluster, remote, newStatus);
         HttpURLConnection conn;
         try {
-            conn = preparePost(urlStr, timeout, ClusterMateConstants.CONTENT_TYPE_JSON);
+            conn = preparePost(urlStr, timeout, ContentType.JSON);
             conn.setDoOutput(false);
             conn.connect();
         } catch (Exception e) {
@@ -281,7 +282,7 @@ public class SyncListAccessor implements StartAndStoppable
      */
     
     protected HttpURLConnection preparePost(String urlStr, TimeSpan timeout,
-            String contentType)
+            ContentType contentType)
         throws IOException
     {
         return prepareHttpMethod(urlStr, timeout, "POST", true, contentType);
@@ -294,7 +295,7 @@ public class SyncListAccessor implements StartAndStoppable
     }
     
     protected HttpURLConnection prepareHttpMethod(String urlStr, TimeSpan timeout,
-            String methodName, boolean sendInput, String contentType)
+            String methodName, boolean sendInput, ContentType contentType)
         throws IOException
     {
         URL url = new URL(urlStr);
@@ -305,7 +306,7 @@ public class SyncListAccessor implements StartAndStoppable
         conn.setDoOutput(sendInput);
         conn.setDoInput(true); // we always read response
         if (contentType != null) { // should also indicate content type...
-            conn.setRequestProperty(ClusterMateConstants.HTTP_HEADER_CONTENT_TYPE, contentType);
+            conn.setRequestProperty(ClusterMateConstants.HTTP_HEADER_CONTENT_TYPE, contentType.toString());
         }
         
         // how about timeouts... JDK one does not give us whole-operation granularity but:

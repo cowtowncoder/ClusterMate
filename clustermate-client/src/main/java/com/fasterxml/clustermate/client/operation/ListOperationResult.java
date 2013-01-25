@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.client.operation;
 
-import com.fasterxml.storemate.client.call.EntryListResult;
+import com.fasterxml.clustermate.client.call.EntryListResult;
 
 /**
  * Result value produced by {@link StoreEntryLister}, contains information

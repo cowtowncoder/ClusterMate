@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.service.msg;
 
-import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.store.Storable;
 

@@ -4,13 +4,13 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoredEntry;
-import com.fasterxml.storemate.shared.EntryKey;
 
 /**
  * "Uber-servlet" that is usually used to route requests to handlers

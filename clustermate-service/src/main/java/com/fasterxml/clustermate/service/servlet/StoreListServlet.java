@@ -2,13 +2,13 @@ package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
-import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.TimeMaster;
 
 @SuppressWarnings("serial")

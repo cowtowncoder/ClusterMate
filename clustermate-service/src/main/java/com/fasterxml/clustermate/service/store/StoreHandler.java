@@ -568,7 +568,8 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
             break;
         }
         final ObjectWriter w = useSmile ? _listSmileWriter : _listJsonWriter;
-        final String contentType = useSmile ? ClusterMateConstants.CONTENT_TYPE_SMILE : ClusterMateConstants.CONTENT_TYPE_JSON;
+        final String contentType = useSmile ? ContentType.SMILE.toString()
+                : ContentType.JSON.toString();
         
         return (OUT) response.ok(new StreamingEntityImpl(w, listResponse))
                 .setContentType(contentType);

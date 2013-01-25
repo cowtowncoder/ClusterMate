@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
@@ -24,7 +25,6 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 import com.fasterxml.clustermate.service.sync.*;
 
 import com.fasterxml.storemate.shared.ByteContainer;
-import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;

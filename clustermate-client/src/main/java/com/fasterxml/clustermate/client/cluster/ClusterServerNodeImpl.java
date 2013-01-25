@@ -3,6 +3,7 @@ package com.fasterxml.clustermate.client.cluster;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.KeyHash;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.RequestPath;
@@ -10,12 +11,11 @@ import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.EntryAccessors;
 import com.fasterxml.clustermate.client.NetworkClient;
-import com.fasterxml.storemate.client.call.ContentDeleter;
-import com.fasterxml.storemate.client.call.ContentGetter;
-import com.fasterxml.storemate.client.call.ContentHeader;
-import com.fasterxml.storemate.client.call.ContentPutter;
-import com.fasterxml.storemate.client.call.EntryLister;
-import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.clustermate.client.call.ContentDeleter;
+import com.fasterxml.clustermate.client.call.ContentGetter;
+import com.fasterxml.clustermate.client.call.ContentHeader;
+import com.fasterxml.clustermate.client.call.ContentPutter;
+import com.fasterxml.clustermate.client.call.EntryLister;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 /**

@@ -1,7 +1,7 @@
 package com.fasterxml.clustermate.client;
 
-import com.fasterxml.storemate.client.call.*;
-import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.client.call.*;
 
 /**
  * "Factory interface" that contains factory methods needed for constructing

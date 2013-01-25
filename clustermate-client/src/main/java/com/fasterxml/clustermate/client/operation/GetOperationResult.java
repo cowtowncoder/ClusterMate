@@ -1,7 +1,7 @@
 package com.fasterxml.clustermate.client.operation;
 
 import com.fasterxml.clustermate.client.ClusterServerNode;
-import com.fasterxml.storemate.client.call.GetContentProcessor;
+import com.fasterxml.clustermate.client.call.GetContentProcessor;
 
 /**
  * {@link OperationResult} subtype used with GET operations, adds actual

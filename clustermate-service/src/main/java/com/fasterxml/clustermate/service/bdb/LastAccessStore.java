@@ -2,11 +2,11 @@ package com.fasterxml.clustermate.service.bdb;
 
 import com.sleepycat.je.*;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
-import com.fasterxml.storemate.shared.EntryKey;
 
 /**
  * Class that encapsulates BDB-JE backed storage of last-accessed

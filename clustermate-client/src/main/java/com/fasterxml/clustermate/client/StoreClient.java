@@ -5,16 +5,11 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.client.operation.StoreEntryLister;
-import com.fasterxml.clustermate.client.operation.DeleteOperationResult;
-import com.fasterxml.clustermate.client.operation.GetOperationResult;
-import com.fasterxml.clustermate.client.operation.HeadOperationResult;
-import com.fasterxml.clustermate.client.operation.PutOperationResult;
-import com.fasterxml.storemate.client.*;
-import com.fasterxml.storemate.client.call.*;
+import com.fasterxml.clustermate.client.call.*;
+import com.fasterxml.clustermate.client.operation.*;
 import com.fasterxml.storemate.shared.ByteRange;
-import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.util.ByteAggregator;
 
 /**

@@ -146,16 +146,6 @@ public interface ClusterMateConstants
 
     /*
     /**********************************************************************
-    /* Content types
-    /**********************************************************************
-     */
-
-    public final static String CONTENT_TYPE_JSON = "application/json";
-    
-    public final static String CONTENT_TYPE_SMILE = "application/x-jackson-smile";
-
-    /*
-    /**********************************************************************
     /* Other constants
     /**********************************************************************
      */

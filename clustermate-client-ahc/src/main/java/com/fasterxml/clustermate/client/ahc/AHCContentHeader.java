@@ -7,12 +7,10 @@ import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.clustermate.client.ClusterServerNode;
-import com.fasterxml.clustermate.client.StoreClientConfig;
-import com.fasterxml.storemate.client.*;
-import com.fasterxml.storemate.client.call.CallConfig;
-import com.fasterxml.storemate.client.call.ContentHeader;
-import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.client.*;
+import com.fasterxml.clustermate.client.call.CallConfig;
+import com.fasterxml.clustermate.client.call.ContentHeader;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 /**

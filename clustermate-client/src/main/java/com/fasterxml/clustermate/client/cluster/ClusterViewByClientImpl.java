@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.KeyHash;
 import com.fasterxml.clustermate.api.KeySpace;
@@ -17,7 +18,6 @@ import com.fasterxml.clustermate.client.NetworkClient;
 import com.fasterxml.clustermate.client.NodesForKey;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
-import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 /**

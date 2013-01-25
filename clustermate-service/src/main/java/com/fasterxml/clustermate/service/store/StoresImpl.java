@@ -17,11 +17,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.bdb.LastAccessStore;
 import com.fasterxml.clustermate.service.bdb.NodeStateStore;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
-import com.fasterxml.storemate.shared.EntryKey;
 
 public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
 	extends Stores<K, E>

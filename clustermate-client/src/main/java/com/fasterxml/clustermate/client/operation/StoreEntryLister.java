@@ -2,12 +2,12 @@ package com.fasterxml.clustermate.client.operation;
 
 import java.util.*;
 
+import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.ListType;
 import com.fasterxml.clustermate.client.*;
-import com.fasterxml.storemate.client.CallFailure;
-import com.fasterxml.storemate.client.call.ContentConverter;
-import com.fasterxml.storemate.client.call.EntryListResult;
-import com.fasterxml.storemate.client.call.HeadCallResult;
-import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.clustermate.client.call.ContentConverter;
+import com.fasterxml.clustermate.client.call.EntryListResult;
+import com.fasterxml.clustermate.client.call.HeadCallResult;
 
 /**
  * Value class that is used as result type for content list operation.
@@ -38,12 +38,12 @@ public class StoreEntryLister<K extends EntryKey>
         _prefix = prefix;
     }
 
-    public ListOperationResult<K> listMore(ContentConverter<K> conv) throws InterruptedException
+    public ListOperationResult<K> listMore(ContentConverter<K> conv, ListType itemType) throws InterruptedException
     {
-        return listMore(conv, DEFAULT_MAX_ENTRIES);
+        return listMore(conv, itemType, DEFAULT_MAX_ENTRIES);
     }
         
-    public ListOperationResult<K> listMore(ContentConverter<K> conv,
+    public ListOperationResult<K> listMore(ContentConverter<K> conv, ListType itemType,
             int maxToList) throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
@@ -70,7 +70,7 @@ public class StoreEntryLister<K extends EntryKey>
             ClusterServerNode server = nodes.node(i);
             if (!server.isDisabled() || noRetries) {
                 EntryListResult<K> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
-                        _prefix, conv.getType(), maxToList, conv);
+                        _prefix, maxToList, conv);
                 if (gotten.failed()) {
                     CallFailure fail = gotten.getFailure();
                     if (fail.isRetriable()) {

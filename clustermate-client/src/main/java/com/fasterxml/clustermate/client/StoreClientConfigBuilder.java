@@ -2,11 +2,11 @@ package com.fasterxml.clustermate.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.storemate.client.call.CallConfig;
-import com.fasterxml.storemate.shared.EntryKey;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
+import com.fasterxml.clustermate.client.call.CallConfig;
 import com.fasterxml.clustermate.client.operation.OperationConfig;
 import com.fasterxml.clustermate.json.ClusterMateObjectMapper;
 

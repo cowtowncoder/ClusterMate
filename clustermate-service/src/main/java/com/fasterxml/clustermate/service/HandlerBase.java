@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 public abstract class HandlerBase
@@ -67,8 +68,7 @@ public abstract class HandlerBase
     protected boolean _acceptSmileContentType(ServiceRequest request) {
         String acceptHeader = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT);
         // what do they request? If not known, serve JSON (assumed to be from browser)
-        return (acceptHeader != null)
-                && acceptHeader.trim().indexOf(ClusterMateConstants.CONTENT_TYPE_SMILE) >= 0;
+        return (acceptHeader != null) && ContentType.SMILE.isAccepted(acceptHeader);
     }
     
     /*

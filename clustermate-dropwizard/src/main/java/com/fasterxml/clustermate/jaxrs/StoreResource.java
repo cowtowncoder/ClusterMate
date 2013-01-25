@@ -7,9 +7,9 @@ import javax.ws.rs.core.*;
 
 import com.yammer.metrics.annotation.Timed;
 
-import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.store.StoreException;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.OperationType;
 import com.fasterxml.clustermate.service.ServiceResponse;

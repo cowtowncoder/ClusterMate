@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.service.msg;
 
-import com.fasterxml.storemate.shared.EntryKey;
+import com.fasterxml.clustermate.api.EntryKey;
 
 /**
  * Simple POJO used for enclosing information in case of a failed GET

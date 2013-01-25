@@ -17,7 +17,7 @@ import com.ning.http.client.HttpResponseHeaders;
 import com.ning.http.client.HttpResponseStatus;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.storemate.client.call.GetContentProcessor;
+import com.fasterxml.clustermate.client.call.GetContentProcessor;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.util.ByteAggregator;
 import com.fasterxml.storemate.shared.util.IOUtil;

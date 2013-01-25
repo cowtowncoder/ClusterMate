@@ -1,9 +1,9 @@
 package com.fasterxml.clustermate.service.msg;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-import com.fasterxml.storemate.shared.EntryKey;
 
 /**
  * Base class used by various response messages (mostly errors,

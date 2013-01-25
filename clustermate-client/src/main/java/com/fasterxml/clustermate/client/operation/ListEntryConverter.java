@@ -3,11 +3,10 @@ package com.fasterxml.clustermate.client.operation;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.fasterxml.clustermate.client.call.ContentConverter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 
-import com.fasterxml.storemate.client.call.ContentConverter;
-import com.fasterxml.storemate.shared.ListType;
 import com.fasterxml.storemate.shared.StorableKey;
 
 public abstract class ListEntryConverter
@@ -24,10 +23,7 @@ public abstract class ListEntryConverter
             _reader = mapper.reader(byte[].class);
         }
 
-        @Override
-        public ListType getType() {
-            return ListType.ids;
-        }
+        //return ListType.ids;
         
         @Override
         public StorableKey convert(InputStream in) throws IOException {

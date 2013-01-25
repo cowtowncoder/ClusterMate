@@ -250,7 +250,7 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         final SyncListResponse<E> resp = new SyncListResponse<E>(entries, timestamp.get(),
                 currentHash, clusterStatus);
         final ObjectWriter w = useSmile ? _syncListSmileWriter : _syncListJsonWriter;
-        final String contentType = useSmile ? ClusterMateConstants.CONTENT_TYPE_SMILE : ClusterMateConstants.CONTENT_TYPE_JSON;
+        final String contentType = useSmile ? ContentType.SMILE.toString() : ContentType.JSON.toString();
         
         return (OUT) response.ok(new StreamingEntityImpl(w, resp))
                 .setContentType(contentType);

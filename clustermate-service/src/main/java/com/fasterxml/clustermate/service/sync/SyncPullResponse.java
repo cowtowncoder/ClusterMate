@@ -8,10 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 
-import com.fasterxml.storemate.shared.EntryKey;
 import com.fasterxml.storemate.shared.util.*;
 import com.fasterxml.storemate.store.file.FileManager;
 
+import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 

@@ -1,8 +1,8 @@
 package com.fasterxml.clustermate.client.ahc;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.storemate.client.CallFailure;
-import com.fasterxml.storemate.client.call.EntryListResult;
+import com.fasterxml.clustermate.client.CallFailure;
+import com.fasterxml.clustermate.client.call.EntryListResult;
 import com.ning.http.client.HttpResponseHeaders;
 
 public class AHCEntryListResult<T> extends EntryListResult<T>
