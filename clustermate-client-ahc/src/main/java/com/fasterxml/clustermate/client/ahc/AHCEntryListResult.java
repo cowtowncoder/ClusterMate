@@ -1,11 +1,11 @@
 package com.fasterxml.clustermate.client.ahc;
 
-import java.util.List;
+import com.ning.http.client.HttpResponseHeaders;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.call.ListCallResult;
-import com.ning.http.client.HttpResponseHeaders;
 
 public class AHCEntryListResult<T> extends ListCallResult<T>
 {
@@ -17,8 +17,8 @@ public class AHCEntryListResult<T> extends ListCallResult<T>
     /**********************************************************************
      */
     
-    public AHCEntryListResult(List<T> result) {
-        super(result);
+    public AHCEntryListResult(ListResponse<T> resp) {
+        super(resp);
     }
 
     public AHCEntryListResult(CallFailure fail) {

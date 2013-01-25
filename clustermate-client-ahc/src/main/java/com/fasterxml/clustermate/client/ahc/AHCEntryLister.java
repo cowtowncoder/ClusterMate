@@ -8,12 +8,15 @@ import java.util.concurrent.TimeoutException;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.ListType;
+import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.*;
+import com.fasterxml.clustermate.client.util.ContentConverter;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
@@ -36,7 +39,7 @@ public class AHCEntryLister<K extends EntryKey>
     @Override
     public <T> ListCallResult<T> tryList(CallConfig config, long endOfTime,
             K prefix, ListType type, int maxResults,
-            ContentConverter<T> converter)
+            ContentConverter<ListResponse<T>> converter)
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
@@ -76,8 +79,9 @@ public class AHCEntryLister<K extends EntryKey>
                 String msg = getExcerpt(resp, config.getMaxExcerptLength());
                 return failed(CallFailure.general(_server, statusCode, startTime, System.currentTimeMillis(), msg));
             }
+            ContentType contentType = findContentType(resp, ContentType.JSON);
             in = resp.getResponseBodyAsStream();
-            return new AHCEntryListResult<T>(ClusterMateConstants.HTTP_STATUS_OK, converter.convert(in));
+            return new AHCEntryListResult<T>(converter.convert(contentType, in));
         } catch (Exception e) {
             if (in != null) {
                 try {

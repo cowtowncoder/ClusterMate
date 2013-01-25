@@ -4,12 +4,12 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.fasterxml.clustermate.api.ClusterStatusAccessor;
-import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.api.ListType;
+import com.fasterxml.clustermate.api.*;
+import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.client.operation.*;
+import com.fasterxml.clustermate.client.util.GenericContentConverter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.util.ByteAggregator;
 
@@ -53,6 +53,8 @@ public abstract class StoreClient<K extends EntryKey,
 
     protected EntryKeyConverter<K> _keyConverter;
     
+    protected final EnumMap<ListType, GenericContentConverter<?>> _listReaders;
+
     /*
     /**********************************************************************
     /* Life-cycle
@@ -91,6 +93,12 @@ public abstract class StoreClient<K extends EntryKey,
         
         _statusAccessor = statusAccessor;
         _clusterView = clusterView;
+
+        _listReaders = new EnumMap<ListType, GenericContentConverter<?>>(ListType.class);
+        ObjectMapper mapper = config.getJsonMapper();
+        _listReaders.put(ListType.ids, new GenericContentConverter<ListResponse.IdListResponse>(mapper, ListResponse.IdListResponse.class));
+        _listReaders.put(ListType.names, new GenericContentConverter<ListResponse.NameListResponse>(mapper, ListResponse.NameListResponse.class));
+        _listReaders.put(ListType.entries, new GenericContentConverter<ListResponse.ItemListResponse>(mapper, ListResponse.ItemListResponse.class));
     }
 
     /**
@@ -857,7 +865,15 @@ public abstract class StoreClient<K extends EntryKey,
      */
     public <T> StoreEntryLister<K,T> listContent(CONFIG config, K prefix, ListType itemType)
     {
-        return new StoreEntryLister<K,T>(config, _clusterView, prefix, itemType);
+        if (itemType == null) {
+            throw new IllegalArgumentException("Can't pass null itemType");
+        }
+        @SuppressWarnings("unchecked")
+        GenericContentConverter<ListResponse<T>> converter = (GenericContentConverter<ListResponse<T>>) _listReaders.get(itemType);
+        if (converter == null) { // sanity check, should never occur
+            throw new IllegalArgumentException("Unsupported item type: "+itemType);
+        }
+        return new StoreEntryLister<K,T>(config, _clusterView, prefix, itemType, converter);
     }
     
     /*

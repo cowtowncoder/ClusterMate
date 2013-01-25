@@ -4,9 +4,10 @@ import java.util.*;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.ListType;
+import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.*;
-import com.fasterxml.clustermate.client.call.ContentConverter;
 import com.fasterxml.clustermate.client.call.ListCallResult;
+import com.fasterxml.clustermate.client.util.ContentConverter;
 
 /**
  * Value class that is used as result type for content list operation.
@@ -38,22 +39,24 @@ public class StoreEntryLister<K extends EntryKey,T>
      */
     protected final ListType _itemType;
 
+    protected final ContentConverter<ListResponse<T>> _converter;
+    
     public StoreEntryLister(StoreClientConfig<K,?> config, ClusterViewByClient<K> cluster,
-            K prefix, ListType itemType)
+            K prefix, ListType itemType, ContentConverter<ListResponse<T>> converter)
     {
         this._clientConfig = config;
         _cluster = cluster;
         _prefix = prefix;
         _itemType = itemType;
+        _converter = null;
     }
 
-    public ListOperationResult<T> listMore(ContentConverter<T> conv, ListType itemType) throws InterruptedException
+    public ListOperationResult<T> listMore() throws InterruptedException
     {
-        return listMore(conv, itemType, DEFAULT_MAX_ENTRIES);
+        return listMore(DEFAULT_MAX_ENTRIES);
     }
         
-    public ListOperationResult<T> listMore(ContentConverter<T> conv, ListType itemType,
-            int maxToList) throws InterruptedException
+    public ListOperationResult<T> listMore(int maxToList) throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
 
@@ -79,7 +82,7 @@ public class StoreEntryLister<K extends EntryKey,T>
             ClusterServerNode server = nodes.node(i);
             if (!server.isDisabled() || noRetries) {
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
-                        _prefix, _itemType, maxToList, conv);
+                        _prefix, _itemType, maxToList, _converter);
                 if (gotten.failed()) {
                     CallFailure fail = gotten.getFailure();
                     if (fail.isRetriable()) {
@@ -109,7 +112,7 @@ public class StoreEntryLister<K extends EntryKey,T>
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
-                        _prefix, _itemType, maxToList, conv);
+                        _prefix, _itemType, maxToList, _converter);
                 if (gotten.succeeded()) {
                     return result.addFailed(retries).setItems(server, gotten);
                 }
@@ -129,7 +132,7 @@ public class StoreEntryLister<K extends EntryKey,T>
                     return result.addFailed(retries);
                 }
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
-                        _prefix, _itemType, maxToList, conv);
+                        _prefix, _itemType, maxToList, _converter);
                 if (gotten.succeeded()) {
                     return result.addFailed(retries).setItems(server, gotten);
                 }
@@ -154,7 +157,7 @@ public class StoreEntryLister<K extends EntryKey,T>
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
-                        _prefix, _itemType, maxToList, conv);
+                        _prefix, _itemType, maxToList, _converter);
                 if (gotten.succeeded()) {
                     return result.addFailed(retries).setItems(server, gotten);
                 }

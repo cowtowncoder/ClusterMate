@@ -39,6 +39,11 @@ ClusterMate-based service.
       <artifactId>jackson-databind</artifactId>
       <version>${version.jackson}</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-smile</artifactId>
+      <version>${version.jackson}</version>
+    </dependency>
 
   </dependencies>
 </project>

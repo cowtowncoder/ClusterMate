@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.client.call;
+package com.fasterxml.clustermate.client.util;
 
 import java.io.*;
 

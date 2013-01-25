@@ -28,9 +28,9 @@ public class ServiceConfigForTests
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Abstract method impl
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Abstract method impl
+    /**********************************************************************
      */
     
     @Override
@@ -43,10 +43,11 @@ public class ServiceConfigForTests
         PartitionId defClientId = getDefaultPartition();
         return new StoredEntryConverterForTests(TestKeyConverter.defaultInstance(defClientId));
     }
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Accessors
+    /**********************************************************************
      */
 
     public PartitionId getDefaultPartition() throws IllegalArgumentException
@@ -60,11 +61,12 @@ public class ServiceConfigForTests
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Additional mutators
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Additional mutators
+    /**********************************************************************
      */
 
+    @Override
     public ServiceConfigForTests overrideStoreBackendConfig(StoreBackendConfig cfg) {
         _storeBackendConfigOverride = cfg;
         return this;

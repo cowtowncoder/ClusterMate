@@ -3,6 +3,7 @@ package com.fasterxml.clustermate.client.ahc;
 import java.io.*;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
@@ -133,6 +134,22 @@ public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
         }
     }
 
+    protected ContentType findContentType(Response resp, ContentType defaultType)
+    {
+        String ctStr = resp.getContentType();
+        if (ctStr != null) {
+            ctStr = ctStr.trim();
+            if (ctStr.length() > 0) {
+                ContentType ct = ContentType.findType(ctStr);
+                if (ct == null) {
+                    logWarn("Unrecognized Content-Type ('"+ctStr+"'); defaulting to: "+defaultType);
+                }
+                return ct;
+            }
+        }
+        return defaultType;
+    }
+    
     /*
     /**********************************************************************
     /* Other
