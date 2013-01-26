@@ -1,6 +1,8 @@
 Project: ClusterMate
 
-0.8.4
+0.8.4 (...)
+
+#4: Add Servlet/Handler for listing entries
 
 0.8.3 (21-Jan-2012)
 
