@@ -76,13 +76,38 @@ public class EntryListTest extends JaxrsStoreTestBase
             .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_MAX_ENTRIES, "1");
         resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, ""), null);
         assertEquals(200, response.getStatus());
-        assertTrue(response.hasStreamingContent());
         resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
 
         assertNotNull(resultList);
         assertNotNull(resultList.items);
         assertEquals(1, resultList.items.size());
         assertEquals(key3, contentKey(resultList.items.get(0)));
+
+        // plus that we can pass "lastSeen" to skip earlier entries
+        response = new FakeHttpResponse();
+        request = new FakeHttpRequest()
+            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE, ListType.ids.toString())
+            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_LAST_SEEN, toBase64(key3));
+        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, ""), null);
+        assertEquals(200, response.getStatus());
+        resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
+
+        assertNotNull(resultList);
+        assertNotNull(resultList.items);
+        assertEquals(1, resultList.items.size());
+        assertEquals(key1, contentKey(resultList.items.get(0)));
+        // and, continuing with this
+        response = new FakeHttpResponse();
+        request = new FakeHttpRequest()
+            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE, ListType.ids.toString())
+            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_LAST_SEEN, toBase64(key1));
+        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, ""), null);
+        assertEquals(200, response.getStatus());
+        resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
+
+        assertNotNull(resultList);
+        assertNotNull(resultList.items);
+        assertEquals(0, resultList.items.size());
         
         // clean up:
         resource.getStores().stop();

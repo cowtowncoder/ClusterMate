@@ -32,6 +32,7 @@ import com.fasterxml.clustermate.service.cfg.NodeConfig;
 import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerImpl;
 import com.fasterxml.clustermate.service.store.StoredEntry;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**
@@ -50,6 +51,8 @@ public abstract class JaxrsStoreTestBase extends TestCase
     protected final TestKeyConverter _keyConverter = TestKeyConverter.defaultInstance(null);
 
     protected final StoredEntryConverterForTests _entryConverter = new StoredEntryConverterForTests(_keyConverter);
+
+    protected final static ObjectMapper _mapper = new ObjectMapper();
     
     /*
     /**********************************************************************
@@ -161,7 +164,15 @@ public abstract class JaxrsStoreTestBase extends TestCase
         }
         return _entryConverter.entryFromStorable(raw);
     }
+
+    protected String toBase64(TestKey key) {
+        return toBase64(key.asStorableKey());
+    }
     
+    protected String toBase64(StorableKey rawKey) {
+        return _mapper.convertValue(rawKey.asBytes(), String.class);
+    }
+
     /*
     /**********************************************************************
     /* Methods for file, directory handling
