@@ -508,17 +508,23 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         if (prefix == null) {
             return (OUT) badRequest(response, "Missing path parameter for 'listEntries'");
         }
-        ListType listType = ListType.find(request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE));
+        String typeStr = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE);
+        ListType listType = ListType.find(typeStr);
         if (listType == null) {
-            return (OUT) badRequest(response, "Missing or invalid query parameter '"
-                    +ClusterMateConstants.HTTP_QUERY_PARAM_TYPE+"'");
+            if (typeStr == null || typeStr.isEmpty()) {
+                return (OUT) badRequest(response, "Missing query parameter '"
+                        +ClusterMateConstants.HTTP_QUERY_PARAM_TYPE+"'");
+            }
+            return (OUT) badRequest(response, "Invalid query parameter '"
+                    +ClusterMateConstants.HTTP_QUERY_PARAM_TYPE+"', value '"+typeStr+"'");
         }
 
         /* First a sanity check: prefix should map to our active or passive range.
          * If not, we should not have any data to list; so let's (for now?) fail request:
          */
         int rawHash = _keyConverter.routingHashFor(prefix);
-        if (!_cluster.getLocalState().inAnyRange(rawHash)) {
+        // note: _cluster is null for testing, not for regular operation
+        if ((_cluster != null) && !_cluster.getLocalState().inAnyRange(rawHash)) {
             return (OUT) badRequest(response, "Invalid prefix: not in key range (%s) of node",
                     _cluster.getLocalState().totalRange());
         }

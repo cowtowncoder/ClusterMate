@@ -30,17 +30,20 @@ public abstract class ListResponse<T> // not a CRUD request/response
     public abstract ListType type();
     
     public static final class IdListResponse extends ListResponse<StorableKey> {
-        @Override public ListType type() { return ListType.ids; }
+        public IdListResponse() { }
         public IdListResponse(List<StorableKey> ids) { super(ids); }
+        @Override public ListType type() { return ListType.ids; }
     }
 
     public static final class NameListResponse extends ListResponse<String> {
-        @Override public ListType type() { return ListType.names; }
+        public NameListResponse() { }
         public NameListResponse(List<String> names) { super(names); }
+        @Override public ListType type() { return ListType.names; }
     }
 
     public static final class ItemListResponse extends ListResponse<ListItem> {
-        @Override public ListType type() { return ListType.entries; }
+        public ItemListResponse() { }
         public ItemListResponse(List<ListItem> entries) { super(entries); }
+        @Override public ListType type() { return ListType.entries; }
     }
 }

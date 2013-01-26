@@ -26,7 +26,7 @@ public class SyncListTest extends JaxrsStoreTestBase
         initTestLogging();
     }
 
-    public void testSimpleSyncList() throws IOException
+    public void testSimpleSyncList() throws Exception
     {
         final long creationTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(creationTime);
@@ -72,6 +72,9 @@ public class SyncListTest extends JaxrsStoreTestBase
         assertNull(syncList.message);
         assertNotNull(syncList.entries);
         assertEquals(1, syncList.entries.size());
+
+        // clean up:
+        resource.getStores().stop();
     }
 
     /**
