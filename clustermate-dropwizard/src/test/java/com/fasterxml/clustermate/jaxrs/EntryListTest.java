@@ -3,10 +3,8 @@ package com.fasterxml.clustermate.jaxrs;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
@@ -42,10 +40,10 @@ public class EntryListTest extends JaxrsStoreTestBase
         // First, add couple of entries
         StorableStore entries = resource.getStores().getEntryStore();
 
-        _addEntry(resource, GROUP1, "foo");
-        _addEntry(resource, GROUP1, "bar");
-        _addEntry(resource, GROUP2, "more");
-        _addEntry(resource, GROUP2, "data");
+        TestKey key1 = _addEntry(resource, GROUP1, "foo");
+        TestKey key2 = _addEntry(resource, GROUP2, "more");
+        TestKey key3 = _addEntry(resource, GROUP1, "bar");
+        TestKey key4 = _addEntry(resource, GROUP2, "data");
         _addEntry(resource, null, "abcdef");
 
         assertEquals(5, entries.getEntryCount());
@@ -54,7 +52,7 @@ public class EntryListTest extends JaxrsStoreTestBase
         FakeHttpResponse response = new FakeHttpResponse();
         FakeHttpRequest request = new FakeHttpRequest()
             .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE, ListType.ids.toString());
-        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, "a"), null);
+        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP2, ""), null);
         
         if (response.getStatus() != 200) {
             fail("Failed to list (status "+response.getStatus()+"), entity: "+response.getEntity());
@@ -63,16 +61,34 @@ public class EntryListTest extends JaxrsStoreTestBase
         assertTrue(response.hasStreamingContent());
         byte[] stuff = this.collectOutput(response);
         ListResponse.IdListResponse resultList = MAPPER.readValue(stuff, ListResponse.IdListResponse.class);
-
         assertNotNull(resultList);
         assertNotNull(resultList.items);
         assertEquals(2, resultList.items.size());
 
+        // entries inserted in different order so
+        assertEquals(key4, contentKey(resultList.items.get(0)));
+        assertEquals(key2, contentKey(resultList.items.get(1)));
+
+        // also verify that max entry count is honored
+        response = new FakeHttpResponse();
+        request = new FakeHttpRequest()
+            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE, ListType.ids.toString())
+            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_MAX_ENTRIES, "1");
+        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, ""), null);
+        assertEquals(200, response.getStatus());
+        assertTrue(response.hasStreamingContent());
+        resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
+
+        assertNotNull(resultList);
+        assertNotNull(resultList.items);
+        assertEquals(1, resultList.items.size());
+        assertEquals(key3, contentKey(resultList.items.get(0)));
+        
         // clean up:
         resource.getStores().stop();
     }
 
-    private void _addEntry(StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource,
+    private TestKey _addEntry(StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource,
             String group, String path) throws IOException
     {
         final TestKey KEY = contentKey(CLIENT_ID, group, path);
@@ -84,5 +100,6 @@ public class EntryListTest extends JaxrsStoreTestBase
                 calcChecksum(SMALL_DATA), new ByteArrayInputStream(SMALL_DATA),
                 null, null, null);
         assertEquals(200, response.getStatus());
+        return KEY;
     }   
 }

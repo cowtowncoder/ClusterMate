@@ -542,7 +542,6 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
                         +"' value; not valid base64 encoded byte sequence");
             }
         }
-        
         // Otherwise can start listing
         boolean useSmile = _acceptSmileContentType(request);
         final StorableKey rawPrefix = prefix.asStorableKey();
@@ -625,12 +624,12 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
             ListLimits limits)
         throws StoreException
     {
+        
         final long maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
         final int maxEntries = limits.getMaxEntries();
         final ArrayList<StorableKey> result = new ArrayList<StorableKey>(100);
         
-        // we could check if all entries were iterated (with result code); for now we won't
-        /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(new StorableIterationCallback() {
+        StorableIterationCallback cb = new StorableIterationCallback() {
             public int counter; // to avoid checking systime too often
 
             @Override
@@ -654,8 +653,18 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
                 // should never get called
                 throw new IllegalStateException();
             }
-            
-        }, lastSeen);
+        };
+
+        /* Two cases; either starting without last seen -- in which case we should include
+         * the first entry -- or with last-seen, in which case it is to be skipped.
+         */
+        if (lastSeen == null) {
+            // we could check if all entries were iterated (with result code); for now we won't
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesByKey(cb, prefix);
+        } else {
+            // we could check if all entries were iterated (with result code); for now we won't
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(cb, lastSeen);
+        }
         return result;
     }
     

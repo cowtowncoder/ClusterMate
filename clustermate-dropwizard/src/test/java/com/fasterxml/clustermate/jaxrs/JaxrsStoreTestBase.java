@@ -12,6 +12,7 @@ import org.skife.config.TimeSpan;
 import com.fasterxml.storemate.backend.bdbje.BDBJEBuilder;
 import com.fasterxml.storemate.backend.bdbje.BDBJEConfig;
 import com.fasterxml.storemate.shared.IpAndPort;
+import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.shared.hash.ChecksumUtil;
 import com.fasterxml.storemate.store.Storable;
@@ -150,6 +151,10 @@ public abstract class JaxrsStoreTestBase extends TestCase
         return _keyConverter.construct(clientId, groupId, fullPath);
     }
 
+    protected TestKey contentKey(StorableKey raw) {
+        return _keyConverter.rawToEntryKey(raw);
+    }
+    
     protected StoredEntry<TestKey> rawToEntry(Storable raw) {
         if (raw == null) {
     		    return null;
