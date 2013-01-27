@@ -108,6 +108,18 @@ public class EntryListTest extends JaxrsStoreTestBase
         assertNotNull(resultList);
         assertNotNull(resultList.items);
         assertEquals(0, resultList.items.size());
+
+        // Finally: do sub-trees as well (should use better keys maybe...)
+        response = new FakeHttpResponse();
+        request = new FakeHttpRequest()
+            .addQueryParam(ClusterMateConstants.QUERY_PARAM_TYPE, ListItemType.ids.toString());
+        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, "fo"), null);
+        assertEquals(200, response.getStatus());
+        resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
+        assertNotNull(resultList);
+        assertNotNull(resultList.items);
+        assertEquals(1, resultList.items.size());
+        assertEquals(key1, contentKey(resultList.items.get(0)));
         
         // clean up:
         resource.getStores().stop();
