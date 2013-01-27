@@ -518,7 +518,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
             return (OUT) badRequest(response, "Invalid query parameter '"
                     +ClusterMateConstants.QUERY_PARAM_TYPE+"', value '"+typeStr+"'");
         }
-
+        
         /* First a sanity check: prefix should map to our active or passive range.
          * If not, we should not have any data to list; so let's (for now?) fail request:
          */

@@ -74,10 +74,4 @@ public class StoreListServlet<K extends EntryKey, E extends StoredEntry<K>>
         _storeHandler.listEntries(request, response, prefix, stats);
         _addStdHeaders(response);
     }
-
-    /*
-    /**********************************************************************
-    /* Helper methods
-    /**********************************************************************
-     */
 }

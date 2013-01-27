@@ -39,7 +39,9 @@ import com.fasterxml.clustermate.service.cluster.ClusterViewByServerImpl;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.service.servlet.NodeStatusServlet;
 import com.fasterxml.clustermate.service.servlet.ServiceDispatchServlet;
+import com.fasterxml.clustermate.service.servlet.ServletBase;
 import com.fasterxml.clustermate.service.servlet.StoreEntryServlet;
+import com.fasterxml.clustermate.service.servlet.StoreListServlet;
 import com.fasterxml.clustermate.service.servlet.SyncListServlet;
 import com.fasterxml.clustermate.service.servlet.SyncPullServlet;
 import com.fasterxml.clustermate.service.store.StoreHandler;
@@ -267,6 +269,11 @@ public abstract class DWBasedService<
             ClusterViewByServer cluster, SyncHandler<K,E> syncHandler) {
         return new SyncPullServlet<K,E>(stuff, cluster, syncHandler);
     }
+
+    protected StoreListServlet<K,E> constructStoreListServlet(SharedServiceStuff stuff,
+            ClusterViewByServer cluster, StoreHandler<K,E> storeHandler) {
+        return new StoreListServlet<K,E>(stuff, cluster, storeHandler);
+    }
     
     /*
     /**********************************************************************
@@ -284,17 +291,18 @@ public abstract class DWBasedService<
             StoreHandler<K,E> storeHandler)
     {
         final ClusterViewByServer cluster = syncHandler.getCluster();
-        NodeStatusServlet nodeStatusServlet = constructNodeStatusServlet(stuff, nodeHandler);
-        SyncListServlet<K,E> syncListServlet = constructSyncListServlet(
+        ServletBase nodeStatusServlet = constructNodeStatusServlet(stuff, nodeHandler);
+        ServletBase syncListServlet = constructSyncListServlet(
                 stuff, cluster, syncHandler);
-        SyncPullServlet<K,E> syncPullServlet = constructSyncPullServlet(
+        ServletBase syncPullServlet = constructSyncPullServlet(
                 stuff, cluster, syncHandler);
         StoreEntryServlet<K,E> storeEntryServlet = constructStoreEntryServlet(stuff,
                 cluster, storeHandler);
+        ServletBase storeListServlet = constructStoreListServlet(stuff,
+                cluster, storeHandler);
         
-        ServiceDispatchServlet<K,E> dispatcher = new ServiceDispatchServlet<K,E>(
-                cluster, stuff,
-                nodeStatusServlet, storeEntryServlet, null,
+        ServiceDispatchServlet<K,E> dispatcher = new ServiceDispatchServlet<K,E>(cluster, stuff,
+                nodeStatusServlet, storeEntryServlet, storeListServlet,
                 syncListServlet, syncPullServlet);
 
         RequestPathBuilder rootBuilder = rootPath(stuff.getServiceConfig());
@@ -305,7 +313,6 @@ public abstract class DWBasedService<
         // // And finally servlet for for entry access
         
         addStoreEntryServlet(stuff, environment, cluster, _storeHandler);
-
     }
 
     /*
@@ -343,6 +350,10 @@ public abstract class DWBasedService<
     }
     */
     
+    /**
+     * Overridable method used for hooking standard entry access endpoint into
+     * alternate location. Usually used for backwards compatibility purposes.
+     */
     protected void addStoreEntryServlet(SharedServiceStuff stuff,
             Environment environment,
             ClusterViewByServer cluster,

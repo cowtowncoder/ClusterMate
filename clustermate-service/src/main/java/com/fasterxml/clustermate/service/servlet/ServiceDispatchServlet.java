@@ -24,14 +24,14 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
     protected final RequestPathStrategy _pathStrategy;
 
     // Delegatees:
-    protected final NodeStatusServlet _nodeStatusServlet;
+    protected final ServletBase _nodeStatusServlet;
 
-    protected final StoreEntryServlet<K,E> _storeEntryServlet;
-    // TODO:
+    protected final ServletBase _storeEntryServlet;
+
     protected final ServletBase _storeListServlet;
 
-    protected final SyncListServlet<K,E> _syncListServlet;
-    protected final SyncPullServlet<K,E> _syncPullServlet;
+    protected final ServletBase _syncListServlet;
+    protected final ServletBase _syncPullServlet;
     
     /*
     /**********************************************************************
@@ -46,9 +46,9 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
      */
     public ServiceDispatchServlet(ClusterViewByServer clusterView,
             SharedServiceStuff stuff,
-            NodeStatusServlet nodeStatusServlet,
-            StoreEntryServlet<K,E> storeEntryServlet, ServletBase storeListServlet,
-            SyncListServlet<K,E> syncListServlet, SyncPullServlet<K,E> syncPullServlet)
+            ServletBase nodeStatusServlet,
+            ServletBase storeEntryServlet, ServletBase storeListServlet,
+            ServletBase syncListServlet, ServletBase syncPullServlet)
     {
         this(clusterView, null, stuff,
                 nodeStatusServlet,
@@ -58,9 +58,9 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
     
     public ServiceDispatchServlet(ClusterViewByServer clusterView, String servletPathBase,
             SharedServiceStuff stuff,
-            NodeStatusServlet nodeStatusServlet,
-            SyncListServlet<K,E> syncListServlet, SyncPullServlet<K,E> syncPullServlet,
-            StoreEntryServlet<K,E> storeEntryServlet, ServletBase storeListServlet)
+            ServletBase nodeStatusServlet,
+            ServletBase syncListServlet, ServletBase syncPullServlet,
+            ServletBase storeEntryServlet, ServletBase storeListServlet)
     {
         // null -> use servlet path base as-is
         super(clusterView, servletPathBase);
