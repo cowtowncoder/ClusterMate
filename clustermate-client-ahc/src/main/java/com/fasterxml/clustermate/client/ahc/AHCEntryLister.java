@@ -52,8 +52,8 @@ public class AHCEntryLister<K extends EntryKey>
         path = _keyConverter.appendToPath(path, prefix);
         BoundRequestBuilder reqBuilder = path
                 .listRequest(_httpClient)
-                .addQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_MAX_ENTRIES, String.valueOf(maxResults))
-                .addQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE, type.toString())
+                .addQueryParameter(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES, String.valueOf(maxResults))
+                .addQueryParameter(ClusterMateConstants.QUERY_PARAM_TYPE, type.toString())
                 ;
 
         InputStream in = null;

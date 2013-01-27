@@ -481,7 +481,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         /* Since key range information will be included anyway, all we need here
          * is just the endpoint name ("caller").
          */
-        requestBuilder = requestBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CALLER,
+        requestBuilder = requestBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_CALLER,
                 _localState.getAddress().toString());
         return requestBuilder;
     }

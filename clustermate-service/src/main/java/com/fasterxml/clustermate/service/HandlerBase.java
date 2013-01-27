@@ -45,7 +45,7 @@ public abstract class HandlerBase
     
     protected IpAndPort getCallerQueryParam(ServiceRequest request)
     {
-        String str = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CALLER);
+        String str = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_CALLER);
         if (str == null || (str = str.trim()).length() == 0) {
             return null;
         }
@@ -53,7 +53,7 @@ public abstract class HandlerBase
             return new IpAndPort(str);
         } catch (Exception e) {
             LOG.warn("Invalid value for {}: '{}', problem: {}",
-                    ClusterMateConstants.HTTP_QUERY_PARAM_CALLER,
+                    ClusterMateConstants.QUERY_PARAM_CALLER,
                     str, e.getMessage());
             return null;
         }

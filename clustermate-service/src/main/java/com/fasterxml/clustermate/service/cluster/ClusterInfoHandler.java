@@ -57,12 +57,12 @@ public class ClusterInfoHandler
         IpAndPort caller = getCallerQueryParam(request);
         if (caller == null) {
             return badRequest(response,
-                    "Missing or invalid '"+ClusterMateConstants.HTTP_QUERY_PARAM_CALLER+"' value");
+                    "Missing or invalid '"+ClusterMateConstants.QUERY_PARAM_CALLER+"' value");
         }
         // as well as known state...
-        String stateStr = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_STATE);
+        String stateStr = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_STATE);
         // including timestamp by sender
-        String timestampStr = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_TIMESTAMP);
+        String timestampStr = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_TIMESTAMP);
         long timestamp = 0L;
         
         if (timestampStr != null) {
@@ -71,7 +71,7 @@ public class ClusterInfoHandler
             } catch (IllegalArgumentException e) { }
         }
         if (timestamp <= 0L) {
-            return (RESP) badRequest(response, "Invalid '"+ClusterMateConstants.HTTP_QUERY_PARAM_TIMESTAMP
+            return (RESP) badRequest(response, "Invalid '"+ClusterMateConstants.QUERY_PARAM_TIMESTAMP
                     +"': '{}'", timestampStr);
         }
         
@@ -79,9 +79,9 @@ public class ClusterInfoHandler
             KeyRange range = null;
 
             // For activation, would prefer having key range too:
-            Integer keyRangeStart = _findIntParam(request, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START);
+            Integer keyRangeStart = _findIntParam(request, ClusterMateConstants.QUERY_PARAM_KEYRANGE_START);
             if (keyRangeStart != null) {
-                Integer keyRangeLength = _findIntParam(request, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH);
+                Integer keyRangeLength = _findIntParam(request, ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH);
                 if (keyRangeLength != null) {
                     try {
                         range = _cluster.getKeySpace().range(keyRangeStart, keyRangeLength);
@@ -99,7 +99,7 @@ public class ClusterInfoHandler
             _cluster.nodeDeactivated(caller, timestamp);
         } else {
             return badRequest(response,
-                    "Unrecognized '"+ClusterMateConstants.HTTP_QUERY_PARAM_STATE+"' value '"+stateStr+"'");
+                    "Unrecognized '"+ClusterMateConstants.QUERY_PARAM_STATE+"' value '"+stateStr+"'");
         }
         return (RESP) response.ok();
     }

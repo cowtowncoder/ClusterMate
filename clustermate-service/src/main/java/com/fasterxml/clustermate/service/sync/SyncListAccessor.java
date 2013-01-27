@@ -354,13 +354,13 @@ public class SyncListAccessor implements StartAndStoppable
         RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote.getAddress())
             .addPathSegments(config.servicePathRoot);
         pathBuilder = _stuff.getPathStrategy().appendSyncListPath(pathBuilder);
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_SINCE,
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_SINCE,
                 String.valueOf(syncedUpTo));
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
         // this will include 'caller' param:
         pathBuilder = cluster.addClusterStateInfo(pathBuilder);
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CLUSTER_HASH,
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_CLUSTER_HASH,
                 String.valueOf(lastClusterHash));
         return pathBuilder.toString();
     }
@@ -372,11 +372,11 @@ public class SyncListAccessor implements StartAndStoppable
         RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote)
             .addPathSegments(_stuff.getServiceConfig().servicePathRoot);
         pathBuilder = _stuff.getPathStrategy().appendNodeStatusPath(pathBuilder);
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_TIMESTAMP,
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_TIMESTAMP,
                 String.valueOf(_stuff.getTimeMaster().currentTimeMillis()));
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.HTTP_QUERY_PARAM_STATE, state);
+        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_STATE, state);
         // this will include 'caller' param:
         pathBuilder = cluster.addClusterStateInfo(pathBuilder);
         return pathBuilder.toString();

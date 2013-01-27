@@ -78,59 +78,59 @@ public interface ClusterMateConstants
     /**********************************************************************
      */
 
-    public final static String HTTP_QUERY_PARAM_CHECKSUM = "checksum";
+    public final static String QUERY_PARAM_CHECKSUM = "checksum";
 
-    public final static String HTTP_QUERY_PARAM_MIN_SINCE_ACCESS_TTL = "minSinceAccessTTL";
-    public final static String HTTP_QUERY_PARAM_MAX_TTL = "maxTTL";
+    public final static String QUERY_PARAM_MIN_SINCE_ACCESS_TTL = "minSinceAccessTTL";
+    public final static String QUERY_PARAM_MAX_TTL = "maxTTL";
     
     /**
      * Query parameter used for defining timestamp after which (inclusive) entries are
      * to be returned, as determine by their insertion time.
      */
-    public final static String HTTP_QUERY_PARAM_SINCE = "since";
+    public final static String QUERY_PARAM_SINCE = "since";
     
-    public final static String HTTP_QUERY_PARAM_KEYRANGE_START = "keyRangeStart";
+    public final static String QUERY_PARAM_KEYRANGE_START = "keyRangeStart";
 
-    public final static String HTTP_QUERY_PARAM_KEYRANGE_LENGTH = "keyRangeLength";
+    public final static String QUERY_PARAM_KEYRANGE_LENGTH = "keyRangeLength";
 
     /**
      * Query parameter used to pass information about calling node.
      */
-    public final static String HTTP_QUERY_PARAM_CALLER = "caller";
+    public final static String QUERY_PARAM_CALLER = "caller";
 
     /**
      * Query parameter that indicates state of the caller
      */
-    public final static String HTTP_QUERY_PARAM_STATE = "state";
+    public final static String QUERY_PARAM_STATE = "state";
     
     /**
      * Query parameter used to contain hash code for last received cluster
      * view.
      */
-    public final static String HTTP_QUERY_PARAM_CLUSTER_HASH = "clusterHash";
+    public final static String QUERY_PARAM_CLUSTER_HASH = "clusterHash";
 
     /**
      * Query parameter that contains timestamp defined by sender and indicates
      * timestamp relevant to the message (such as status update).
      */
-    public final static String HTTP_QUERY_PARAM_TIMESTAMP = "timestamp";
+    public final static String QUERY_PARAM_TIMESTAMP = "timestamp";
 
     /**
      * Query parameter that defines type of items/entries to list.
      */
-    public final static String HTTP_QUERY_PARAM_TYPE = "type";
+    public final static String QUERY_PARAM_TYPE = "type";
 
     /**
      * Query parameter that defines maximum number of entries caller wishes
      * to list.
      */
-    public final static String HTTP_QUERY_PARAM_MAX_ENTRIES = "maxEntries";
+    public final static String QUERY_PARAM_MAX_ENTRIES = "maxEntries";
 
     /**
      * Query parameter that defines what was the last traversed item, if any,
      * when listing entries.
      */
-    public final static String HTTP_QUERY_PARAM_LAST_SEEN = "lastSeen";
+    public final static String QUERY_PARAM_LAST_SEEN = "lastSeen";
     
     /*
     /**********************************************************************

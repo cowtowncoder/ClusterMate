@@ -35,16 +35,16 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
-        String str = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_SINCE);
+        String str = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_SINCE);
         if (str == null) {
-            response = _syncHandler.missingArgument(response, ClusterMateConstants.HTTP_QUERY_PARAM_SINCE);
+            response = _syncHandler.missingArgument(response, ClusterMateConstants.QUERY_PARAM_SINCE);
         } else {
             long since = -1;
             try {
                 since = Long.parseLong(str);
             } catch (NumberFormatException e) { }
             if (since < 0L) {
-                response = _syncHandler.invalidArgument(response, ClusterMateConstants.HTTP_QUERY_PARAM_SINCE, str);
+                response = _syncHandler.invalidArgument(response, ClusterMateConstants.QUERY_PARAM_SINCE, str);
             } else {
                 response = _syncHandler.listEntries(request, response, since, stats);
                 _addStdHeaders(response);

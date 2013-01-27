@@ -94,7 +94,7 @@ public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
 
     protected BoundRequestBuilder addCheckSum(BoundRequestBuilder reqBuilder, int checksum)
     {
-        reqBuilder = reqBuilder.addQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CHECKSUM,
+        reqBuilder = reqBuilder.addQueryParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM,
                 (checksum == 0) ? "0" : String.valueOf(checksum));
         return reqBuilder;
     }

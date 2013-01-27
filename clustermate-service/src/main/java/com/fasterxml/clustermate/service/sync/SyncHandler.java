@@ -173,15 +173,15 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         if (sinceL == null) {
             return (OUT) badRequest(response, "Missing path parameter for 'list-since'");
         }
-        Integer keyRangeStart = _findIntParam(request, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START);
+        Integer keyRangeStart = _findIntParam(request, ClusterMateConstants.QUERY_PARAM_KEYRANGE_START);
         if (keyRangeStart == null) {
-            return (OUT) missingArgument(response, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_START);
+            return (OUT) missingArgument(response, ClusterMateConstants.QUERY_PARAM_KEYRANGE_START);
         }
-        Integer keyRangeLength = _findIntParam(request, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH);
+        Integer keyRangeLength = _findIntParam(request, ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH);
         if (keyRangeLength == null) {
-            return (OUT) missingArgument(response, ClusterMateConstants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH);
+            return (OUT) missingArgument(response, ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH);
         }
-        long clusterHash = _findLongParam(request, ClusterMateConstants.HTTP_QUERY_PARAM_CLUSTER_HASH);
+        long clusterHash = _findLongParam(request, ClusterMateConstants.QUERY_PARAM_CLUSTER_HASH);
         KeyRange range;
         try {
             range = _cluster.getKeySpace().range(keyRangeStart, keyRangeLength);

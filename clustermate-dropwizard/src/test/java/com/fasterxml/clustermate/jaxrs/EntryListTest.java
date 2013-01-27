@@ -51,7 +51,7 @@ public class EntryListTest extends JaxrsStoreTestBase
         // and then see what we can see, for group 1; should see 2 entries first
         FakeHttpResponse response = new FakeHttpResponse();
         FakeHttpRequest request = new FakeHttpRequest()
-            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE, ListItemType.ids.toString());
+            .addQueryParam(ClusterMateConstants.QUERY_PARAM_TYPE, ListItemType.ids.toString());
         resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP2, ""), null);
         
         if (response.getStatus() != 200) {
@@ -72,8 +72,8 @@ public class EntryListTest extends JaxrsStoreTestBase
         // also verify that max entry count is honored
         response = new FakeHttpResponse();
         request = new FakeHttpRequest()
-            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE, ListItemType.ids.toString())
-            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_MAX_ENTRIES, "1");
+            .addQueryParam(ClusterMateConstants.QUERY_PARAM_TYPE, ListItemType.ids.toString())
+            .addQueryParam(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES, "1");
         resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, ""), null);
         assertEquals(200, response.getStatus());
         resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
@@ -86,8 +86,8 @@ public class EntryListTest extends JaxrsStoreTestBase
         // plus that we can pass "lastSeen" to skip earlier entries
         response = new FakeHttpResponse();
         request = new FakeHttpRequest()
-            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE, ListItemType.ids.toString())
-            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_LAST_SEEN, toBase64(key3));
+            .addQueryParam(ClusterMateConstants.QUERY_PARAM_TYPE, ListItemType.ids.toString())
+            .addQueryParam(ClusterMateConstants.QUERY_PARAM_LAST_SEEN, toBase64(key3));
         resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, ""), null);
         assertEquals(200, response.getStatus());
         resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
@@ -99,8 +99,8 @@ public class EntryListTest extends JaxrsStoreTestBase
         // and, continuing with this
         response = new FakeHttpResponse();
         request = new FakeHttpRequest()
-            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE, ListItemType.ids.toString())
-            .addQueryParam(ClusterMateConstants.HTTP_QUERY_PARAM_LAST_SEEN, toBase64(key1));
+            .addQueryParam(ClusterMateConstants.QUERY_PARAM_TYPE, ListItemType.ids.toString())
+            .addQueryParam(ClusterMateConstants.QUERY_PARAM_LAST_SEEN, toBase64(key1));
         resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, ""), null);
         assertEquals(200, response.getStatus());
         resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);

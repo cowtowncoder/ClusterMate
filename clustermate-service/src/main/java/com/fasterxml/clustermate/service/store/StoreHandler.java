@@ -337,12 +337,12 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     public ServiceResponse putEntry(ServiceRequest request, ServiceResponse response,
             K key, InputStream dataIn, OperationDiagnostics metadata)
     {
-        final int checksum = _decodeInt(request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_CHECKSUM), 0);
+        final int checksum = _decodeInt(request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM), 0);
         String paramKey = null, paramValue = null;
-        paramKey = ClusterMateConstants.HTTP_QUERY_PARAM_MIN_SINCE_ACCESS_TTL;
+        paramKey = ClusterMateConstants.QUERY_PARAM_MIN_SINCE_ACCESS_TTL;
         paramValue = request.getQueryParameter(paramKey);
         TimeSpan minTTL = _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
-        paramKey = ClusterMateConstants.HTTP_QUERY_PARAM_MAX_TTL;
+        paramKey = ClusterMateConstants.QUERY_PARAM_MAX_TTL;
         paramValue = request.getQueryParameter(paramKey);
         TimeSpan maxTTL = _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
 
@@ -508,15 +508,15 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         if (prefix == null) {
             return (OUT) badRequest(response, "Missing path parameter for 'listEntries'");
         }
-        String typeStr = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE);
+        String typeStr = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_TYPE);
         ListItemType listType = ListItemType.find(typeStr);
         if (listType == null) {
             if (typeStr == null || typeStr.isEmpty()) {
                 return (OUT) badRequest(response, "Missing query parameter '"
-                        +ClusterMateConstants.HTTP_QUERY_PARAM_TYPE+"'");
+                        +ClusterMateConstants.QUERY_PARAM_TYPE+"'");
             }
             return (OUT) badRequest(response, "Invalid query parameter '"
-                    +ClusterMateConstants.HTTP_QUERY_PARAM_TYPE+"', value '"+typeStr+"'");
+                    +ClusterMateConstants.QUERY_PARAM_TYPE+"', value '"+typeStr+"'");
         }
 
         /* First a sanity check: prefix should map to our active or passive range.
@@ -531,14 +531,14 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
 
         // Then extract 'lastSeen', if it's passed:
         StorableKey lastSeen = null;
-        String b64str = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_LAST_SEEN);
+        String b64str = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_LAST_SEEN);
         if (b64str != null && b64str.length() > 0) {
             try {
                 // Jackson can do base64 decoding, and this is the easiest way
                 byte[] lastSeenRaw = _objectMapper.convertValue(b64str, byte[].class);
                 lastSeen = new StorableKey(lastSeenRaw);
             } catch (Exception e) {
-                return (OUT) badRequest(response, "Invalid '"+ClusterMateConstants.HTTP_QUERY_PARAM_LAST_SEEN
+                return (OUT) badRequest(response, "Invalid '"+ClusterMateConstants.QUERY_PARAM_LAST_SEEN
                         +"' value; not valid base64 encoded byte sequence");
             }
         }
@@ -547,7 +547,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         final StorableKey rawPrefix = prefix.asStorableKey();
         ListLimits limits = DEFAULT_LIST_LIMITS;
 
-        String maxStr = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_MAX_ENTRIES);
+        String maxStr = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES);
         if (maxStr != null) {
             limits = limits.withMaxEntries(_decodeInt(maxStr, limits.getMaxEntries()));
         }
