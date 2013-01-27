@@ -513,24 +513,24 @@ public abstract class StoreClient<K extends EntryKey,
                 if (fail.isRetriable()) {
                     retries = _add(retries, new NodeFailure(server, fail));
                 } else {
-                    result.addFailed(new NodeFailure(server, fail));
+                    result.withFailed(new NodeFailure(server, fail));
                 }
                 continue;
             }
             result.addSucceeded(server);
             // Very first round: go up to max if it's smooth sailing!
             if (result.succeededMaximally()) {
-                return result.addFailed(retries);
+                return result.withFailed(retries);
             }
         }
         if (noRetries) { // if we can't retry, don't:
-            return result.addFailed(retries);
+            return result.withFailed(retries);
         }
 
         // If we got this far, let's accept sub-optimal outcomes as well; or, if we timed out
         final long secondRoundStart = System.currentTimeMillis();
         if (result.succeededMinimally() || secondRoundStart >= lastValidTime) {
-            return result.addFailed(retries);
+            return result.withFailed(retries);
         }
         // Do we need any delay in between?
         _doDelay(startTime, secondRoundStart, endOfTime);
@@ -547,14 +547,14 @@ public abstract class StoreClient<K extends EntryKey,
                 if (fail != null) {
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) { // not worth retrying?
-                        result.addFailed(retry);
+                        result.withFailed(retry);
                         it.remove();
                     }
                 } else {
                     it.remove(); // remove now from retry list
                     result.addSucceeded(server);
                     if (result.succeededOptimally()) {
-                        return result.addFailed(retries);
+                        return result.withFailed(retries);
                     }
                 }
             }
@@ -562,7 +562,7 @@ public abstract class StoreClient<K extends EntryKey,
         // if no success, add disabled nodes in the mix; but only if we don't have minimal success:
         for (int i = 0; i < nodeCount; ++i) {
             if (result.succeededMinimally() || System.currentTimeMillis() >= lastValidTime) {
-                return result.addFailed(retries);
+                return result.withFailed(retries);
             }
             ClusterServerNode server = nodes.node(i);
             if (server.isDisabled()) {
@@ -571,7 +571,7 @@ public abstract class StoreClient<K extends EntryKey,
                     if (fail.isRetriable()) {
                         retries.add(new NodeFailure(server, fail));
                     } else {
-                        result.addFailed(new NodeFailure(server, fail));
+                        result.withFailed(new NodeFailure(server, fail));
                     }
                 } else {
                     result.addSucceeded(server);
@@ -588,7 +588,7 @@ public abstract class StoreClient<K extends EntryKey,
             Iterator<NodeFailure> it = retries.iterator();
             while (it.hasNext()) {
                 if (result.succeededMinimally() || System.currentTimeMillis() >= lastValidTime) {
-                    return result.addFailed(retries);
+                    return result.withFailed(retries);
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
@@ -596,7 +596,7 @@ public abstract class StoreClient<K extends EntryKey,
                 if (fail != null) {
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) {
-                        result.addFailed(retry);
+                        result.withFailed(retry);
                         it.remove();
                     }
                 } else {
@@ -606,7 +606,7 @@ public abstract class StoreClient<K extends EntryKey,
             prevStartTime = currStartTime;
         }
         // we are all done, failed:
-        return result.addFailed(retries);
+        return result.withFailed(retries);
     }
 
     /*
@@ -681,21 +681,21 @@ public abstract class StoreClient<K extends EntryKey,
                     if (fail.isRetriable()) {
                         retries = _add(retries, new NodeFailure(server, fail));
                     } else {
-                        result.addFailed(new NodeFailure(server, fail));
+                        result.withFailed(new NodeFailure(server, fail));
                     }
                     continue;
                 }
                 // did we get the thing?
                 T entry = gotten.getResult();
                 if (entry != null) {
-                    return result.addFailed(retries).setContents(server, entry);
+                    return result.withFailed(retries).setContents(server, entry);
                 }
                 // it not, it's 404, missing entry. Neither fail nor really success...
-                result = result.addMissing(server);
+                result = result.withMissing(server);
             }
         }
         if (noRetries) { // if we can't retry, don't:
-            return result.addFailed(retries);
+            return result.withFailed(retries);
         }
         
         final long secondRoundStart = System.currentTimeMillis();
@@ -715,16 +715,16 @@ public abstract class StoreClient<K extends EntryKey,
                 if (gotten.succeeded()) {
                     T entry = gotten.getResult(); // got it?
                     if (entry != null) {
-                        return result.addFailed(retries).setContents(server, entry);
+                        return result.withFailed(retries).setContents(server, entry);
                     }
                     // it not, it's 404, missing entry. Neither fail nor really success...
-                    result = result.addMissing(server);
+                    result = result.withMissing(server);
                     it.remove();
                 } else {
                     CallFailure fail = gotten.getFailure();
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) {
-                        result.addFailed(retry);
+                        result.withFailed(retry);
                         it.remove();
                     }
                 }
@@ -735,23 +735,23 @@ public abstract class StoreClient<K extends EntryKey,
             ClusterServerNode server = nodes.node(i);
             if (server.isDisabled()) {
                 if (System.currentTimeMillis() >= lastValidTime) {
-                    return result.addFailed(retries);
+                    return result.withFailed(retries);
                 }
                 GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(), endOfTime, key,
                 		processor, range);
                 if (gotten.succeeded()) {
                     T entry = gotten.getResult(); // got it?
                     if (entry != null) {
-                        return result.addFailed(retries).setContents(server, entry);
+                        return result.withFailed(retries).setContents(server, entry);
                     }
                     // it not, it's 404, missing entry. Neither fail nor really success...
-                    result = result.addMissing(server);
+                    result = result.withMissing(server);
                 } else {
                     CallFailure fail = gotten.getFailure();
                     if (fail.isRetriable()) {
                         retries.add(new NodeFailure(server, fail));
                     } else {
-                        result.addFailed(new NodeFailure(server, fail));
+                        result.withFailed(new NodeFailure(server, fail));
                     }
                 }
             }
@@ -764,7 +764,7 @@ public abstract class StoreClient<K extends EntryKey,
             Iterator<NodeFailure> it = retries.iterator();
             while (it.hasNext()) {
                 if (System.currentTimeMillis() >= lastValidTime) {
-                    return result.addFailed(retries);
+                    return result.withFailed(retries);
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
@@ -773,23 +773,23 @@ public abstract class StoreClient<K extends EntryKey,
                 if (gotten.succeeded()) {
                     T entry = gotten.getResult(); // got it?
                     if (entry != null) {
-                        return result.addFailed(retries).setContents(server, entry);
+                        return result.withFailed(retries).setContents(server, entry);
                     }
                     // it not, it's 404, missing entry. Neither fail nor really success...
-                    result = result.addMissing(server);
+                    result = result.withMissing(server);
                     it.remove();
                 } else {
                     CallFailure fail = gotten.getFailure();
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) {
-                        result.addFailed(retry);
+                        result.withFailed(retry);
                         it.remove();
                     }
                 }
             }
         }
         // we are all done and this'll be a failure...
-        return result.addFailed(retries);
+        return result.withFailed(retries);
     }
 
     /*
@@ -834,19 +834,19 @@ public abstract class StoreClient<K extends EntryKey,
                     if (fail.isRetriable()) {
                         retries = _add(retries, new NodeFailure(server, fail));
                     } else {
-                        result.addFailed(new NodeFailure(server, fail));
+                        result.withFailed(new NodeFailure(server, fail));
                     }
                     continue;
                 }
                 if (gotten.hasContentLength()) {
-                    return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
+                    return result.withFailed(retries).setContentLength(server, gotten.getContentLength());
                 }
                 // it not, it's 404, missing entry. Neither fail nor really success...
-                result = result.addMissing(server);
+                result = result.withMissing(server);
             }
         }
         if (noRetries) { // if no retries, bail out quickly
-            return result.addFailed(retries);
+            return result.withFailed(retries);
         }
         
         final long secondRoundStart = System.currentTimeMillis();
@@ -864,16 +864,16 @@ public abstract class StoreClient<K extends EntryKey,
                 HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(), endOfTime, key);
                 if (gotten.succeeded()) {
                     if (gotten.hasContentLength()) {
-                        return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
+                        return result.withFailed(retries).setContentLength(server, gotten.getContentLength());
                     }
                     // it not, it's 404, missing entry. Neither fail nor really success...
-                    result = result.addMissing(server);
+                    result = result.withMissing(server);
                     it.remove();
                 } else {
                     CallFailure fail = gotten.getFailure();
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) {
-                        result.addFailed(retry);
+                        result.withFailed(retry);
                         it.remove();
                     }
                 }
@@ -884,21 +884,21 @@ public abstract class StoreClient<K extends EntryKey,
             ClusterServerNode server = nodes.node(i);
             if (server.isDisabled()) {
                 if (System.currentTimeMillis() >= lastValidTime) {
-                    return result.addFailed(retries);
+                    return result.withFailed(retries);
                 }
                 HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(), endOfTime, key);
                 if (gotten.succeeded()) {
                     if (gotten.hasContentLength()) {
-                        return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
+                        return result.withFailed(retries).setContentLength(server, gotten.getContentLength());
                     }
                     // it not, it's 404, missing entry. Neither fail nor really success...
-                    result = result.addMissing(server);
+                    result = result.withMissing(server);
                 } else {
                     CallFailure fail = gotten.getFailure();
                     if (fail.isRetriable()) {
                         retries.add(new NodeFailure(server, fail));
                     } else {
-                        result.addFailed(new NodeFailure(server, fail));
+                        result.withFailed(new NodeFailure(server, fail));
                     }
                 }
             }
@@ -911,30 +911,30 @@ public abstract class StoreClient<K extends EntryKey,
             Iterator<NodeFailure> it = retries.iterator();
             while (it.hasNext()) {
                 if (System.currentTimeMillis() >= lastValidTime) {
-                    return result.addFailed(retries);
+                    return result.withFailed(retries);
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
                 HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(), endOfTime, key);
                 if (gotten.succeeded()) {
                     if (gotten.hasContentLength()) {
-                        return result.addFailed(retries).setContentLength(server, gotten.getContentLength());
+                        return result.withFailed(retries).setContentLength(server, gotten.getContentLength());
                     }
                     // it not, it's 404, missing entry. Neither fail nor really success...
-                    result = result.addMissing(server);
+                    result = result.withMissing(server);
                     it.remove();
                 } else {
                     CallFailure fail = gotten.getFailure();
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) {
-                        result.addFailed(retry);
+                        result.withFailed(retry);
                         it.remove();
                     }
                 }
             }
         }
         // we are all done and this'll be a failure...
-        return result.addFailed(retries);
+        return result.withFailed(retries);
     }
 
     /*
@@ -1019,18 +1019,18 @@ public abstract class StoreClient<K extends EntryKey,
                 if (fail.isRetriable()) {
                     retries = _add(retries, new NodeFailure(server, fail));
                 } else {
-                    result.addFailed(new NodeFailure(server, fail));
+                    result.withFailed(new NodeFailure(server, fail));
                 }
                 continue;
             }
             result.addSucceeded(server);
             // first round: go to the max, if possible
             if (result.succeededMaximally()) {
-                return result.addFailed(retries);
+                return result.withFailed(retries);
             }
         }
         if (noRetries) { // if no retries, bail out quickly
-            return result.addFailed(retries);
+            return result.withFailed(retries);
         }
         
         /* If we got this far, let's accept 'just optimal'; but keep on trying for
@@ -1039,7 +1039,7 @@ public abstract class StoreClient<K extends EntryKey,
          */
         final long secondRoundStart = System.currentTimeMillis();
         if (result.succeededOptimally() || secondRoundStart >= lastValidTime) {
-            return result.addFailed(retries);
+            return result.withFailed(retries);
         }
         // Do we need any delay in between?
         _doDelay(startTime, secondRoundStart, endOfTime);
@@ -1056,14 +1056,14 @@ public abstract class StoreClient<K extends EntryKey,
                 if (fail != null) {
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) { // not worth retrying?
-                        result.addFailed(retry);
+                        result.withFailed(retry);
                         it.remove();
                     }
                 } else {
                     it.remove(); // remove now from retry list
                     result.addSucceeded(server);
                     if (result.succeededOptimally()) {
-                        return result.addFailed(retries);
+                        return result.withFailed(retries);
                     }
                 }
             }
@@ -1072,7 +1072,7 @@ public abstract class StoreClient<K extends EntryKey,
         // if no success, add disabled nodes in the mix; but only if we don't have minimal success:
         for (int i = 0; i < nodeCount; ++i) {
             if (result.succeededMinimally() || System.currentTimeMillis() >= lastValidTime) {
-                return result.addFailed(retries);
+                return result.withFailed(retries);
             }
             ClusterServerNode server = nodes.node(i);
             if (server.isDisabled()) {
@@ -1081,7 +1081,7 @@ public abstract class StoreClient<K extends EntryKey,
                     if (fail.isRetriable()) {
                         retries.add(new NodeFailure(server, fail));
                     } else {
-                        result.addFailed(new NodeFailure(server, fail));
+                        result.withFailed(new NodeFailure(server, fail));
                     }
                 } else {
                     result.addSucceeded(server);
@@ -1097,7 +1097,7 @@ public abstract class StoreClient<K extends EntryKey,
             Iterator<NodeFailure> it = retries.iterator();
             while (it.hasNext()) {
                 if (result.succeededMinimally() || System.currentTimeMillis() >= lastValidTime) {
-                    return result.addFailed(retries);
+                    return result.withFailed(retries);
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = retry.getServer();
@@ -1105,7 +1105,7 @@ public abstract class StoreClient<K extends EntryKey,
                 if (fail != null) {
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) {
-                        result.addFailed(retry);
+                        result.withFailed(retry);
                         it.remove();
                     }
                 } else {
@@ -1115,7 +1115,7 @@ public abstract class StoreClient<K extends EntryKey,
             prevStartTime = currStartTime;
         }
         // we are all done, failed:
-        return result.addFailed(retries);
+        return result.withFailed(retries);
     }
     
     /*

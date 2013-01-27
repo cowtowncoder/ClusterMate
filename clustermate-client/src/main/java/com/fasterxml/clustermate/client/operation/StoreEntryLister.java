@@ -88,7 +88,7 @@ public class StoreEntryLister<K extends EntryKey,T>
                     if (fail.isRetriable()) {
                         retries = _add(retries, new NodeFailure(server, fail));
                     } else {
-                        result.addFailed(new NodeFailure(server, fail));
+                        result.withFailed(new NodeFailure(server, fail));
                     }
                     continue;
                 }
@@ -96,7 +96,7 @@ public class StoreEntryLister<K extends EntryKey,T>
             }
         }
         if (noRetries) { // if no retries, bail out quickly
-            return result.addFailed(retries);
+            return result.withFailed(retries);
         }
         
         final long secondRoundStart = System.currentTimeMillis();
@@ -114,12 +114,12 @@ public class StoreEntryLister<K extends EntryKey,T>
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
                         _prefix, _itemType, maxToList, _converter);
                 if (gotten.succeeded()) {
-                    return result.addFailed(retries).setItems(server, gotten);
+                    return result.withFailed(retries).setItems(server, gotten);
                 }
                 CallFailure fail = gotten.getFailure();
                 retry.addFailure(fail);
                 if (!fail.isRetriable()) {
-                    result.addFailed(retry);
+                    result.withFailed(retry);
                     it.remove();
                 }
             }
@@ -129,18 +129,18 @@ public class StoreEntryLister<K extends EntryKey,T>
             ClusterServerNode server = nodes.node(i);
             if (server.isDisabled()) {
                 if (System.currentTimeMillis() >= lastValidTime) {
-                    return result.addFailed(retries);
+                    return result.withFailed(retries);
                 }
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
                         _prefix, _itemType, maxToList, _converter);
                 if (gotten.succeeded()) {
-                    return result.addFailed(retries).setItems(server, gotten);
+                    return result.withFailed(retries).setItems(server, gotten);
                 }
                 CallFailure fail = gotten.getFailure();
                 if (fail.isRetriable()) {
                     retries.add(new NodeFailure(server, fail));
                 } else {
-                    result.addFailed(new NodeFailure(server, fail));
+                    result.withFailed(new NodeFailure(server, fail));
                 }
             }
         }
@@ -152,25 +152,25 @@ public class StoreEntryLister<K extends EntryKey,T>
             Iterator<NodeFailure> it = retries.iterator();
             while (it.hasNext()) {
                 if (System.currentTimeMillis() >= lastValidTime) {
-                    return result.addFailed(retries);
+                    return result.withFailed(retries);
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
                         _prefix, _itemType, maxToList, _converter);
                 if (gotten.succeeded()) {
-                    return result.addFailed(retries).setItems(server, gotten);
+                    return result.withFailed(retries).setItems(server, gotten);
                 }
                 CallFailure fail = gotten.getFailure();
                 retry.addFailure(fail);
                 if (!fail.isRetriable()) {
-                    result.addFailed(retry);
+                    result.withFailed(retry);
                     it.remove();
                 }
             }
         }
         // we are all done and this'll be a failure...
-        return result.addFailed(retries);
+        return result.withFailed(retries);
     }
 
     /*

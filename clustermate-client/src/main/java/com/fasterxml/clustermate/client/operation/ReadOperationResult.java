@@ -32,12 +32,13 @@ public class ReadOperationResult<T extends ReadOperationResult<T>>
 
     /**
      * Method called to indicate that the requested entry was missing from
-     * specified server. Some of information is included.
+     * specified server; will return either a new response object, or this
+     * response modified with additional information.
      * 
      * @param server Server that was missing requested entry
      */
     @SuppressWarnings("unchecked")
-    public T addMissing(ClusterServerNode server)
+    public T withMissing(ClusterServerNode server)
     {
         if (_serversWithoutEntry == null) {
             _serversWithoutEntry = new LinkedList<ClusterServerNode>();

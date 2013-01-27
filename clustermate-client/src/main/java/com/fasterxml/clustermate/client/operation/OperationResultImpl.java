@@ -47,12 +47,12 @@ public abstract class OperationResultImpl<T extends OperationResultImpl<T>>
         return (T) this;
     }
 
-    public T addFailed(NodeFailure fail) {
+    public T withFailed(NodeFailure fail) {
         _failed.add(fail);
         return _this();
     }
 
-    public T addFailed(Collection<NodeFailure> fails) {
+    public T withFailed(Collection<NodeFailure> fails) {
         if (fails != null) {
             for (NodeFailure fail : fails) {
                 _failed.add(fail);
@@ -61,7 +61,7 @@ public abstract class OperationResultImpl<T extends OperationResultImpl<T>>
         return _this();
     }
     
-    public T addIgnored(ClusterServerNode server) {
+    public T withIgnored(ClusterServerNode server) {
         _ignored.add(server);
         return _this();
     }
