@@ -509,7 +509,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
             return (OUT) badRequest(response, "Missing path parameter for 'listEntries'");
         }
         String typeStr = request.getQueryParameter(ClusterMateConstants.HTTP_QUERY_PARAM_TYPE);
-        ListType listType = ListType.find(typeStr);
+        ListItemType listType = ListItemType.find(typeStr);
         if (listType == null) {
             if (typeStr == null || typeStr.isEmpty()) {
                 return (OUT) badRequest(response, "Missing query parameter '"

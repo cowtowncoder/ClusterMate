@@ -2,7 +2,7 @@ package com.fasterxml.clustermate.api.msg;
 
 import java.util.List;
 
-import com.fasterxml.clustermate.api.ListType;
+import com.fasterxml.clustermate.api.ListItemType;
 import com.fasterxml.storemate.shared.StorableKey;
 
 /**
@@ -27,23 +27,23 @@ public abstract class ListResponse<T> // not a CRUD request/response
     public ListResponse(String msg) { message = msg; }
     public ListResponse(List<T> i) { items = i; }
 
-    public abstract ListType type();
+    public abstract ListItemType type();
     
     public static final class IdListResponse extends ListResponse<StorableKey> {
         public IdListResponse() { }
         public IdListResponse(List<StorableKey> ids) { super(ids); }
-        @Override public ListType type() { return ListType.ids; }
+        @Override public ListItemType type() { return ListItemType.ids; }
     }
 
     public static final class NameListResponse extends ListResponse<String> {
         public NameListResponse() { }
         public NameListResponse(List<String> names) { super(names); }
-        @Override public ListType type() { return ListType.names; }
+        @Override public ListItemType type() { return ListItemType.names; }
     }
 
     public static final class ItemListResponse extends ListResponse<ListItem> {
         public ItemListResponse() { }
         public ItemListResponse(List<ListItem> entries) { super(entries); }
-        @Override public ListType type() { return ListType.entries; }
+        @Override public ListItemType type() { return ListItemType.entries; }
     }
 }

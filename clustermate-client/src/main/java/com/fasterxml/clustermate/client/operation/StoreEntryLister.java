@@ -3,7 +3,7 @@ package com.fasterxml.clustermate.client.operation;
 import java.util.*;
 
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.ListType;
+import com.fasterxml.clustermate.api.ListItemType;
 import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.ListCallResult;
@@ -37,12 +37,12 @@ public class StoreEntryLister<K extends EntryKey,T>
     /**
      * Type of items of the result list.
      */
-    protected final ListType _itemType;
+    protected final ListItemType _itemType;
 
     protected final ContentConverter<ListResponse<T>> _converter;
     
     public StoreEntryLister(StoreClientConfig<K,?> config, ClusterViewByClient<K> cluster,
-            K prefix, ListType itemType, ContentConverter<ListResponse<T>> converter)
+            K prefix, ListItemType itemType, ContentConverter<ListResponse<T>> converter)
     {
         this._clientConfig = config;
         _cluster = cluster;

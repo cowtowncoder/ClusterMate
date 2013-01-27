@@ -53,7 +53,7 @@ public abstract class StoreClient<K extends EntryKey,
 
     protected EntryKeyConverter<K> _keyConverter;
     
-    protected final EnumMap<ListType, GenericContentConverter<?>> _listReaders;
+    protected final EnumMap<ListItemType, GenericContentConverter<?>> _listReaders;
 
     /*
     /**********************************************************************
@@ -94,11 +94,11 @@ public abstract class StoreClient<K extends EntryKey,
         _statusAccessor = statusAccessor;
         _clusterView = clusterView;
 
-        _listReaders = new EnumMap<ListType, GenericContentConverter<?>>(ListType.class);
+        _listReaders = new EnumMap<ListItemType, GenericContentConverter<?>>(ListItemType.class);
         ObjectMapper mapper = config.getJsonMapper();
-        _listReaders.put(ListType.ids, new GenericContentConverter<ListResponse.IdListResponse>(mapper, ListResponse.IdListResponse.class));
-        _listReaders.put(ListType.names, new GenericContentConverter<ListResponse.NameListResponse>(mapper, ListResponse.NameListResponse.class));
-        _listReaders.put(ListType.entries, new GenericContentConverter<ListResponse.ItemListResponse>(mapper, ListResponse.ItemListResponse.class));
+        _listReaders.put(ListItemType.ids, new GenericContentConverter<ListResponse.IdListResponse>(mapper, ListResponse.IdListResponse.class));
+        _listReaders.put(ListItemType.names, new GenericContentConverter<ListResponse.NameListResponse>(mapper, ListResponse.NameListResponse.class));
+        _listReaders.put(ListItemType.entries, new GenericContentConverter<ListResponse.ItemListResponse>(mapper, ListResponse.ItemListResponse.class));
     }
 
     /**
@@ -217,11 +217,30 @@ public abstract class StoreClient<K extends EntryKey,
      * Convenience method for PUTting specified static content;
      * may be used if content need not be streamed from other sources.
      */
+    public final PutOperationResult putContent(K key, byte[] data) throws InterruptedException
+    {
+        return putContent(_config, key, data);
+    }
+
+    /**
+     * Convenience method for PUTting specified static content,
+     * using specified configuration overrides.
+     */
     public PutOperationResult putContent(CONFIG config, K key, byte[] data)
         throws InterruptedException {
         return putContent(config, key, data, 0, data.length);
     }
 
+    /**
+     * Convenience method for PUTting specified static content;
+     * may be used if content need not be streamed from other sources.
+     */
+    public final PutOperationResult putContent(K key, byte[] data, int dataOffset, int dataLength)
+            throws InterruptedException
+    {
+        return putContent(_config, key, data, dataOffset, dataLength);
+    }
+    
     /**
      * Convenience method for PUTting specified static content;
      * may be used if content need not be streamed from other sources.
@@ -236,13 +255,31 @@ public abstract class StoreClient<K extends EntryKey,
     /**
      * Convenience method for PUTting contents of specified File.
      */
-    public PutOperationResult putContent(CONFIG config, K key,
-            File file)
+    public final PutOperationResult putContent(K key, File file) throws InterruptedException {
+        return putContent(_config, key, file);
+    }
+
+    /**
+     * Convenience method for PUTting contents of specified File.
+     */
+    public PutOperationResult putContent(CONFIG config, K key, File file)
         throws InterruptedException
     {
-        long fileLength = file.length();
-        return putContent(config, key,
-                PutContentProviders.forFile(file, fileLength));
+        return putContent(config, key, PutContentProviders.forFile(file, file.length()));
+    }
+    
+    /**
+     * Convenience method for GETting specific content and aggregating it as a
+     * byte array.
+     * Note that failure to perform GET operation will be signaled with
+     * {@link IllegalStateException}, whereas missing content is indicated by
+     * null return value.
+     * 
+     * @return Array of bytes returned, if content exists; null if no such content
+     *    exists (never PUT, or has been DELETEd)
+     */
+    public byte[] getContentAsBytes(K key) throws InterruptedException {
+        return getContentAsBytes(_config, key);
     }
     
     /**
@@ -266,6 +303,19 @@ public abstract class StoreClient<K extends EntryKey,
         // otherwise, we either got content, or got 404 or deletion
         ByteAggregator aggr = result.getContents();
         return (aggr == null) ? null : aggr.toByteArray();
+    }
+
+    /**
+     * Convenience method for GETting specific content and storing it in specified file.
+     * Note that failure to perform GET operation will be signaled with
+     * {@link IllegalStateException}, whereas missing content is indicated by
+     * 'false' return value
+     * 
+     * @return Original result file, if content exists; null if content was not found but
+     *   operation succeeded (throw exception if access operation itself fails)
+     */
+    public final File getContentAsFile(K key, File resultFile) throws InterruptedException {
+        return getContentAsFile(_config, key, resultFile);
     }
 
     /**
@@ -306,10 +356,14 @@ public abstract class StoreClient<K extends EntryKey,
      * @return Array of bytes returned, if content exists; null if no such content
      *    exists (never PUT, or has been DELETEd)
      */
+    public final byte[] getPartialContentAsBytes(K key, ByteRange range) throws InterruptedException {
+        return getPartialContentAsBytes(key, range);
+    }
+    
     public byte[] getPartialContentAsBytes(CONFIG config, K key,
-    		ByteRange range)
-        throws InterruptedException
-    {
+            ByteRange range)
+          throws InterruptedException
+  {
         GetContentProcessorForBytes processor = new GetContentProcessorForBytes();
         GetOperationResult<ByteAggregator> result = getContent(config, key, processor, range);
         if (result.failed()) { // failed to contact any server
@@ -337,10 +391,15 @@ public abstract class StoreClient<K extends EntryKey,
      * @return Original result file, if content exists; null if content was not found but
      *   operation succeeded (throw exception if access operation itself fails)
      */
+    public final File getPartialContentAsFile(K key, File resultFile,
+    		ByteRange range) throws InterruptedException {
+        return getPartialContentAsFile(key, resultFile, range);
+    }
+    
     public File getPartialContentAsFile(CONFIG config, K key, File resultFile,
-    		ByteRange range)
-        throws InterruptedException
-    {
+            ByteRange range)
+          throws InterruptedException
+      {
         GetContentProcessorForFiles processor = new GetContentProcessorForFiles(resultFile);
         GetOperationResult<File> result = getContent(config, key, processor, range);
         if (result.failed()) { // failed to contact any server
@@ -357,6 +416,10 @@ public abstract class StoreClient<K extends EntryKey,
      * @return Length of entry in bytes, if entry exists: -1 if no such entry
      *    exists
      */
+    public final long getContentLength(K key) throws InterruptedException {
+        return getContentLength(_config, key);
+    }
+    
     public long getContentLength(CONFIG config, K key)
             throws InterruptedException
     {
@@ -410,6 +473,11 @@ public abstract class StoreClient<K extends EntryKey,
      *   Caller is expected to check details from this object to determine
      *   whether operation was successful or not.
      */
+    public final PutOperationResult putContent(K key, PutContentProvider content)
+        throws InterruptedException {
+        return putContent(_config, key, content);
+    }
+    
     public PutOperationResult putContent(CONFIG config, K key,
             PutContentProvider content)
         throws InterruptedException
@@ -559,13 +627,26 @@ public abstract class StoreClient<K extends EntryKey,
      *   Caller is expected to check details from this object to determine
      *   whether operation was successful or not.
      */
-    public <T> GetOperationResult<T> getContent(CONFIG config, K key,
+    public final <T> GetOperationResult<T> getContent(K key, GetContentProcessor<T> processor)
+        throws InterruptedException
+    {
+        return getContent(_config, key, processor, null);
+    }
+    
+    public final <T> GetOperationResult<T> getContent(CONFIG config, K key,
             GetContentProcessor<T> processor)
         throws InterruptedException
     {
-    	return getContent(config, key, processor, null);
+        return getContent(config, key, processor, null);
     }
 
+    public final <T> GetOperationResult<T> getContent(K key,
+            GetContentProcessor<T> processor, ByteRange range)
+        throws InterruptedException
+    {
+        return getContent(_config, key, processor, range);
+    }
+    
     public <T> GetOperationResult<T> getContent(CONFIG config, K key,
             GetContentProcessor<T> processor, ByteRange range)
         throws InterruptedException
@@ -717,6 +798,10 @@ public abstract class StoreClient<K extends EntryKey,
     /**********************************************************************
      */
 
+    public final HeadOperationResult headContent(K key) throws InterruptedException {
+        return headContent(_config, key);
+    }
+    
     public HeadOperationResult headContent(CONFIG config, K key)
         throws InterruptedException
     {
@@ -863,7 +948,12 @@ public abstract class StoreClient<K extends EntryKey,
      * Result object is basically an iterator, and no actual access occurs
      * before methods are called on iterator.
      */
-    public <T> StoreEntryLister<K,T> listContent(CONFIG config, K prefix, ListType itemType)
+    public final <T> StoreEntryLister<K,T> listContent(K prefix, ListItemType itemType) throws InterruptedException {
+        return listContent(_config, prefix, itemType);
+    }
+    
+    public <T> StoreEntryLister<K,T> listContent(CONFIG config, K prefix, ListItemType itemType)
+            throws InterruptedException
     {
         if (itemType == null) {
             throw new IllegalArgumentException("Can't pass null itemType");
@@ -890,9 +980,15 @@ public abstract class StoreClient<K extends EntryKey,
      *   Caller is expected to check details from this object to determine
      *   whether operation was successful or not.
      */
-    public DeleteOperationResult deleteContent(CONFIG config, K key)
+    public final DeleteOperationResult deleteContent(K key)
         throws InterruptedException
     {
+        return deleteContent(_config, key);
+    }
+    
+    public DeleteOperationResult deleteContent(CONFIG config, K key)
+            throws InterruptedException
+        {
         final long startTime = System.currentTimeMillis();
 
         // First things first: find Server nodes to talk to:

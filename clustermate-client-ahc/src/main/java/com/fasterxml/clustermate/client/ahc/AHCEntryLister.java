@@ -10,7 +10,7 @@ import com.fasterxml.storemate.shared.util.IOUtil;
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.ListType;
+import com.fasterxml.clustermate.api.ListItemType;
 import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
@@ -38,7 +38,7 @@ public class AHCEntryLister<K extends EntryKey>
 
     @Override
     public <T> ListCallResult<T> tryList(CallConfig config, long endOfTime,
-            K prefix, ListType type, int maxResults,
+            K prefix, ListItemType type, int maxResults,
             ContentConverter<ListResponse<T>> converter)
     {
         // first: if we can't spend at least 10 msecs, let's give up:

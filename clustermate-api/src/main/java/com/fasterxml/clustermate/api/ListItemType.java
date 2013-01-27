@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * Enumeration of types of list items available for listing entries.
  */
-public enum ListType
+public enum ListItemType
 {
     /**
      * Entries are ids in their binary form encoded as Base64 in JSON (and raw bytes in Smile)
@@ -24,14 +24,14 @@ public enum ListType
      */
     entries;
 
-    private final static HashMap<String,ListType> _entries = new HashMap<String,ListType>();
+    private final static HashMap<String,ListItemType> _entries = new HashMap<String,ListItemType>();
     static {
-        for (ListType t : ListType.values()) {
+        for (ListItemType t : ListItemType.values()) {
             _entries.put(t.name(), t);
         }
     }
 
-    public static ListType find(String str)
+    public static ListItemType find(String str)
     {
         return _entries.get(str);
     }
