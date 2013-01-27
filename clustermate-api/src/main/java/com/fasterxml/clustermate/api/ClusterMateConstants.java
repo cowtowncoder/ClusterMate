@@ -146,6 +146,33 @@ public interface ClusterMateConstants
 
     /*
     /**********************************************************************
+    /* Custom 'virtual' HTTP response codes; used to indicate client-side
+    /* failures that do not have real server-provided failing status code
+    /**********************************************************************
+     */
+    
+    /**
+     * Constant used as a placeholder for internal call failure caused
+     * by an exception thrown on client side.
+     */
+    public final static int HTTP_STATUS_CUSTOM_FAIL_CLIENT_THROWABLE = -2;
+
+    /**
+     * Constant used as a placeholder for internal call failure caused
+     * by a problem on client side (before trying to call server),
+     * as identified by given message
+     */
+    public final static int HTTP_STATUS_CUSTOM_FAIL_CLIENT_MESSAGE = -3;
+
+
+    /* Response code used when the request timed out; as per docs, while
+     * not a formally standardized code, is actually used. And is considered
+     * retriable (as 5xx code) which is why we choose it.
+     */
+    public final static int HTTP_STATUS_CLIENT_TIMEOUT_ON_READ = 598;    
+
+    /*
+    /**********************************************************************
     /* Other constants
     /**********************************************************************
      */
