@@ -120,13 +120,17 @@ public abstract class ServiceResponse
      */
     
     public final ServiceResponse ok() {
-        return setStatus(200);
+        return setStatus(ClusterMateConstants.HTTP_STATUS_OK);
     }
-    
+
     public final ServiceResponse ok(Object entity) {
         return ok().setEntity(entity);
     }
 
+    public final ServiceResponse ok(String contentType, Object entity) {
+        return ok().setContentType(contentType).setEntity(entity);
+    }
+    
     public final ServiceResponse noContent() {
         return setStatus(204);
     }

@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.client.util;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -27,7 +26,8 @@ public class GenericContentConverter<T> implements ContentConverter<T>
 
     @Override
     public T convert(ContentType contentType, InputStream in)
-            throws IOException {
+        throws IOException
+    {
         return _chooseReader(contentType).readValue(in);
     }
 

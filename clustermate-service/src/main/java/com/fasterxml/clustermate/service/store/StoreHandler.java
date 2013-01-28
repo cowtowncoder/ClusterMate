@@ -575,9 +575,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         final ObjectWriter w = useSmile ? _listSmileWriter : _listJsonWriter;
         final String contentType = useSmile ? ContentType.SMILE.toString()
                 : ContentType.JSON.toString();
-        
-        return (OUT) response.ok(new StreamingEntityImpl(w, listResponse))
-                .setContentType(contentType);
+        return (OUT) response.ok(contentType, new StreamingEntityImpl(w, listResponse));
     }    
 
     protected List<ListItem> _listItems(final StorableKey prefix, StorableKey lastSeen,
