@@ -38,7 +38,7 @@ public class AHCEntryLister<K extends EntryKey>
 
     @Override
     public <T> ListCallResult<T> tryList(CallConfig config, long endOfTime,
-            K prefix, ListItemType type, int maxResults,
+            K prefix, K lastSeen, ListItemType type, int maxResults,
             ContentConverter<ListResponse<T>> converter)
     {
         if (converter == null) {
@@ -59,6 +59,11 @@ public class AHCEntryLister<K extends EntryKey>
                 .addQueryParameter(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES, String.valueOf(maxResults))
                 .addQueryParameter(ClusterMateConstants.QUERY_PARAM_TYPE, type.toString())
                 ;
+        
+        if (lastSeen != null) {
+            reqBuilder = reqBuilder
+                    .addQueryParameter(ClusterMateConstants.QUERY_PARAM_LAST_SEEN, toBase64(lastSeen.asBytes()));
+        }
 
         InputStream in = null;
         try {

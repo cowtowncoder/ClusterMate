@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.call.ListCallResult;
+import com.fasterxml.storemate.shared.StorableKey;
 
 /**
  * Result value produced by {@link StoreEntryLister}, contains information
@@ -13,6 +14,8 @@ import com.fasterxml.clustermate.client.call.ListCallResult;
 public class ListOperationResult<T> extends ReadOperationResult<ListOperationResult<T>>
 {
     protected List<T> _items;
+    
+    protected StorableKey _lastSeen;
     
     public ListOperationResult(OperationConfig config)
     {
@@ -26,8 +29,10 @@ public class ListOperationResult<T> extends ReadOperationResult<ListOperationRes
         }
         _server = server;
         _items = result.getItems();
+        _lastSeen = result.getLastSeen();
         return this;
     }
 
     public List<T> getItems() { return _items; }
+    public StorableKey getLastSeen() { return _lastSeen; }
 }

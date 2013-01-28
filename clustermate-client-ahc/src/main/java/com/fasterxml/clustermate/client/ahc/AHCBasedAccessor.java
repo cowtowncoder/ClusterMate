@@ -163,4 +163,13 @@ public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
         }
         return t;
     }
+
+    protected byte[] fromBase64(String b64str) {
+        return _mapper.convertValue(b64str, byte[].class);
+    }
+
+    protected String toBase64(byte[] data) {
+        return _mapper.convertValue(data, String.class);
+    }
+    
 }

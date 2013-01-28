@@ -963,7 +963,7 @@ public abstract class StoreClient<K extends EntryKey,
         if (converter == null) { // sanity check, should never occur
             throw new IllegalArgumentException("Unsupported item type: "+itemType);
         }
-        return new StoreEntryLister<K,T>(config, _clusterView, prefix, itemType, converter);
+        return new StoreEntryLister<K,T>(config, _clusterView, prefix, itemType, converter, null);
     }
     
     /*

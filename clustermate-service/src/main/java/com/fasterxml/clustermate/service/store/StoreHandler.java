@@ -556,10 +556,18 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         
         switch (listType) {
         case entries:
-            listResponse = new ListResponse.ItemListResponse(_listItems(rawPrefix, lastSeen, limits));
+            {
+                List<ListItem> items = _listItems(rawPrefix, lastSeen, limits);
+                ListItem lastItem = _last(items);
+                listResponse = new ListResponse.ItemListResponse(items,
+                        (lastItem == null) ? null : lastItem.key);
+            }
             break;
         case ids:
-            listResponse = new ListResponse.IdListResponse(_listIds(rawPrefix, lastSeen, limits));
+            {
+                List<StorableKey> ids = _listIds(rawPrefix, lastSeen, limits);
+                listResponse = new ListResponse.IdListResponse(ids, _last(ids));
+            }
             break;
         case names:
             {
@@ -568,7 +576,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
                 for (StorableKey id : ids) {
                     names.add(id.toString());
                 }
-                listResponse = new ListResponse.NameListResponse(names);
+                listResponse = new ListResponse.NameListResponse(names, _last(ids));
             }
             break;
         }
@@ -576,8 +584,15 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         final String contentType = useSmile ? ContentType.SMILE.toString()
                 : ContentType.JSON.toString();
         return (OUT) response.ok(contentType, new StreamingEntityImpl(w, listResponse));
-    }    
+    }
 
+    protected final static <T> T _last(List<T> list) {
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        return list.get(list.size() - 1);
+    }
+    
     protected List<ListItem> _listItems(final StorableKey prefix, StorableKey lastSeen,
             ListLimits limits)
         throws StoreException

@@ -8,6 +8,7 @@ import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.ListCallResult;
 import com.fasterxml.clustermate.client.util.ContentConverter;
+import com.fasterxml.storemate.shared.StorableKey;
 
 /**
  * Value class that is used as result type for content list operation.
@@ -40,15 +41,22 @@ public class StoreEntryLister<K extends EntryKey,T>
     protected final ListItemType _itemType;
 
     protected final ContentConverter<ListResponse<T>> _converter;
+
+    /**
+     * Id of the last entry that was iterated over.
+     */
+    protected K _lastSeen;
     
     public StoreEntryLister(StoreClientConfig<K,?> config, ClusterViewByClient<K> cluster,
-            K prefix, ListItemType itemType, ContentConverter<ListResponse<T>> converter)
+            K prefix, ListItemType itemType, ContentConverter<ListResponse<T>> converter,
+            K initialLastSeen)
     {
         this._clientConfig = config;
         _cluster = cluster;
         _prefix = prefix;
         _itemType = itemType;
         _converter = converter;
+        _lastSeen = initialLastSeen;
     }
 
     public ListOperationResult<T> listMore() throws InterruptedException
@@ -57,6 +65,18 @@ public class StoreEntryLister<K extends EntryKey,T>
     }
         
     public ListOperationResult<T> listMore(int maxToList) throws InterruptedException
+    {
+        ListOperationResult<T> result = _listMore(maxToList);
+        if (result != null) {
+            StorableKey raw = result.getLastSeen();
+            if (raw != null) { // should this error out?
+                _lastSeen = _clientConfig.getKeyConverter().rawToEntryKey(raw);
+            }
+        }
+        return result;
+    }
+
+    public ListOperationResult<T> _listMore(int maxToList) throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
 
@@ -82,7 +102,7 @@ public class StoreEntryLister<K extends EntryKey,T>
             ClusterServerNode server = nodes.node(i);
             if (!server.isDisabled() || noRetries) {
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
-                        _prefix, _itemType, maxToList, _converter);
+                        _prefix, _lastSeen, _itemType, maxToList, _converter);
                 if (gotten.failed()) {
                     CallFailure fail = gotten.getFailure();
                     if (fail.isRetriable()) {
@@ -112,7 +132,7 @@ public class StoreEntryLister<K extends EntryKey,T>
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
-                        _prefix, _itemType, maxToList, _converter);
+                        _prefix, _lastSeen, _itemType, maxToList, _converter);
                 if (gotten.succeeded()) {
                     return result.withFailed(retries).setItems(server, gotten);
                 }
@@ -132,7 +152,7 @@ public class StoreEntryLister<K extends EntryKey,T>
                     return result.withFailed(retries);
                 }
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
-                        _prefix, _itemType, maxToList, _converter);
+                        _prefix, _lastSeen, _itemType, maxToList, _converter);
                 if (gotten.succeeded()) {
                     return result.withFailed(retries).setItems(server, gotten);
                 }
@@ -157,7 +177,7 @@ public class StoreEntryLister<K extends EntryKey,T>
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
                 ListCallResult<T> gotten = server.entryLister().tryList(_clientConfig.getCallConfig(), endOfTime,
-                        _prefix, _itemType, maxToList, _converter);
+                        _prefix, _lastSeen, _itemType, maxToList, _converter);
                 if (gotten.succeeded()) {
                     return result.withFailed(retries).setItems(server, gotten);
                 }
