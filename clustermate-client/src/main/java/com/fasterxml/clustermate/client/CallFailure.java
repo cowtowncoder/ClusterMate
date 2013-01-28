@@ -1,6 +1,7 @@
 package com.fasterxml.clustermate.client;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.client.util.ExceptionUtil;
 
 /**
  * Container for details of a single failed call to a server.
@@ -44,11 +45,18 @@ public class CallFailure
             long callTime, long endTime,
             String errorMsg, byte[] responseExcerpt)
     {
+        this(server, statusCode, callTime, endTime, null, errorMsg, responseExcerpt);
+    }
+    
+    public CallFailure(ServerNode server, int statusCode,
+            long callTime, long endTime,
+            Throwable error, String errorMsg, byte[] responseExcerpt)
+    {
         _server = server;
         _statusCode = statusCode;
         _callTime = callTime;
         _timeTakenMsecs = (int) (endTime - callTime);
-        _error = null;
+        _error = error;
         _errorMessage = errorMsg;
         _rawResponse = responseExcerpt;
     }
@@ -101,7 +109,7 @@ public class CallFailure
             long endTime, String msg, Exception e)
     {
         if (e != null) {
-            Throwable cause = _peel(e);
+            Throwable cause = ExceptionUtil.peel(e);
             msg += " (exception of type "+cause.getClass().getName()+": "+cause.getMessage()+")";
         }
         return new CallFailure(server, statusCode, callTime, endTime, msg, null);
@@ -113,8 +121,18 @@ public class CallFailure
      * exception indicating what happened.
      */
     public static CallFailure clientInternal(ServerNode server, long callTime,
-            long endTime, Throwable cause) {
-        cause = _peel(cause);
+            long endTime, Throwable cause)
+    {
+        cause = ExceptionUtil.peel(cause);
+        
+        // Let's produce stack trace for certain problems
+        if (cause instanceof NullPointerException) {
+            return new CallFailure(server, ClusterMateConstants.HTTP_STATUS_CUSTOM_FAIL_CLIENT_THROWABLE,
+                    callTime, endTime, cause,
+                    "NullPointerException at "+ExceptionUtil.getStackTraceDesc(cause, 5),
+                    null);            
+        }
+        
         return new CallFailure(server, ClusterMateConstants.HTTP_STATUS_CUSTOM_FAIL_CLIENT_THROWABLE,
                 callTime, endTime, cause, null);
     }
@@ -215,19 +233,5 @@ public class CallFailure
         }
         sb.append(']');
         return sb.toString();
-    }
-
-    /*
-    /**********************************************************************
-    /* Helper methods
-    /**********************************************************************
-     */
-    
-    private static Throwable _peel(Throwable t)
-    {
-        while (t.getCause() != null) {
-            t = t.getCause();
-        }
-        return t;
     }
 }

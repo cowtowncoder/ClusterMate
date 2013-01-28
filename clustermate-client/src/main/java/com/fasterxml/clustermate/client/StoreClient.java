@@ -879,7 +879,7 @@ public abstract class StoreClient<K extends EntryKey,
                 }
             }
         }
-        // if no success, add disabled nodes in the mix
+        // if no success, add disabled nodes in the mix; try only once per each
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
             if (server.isDisabled()) {

@@ -41,6 +41,10 @@ public class AHCEntryLister<K extends EntryKey>
             K prefix, ListItemType type, int maxResults,
             ContentConverter<ListResponse<T>> converter)
     {
+        if (converter == null) {
+            throw new IllegalArgumentException("Missing converter");
+        }
+        
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
         final long timeout = Math.min(endOfTime - startTime, config.getGetCallTimeoutMsecs());

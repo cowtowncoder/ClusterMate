@@ -48,7 +48,7 @@ public class StoreEntryLister<K extends EntryKey,T>
         _cluster = cluster;
         _prefix = prefix;
         _itemType = itemType;
-        _converter = null;
+        _converter = converter;
     }
 
     public ListOperationResult<T> listMore() throws InterruptedException
