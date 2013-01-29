@@ -9,6 +9,7 @@ import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
+import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 import com.fasterxml.clustermate.service.sync.SyncListResponse;
@@ -61,10 +62,12 @@ public class SyncListTest extends JaxrsStoreTestBase
         syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ContentType.SMILE.toString());
         
         response = new FakeHttpResponse();
-        syncH.listEntries(syncReq, response, creationTime, null);
+        OperationDiagnostics diag = new OperationDiagnostics();        
+        syncH.listEntries(syncReq, response, creationTime, diag);
         assertTrue(response.hasStreamingContent());
         assertEquals(200, response.getStatus());
         assertEquals(ContentType.SMILE.toString(), response.getContentType());
+        assertEquals(1, diag.getItemCount());
         byte[] data = response.getStreamingContentAsBytes();
 
         SyncListResponse<?> syncList = resource._stuff.smileReader(SyncListResponse.class).readValue(data);
@@ -93,7 +96,7 @@ public class SyncListTest extends JaxrsStoreTestBase
         SyncHandler<TestKey, StoredEntry<TestKey>> syncH = new SyncHandler<TestKey, StoredEntry<TestKey>>(resource._stuff,
                 resource.getStores(), resource.getCluster(), 1);
         
-        // First, add an entry:
+        // First, add entries
         StorableStore entries = resource.getStores().getEntryStore();
         final TestKey KEY1 = contentKey(CLIENT_ID, "data/entry/1");
         final TestKey KEY2 = contentKey(CLIENT_ID, "data/entry/2");
@@ -127,7 +130,8 @@ public class SyncListTest extends JaxrsStoreTestBase
         syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ContentType.SMILE.toString());
         
         response = new FakeHttpResponse();
-        syncH.listEntries(syncReq, response, creationTime, null);
+        OperationDiagnostics diag = new OperationDiagnostics();        
+        syncH.listEntries(syncReq, response, creationTime, diag);
         assertTrue(response.hasStreamingContent());
         assertEquals(200, response.getStatus());
         assertEquals(ContentType.SMILE.toString(), response.getContentType());
@@ -139,5 +143,6 @@ public class SyncListTest extends JaxrsStoreTestBase
         assertNotNull(syncList.entries);
         // Important: we MUST get all 3, as they have same timestamp
         assertEquals(3, syncList.entries.size());
+        assertEquals(3, diag.getItemCount());
     }
 }

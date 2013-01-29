@@ -36,6 +36,10 @@ public abstract class ListResponse<T> // not a CRUD request/response
         lastSeen = ls;
     }
 
+    public int size() {
+        return (items == null) ? 0 : items.size();
+    }
+    
     public abstract ListItemType type();
     
     public static final class IdListResponse extends ListResponse<StorableKey> {

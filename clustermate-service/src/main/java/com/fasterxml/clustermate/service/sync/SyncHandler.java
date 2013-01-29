@@ -234,6 +234,9 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
                     caller, range, localRange);
             entries = Collections.emptyList();
         }
+        if (metadata != null) {
+            metadata = metadata.setItemCount(entries.size());
+        }
         
         // one more twist; if no entries found, can sync up to 'upUntil' time...
         long lastSeen = timestamp.get();
@@ -289,6 +292,9 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
             // note: this may give null as well; caller needs to check (converter passes null as-is)
             E entry = (E) _entryConverter.entryFromStorable(raw);
             entries.add(entry);
+        }
+        if (metadata != null) {
+            metadata = metadata.setItemCount(entries.size());
         }
         return (OUT) response.ok(new SyncPullResponse<E>(_fileManager, _syncPullSmileWriter, entries));
     }

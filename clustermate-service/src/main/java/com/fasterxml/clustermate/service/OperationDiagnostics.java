@@ -11,6 +11,12 @@ public class OperationDiagnostics
     protected final long _nanoStart;
     
     protected Storable _entry;
+
+    /**
+     * Number of items included in response, for operations where this
+     * makes sense.
+     */
+    protected int _itemCount;
     
     /*
     /**********************************************************************
@@ -30,6 +36,11 @@ public class OperationDiagnostics
         _entry = e;
         return this;
     }
+
+    public OperationDiagnostics setItemCount(int count) {
+        _itemCount = count;
+        return this;
+    }
     
     /*
     /**********************************************************************
@@ -39,6 +50,8 @@ public class OperationDiagnostics
     
     public Storable getEntry() { return _entry; }
 
+    public int getItemCount() { return _itemCount; }
+    
     /**
      * Accessor for number of nanoseconds spent since construction of this object
      */

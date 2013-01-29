@@ -580,6 +580,11 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
             }
             break;
         }
+        
+        if (metadata != null) {
+            metadata.setItemCount(listResponse.size());
+        }
+        
         final ObjectWriter w = useSmile ? _listSmileWriter : _listJsonWriter;
         final String contentType = useSmile ? ContentType.SMILE.toString()
                 : ContentType.JSON.toString();

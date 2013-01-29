@@ -1,6 +1,11 @@
 Project: ClusterMate
 
-0.8.4 (...)
+0.8.5 (...)
+
+* Add 'itemCount' property in 'OperationDiagnostics', populate for sync list, pull,
+  list entries
+
+0.8.4 (28-Jan-2012)
 
 #4: Add Servlet/Handler for listing entries
 
