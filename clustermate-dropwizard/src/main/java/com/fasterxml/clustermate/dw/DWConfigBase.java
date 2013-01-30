@@ -1,5 +1,7 @@
 package com.fasterxml.clustermate.dw;
 
+import org.skife.config.TimeSpan;
+
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.yammer.dropwizard.config.Configuration;
 import com.yammer.dropwizard.util.Duration;
@@ -64,6 +66,12 @@ public abstract class DWConfigBase<
     @SuppressWarnings("unchecked")
     public THIS setShutdownGracePeriod(Duration d) {
         getHttpConfiguration().setShutdownGracePeriod(d);
+        return (THIS) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public THIS setSyncGracePeriod(TimeSpan t) {
+        getServiceConfig().cfgSyncGracePeriod = t;
         return (THIS) this;
     }
 }
