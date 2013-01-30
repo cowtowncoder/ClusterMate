@@ -4,6 +4,7 @@ import org.skife.config.TimeSpan;
 
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.yammer.dropwizard.config.Configuration;
+import com.yammer.dropwizard.config.RequestLogConfiguration;
 import com.yammer.dropwizard.util.Duration;
 
 public abstract class DWConfigBase<
@@ -74,4 +75,17 @@ public abstract class DWConfigBase<
         getServiceConfig().cfgSyncGracePeriod = t;
         return (THIS) this;
     }
+
+    /**
+     * Method called to suppress all request logging; usually during testing.
+     */
+    @SuppressWarnings("unchecked")
+    public THIS disableRequestLog() {
+        RequestLogConfiguration reqLog = getHttpConfiguration().getRequestLogConfiguration();
+        reqLog.getConsoleConfiguration().setEnabled(false);
+        reqLog.getFileConfiguration().setEnabled(false);
+        reqLog.getSyslogConfiguration().setEnabled(false);
+        return (THIS) this;
+    }
 }
+
