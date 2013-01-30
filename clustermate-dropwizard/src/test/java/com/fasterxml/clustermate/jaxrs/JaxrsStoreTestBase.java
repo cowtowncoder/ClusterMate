@@ -9,12 +9,13 @@ import junit.framework.TestCase;
 
 import org.skife.config.TimeSpan;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.fasterxml.storemate.backend.bdbje.BDBJEBuilder;
 import com.fasterxml.storemate.backend.bdbje.BDBJEConfig;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;
-import com.fasterxml.storemate.shared.hash.ChecksumUtil;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.backend.StoreBackend;
@@ -32,8 +33,7 @@ import com.fasterxml.clustermate.service.cfg.NodeConfig;
 import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerImpl;
 import com.fasterxml.clustermate.service.store.StoredEntry;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.fasterxml.clustermate.std.ChecksumUtil;
 
 /**
  * Shared base class for unit tests; contains shared utility methods.
@@ -337,7 +337,7 @@ public abstract class JaxrsStoreTestBase extends TestCase
      */
 
     protected int calcChecksum(byte[] data) {
-    	return ChecksumUtil.calcChecksum(data);
+        return ChecksumUtil.calcChecksum(data);
     }
 
     protected byte[] gzip(byte[] input) throws IOException

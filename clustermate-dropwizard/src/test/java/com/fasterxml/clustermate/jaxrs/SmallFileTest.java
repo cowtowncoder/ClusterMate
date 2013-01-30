@@ -4,6 +4,7 @@ import java.io.*;
 
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
+import com.fasterxml.storemate.shared.hash.HashConstants;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
 
@@ -138,6 +139,78 @@ public class SmallFileTest extends JaxrsStoreTestBase
         entries.stop();
     }
 
+    // Test to verify storage of 0-length entry
+    public void testEmptyFile() throws IOException
+    {
+        final long creationTime = 456L;
+        final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(creationTime);
+
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(TEST_PREFIX, timeMaster, true);
+
+        StorableStore entries = resource.getStores().getEntryStore();
+        assertEquals(0, entries.getEntryCount());
+
+        final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, "data/entry/0");
+        final byte[] SMALL_DATA = new byte[0];
+
+        FakeHttpResponse response = new FakeHttpResponse();
+        final int inputHash = calcChecksum(SMALL_DATA);
+        
+        // and just to make sure... we must NOT be using "no checksum" here
+        if (inputHash == HashConstants.NO_CHECKSUM) {
+            fail("Checksum must not be "+HashConstants.NO_CHECKSUM);
+        }
+        
+        resource.getHandler().putEntry(new FakeHttpRequest(), response,
+                INTERNAL_KEY1, inputHash, new ByteArrayInputStream(SMALL_DATA),
+                null, null, null);
+        if (response.getStatus() != 200) {
+            PutResponse<?> presp = (PutResponse<?>) response.getEntity();
+            fail("Failed with response code of "+response.getStatus()+"; fail="+presp.message);
+        }
+        assertEquals(1, entries.getEntryCount());
+        assertEquals(0L, resource.getStores().getLastAccessStore().findLastAccessTime(INTERNAL_KEY1,
+                LastAccessUpdateMethod.INDIVIDUAL));
+
+        // Ok. Then, we should also be able to fetch it, right?
+        response = new FakeHttpResponse();
+        // and ensure we get diagnostics too
+        OperationDiagnostics stats = new OperationDiagnostics();
+        resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1, stats);
+        assertNotNull(stats.getEntry());
+        assertEquals(200, response.getStatus());
+
+        // As per Issue #6, we should get Etag back:
+        String etag = response.getHeader(ClusterMateConstants.HTTP_HEADER_ETAG);
+        String expEtag = "\"" + inputHash + "\"";
+        assertEquals(expEtag, etag);
+
+        // and now last-accessed should be set
+        assertEquals(creationTime, resource.getStores().getLastAccessStore().findLastAccessTime(INTERNAL_KEY1,
+                LastAccessUpdateMethod.INDIVIDUAL));
+
+        // let's verify it then; small request...
+        assertTrue(response.hasStreamingContent());
+        assertTrue(response.hasInlinedData());
+        byte[] data = collectOutput(response);
+        assertEquals(0, data.length);
+        
+        Storable raw = entries.findEntry(INTERNAL_KEY1.asStorableKey());
+        assertNotNull(raw);
+        // too small to be compressed, so:
+        assertEquals(Compression.NONE, raw.getCompression());
+        assertFalse(raw.hasExternalData());
+        assertFalse(raw.hasInlineData()); // considered "no inline data"
+        assertEquals(SMALL_DATA.length, raw.getInlineDataLength());
+
+        StoredEntry<TestKey> entry = rawToEntry(raw);
+
+        assertEquals(creationTime, entry.getCreationTime());
+        assertEquals(creationTime, entry.getLastModifiedTime());
+
+        entries.stop();
+    }
+    
     /**
      * Slight variation of basic test: let's accept compressed
      * contents; verify that we are served compressed thing

@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.fasterxml.storemate.shared.hash.ChecksumUtil;
+import com.fasterxml.clustermate.std.ChecksumUtil;
 import com.fasterxml.storemate.shared.hash.IncrementalHasher32;
 import com.fasterxml.storemate.shared.util.BufferRecycler;
 

@@ -9,6 +9,7 @@ import org.skife.config.TimeSpan;
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
+import com.fasterxml.storemate.shared.hash.HashConstants;
 import com.fasterxml.storemate.store.*;
 import com.fasterxml.storemate.store.backend.IterationAction;
 import com.fasterxml.storemate.store.backend.StorableIterationCallback;
@@ -172,7 +173,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         if (rawEntry == null) {
             return handleGetForMissing(request, response, key);
         }
-
+        
         // second: did we get a tombstone?
         if (rawEntry.isDeleted()) {
             ServiceResponse resp = handleGetForDeleted(request, response, key, rawEntry);
@@ -209,6 +210,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         }
         
         StreamingResponseContentImpl output;
+        
         if (entry.hasExternalData()) { // need to stream from File
             File f = entry.getRaw().getExternalFile(_fileManager);
             output = new StreamingResponseContentImpl(f, skipCompression ? null : comp, range);
@@ -231,7 +233,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         }
         // Issue #6: Need to provide Etag, if content hash available
         int contentHash = rawEntry.getContentHash();
-        if (contentHash != StoreConstants.NO_CHECKSUM) {
+        if (contentHash != HashConstants.NO_CHECKSUM) {
             StringBuilder sb = new StringBuilder();
             sb.append('"');
             sb.append(contentHash);
@@ -250,7 +252,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
     {
         // First: entry must have hash value to compare against
         int contentHash = rawEntry.getContentHash();
-        if (contentHash != StoreConstants.NO_CHECKSUM) {
+        if (contentHash != HashConstants.NO_CHECKSUM) {
             String rangeStr = request.getHeader(ClusterMateConstants.HTTP_HEADER_ETAG_NO_MATCH);
             if (rangeStr != null) {
                 rangeStr = rangeStr.trim();

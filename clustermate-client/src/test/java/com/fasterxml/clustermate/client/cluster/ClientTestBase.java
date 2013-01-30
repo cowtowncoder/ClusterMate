@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.client.cluster;
 
-import com.fasterxml.storemate.shared.hash.ChecksumUtil;
+import com.fasterxml.clustermate.std.ChecksumUtil;
 
 import junit.framework.TestCase;
 
@@ -10,9 +10,9 @@ import junit.framework.TestCase;
 public abstract class ClientTestBase extends TestCase
 {	
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Test methods: message validation
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Test methods: message validation
+    /**********************************************************************
      */
 
     protected void verifyException(Exception e, String expected)
@@ -29,12 +29,12 @@ public abstract class ClientTestBase extends TestCase
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Checksum calculation
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Checksum calculation
+    /**********************************************************************
      */
 
     protected int calcChecksum(byte[] data) {
-    	return ChecksumUtil.calcChecksum(data);
+        return ChecksumUtil.calcChecksum(data);
     }
 }
