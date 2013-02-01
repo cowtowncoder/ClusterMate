@@ -562,7 +562,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
                 List<ListItem> items = _listItems(rawPrefix, lastSeen, limits);
                 ListItem lastItem = _last(items);
                 listResponse = new ListResponse.ItemListResponse(items,
-                        (lastItem == null) ? null : lastItem.key);
+                        (lastItem == null) ? null : lastItem.getKey());
             }
             break;
         case ids:
@@ -628,7 +628,8 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
             }
             @Override
             public IterationAction processEntry(Storable entry) throws StoreException {
-                result.add(new ListItem(entry.getKey()));
+                result.add(new ListItem(entry.getKey(),
+                        entry.getContentHash(), entry.getActualUncompressedLength()));
                 if (result.size() >= maxEntries) {
                     return IterationAction.TERMINATE_ITERATION;
                 }

@@ -8,9 +8,26 @@ import com.fasterxml.storemate.shared.StorableKey;
  */
 public class ListItem
 {
-    public final StorableKey key;
+    // NOTE: names MUST match with accessor names
+    
+    protected StorableKey key;
 
-    public ListItem(StorableKey k) {
+    protected int hash;
+
+    protected long length;
+    
+    protected ListItem() { }
+    
+    public ListItem(StorableKey k, int h, long l)
+    {
         key = k;
+        hash = h;
+        length = l;
     }
+
+    // Use shorter public names to save some space
+    
+    public StorableKey getKey() { return key; }
+    public int getHash() { return hash; }
+    public long getLength() { return length; }
 }
