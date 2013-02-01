@@ -51,7 +51,7 @@ public class StoreEntryLister<K extends EntryKey,T>
             K prefix, ListItemType itemType, ContentConverter<ListResponse<T>> converter,
             K initialLastSeen)
     {
-        this._clientConfig = config;
+        _clientConfig = config;
         _cluster = cluster;
         _prefix = prefix;
         _itemType = itemType;
