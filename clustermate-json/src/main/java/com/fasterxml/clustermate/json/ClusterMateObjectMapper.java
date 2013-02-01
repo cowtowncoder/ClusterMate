@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.json;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -11,6 +12,13 @@ public class ClusterMateObjectMapper extends ObjectMapper
 {
     public ClusterMateObjectMapper()
     {
+        // since these are JSON mappers, no point in numeric representation (false)
+        registerModule(new ClusterMateTypesModule(false));
+    }
+
+    public ClusterMateObjectMapper(JsonFactory f)
+    {
+        super(f);
         // since these are JSON mappers, no point in numeric representation (false)
         registerModule(new ClusterMateTypesModule(false));
     }
