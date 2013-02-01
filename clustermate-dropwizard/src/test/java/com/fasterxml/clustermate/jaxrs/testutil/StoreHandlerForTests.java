@@ -1,11 +1,12 @@
 package com.fasterxml.clustermate.jaxrs.testutil;
 
+import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
-public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<TestKey>>
+public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<TestKey>, ListItem>
 {
     public StoreHandlerForTests(SharedServiceStuff stuff,
             Stores<TestKey, StoredEntry<TestKey>> stores,
@@ -36,9 +37,9 @@ public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<Test
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
      */
     
     private void _updateLastAccessed(TestKey key, StoredEntry<TestKey> entry, long accessTime)

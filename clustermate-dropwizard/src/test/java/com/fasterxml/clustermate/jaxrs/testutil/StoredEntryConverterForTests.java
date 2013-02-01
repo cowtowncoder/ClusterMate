@@ -5,6 +5,7 @@ import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.util.WithBytesCallback;
 import com.fasterxml.storemate.store.Storable;
 
+import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.bdb.BDBConverters;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
@@ -12,7 +13,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 
 public class StoredEntryConverterForTests
-    extends StoredEntryConverter<TestKey, StoredEntry<TestKey>>
+    extends StoredEntryConverter<TestKey, StoredEntry<TestKey>,ListItem>
 {
     public final static byte METADATA_VERSION_1 = 0x11;
     
@@ -74,7 +75,7 @@ public class StoredEntryConverterForTests
 
     /*
     /**********************************************************************
-    /* Actual VEntry conversions
+    /* Entry conversions
     /**********************************************************************
      */
     
@@ -111,6 +112,11 @@ public class StoredEntryConverterForTests
         return new StoredEntryForTests(key, raw, creationTime, minTTLSecs, maxTTLSecs, acc);
     }
 
+    @Override
+    public ListItem listItemFromStorable(Storable raw) {
+        return defaultListItemFromStorable(raw);
+    }
+    
     /*
     /**********************************************************************
     /* Other conversions

@@ -2,6 +2,8 @@ package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
 
+import com.fasterxml.storemate.shared.TimeMaster;
+
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
@@ -9,10 +11,11 @@ import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
-import com.fasterxml.storemate.shared.TimeMaster;
 
 @SuppressWarnings("serial")
-public class StoreListServlet<K extends EntryKey, E extends StoredEntry<K>>
+public class StoreListServlet<K extends EntryKey,
+    E extends StoredEntry<K>
+>
     extends ServletBase
 {
     /*
@@ -23,7 +26,7 @@ public class StoreListServlet<K extends EntryKey, E extends StoredEntry<K>>
         
 //        private final Log LOG = Log.forClass(getClass());
 
-    protected final StoreHandler<K,E> _storeHandler;
+    protected final StoreHandler<K,E,?> _storeHandler;
 
     protected final TimeMaster _timeMaster;
 
@@ -36,7 +39,7 @@ public class StoreListServlet<K extends EntryKey, E extends StoredEntry<K>>
      */
 
     public StoreListServlet(SharedServiceStuff stuff, ClusterViewByServer clusterView,
-            StoreHandler<K,E> storeHandler)
+            StoreHandler<K,E,?> storeHandler)
     {
         // null -> use servlet path base as-is
         super(clusterView, null);

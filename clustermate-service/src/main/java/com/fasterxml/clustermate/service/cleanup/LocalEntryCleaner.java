@@ -36,7 +36,7 @@ public class LocalEntryCleaner<K extends EntryKey, E extends StoredEntry<K>>
 
     protected final LastAccessStore<K, E> _lastAccessStore;
 
-    protected final StoredEntryConverter<K, E> _entryFactory;
+    protected final StoredEntryConverter<K,E,?> _entryFactory;
     
     protected final boolean _isTesting;
     

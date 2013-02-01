@@ -225,7 +225,7 @@ public abstract class ServiceConfig
     /**********************************************************************
      */
 
-    public abstract StoredEntryConverter<?,?> getEntryConverter();
+    public abstract StoredEntryConverter<?,?,?> getEntryConverter();
 
     public StoreBackendBuilder<?> instantiateBackendBuilder()
     {

@@ -135,7 +135,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     /**
      * Need to construct metadata nuggets with this factory
      */
-    protected final StoredEntryConverter<K,E> _entryConverter;
+    protected final StoredEntryConverter<K,E,?> _entryConverter;
     
     /*
     /**********************************************************************

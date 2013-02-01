@@ -29,7 +29,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     
 //    private final Log LOG = Log.forClass(getClass());
 
-    protected final StoreHandler<K,E> _storeHandler;
+    protected final StoreHandler<K,E,?> _storeHandler;
 
     protected final TimeMaster _timeMaster;
 
@@ -44,7 +44,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
      */
     
     public StoreEntryServlet(SharedServiceStuff stuff, ClusterViewByServer clusterView,
-            StoreHandler<K,E> storeHandler)
+            StoreHandler<K,E,?> storeHandler)
     {
         // null -> use servlet path base as-is
         super(clusterView, null);

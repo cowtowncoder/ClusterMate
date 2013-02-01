@@ -26,6 +26,7 @@ import com.fasterxml.storemate.store.impl.StorableStoreImpl;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
+import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.jaxrs.IndexResource;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
@@ -54,6 +55,7 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 public abstract class DWBasedService<
     K extends EntryKey,
     E extends StoredEntry<K>,
+    L extends ListItem,
     SCONFIG extends ServiceConfig,
     CONF extends DWConfigBase<SCONFIG, CONF>
 >
@@ -107,7 +109,7 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
     
-    protected StoreHandler<K,E> _storeHandler;
+    protected StoreHandler<K,E,L> _storeHandler;
     
     /*
     /**********************************************************************
@@ -150,7 +152,7 @@ public abstract class DWBasedService<
         
         _managed = new ArrayList<StartAndStoppable>();
 
-        StoredEntryConverter<K,E> entryConverter = constructEntryConverter(config, environment);
+        StoredEntryConverter<K,E,L> entryConverter = constructEntryConverter(config, environment);
         FileManager files = constructFileManager(config);
 
         _serviceStuff = constructServiceStuff(config, _timeMaster,
@@ -214,7 +216,7 @@ public abstract class DWBasedService<
      * constructing {@link StoredEntry} instances to store in the
      * entry metadata store (currently BDB).
      */
-    protected abstract StoredEntryConverter<K,E> constructEntryConverter(SCONFIG config,
+    protected abstract StoredEntryConverter<K,E,L> constructEntryConverter(SCONFIG config,
             Environment environment);
 
     protected abstract FileManager constructFileManager(SCONFIG serviceConfig);
@@ -223,7 +225,7 @@ public abstract class DWBasedService<
             SCONFIG serviceConfig, StorableStore store);    
 
     protected abstract SharedServiceStuff constructServiceStuff(SCONFIG serviceConfig,
-            TimeMaster timeMaster, StoredEntryConverter<K,E> entryConverter,
+            TimeMaster timeMaster, StoredEntryConverter<K,E,L> entryConverter,
             FileManager files);
     
     /*
@@ -232,7 +234,7 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
-    protected abstract StoreHandler<K,E> constructStoreHandler(SharedServiceStuff serviceStuff,
+    protected abstract StoreHandler<K,E,L> constructStoreHandler(SharedServiceStuff serviceStuff,
             Stores<K,E> stores, ClusterViewByServer cluster);
 
     protected SyncHandler<K,E> constructSyncHandler(SharedServiceStuff stuff,
@@ -254,7 +256,7 @@ public abstract class DWBasedService<
      */
 
     protected abstract StoreEntryServlet<K,E> constructStoreEntryServlet(SharedServiceStuff stuff,
-            ClusterViewByServer cluster, StoreHandler<K,E> storeHandler);
+            ClusterViewByServer cluster, StoreHandler<K,E,L> storeHandler);
 
     protected NodeStatusServlet constructNodeStatusServlet(SharedServiceStuff stuff, ClusterInfoHandler nodeHandler) {
         return new NodeStatusServlet(stuff, nodeHandler);
@@ -271,7 +273,7 @@ public abstract class DWBasedService<
     }
 
     protected StoreListServlet<K,E> constructStoreListServlet(SharedServiceStuff stuff,
-            ClusterViewByServer cluster, StoreHandler<K,E> storeHandler) {
+            ClusterViewByServer cluster, StoreHandler<K,E,L> storeHandler) {
         return new StoreListServlet<K,E>(stuff, cluster, storeHandler);
     }
     
@@ -288,7 +290,7 @@ public abstract class DWBasedService<
     protected void addServiceEndpoints(SharedServiceStuff stuff,
             Environment environment,
             ClusterInfoHandler nodeHandler, SyncHandler<K,E> syncHandler,
-            StoreHandler<K,E> storeHandler)
+            StoreHandler<K,E,L> storeHandler)
     {
         final ClusterViewByServer cluster = syncHandler.getCluster();
         ServletBase nodeStatusServlet = constructNodeStatusServlet(stuff, nodeHandler);
@@ -357,7 +359,7 @@ public abstract class DWBasedService<
     protected void addStoreEntryServlet(SharedServiceStuff stuff,
             Environment environment,
             ClusterViewByServer cluster,
-            StoreHandler<K,E> storeHandler)
+            StoreHandler<K,E,?> storeHandler)
     {
     }
     

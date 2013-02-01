@@ -31,7 +31,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
  * Class that handles coordination between front-end service layer (servlet,
  * jax-rs) and back-end storage layer.
  */
-public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
+public abstract class StoreHandler<
+    K extends EntryKey,
+    E extends StoredEntry<K>,
+    L extends ListItem
+>
     extends HandlerBase
 {
     // Do we want these output? Not for production, at least...
@@ -69,7 +73,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
 
     protected final EntryKeyConverter<K> _keyConverter;
 
-    protected final StoredEntryConverter<K, E> _entryConverter;
+    protected final StoredEntryConverter<K,E,L> _entryConverter;
 
     protected final ObjectMapper _objectMapper;
     

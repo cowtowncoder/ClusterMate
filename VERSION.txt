@@ -4,6 +4,7 @@ Project: ClusterMate
 
 * Add 'itemCount' property in 'OperationDiagnostics', populate for sync list, pull,
   list entries
+* Add 'ListItem' parameterization, to allow custom sub-classes.
 
 0.8.4 (28-Jan-2012)
 

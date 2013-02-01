@@ -68,7 +68,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
 
     protected final EntryKeyConverter<K> _keyConverter;
     
-    protected final StoredEntryConverter<K,E> _entryConverter;
+    protected final StoredEntryConverter<K,E,?> _entryConverter;
     
     protected final FileManager _fileManager;
 

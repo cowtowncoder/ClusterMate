@@ -23,7 +23,7 @@ public abstract class Stores<K extends EntryKey, E extends StoredEntry<K>>
 
     public abstract File getNodeDirectory();
 
-    public abstract StoredEntryConverter<K,E> getEntryConverter();
+    public abstract StoredEntryConverter<K,E,?> getEntryConverter();
     
     public abstract StorableStore getEntryStore();
     public abstract NodeStateStore getNodeStore();

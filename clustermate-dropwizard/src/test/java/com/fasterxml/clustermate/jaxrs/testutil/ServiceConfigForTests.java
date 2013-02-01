@@ -39,7 +39,7 @@ public class ServiceConfigForTests
     }
     
     @Override
-    public StoredEntryConverter<?,?> getEntryConverter() {
+    public StoredEntryConverter<?,?,?> getEntryConverter() {
         PartitionId defClientId = getDefaultPartition();
         return new StoredEntryConverterForTests(TestKeyConverter.defaultInstance(defClientId));
     }

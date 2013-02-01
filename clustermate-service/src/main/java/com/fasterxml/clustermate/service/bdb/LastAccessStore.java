@@ -22,9 +22,9 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<K>>
 {
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // BDB store for last-accessed timestamps
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* BDB store for last-accessed timestamps
+    /**********************************************************************
      */
 
     /**
@@ -32,15 +32,15 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
      */
     protected final Database _store;
 
-    protected final StoredEntryConverter<K,E> _entryConverter;
+    protected final StoredEntryConverter<K,E,?> _entryConverter;
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Life cycle
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Life cycle
+    /**********************************************************************
      */
 
-    public LastAccessStore(Environment env, StoredEntryConverter<K,E> conv)
+    public LastAccessStore(Environment env, StoredEntryConverter<K,E,?> conv)
         throws DatabaseException
     {
         _store = env.openDatabase(null, // no TX
@@ -54,9 +54,9 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Public API
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Public API
+    /**********************************************************************
      */
 
     public long findLastAccessTime(E entry) {
@@ -127,9 +127,9 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Internal methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Internal methods
+    /**********************************************************************
      */
 
     protected DatabaseConfig dbConfig(Environment env)

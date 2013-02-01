@@ -12,7 +12,7 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 public class LastAccessStoreForTests
     extends LastAccessStore<TestKey, StoredEntry<TestKey>>
 {
-    public LastAccessStoreForTests(Environment env, StoredEntryConverter<TestKey,StoredEntry<TestKey>> conv) {
+    public LastAccessStoreForTests(Environment env, StoredEntryConverter<TestKey,StoredEntry<TestKey>,?> conv) {
         super(env, conv);
     }
 

@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.service.store;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.store.Storable;
@@ -14,7 +15,10 @@ import com.fasterxml.storemate.store.Storable;
  * Custom sub-classing is needed to support additional metadata for
  * systems implementations.
  */
-public abstract class StoredEntryConverter<K extends EntryKey, E extends StoredEntry<K>>
+public abstract class StoredEntryConverter<K extends EntryKey,
+    E extends StoredEntry<K>,
+    L extends ListItem
+>
 {
     // // // Key conversion
 
@@ -22,13 +26,19 @@ public abstract class StoredEntryConverter<K extends EntryKey, E extends StoredE
     
     // // // Entry conversion
     
-    public abstract E entryFromStorable(final Storable raw);
+    public abstract E entryFromStorable(Storable raw);
 
-    public abstract E entryFromStorable(final K key, final Storable raw);
+    public abstract E entryFromStorable(K key, final Storable raw);
 
     public abstract E entryFromStorable(K key, Storable raw,
             byte[] buffer, int offset, int length);
 
+    /**
+     * Method for constructing implementation specific {@link ListItem} instances
+     * (subtypes) from raw {@link Storable}
+     */
+    public abstract L listItemFromStorable(Storable raw);
+    
     // // // Metadata handling
     
     /**
@@ -45,4 +55,17 @@ public abstract class StoredEntryConverter<K extends EntryKey, E extends StoredE
 
     public abstract EntryLastAccessed createLastAccessed(byte[] raw);
 
+    /*
+    /**********************************************************************
+    /* Default implementations (mostly for unit tests)
+    /**********************************************************************
+     */
+
+    /**
+     * Helper method that can be used as the baseline implementation for 
+     * {@link #listItemFromStorable(Storable)} by tests.
+     */
+    protected ListItem defaultListItemFromStorable(Storable raw) {
+        return new ListItem(raw.getKey(), raw.getContentHash(), raw.getActualUncompressedLength());
+    }
 }

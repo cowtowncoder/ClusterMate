@@ -79,7 +79,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     /**
      * We also need a factory for converting keys, entries.
      */
-    protected final StoredEntryConverter<K, E> _entryConverter;
+    protected final StoredEntryConverter<K,E,?> _entryConverter;
     
     // Separate Environments for node state, last-accessed: latter much bigger,
     // former possibly transactional
@@ -116,7 +116,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
      
     public StoresImpl(ServiceConfig config, TimeMaster timeMaster, ObjectMapper jsonMapper,
-            StoredEntryConverter<K, E> entryConverter,
+            StoredEntryConverter<K,E,?> entryConverter,
             StorableStore entryStore, File bdbEnvRoot)
     {
         _timeMaster = timeMaster;
@@ -284,7 +284,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     public File getNodeDirectory() { return _bdbRootForNodes; }
 
     @Override
-    public StoredEntryConverter<K, E> getEntryConverter() { return _entryConverter; }
+    public StoredEntryConverter<K,E,?> getEntryConverter() { return _entryConverter; }
     
     @Override
     public StorableStore getEntryStore() { return _entryStore; }

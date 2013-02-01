@@ -33,7 +33,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
     /**********************************************************************
      */
     
-    protected final StoreHandler<K, E> _storeHandler;
+    protected final StoreHandler<K,E,?> _storeHandler;
 
     protected final ClusterViewByServer _clusterView;
 
@@ -46,7 +46,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
      */
     
     public StoreResource(SharedServiceStuff stuff, ClusterViewByServer clusterView,
-            StoreHandler<K, E> storeHandler)
+            StoreHandler<K,E,?> storeHandler)
     {
         _storeHandler = storeHandler;
         _clusterView = clusterView;
@@ -62,7 +62,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
     /**
      * Method to be only used by unit tests...
      */
-    public StoreHandler<K,E> getHandler() {
+    public StoreHandler<K,E,?> getHandler() {
         return _storeHandler;
     }
 

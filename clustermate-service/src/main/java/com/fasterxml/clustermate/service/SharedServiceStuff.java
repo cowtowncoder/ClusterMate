@@ -15,6 +15,7 @@ import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
+import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.json.ClusterMateTypesModule;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -97,8 +98,8 @@ public abstract class SharedServiceStuff
 
     public abstract <K extends EntryKey> EntryKeyConverter<K> getKeyConverter();
 
-    public abstract <K extends EntryKey, E extends StoredEntry<K>>
-    StoredEntryConverter<K, E> getEntryConverter();
+    public abstract <K extends EntryKey, E extends StoredEntry<K>, L extends ListItem>
+    StoredEntryConverter<K,E,L> getEntryConverter();
 
     public FileManager getFileManager() {
         return _fileManager;
