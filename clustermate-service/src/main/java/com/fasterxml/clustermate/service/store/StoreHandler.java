@@ -609,7 +609,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         final ArrayList<ListItem> result = new ArrayList<ListItem>(100);
 
         // we could check if all entries were iterated (with result code); for now we won't
-        /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(new StorableIterationCallback() {
+        StorableIterationCallback cb = new StorableIterationCallback() {
             public int counter; // to avoid checking systime too often
 
             @Override
@@ -635,8 +635,17 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
                 return IterationAction.PROCESS_ENTRY;
             }
             
-        }, lastSeen);
-        
+        };
+        /* Two cases; either starting without last seen -- in which case we should include
+         * the first entry -- or with last-seen, in which case it is to be skipped.
+         */
+        if (lastSeen == null) {
+            // we could check if all entries were iterated (with result code); for now we won't
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesByKey(cb, prefix);
+        } else {
+            // we could check if all entries were iterated (with result code); for now we won't
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(cb, lastSeen);
+        }
         return result;
     }
 
@@ -648,7 +657,7 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
         final long maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
         final int maxEntries = limits.getMaxEntries();
         final ArrayList<StorableKey> result = new ArrayList<StorableKey>(100);
-        
+
         StorableIterationCallback cb = new StorableIterationCallback() {
             public int counter; // to avoid checking systime too often
 
@@ -674,7 +683,6 @@ public abstract class StoreHandler<K extends EntryKey, E extends StoredEntry<K>>
                 throw new IllegalStateException();
             }
         };
-
         /* Two cases; either starting without last seen -- in which case we should include
          * the first entry -- or with last-seen, in which case it is to be skipped.
          */
