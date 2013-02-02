@@ -61,11 +61,11 @@ public class StoredEntryConverterForTests
      */
     @Override
     public ByteContainer createMetadata(long creationTime,
-            LastAccessUpdateMethod lastAccessUpdateMethod, int minTTLSecs, int maxTTLSecs)
+            byte lastAccessUpdateMethod, int minTTLSecs, int maxTTLSecs)
     {
         byte[] buffer = new byte[METADATA_LENGTH];
         buffer[OFFSET_VERSION] = METADATA_VERSION_1;
-        buffer[OFFSET_LAST_ACCESS] = lastAccessUpdateMethod.asByte();
+        buffer[OFFSET_LAST_ACCESS] = lastAccessUpdateMethod;
         _putLongBE(buffer, OFFSET_CREATE_TIME, creationTime);
         _putIntBE(buffer, OFFSET_MIN_TTL, minTTLSecs);
         _putIntBE(buffer, OFFSET_MAX_TTL, maxTTLSecs);

@@ -23,10 +23,11 @@ public class SyncPullEntry
 
     public int checksum, checksumForCompressed;
     
+    public Compression compression;
+
     public boolean isDeleted;
 
-    public Compression compression;
-    public LastAccessUpdateMethod lastAccessMethod;
+    public byte lastAccessMethod;
 
     public SyncPullEntry() { }
 
@@ -46,7 +47,8 @@ public class SyncPullEntry
             size = raw.getOriginalLength();
         }
         compression = raw.getCompression();
-        lastAccessMethod = src.getLastAccessUpdateMethod();
+        LastAccessUpdateMethod m = src.getLastAccessUpdateMethod();
+        lastAccessMethod = (m == null) ? 0 : m.asByte();
         minTTLSecs = src.getMinTTLSinceAccessSecs();
         maxTTLSecs = src.getMaxTTLSecs();
         

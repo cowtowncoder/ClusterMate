@@ -380,7 +380,8 @@ public abstract class StoreHandler<
         // not that of compressed (latter is easy to calculate on server anyway)
         StorableCreationMetadata stdMetadata = new StorableCreationMetadata(inputCompression,
         		checksum, 0);
-        ByteContainer customMetadata = _entryConverter.createMetadata(creationTime, lastAcc,
+        ByteContainer customMetadata = _entryConverter.createMetadata(creationTime,
+                ((lastAcc == null) ? 0 : lastAcc.asByte()),
                 ((minTTLSinceAccess == null) ? _cfgDefaultMinTTLSecs : (int) minTTLSinceAccess.getMillis()),
                 ((maxTTL == null) ? _cfgDefaultMaxTTLSecs : (int) maxTTL.getMillis())
                 );

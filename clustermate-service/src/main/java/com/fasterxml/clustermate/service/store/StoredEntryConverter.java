@@ -46,7 +46,7 @@ public abstract class StoredEntryConverter<K extends EntryKey,
      * used for constructing a new <code>Storable</code> instance.
      */
     public abstract ByteContainer createMetadata(long creationTime,
-            LastAccessUpdateMethod lastAccessUpdateMethod,
+            byte lastAccessUpdateMethod,
             int minTTLSecs, int maxTTLSecs);
     
     // // // Last accessed
