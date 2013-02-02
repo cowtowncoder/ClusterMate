@@ -204,8 +204,11 @@ public abstract class ServiceConfig
     /**
      * What is the maximum amount of time server may keep connection
      * for "Sync List" open before returning empty result.
+     *<br />
+     * NOTE: should be kept relatively low; server will let client know
+     * of additional sleep it may do before retrying sync list request.
      */
-    public TimeSpan cfgSyncMaxLongPollTime = new TimeSpan("10s");
+    public TimeSpan cfgSyncMaxLongPollTime = new TimeSpan("3s");
 
     /*
     /**********************************************************************
