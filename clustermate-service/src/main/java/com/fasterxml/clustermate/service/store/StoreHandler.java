@@ -374,7 +374,7 @@ public abstract class StoreHandler<
             inputCompression = null;
         }
         // TODO: pass in LastAccessUpdateMethod...
-        LastAccessUpdateMethod lastAcc = _findLastAccessUpdateMethod(key);
+        LastAccessUpdateMethod lastAcc = _findLastAccessUpdateMethod(request, key);
 
         // assumption here is that we may be passed hash code of orig content, but
         // not that of compressed (latter is easy to calculate on server anyway)
@@ -739,7 +739,11 @@ public abstract class StoreHandler<
     /**********************************************************************
      */
 
-    protected abstract LastAccessUpdateMethod _findLastAccessUpdateMethod(K key);
+    /**
+     * Method called for GET operations, to figure out which method of updating 
+     * "last-access" information should be used, if any.
+     */
+    protected abstract LastAccessUpdateMethod _findLastAccessUpdateMethod(ServiceRequest request, K key);
     
     /**
      * Method called to let implementation update last-accessed timestamp if necessary

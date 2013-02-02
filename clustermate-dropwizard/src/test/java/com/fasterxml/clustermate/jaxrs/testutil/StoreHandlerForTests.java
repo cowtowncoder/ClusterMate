@@ -16,7 +16,7 @@ public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<Test
     }
     
     @Override
-    protected LastAccessUpdateMethod _findLastAccessUpdateMethod(TestKey key)
+    protected LastAccessUpdateMethod _findLastAccessUpdateMethod(ServiceRequest request, TestKey key)
     {
         return key.hasGroupId() ? FakeLastAccess.GROUPED
                 : FakeLastAccess.INDIVIDUAL;
