@@ -5,7 +5,7 @@ using single-node storage components provided by
 [StoreMate](https://github.com/cowtowncoder/StoreMate) project.
 It is designed as a toolkit for building distributed storage systems, either for stand-alone systems or as base for other distributed systems (like message queues).
 
-Check out [Project Wiki](/cowtowncoder/ClusterMate/wiki) for more.
+Check out [Project Wiki](http://github.com/cowtowncoder/ClusterMate/wiki) for more.
 
 # Status
 
