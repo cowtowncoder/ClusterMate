@@ -1,10 +1,7 @@
 package com.fasterxml.clustermate.service.sync;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.skife.config.TimeSpan;
@@ -23,12 +20,7 @@ import com.fasterxml.storemate.store.file.FileManager;
 
 import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
-import com.fasterxml.clustermate.service.HandlerBase;
-import com.fasterxml.clustermate.service.OperationDiagnostics;
-import com.fasterxml.clustermate.service.ServiceRequest;
-import com.fasterxml.clustermate.service.ServiceResponse;
-import com.fasterxml.clustermate.service.SharedServiceStuff;
-import com.fasterxml.clustermate.service.Stores;
+import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
@@ -202,7 +194,6 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         }
         boolean useSmile = _acceptSmileContentType(request);
         long currentTime = _timeMaster.currentTimeMillis();
-
         final long upUntil = currentTime - _cfgSyncGracePeriod.getMillis();
 
         AtomicLong timestamp = new AtomicLong(0L);
@@ -359,13 +350,36 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
             double secs = msecs / 1000.0;
             LOG.warn(String.format("Had to stop processing 'listEntries' after %.2f seconds; scanned through %d entries, collected %d entries",
                     secs, totals, result.size()));
+        } else if (r == IterationResult.TERMINATED_FOR_TIMESTAMP) {
+            // and running out of valid data by terminating for timestamp; if so, we have seen
+            // a later timestamp, but one that's not valid to use
+            // So how long would we need to wait?
+            
+            // !!! TODO: Loop a bit to get something to serve
+            /*
+            long nextSeen = cb.getNextTimestamp();
+            
+    long delay = (nextSeen + _cfgMaxLongPollTime.getMillis()) - _timeMaster.currentTimeMillis();
+    LOG.warn("SyncList wait to see next one: {} msecs", delay);
+    
+    */
+
         } else if (r == IterationResult.FULLY_ITERATED) {
-            /* Oh. Also, if we got this far, we better update last-seen timestamp;
-             * otherwise we'll be checking same last entry over and over again
-             */
+            // Oh. Also, if we got this far, we better update last-seen timestamp;
+            // otherwise we'll be checking same last entry over and over again
             if (lastSeenTimestamp != null) {
                 lastSeenTimestamp.set(upTo);
             }
+
+            // !!! TODO: Loop a bit to get something to serve
+            /*
+            
+            // Similar to above, can deduce time to wait to reach visibility
+long delay = (upTo + _cfgMaxLongPollTime.getMillis()) - _timeMaster.currentTimeMillis();
+LOG.warn("SyncList wait to reach possible new entries: {} msecs", delay);
+*/
+
+
         }
         return result;
     }
@@ -415,10 +429,15 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         private int _total = 0;
 
         private final ArrayList<E> _result;
-        private long _lastSeenTimestamp;
+        
+        // last timestamp traversed that was in legal timestamp range
+        private long _lastSeenValidTimestamp;
+
+        // first timestamp out of valid range
+        private long _nextTimestamp;
 
         // to ensure List advances timestamp:
-        private boolean timestampHasAdvanced = false;
+        private boolean _timestampHasAdvanced = false;
         
         public LastModLister(TimeMaster timeMaster, StoredEntryConverter<K,E,?> entryConverter,
                 KeyRange inRange, long since, long upTo, long processUntil, int maxCount,
@@ -449,19 +468,20 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
                  *  in-flight-modifiable things, it would seem possible.
                  *  However, let's play this safe for now.
                  */
+                _nextTimestamp = timestamp;
                 return IterationAction.TERMINATE_ITERATION;
             }
             // First things first: we do want to know last seen entry that's "in range"
-            _lastSeenTimestamp = timestamp;
-            timestampHasAdvanced |= (timestamp > _since);
+            _lastSeenValidTimestamp = timestamp;
+            _timestampHasAdvanced |= (timestamp > _since);
             return IterationAction.PROCESS_ENTRY;
         }
         
         // Most of filtering can actually be done with just keys...
         @Override public IterationAction verifyKey(StorableKey rawKey) {
-            // check time limits every 32 entries processed
-            if ((++_total & 0x1F) == 0) {
-                if (timestampHasAdvanced &&
+            // check time limits every 64 entries processed
+            if ((++_total & 0x3F) == 0) {
+                if (_timestampHasAdvanced &&
                         _timeMaster.realSystemTimeMillis() > _processUntil) {
                     return IterationAction.TERMINATE_ITERATION;
                 }
@@ -483,14 +503,15 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
             /* One limitation, however; we MUST advance timer beyond initial
              * 'since' time. This may require including more than 'max' entries.
              */
-            if (timestampHasAdvanced && _result.size() >= _maxCount) {
+            if (_timestampHasAdvanced && _result.size() >= _maxCount) {
                 return IterationAction.TERMINATE_ITERATION;
             }
             return IterationAction.PROCESS_ENTRY;
         }
 
         public int getTotal() { return _total; }
-        public long getLastSeenTimestamp() { return _lastSeenTimestamp; }
+        public long getLastSeenTimestamp() { return _lastSeenValidTimestamp; }
+        public long getNextTimestamp() { return _nextTimestamp; }
     }
 }
 
