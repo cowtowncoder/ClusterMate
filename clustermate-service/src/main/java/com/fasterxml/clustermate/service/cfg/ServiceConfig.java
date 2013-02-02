@@ -49,34 +49,13 @@ public abstract class ServiceConfig
     @NotNull
     @Valid
     public ClusterConfig cluster = new ClusterConfig();
+
+    /*
+    /**********************************************************************
+    /* Store behavior
+    /**********************************************************************
+     */
     
-    /*
-    /**********************************************************************
-    /* Storage config: paths, helper classes
-    /**********************************************************************
-     */
-  
-    /**
-     * Directory used for storing service metadata, such as node
-     * states, last-accessed timestamps.
-     */
-    @NotNull
-    public File metadataDirectory;
-
-    /**
-     * What is the grace period for syncing: that is, how many seconds do we give
-     * for servers to get content from clients before we try to synchronize.
-     * This balances fast synchronization with overhead of doing sync: for now,
-     * let's give 60 seconds.
-     */
-    public TimeSpan cfgSyncGracePeriod = new TimeSpan("60s");
-
-    /*
-    /**********************************************************************
-    /* Storage config: data expiration
-    /**********************************************************************
-     */
-
     /**
      * Configuration setting that determines whether it is legal to
      * re-create a formerly deleted entry that still has a tombstone.
@@ -94,13 +73,54 @@ public abstract class ServiceConfig
      * if true, 204.
      */
     public boolean cfgReportDeletedAsEmpty = true;
+
+    /*
+    /**********************************************************************
+    /* Storage config: StoreMate (single-node storage subsystem) configs
+    /**********************************************************************
+     */
+
+    /**
+     * General configuration for the underlying entry metadata store.
+     */
+    public StoreConfig storeConfig = new StoreConfig();
+
+    /**
+     * Type of the store backend, specified using type of builder
+     * for 
+     */
+    public Class<? extends StoreBackendBuilder<?>> storeBackendType;
     
     /**
-     * By default we will not run cleanup more often than once per hour.
-     * The first cleanup will typically be run earlier than delay.
+     * Configuration settings for the store backend: specific type depends on
+     * backend type (class), and data-binding is done lazily.
+     */
+    public java.util.Map<String,Object> storeBackendConfig;
+
+    /**
+     * Alternatively, instead of "raw" JSON, it is possible to just give overrides
+     * for backend. Used by some tests.
+     */
+    public StoreBackendConfig _storeBackendConfigOverride;
+    
+    /*
+    /**********************************************************************
+    /* Storage config: paths
+    /**********************************************************************
+     */
+  
+    /**
+     * Directory used for storing service metadata, such as node
+     * states, last-accessed timestamps.
      */
     @NotNull
-    public TimeSpan cfgDelayBetweenCleanup = new TimeSpan("60m");
+    public File metadataDirectory;
+
+    /*
+    /**********************************************************************
+    /* Storage config: data expiration, deletion, cleanup
+    /**********************************************************************
+     */
 
     /**
      * This value specifies absolute maximum time-to-live value for any
@@ -143,6 +163,13 @@ public abstract class ServiceConfig
      * less than 3 hours after last access or creation.
      */
     public TimeSpan cfgDefaultSinceAccessTTL = new TimeSpan("3h");
+
+    /**
+     * By default we will not run cleanup more often than once per hour.
+     * The first cleanup will typically be run earlier than delay.
+     */
+    @NotNull
+    public TimeSpan cfgDelayBetweenCleanup = new TimeSpan("60m");
     
     /**
      * This value specifies time that tombstones (deletion markers) should
@@ -154,40 +181,31 @@ public abstract class ServiceConfig
      */
     public TimeSpan cfgTombstoneTTL = new TimeSpan("1h");
 
+    /*
+    /**********************************************************************
+    /* Storage config: synchronization settings
+    /**********************************************************************
+     */
+
+    /**
+     * What is the grace period for syncing: that is, how many seconds do we give
+     * for servers to get content from clients before we try to synchronize.
+     * This balances fast synchronization with overhead of doing sync: for now,
+     * let's give 60 seconds.
+     */
+    public TimeSpan cfgSyncGracePeriod = new TimeSpan("60s");
+    
     /**
      * How many entries can we request with each call sync-list call?
      * Responses are fully buffered in memory, so let's say... 500?
      */
     public int cfgMaxEntriesPerSyncList = 500;
-    
-    /*
-    /**********************************************************************
-    /* StoreMate (single-node storage subsystem V uses) configs
-    /**********************************************************************
-     */
 
     /**
-     * General configuration for the underlying entry metadata store.
+     * What is the maximum amount of time server may keep connection
+     * for "Sync List" open before returning empty result.
      */
-    public StoreConfig storeConfig = new StoreConfig();
-
-    /**
-     * Type of the store backend, specified using type of builder
-     * for 
-     */
-    public Class<? extends StoreBackendBuilder<?>> storeBackendType;
-    
-    /**
-     * Configuration settings for the store backend: specific type depends on
-     * backend type (class), and data-binding is done lazily.
-     */
-    public java.util.Map<String,Object> storeBackendConfig;
-
-    /**
-     * Alternatively, instead of "raw" JSON, it is possible to just give overrides
-     * for backend. Used by some tests.
-     */
-    public StoreBackendConfig _storeBackendConfigOverride;
+    public TimeSpan cfgSyncMaxLongPollTime = new TimeSpan("10s");
 
     /*
     /**********************************************************************
@@ -209,11 +227,20 @@ public abstract class ServiceConfig
         try {
             cfgSyncGracePeriod = new TimeSpan(periodDesc);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid delay description '"+periodDesc+"': "+e.getMessage());
+            throw new IllegalArgumentException("Invalid delay definition '"+periodDesc+"': "+e.getMessage());
         }
         return this;
     }
 
+    public ServiceConfig overrideMaxLongPollTime(String periodDesc) {
+        try {
+            cfgSyncMaxLongPollTime = new TimeSpan(periodDesc);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid max setting definition '"+periodDesc+"': "+e.getMessage());
+        }
+        return this;
+    }
+    
     public ServiceConfig overrideStoreBackendConfig(StoreBackendConfig cfg) {
         _storeBackendConfigOverride = cfg;
         return this;

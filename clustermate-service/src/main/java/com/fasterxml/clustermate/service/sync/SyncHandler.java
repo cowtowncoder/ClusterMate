@@ -66,9 +66,9 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
 
     protected final Stores<K,E> _stores;
 
-    protected final EntryKeyConverter<K> _keyConverter;
-    
     protected final StoredEntryConverter<K,E,?> _entryConverter;
+
+    protected final EntryKeyConverter<K> _keyConverter;
     
     protected final FileManager _fileManager;
 
@@ -101,6 +101,8 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
     protected final TimeSpan _cfgSyncGracePeriod;
 
     protected final TimeSpan _cfgMaxTimeToLiveMsecs;
+
+    protected final TimeSpan _cfgMaxLongPollTime;
     
     /**
      * We will limit number of entries listed in couple of ways; count limitation
@@ -134,6 +136,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         _keyConverter = stuff.getKeyConverter();
         _cfgSyncGracePeriod = stuff.getServiceConfig().cfgSyncGracePeriod;
         _cfgMaxTimeToLiveMsecs = stuff.getServiceConfig().cfgMaxMaxTTL;
+        _cfgMaxLongPollTime = stuff.getServiceConfig().cfgSyncMaxLongPollTime;
         _syncListJsonWriter = stuff.jsonWriter().withDefaultPrettyPrinter();
         _syncListSmileWriter = stuff.smileWriter();
         _syncPullSmileWriter = stuff.smileWriter();
@@ -335,80 +338,23 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
             }
         }
         final long upTo = upTo0;
-        
         final long processUntil = realStartTime + MAX_LIST_PROC_TIME_IN_MSECS;
-        
         final ArrayList<E> result = new ArrayList<E>(Math.min(100, maxCount));
-        final AtomicInteger totalCounter = new AtomicInteger(0);
 
-        IterationResult r = _stores.getEntryStore().iterateEntriesByModifiedTime(
-            new StorableLastModIterationCallback() {
-                int total = 0;
-                K key = null;
-                // to ensure List advances timestamp:
-                boolean timestampHasAdvanced = false;
-
-                /* We can do most efficient checks for timestamp range by
-                 * verifying timestamp first, right off the index we are
-                 * using...
-                 */
-                @Override
-                public IterationAction verifyTimestamp(long timestamp) {
-                    if (timestamp > upTo) {
-                        /* 21-Sep-2012, tatu: Should we try to approximate latest
-                         *  possible "lastSeen" timestamp here? As long as we avoid
-                         *  in-flight-modifiable things, it would seem possible.
-                         *  However, let's play this safe for now.
-                         */
-                        totalCounter.set(total);
-                        return IterationAction.TERMINATE_ITERATION;
-                    }
-                    // First things first: we do want to know last seen entry that's "in range"
-                    if (lastSeenTimestamp != null) {
-                        lastSeenTimestamp.set(timestamp);
-                    }
-                    timestampHasAdvanced |= (timestamp > since);
-                    return IterationAction.PROCESS_ENTRY;
-                }
-                
-                // Most of filtering can actually be done with just keys...
-                @Override public IterationAction verifyKey(StorableKey rawKey) {
-                    // check time limits
-                    if ((++total & 0x7F) == 0) {
-                        if (timestampHasAdvanced &&
-                                _timeMaster.realSystemTimeMillis() > processUntil) {
-                            totalCounter.set(total);
-                            return IterationAction.TERMINATE_ITERATION;
-                        }
-                    }
-                    // and then verify that we are in range...
-                    key = _keyConverter.rawToEntryKey(rawKey);
-                    int hash = _keyConverter.routingHashFor(key);
-                    if (inRange.contains(hash)) {
-                        return IterationAction.PROCESS_ENTRY;
-                    }
-                    return IterationAction.SKIP_ENTRY;
-                }
-
-                @Override
-                public IterationAction processEntry(Storable storable)
-                {
-                    E entry = _entryConverter.entryFromStorable(key, storable);
-                    result.add(entry);
-                    /* One limitation, however; we MUST advance timer beyond initial
-                     * 'since' time. This may require including more than 'max' entries.
-                     */
-                    if (timestampHasAdvanced && result.size() >= maxCount) {
-                        totalCounter.set(total);
-                        return IterationAction.TERMINATE_ITERATION;
-                    }
-                    return IterationAction.PROCESS_ENTRY;
-                }
-            }, since);
-
+        LastModLister<K,E> cb = new LastModLister<K,E>(
+                _timeMaster, _entryConverter, inRange,
+                since, upTo, processUntil, maxCount,
+                result);
+        IterationResult r = _stores.getEntryStore().iterateEntriesByModifiedTime(cb, since);
         // "timeout" is indicated by termination at primary key:
         if (r == IterationResult.TERMINATED_FOR_KEY) {
-            int totals = totalCounter.get();
+            if (lastSeenTimestamp != null) {
+                long l = cb.getLastSeenTimestamp();
+                if (l > 0) {
+                    lastSeenTimestamp.set(l);
+                }
+            }
+            int totals = cb.getTotal();
             long msecs = _timeMaster.realSystemTimeMillis() - realStartTime;
             double secs = msecs / 1000.0;
             LOG.warn(String.format("Had to stop processing 'listEntries' after %.2f seconds; scanned through %d entries, collected %d entries",
@@ -435,4 +381,116 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
     protected <OUT extends ServiceResponse> OUT _badRequest(ServiceResponse response, String msg) {
         return (OUT) response.badRequest(new SyncListResponse<E>(msg)).setContentTypeJson();
     }
+
+    /*
+    /**********************************************************************
+    /* Helper classes for callback handling
+    /**********************************************************************
+     */
+
+    static class LastModLister<K extends EntryKey, E extends StoredEntry<K>>
+        extends StorableLastModIterationCallback
+    {
+        private final TimeMaster _timeMaster;
+        private final StoredEntryConverter<K,E,?> _entryConverter;
+
+        // // Limits
+        
+        private final KeyRange _inRange;
+
+        private final EntryKeyConverter<K> _keyConverter;
+
+        private final long _since, _upTo;
+
+        private final long _processUntil;
+
+        private final int _maxCount;
+        
+        // // Temporary values
+        
+        private K key = null;
+
+        // // Result values
+        
+        private int _total = 0;
+
+        private final ArrayList<E> _result;
+        private long _lastSeenTimestamp;
+
+        // to ensure List advances timestamp:
+        private boolean timestampHasAdvanced = false;
+        
+        public LastModLister(TimeMaster timeMaster, StoredEntryConverter<K,E,?> entryConverter,
+                KeyRange inRange, long since, long upTo, long processUntil, int maxCount,
+                ArrayList<E> result)
+        {
+            _timeMaster = timeMaster;
+            _entryConverter = entryConverter;
+            _keyConverter = entryConverter.keyConverter();
+
+            _inRange = inRange;
+            _since = since;
+            _upTo = upTo;
+            _processUntil = processUntil;
+            _maxCount = maxCount;
+
+            _result = result;
+        }
+        
+        /* We can do most efficient checks for timestamp range by
+         * verifying timestamp first, right off the index we are
+         * using...
+         */
+        @Override
+        public IterationAction verifyTimestamp(long timestamp) {
+            if (timestamp > _upTo) {
+                /* 21-Sep-2012, tatu: Should we try to approximate latest
+                 *  possible "lastSeen" timestamp here? As long as we avoid
+                 *  in-flight-modifiable things, it would seem possible.
+                 *  However, let's play this safe for now.
+                 */
+                return IterationAction.TERMINATE_ITERATION;
+            }
+            // First things first: we do want to know last seen entry that's "in range"
+            _lastSeenTimestamp = timestamp;
+            timestampHasAdvanced |= (timestamp > _since);
+            return IterationAction.PROCESS_ENTRY;
+        }
+        
+        // Most of filtering can actually be done with just keys...
+        @Override public IterationAction verifyKey(StorableKey rawKey) {
+            // check time limits every 32 entries processed
+            if ((++_total & 0x1F) == 0) {
+                if (timestampHasAdvanced &&
+                        _timeMaster.realSystemTimeMillis() > _processUntil) {
+                    return IterationAction.TERMINATE_ITERATION;
+                }
+            }
+            // and then verify that we are in range...
+            key = _keyConverter.rawToEntryKey(rawKey);
+            int hash = _keyConverter.routingHashFor(key);
+            if (_inRange.contains(hash)) {
+                return IterationAction.PROCESS_ENTRY;
+            }
+            return IterationAction.SKIP_ENTRY;
+        }
+
+        @Override
+        public IterationAction processEntry(Storable storable)
+        {
+            E entry = _entryConverter.entryFromStorable(key, storable);
+            _result.add(entry);
+            /* One limitation, however; we MUST advance timer beyond initial
+             * 'since' time. This may require including more than 'max' entries.
+             */
+            if (timestampHasAdvanced && _result.size() >= _maxCount) {
+                return IterationAction.TERMINATE_ITERATION;
+            }
+            return IterationAction.PROCESS_ENTRY;
+        }
+
+        public int getTotal() { return _total; }
+        public long getLastSeenTimestamp() { return _lastSeenTimestamp; }
+    }
 }
+
