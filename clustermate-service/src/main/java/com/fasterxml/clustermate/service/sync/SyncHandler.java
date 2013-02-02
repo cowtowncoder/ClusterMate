@@ -305,14 +305,12 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         throws StoreException
     {
         final StorableStore store = _stores.getEntryStore();
-        /* 19-Sep-2012, tatu: Alas, it is difficult to make this work
-         *   with virtual time, tests; so for now we will use actual
-         *   real system time and not virtual time.
+        /* 19-Sep-2012, tatu: Alas, it is difficult to make this work with virtual time,
+         *   tests; so for now we will use actual real system time and not virtual time.
          *   May need to revisit in future.
          */
         final long realStartTime = _timeMaster.realSystemTimeMillis();
-        // sanity check (better safe than sorry)
-        if (upTo0 >= realStartTime) {
+        if (upTo0 >= realStartTime) { // sanity check (better safe than sorry)
             throw new IllegalStateException("Argument 'upTo' too high ("+upTo0+"): can not exceed current time ("
                     +realStartTime);
         }
@@ -332,10 +330,8 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         final long processUntil = realStartTime + MAX_LIST_PROC_TIME_IN_MSECS;
         final ArrayList<E> result = new ArrayList<E>(Math.min(100, maxCount));
 
-        LastModLister<K,E> cb = new LastModLister<K,E>(
-                _timeMaster, _entryConverter, inRange,
-                since, upTo, processUntil, maxCount,
-                result);
+        LastModLister<K,E> cb = new LastModLister<K,E>(_timeMaster, _entryConverter, inRange,
+                since, upTo, processUntil, maxCount, result);
         IterationResult r = _stores.getEntryStore().iterateEntriesByModifiedTime(cb, since);
         // "timeout" is indicated by termination at primary key:
         if (r == IterationResult.TERMINATED_FOR_KEY) {

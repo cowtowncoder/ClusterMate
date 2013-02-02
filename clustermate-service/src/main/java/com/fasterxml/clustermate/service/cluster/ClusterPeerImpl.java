@@ -44,6 +44,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
 
     private final static long SLEEP_FOR_SYNCPULL_ERRORS_MSECS = 3000L;
 
+    // no point trying to sleep for trivial time
+    private final static long MINIMAL_SLEEP_MSECS = 10L;
+    
     /**
      * If synclist is empty, we can wait for... say, 10 seconds?
      */
@@ -439,7 +442,13 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (insertedEntryCount == 0) { // nothing to update
             // may still need to update timestamp?
             _updatePersistentState(listTime, syncResp.lastSeen());
-            _timeMaster.sleep(SLEEP_FOR_EMPTY_SYNCLIST_MSECS);
+            
+            long timeSpent = _timeMaster.currentTimeMillis() - listTime;
+            long sleepMsecs = SLEEP_FOR_EMPTY_SYNCLIST_MSECS - timeSpent;
+
+            if (sleepMsecs >= MINIMAL_SLEEP_MSECS) {
+                _timeMaster.sleep(sleepMsecs);
+            }
             return;
         }
         // Ok, we got something, good.
