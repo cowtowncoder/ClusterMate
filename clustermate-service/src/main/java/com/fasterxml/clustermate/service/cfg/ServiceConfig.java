@@ -191,9 +191,9 @@ public abstract class ServiceConfig
      * What is the grace period for syncing: that is, how many seconds do we give
      * for servers to get content from clients before we try to synchronize.
      * This balances fast synchronization with overhead of doing sync: for now,
-     * let's give 60 seconds.
+     * let's give 20 seconds.
      */
-    public TimeSpan cfgSyncGracePeriod = new TimeSpan("60s");
+    public TimeSpan cfgSyncGracePeriod = new TimeSpan("20s");
     
     /**
      * How many entries can we request with each call sync-list call?
