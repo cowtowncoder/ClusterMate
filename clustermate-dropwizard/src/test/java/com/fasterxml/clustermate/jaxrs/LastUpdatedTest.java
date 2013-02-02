@@ -3,13 +3,12 @@ package com.fasterxml.clustermate.jaxrs;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-import com.fasterxml.clustermate.jaxrs.StoreResource;
-import com.fasterxml.clustermate.jaxrs.testutil.*;
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
-import com.fasterxml.clustermate.service.ServiceResponse;
-import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.storemate.store.StorableStore;
 
+import com.fasterxml.clustermate.jaxrs.StoreResource;
+import com.fasterxml.clustermate.jaxrs.testutil.*;
+import com.fasterxml.clustermate.service.ServiceResponse;
+import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**
  * Tests to verify correct handling of 'last updated' timestamps
@@ -105,7 +104,7 @@ public class LastUpdatedTest extends JaxrsStoreTestBase
 
         // note: second entry should see the last-accessed from the first update!
         entry1b = rawToEntry(entries.findEntry(KEY1B.asStorableKey()));
-        assertEquals(LastAccessUpdateMethod.GROUPED, entry1b.getLastAccessUpdateMethod());
+        assertEquals(FakeLastAccess.GROUPED, entry1b.getLastAccessUpdateMethod());
         assertEquals(UPDATE_TIME2, resource.getStores().getLastAccessStore().findLastAccessTime(entry1b));
 
         // as well as vice-versa

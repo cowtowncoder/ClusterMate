@@ -60,7 +60,8 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
      */
 
     public long findLastAccessTime(E entry) {
-        return findLastAccessTime(entry.getKey(), entry.getLastAccessUpdateMethod());
+        EntryLastAccessed acc = findLastAccessEntry(entry.getKey(), entry.getLastAccessUpdateMethod());
+        return (acc == null) ? 0L : acc.lastAccessTime;
     }
     
     public long findLastAccessTime(K key, LastAccessUpdateMethod method)
@@ -142,10 +143,9 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
         return dbConfig;
     }
 
-    private DatabaseEntry lastAccessKey(E entry)
-    {
+    private DatabaseEntry lastAccessKey(E entry) {
         return lastAccessKey(entry.getKey(), entry.getLastAccessUpdateMethod());
     }
-
+    
     protected abstract DatabaseEntry lastAccessKey(K key, LastAccessUpdateMethod acc);
 }

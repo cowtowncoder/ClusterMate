@@ -3,16 +3,15 @@ package com.fasterxml.clustermate.jaxrs;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
-import com.fasterxml.clustermate.jaxrs.StoreResource;
-import com.fasterxml.clustermate.jaxrs.testutil.*;
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
-import com.fasterxml.clustermate.service.msg.DeleteResponse;
-import com.fasterxml.clustermate.service.msg.PutResponse;
-import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.storemate.store.AdminStorableStore;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
- 
+
+import com.fasterxml.clustermate.jaxrs.StoreResource;
+import com.fasterxml.clustermate.jaxrs.testutil.*;
+import com.fasterxml.clustermate.service.msg.DeleteResponse;
+import com.fasterxml.clustermate.service.msg.PutResponse;
+import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**
  * Unit tests to verify basic functioning of DELETE operation
@@ -70,7 +69,7 @@ public class DeleteTest extends JaxrsStoreTestBase
         assertTrue(response.hasStreamingContent());
         // access does update timestamp
         assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime(
-                INTERNAL_KEY1, LastAccessUpdateMethod.INDIVIDUAL));
+                INTERNAL_KEY1, FakeLastAccess.INDIVIDUAL));
 
         // then try DELETEing second entry first:
         final long deleteTime = timeMaster.advanceCurrentTimeMillis(5000L).currentTimeMillis();

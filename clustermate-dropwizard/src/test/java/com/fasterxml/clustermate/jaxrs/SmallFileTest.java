@@ -11,7 +11,6 @@ import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.jaxrs.StoreResource;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.msg.PutResponse;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -62,7 +61,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         assertEquals(1, entries.getEntryCount());
         // not accessed yet:
         assertEquals(0L, resource.getStores().getLastAccessStore().findLastAccessTime(INTERNAL_KEY1,
-                LastAccessUpdateMethod.INDIVIDUAL));
+                FakeLastAccess.INDIVIDUAL));
 
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();
@@ -85,7 +84,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
 
         // and now last-accessed should be set
         assertEquals(1234L, resource.getStores().getLastAccessStore().findLastAccessTime(INTERNAL_KEY1,
-                LastAccessUpdateMethod.INDIVIDUAL));
+                FakeLastAccess.INDIVIDUAL));
 
         // let's verify it then; small request...
         assertTrue(response.hasStreamingContent());
@@ -170,7 +169,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         }
         assertEquals(1, entries.getEntryCount());
         assertEquals(0L, resource.getStores().getLastAccessStore().findLastAccessTime(INTERNAL_KEY1,
-                LastAccessUpdateMethod.INDIVIDUAL));
+                FakeLastAccess.INDIVIDUAL));
 
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();
@@ -187,7 +186,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
 
         // and now last-accessed should be set
         assertEquals(creationTime, resource.getStores().getLastAccessStore().findLastAccessTime(INTERNAL_KEY1,
-                LastAccessUpdateMethod.INDIVIDUAL));
+                FakeLastAccess.INDIVIDUAL));
 
         // let's verify it then; small request...
         assertTrue(response.hasStreamingContent());

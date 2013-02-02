@@ -129,7 +129,7 @@ public class StoredEntryForTests extends StoredEntry<TestKey>
     public boolean usesLastAccessTime()
     {
         LastAccessUpdateMethod method = lastAccessUpdateMethod;
-        return (method == LastAccessUpdateMethod.GROUPED) || (method == LastAccessUpdateMethod.INDIVIDUAL);
+        return (method == FakeLastAccess.GROUPED) || (method == FakeLastAccess.INDIVIDUAL);
     }
     
     @Override

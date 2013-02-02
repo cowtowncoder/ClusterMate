@@ -17,8 +17,9 @@ public class LastAccessStoreForTests
     }
 
     @Override
-    protected DatabaseEntry lastAccessKey(TestKey key, LastAccessUpdateMethod acc)
+    protected DatabaseEntry lastAccessKey(TestKey key, LastAccessUpdateMethod acc0)
     {
+        FakeLastAccess acc = (FakeLastAccess) acc0;
         if (acc != null) {
             switch (acc) {
             case NONE:

@@ -164,10 +164,10 @@ public class StoredEntryConverterForTests
         return _getIntBE(buffer, offset+OFFSET_MAX_TTL);
     }
     
-    protected LastAccessUpdateMethod _extractLastAccessUpdatedMethod(TestKey key, byte[] buffer, int offset, int length)
+    protected FakeLastAccess _extractLastAccessUpdatedMethod(TestKey key, byte[] buffer, int offset, int length)
     {
         int accCode = buffer[offset+OFFSET_LAST_ACCESS];
-        LastAccessUpdateMethod acc = LastAccessUpdateMethod.valueOf(accCode);
+        FakeLastAccess acc = FakeLastAccess.valueOf(accCode);
         if (acc == null) {
             _badData(key, "invalid last-access-update-method 0x"+Integer.toHexString(accCode));
         }
