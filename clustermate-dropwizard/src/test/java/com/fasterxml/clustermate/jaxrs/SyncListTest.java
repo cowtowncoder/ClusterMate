@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.jaxrs;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 import com.fasterxml.storemate.store.StorableStore;
 
@@ -13,7 +12,6 @@ import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 import com.fasterxml.clustermate.service.sync.SyncListResponse;
-
 
 /**
  * Test case(s) to verify that we can handle basic pull list request
@@ -85,7 +83,7 @@ public class SyncListTest extends JaxrsStoreTestBase
      * timestamp, max entries to list must be relaxed so that caller
      * can advance.
      */
-    public void testLargerSyncList() throws IOException
+    public void testLargerSyncList() throws Exception
     {
         final long creationTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(creationTime);
