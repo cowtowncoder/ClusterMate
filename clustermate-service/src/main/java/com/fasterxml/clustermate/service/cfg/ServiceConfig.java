@@ -203,7 +203,11 @@ public abstract class ServiceConfig
 
     /**
      * What is the maximum amount of time server may keep connection
-     * for "Sync List" open before returning empty result.
+     * for "Sync List" open before having to return empty result
+     * set (non-empty result sets are to be returned right away without
+     * further waiting). This means that servers may put request to sleep
+     * for up to this amount of time, but only if it does not yet have
+     * any results to return.
      *<br />
      * NOTE: should be kept relatively low; server will let client know
      * of additional sleep it may do before retrying sync list request.

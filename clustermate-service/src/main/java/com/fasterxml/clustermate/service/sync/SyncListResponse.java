@@ -15,7 +15,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  * NOTE: only used for writing; on reading side we will use a "raw"
  * approach.
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class SyncListResponse<E extends StoredEntry<?>>
 {
     /**
@@ -28,7 +28,7 @@ public class SyncListResponse<E extends StoredEntry<?>>
      * timestamp of entries returned to reflect skipped entries (or in some
      * cases known "empty" time ranges)
      */
-    public Long lastSeenTimestamp;
+    public long lastSeenTimestamp;
 
     /**
      * Hash code server calculates over cluster view information.
@@ -38,6 +38,14 @@ public class SyncListResponse<E extends StoredEntry<?>>
     public long clusterHash;
 
     /**
+     * If server returns empty result list, it may also indicate that client
+     * may want to wait for specified amount of time before issuing a new request;
+     * this based on its knowledge of when more data can be available at earliest.
+     * Time is in milliseconds.
+     */
+    public long clientWait;
+    
+    /**
      * Optionally included cluster view.
      */
     public ClusterStatusMessage clusterStatus;
@@ -46,13 +54,21 @@ public class SyncListResponse<E extends StoredEntry<?>>
     
     public SyncListResponse() { }
     public SyncListResponse(String error) { message = error; }
-    public SyncListResponse(List<E> rawEntries, long lastSeen,
-            long clusterHash, ClusterStatusMessage clusterStatus)
-    {
+    public SyncListResponse(List<E> rawEntries) {
         entries = new ArrayList<SyncListResponseEntry>(rawEntries.size());
         for (StoredEntry<?> e : rawEntries) {
             entries.add(SyncListResponseEntry.valueOf(e));
         }
+    }
+
+    // NOTE: only to be used internally
+    public SyncListResponse(boolean dummy) {
+        entries = Collections.emptyList();
+    }
+    
+    public SyncListResponse(List<E> rawEntries, long lastSeen,
+            long clusterHash, ClusterStatusMessage clusterStatus)
+    {
         lastSeenTimestamp = lastSeen;
         this.clusterStatus = clusterStatus;
         this.clusterHash = clusterHash;
@@ -63,6 +79,27 @@ public class SyncListResponse<E extends StoredEntry<?>>
     }
 
     public long lastSeen() {
-        return (lastSeenTimestamp == null) ? 0L : lastSeenTimestamp.longValue();
+        return lastSeenTimestamp;
+    }
+
+    public SyncListResponse<E> setLastSeenTimestamp(long l) {
+        lastSeenTimestamp = l;
+        return this;
+    }
+
+    public SyncListResponse<E> setClusterStatus(ClusterStatusMessage s) {
+        clusterStatus = s;
+        return this;
+    }
+    
+    public SyncListResponse<E> setClusterHash(long h) {
+        clusterHash = h;
+        return this;
+    }
+
+
+    public SyncListResponse<E> setClientWait(long w) {
+        clientWait = w;
+        return this;
     }
 }
