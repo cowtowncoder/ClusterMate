@@ -46,7 +46,11 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
             if (since < 0L) {
                 response = _syncHandler.invalidArgument(response, ClusterMateConstants.QUERY_PARAM_SINCE, str);
             } else {
-                response = _syncHandler.listEntries(request, response, since, stats);
+                try {
+                    response = _syncHandler.listEntries(request, response, since, stats);
+                } catch (InterruptedException e) {
+                    throw new IOException(e);
+                }
                 _addStdHeaders(response);
             }
         }

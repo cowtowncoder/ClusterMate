@@ -2,9 +2,6 @@ package com.fasterxml.clustermate.service.sync;
 
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.skife.config.TimeSpan;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -90,11 +87,11 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
      * sent by client; that is, to reduce hysteresis caused by differing
      * arrival times of entries.
      */
-    protected final TimeSpan _cfgSyncGracePeriod;
+    protected final long _cfgSyncGracePeriodMsecs;
 
-    protected final TimeSpan _cfgMaxTimeToLiveMsecs;
+    protected final long _cfgMaxTimeToLiveMsecs;
 
-    protected final TimeSpan _cfgMaxLongPollTime;
+    protected final long _cfgMaxLongPollTimeMsecs;
     
     /**
      * We will limit number of entries listed in couple of ways; count limitation
@@ -126,9 +123,9 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         _fileManager = stuff.getFileManager();
         _timeMaster = stuff.getTimeMaster();
         _keyConverter = stuff.getKeyConverter();
-        _cfgSyncGracePeriod = stuff.getServiceConfig().cfgSyncGracePeriod;
-        _cfgMaxTimeToLiveMsecs = stuff.getServiceConfig().cfgMaxMaxTTL;
-        _cfgMaxLongPollTime = stuff.getServiceConfig().cfgSyncMaxLongPollTime;
+        _cfgSyncGracePeriodMsecs = stuff.getServiceConfig().cfgSyncGracePeriod.getMillis();
+        _cfgMaxTimeToLiveMsecs = stuff.getServiceConfig().cfgMaxMaxTTL.getMillis();
+        _cfgMaxLongPollTimeMsecs = stuff.getServiceConfig().cfgSyncMaxLongPollTime.getMillis();
         _syncListJsonWriter = stuff.jsonWriter().withDefaultPrettyPrinter();
         _syncListSmileWriter = stuff.smileWriter();
         _syncPullSmileWriter = stuff.smileWriter();
@@ -162,7 +159,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
     @SuppressWarnings("unchecked")
     public <OUT extends ServiceResponse> OUT listEntries(ServiceRequest request, OUT response,
             Long sinceL, OperationDiagnostics metadata)
-        throws StoreException
+        throws InterruptedException, StoreException
     {
         // simple validation first
         if (sinceL == null) {
@@ -194,16 +191,14 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         }
         boolean useSmile = _acceptSmileContentType(request);
         long currentTime = _timeMaster.currentTimeMillis();
-        final long upUntil = currentTime - _cfgSyncGracePeriod.getMillis();
-
-        AtomicLong timestamp = new AtomicLong(0L);
+        final long upUntil = currentTime - _cfgSyncGracePeriodMsecs;
         long since = (sinceL == null) ? 0L : sinceL.longValue();
 
         /* [Issue#8] Let's impose minimum timestamp to consider, to try to avoid
          * exposing potentially obsolete entries (ones that are due to cleanup
          * and will disappear anyway).
          */
-        long minSince = currentTime - _cfgMaxTimeToLiveMsecs.getMillis();
+        long minSince = currentTime - _cfgMaxTimeToLiveMsecs;
         if (minSince > since) {
             LOG.warn("Sync list 'since' argument of {} updated to {}, to use maximum TTL of {}",
                     since, minSince, _cfgMaxTimeToLiveMsecs);
@@ -214,38 +209,28 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
          * range. If not, can avoid (possibly huge) database scan.
          */
         NodeState localState = _cluster.getLocalState();
-        List<E> entries;
-
+        final SyncListResponse<E> resp;
         KeyRange localRange = localState.totalRange();
         if (localRange.overlapsWith(range)) {
-            entries = _listEntries(range, since, upUntil, _maxToListPerRequest, timestamp);
-        /*
+            resp = _listEntries(range, since, upUntil, _maxToListPerRequest);
+
+    /*
 System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+"); between "+sinceL+" and "+upUntil+", got "+entries.size()+"/"
 +_stores.getEntryStore().getEntryCount()+" entries... (time: "+_timeMaster.currentTimeMillis()+")");
 */
         } else {
             LOG.warn("Sync list request by {} for range {}; does not overlap with local range of {}; skipping",
                     caller, range, localRange);
-            entries = Collections.emptyList();
+            resp = SyncListResponse.emptyResponse();
         }
         if (metadata != null) {
-            metadata = metadata.setItemCount(entries.size());
+            metadata = metadata.setItemCount(resp.size());
         }
-        
-        // one more twist; if no entries found, can sync up to 'upUntil' time...
-        long lastSeen = timestamp.get();
-        if (entries.isEmpty() && upUntil > lastSeen) {
-            lastSeen = upUntil-1;
-        }
-
-        // One more thing: is cluster info requested?
-        ClusterStatusMessage clusterStatus;
         long currentHash = _cluster.getHashOverState();
-        clusterStatus = (clusterHash == 0L || clusterHash != currentHash) ?
+        resp.setClusterHash(currentHash);
+        ClusterStatusMessage clusterStatus = (clusterHash == 0L || clusterHash != currentHash) ?
                 _cluster.asMessage() : null;
-        
-        final SyncListResponse<E> resp = new SyncListResponse<E>(entries, timestamp.get(),
-                currentHash, clusterStatus);
+        resp.setClusterStatus(clusterStatus);                
         final ObjectWriter w = useSmile ? _syncListSmileWriter : _syncListJsonWriter;
         final String contentType = useSmile ? ContentType.SMILE.toString() : ContentType.JSON.toString();
         
@@ -299,87 +284,110 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
     /**********************************************************************
      */
     
-    protected List<E> _listEntries(final KeyRange inRange,
-            final long since, long upTo0, final int maxCount,
-            final AtomicLong lastSeenTimestamp)
-        throws StoreException
+    protected SyncListResponse<E> _listEntries(final KeyRange inRange,
+            final long since, long upTo0, final int maxCount)
+        throws InterruptedException, StoreException
     {
         final StorableStore store = _stores.getEntryStore();
-        /* 19-Sep-2012, tatu: Alas, it is difficult to make this work with virtual time,
-         *   tests; so for now we will use actual real system time and not virtual time.
-         *   May need to revisit in future.
-         */
-        final long realStartTime = _timeMaster.realSystemTimeMillis();
-        if (upTo0 >= realStartTime) { // sanity check (better safe than sorry)
-            throw new IllegalStateException("Argument 'upTo' too high ("+upTo0+"): can not exceed current time ("
-                    +realStartTime);
-        }
-        /* one more thing: need to make sure we can skip entries that
-         * have been updated concurrently (rare, but possible).
-         */
-        long oldestInFlight = store.getOldestInFlightTimestamp();
-        if (oldestInFlight != 0L) {
-            if (upTo0 > oldestInFlight) {
-                // since it's rare, add INFO logging to see if ever encounter this
-                LOG.info("Oldest in-flight ({}) higher than upTo ({}), use former as limit",
-                        oldestInFlight, upTo0);
-                upTo0 = oldestInFlight;
-            }
-        }
-        final long upTo = upTo0;
-        final long processUntil = realStartTime + MAX_LIST_PROC_TIME_IN_MSECS;
         final ArrayList<E> result = new ArrayList<E>(Math.min(100, maxCount));
-
-        LastModLister<K,E> cb = new LastModLister<K,E>(_timeMaster, _entryConverter, inRange,
-                since, upTo, processUntil, maxCount, result);
-        IterationResult r = _stores.getEntryStore().iterateEntriesByModifiedTime(cb, since);
-        // "timeout" is indicated by termination at primary key:
-        if (r == IterationResult.TERMINATED_FOR_KEY) {
-            if (lastSeenTimestamp != null) {
-                long l = cb.getLastSeenTimestamp();
-                if (l > 0) {
-                    lastSeenTimestamp.set(l);
+        long lastSeenTimestamp = 0L;
+        long clientWait = 0L; // we may instruct client to do bit of waiting before retry
+        
+        // let's only allow single wait; hence two rounds
+        for (int round = 0; round < 2; ++round) {
+            /* 19-Sep-2012, tatu: Alas, it is difficult to make this work with virtual time,
+             *   tests; so for now we will use actual real system time and not virtual time.
+             *   May need to revisit in future.
+             */
+            final long realStartTime = _timeMaster.realSystemTimeMillis();
+            if (upTo0 >= realStartTime) { // sanity check (better safe than sorry)
+                throw new IllegalStateException("Argument 'upTo' too high ("+upTo0+"): can not exceed current time ("
+                        +realStartTime);
+            }
+            /* one more thing: need to make sure we can skip entries that
+             * have been updated concurrently (rare, but possible).
+             */
+            long oldestInFlight = store.getOldestInFlightTimestamp();
+            if (oldestInFlight != 0L) {
+                if (upTo0 > oldestInFlight) {
+                    // since it's rare, add INFO logging to see if ever encounter this
+                    LOG.info("Oldest in-flight ({}) higher than upTo ({}), use former as limit",
+                            oldestInFlight, upTo0);
+                    upTo0 = oldestInFlight;
                 }
             }
-            int totals = cb.getTotal();
-            long msecs = _timeMaster.realSystemTimeMillis() - realStartTime;
-            double secs = msecs / 1000.0;
-            LOG.warn(String.format("Had to stop processing 'listEntries' after %.2f seconds; scanned through %d entries, collected %d entries",
-                    secs, totals, result.size()));
-        } else if (r == IterationResult.TERMINATED_FOR_TIMESTAMP) {
-            // and running out of valid data by terminating for timestamp; if so, we have seen
-            // a later timestamp, but one that's not valid to use
-            // So how long would we need to wait?
-            
-            // !!! TODO: Loop a bit to get something to serve
-            /*
-            long nextSeen = cb.getNextTimestamp();
-            
-    long delay = (nextSeen + _cfgMaxLongPollTime.getMillis()) - _timeMaster.currentTimeMillis();
-    LOG.warn("SyncList wait to see next one: {} msecs", delay);
+            final long upTo = upTo0;
+            final long processUntil = realStartTime + MAX_LIST_PROC_TIME_IN_MSECS;
     
-    */
+            LastModLister<K,E> cb = new LastModLister<K,E>(_timeMaster, _entryConverter, inRange,
+                    since, upTo, processUntil, maxCount, result);
+            IterationResult r = _stores.getEntryStore().iterateEntriesByModifiedTime(cb, since);
 
-        } else if (r == IterationResult.FULLY_ITERATED) {
-            // Oh. Also, if we got this far, we better update last-seen timestamp;
-            // otherwise we'll be checking same last entry over and over again
-            if (lastSeenTimestamp != null) {
-                lastSeenTimestamp.set(upTo);
+            // "timeout" is indicated by termination at primary key:
+            if (r == IterationResult.TERMINATED_FOR_KEY) {
+                long l = cb.getLastSeenTimestamp();
+                if (l > 0) {
+                    lastSeenTimestamp = l;
+                }
+                int totals = cb.getTotal();
+                long msecs = _timeMaster.realSystemTimeMillis() - realStartTime;
+                double secs = msecs / 1000.0;
+                LOG.warn(String.format("Had to stop processing 'listEntries' after %.2f seconds; scanned through %d entries, collected %d entries",
+                        secs, totals, result.size()));
+                break;
             }
 
-            // !!! TODO: Loop a bit to get something to serve
-            /*
+            long targetTime, delay;
+            if (r == IterationResult.TERMINATED_FOR_TIMESTAMP) {
+                // and running out of valid data by terminating for timestamp; if so, we have seen
+                // a later timestamp, but one that's not valid to use
+                // So how long would we need to wait?
+                targetTime = (cb.getNextTimestamp() + _cfgSyncGracePeriodMsecs);
+                delay = targetTime - _timeMaster.currentTimeMillis();
+            } else if (r == IterationResult.FULLY_ITERATED) { // means we got through all data (nothing to see)
+                // Oh. Also, if we got this far, we better update last-seen timestamp;
+                // otherwise we'll be checking same last entry over and over again
+                lastSeenTimestamp = upTo;
+                // NOTE: 'upTo' is about "currentTime - gracePeriod"; but our target really should
+                // be at least currentTime PLUS grace period; first timepoint when new stuff might
+                // have become visible
+                delay = _cfgSyncGracePeriodMsecs;
+                targetTime = _timeMaster.currentTimeMillis() + delay;
+            } else { // this then should be TERMINATED_FOR_ENTRY, which means entries were added, no need for delay
+                break;
+            }
+            if (result.size() > 0) {
+                break;
+            }
+          
+//LOG.warn("No SYNCs to LIST; should wait {} msecs", delay);
+
+            if (delay <= 0L) { // sanity check, should not occur
+                LOG.warn("No SYNCs to list, but calculated delay is {}, which is invalid; ignoring", delay);
+                break;
+            }
             
-            // Similar to above, can deduce time to wait to reach visibility
-long delay = (upTo + _cfgMaxLongPollTime.getMillis()) - _timeMaster.currentTimeMillis();
-LOG.warn("SyncList wait to reach possible new entries: {} msecs", delay);
-*/
-
-
+            if (delay > _cfgMaxLongPollTimeMsecs) { // can we delay up to that long? If not:
+                Thread.sleep(_cfgMaxLongPollTimeMsecs);
+                // and recalculate to see how long to ask client to wait (since actual time elapsed may differ)
+                clientWait = targetTime - _timeMaster.currentTimeMillis();
+                break;
+            }
+            // yes: we should get more data; so sleep, try again
+            Thread.sleep(delay);
         }
-        return result;
+        SyncListResponse<E> resp = new SyncListResponse<E>(result);
+        // one more twist; if no entries found, can sync up to 'upUntil' time...
+        if (result.size() == 0 && upTo0 > lastSeenTimestamp) {
+            lastSeenTimestamp = upTo0-1;
+        }
+        resp.setLastSeenTimestamp(lastSeenTimestamp);
+        if (clientWait > 0L) {
+            resp.setClientWait(clientWait);
+        }
+        return resp;
     }
-
+    
     /*
     /**********************************************************************
     /* Helper methods, other

@@ -62,7 +62,7 @@ public class SyncListResponse<E extends StoredEntry<?>>
     }
 
     // NOTE: only to be used internally
-    public SyncListResponse(boolean dummy) {
+    private SyncListResponse(boolean dummy) {
         entries = Collections.emptyList();
     }
     
@@ -74,6 +74,10 @@ public class SyncListResponse<E extends StoredEntry<?>>
         this.clusterHash = clusterHash;
     }
 
+    public static <E2 extends StoredEntry<?>> SyncListResponse<E2> emptyResponse() {
+        return new SyncListResponse<E2>(false);
+    }
+    
     public int size() {
         return (entries == null) ? 0 : entries.size();
     }
