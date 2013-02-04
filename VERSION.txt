@@ -1,28 +1,21 @@
 Project: ClusterMate
 
-0.8.5 (03-Feb-2013)
+0.8.7
+
+0.8.6 (03-Feb-2013)
+
+* #11: Use long-polling for SYNC LIST operation
+
+0.8.5
 
 * Add 'itemCount' property in 'OperationDiagnostics', populate for sync list, pull,
   list entries
 * Add 'ListItem' parameterization, to allow custom sub-classes.
 * Make 'LastAccessUpdatedMethod' an interface to make values configurable
-* #11: Use long-polling for SYNC LIST operation
 
-0.8.4 (28-Jan-2013)
+0.8.4 and earlier
 
 #4: Add Servlet/Handler for listing entries
-
-0.8.3 (21-Jan-2013)
-
-* #8: Fix problems with file auto-cleaning, dangling metadata, failing sync pulls
-
-0.8.2 (10-Jan-2013)
-
-Changes:
-
+#8: Fix problems with file auto-cleaning, dangling metadata, failing sync pulls
 #6: Provide Etag for GET, when content hash known
 #7: Support conditional GET with Etag
-
-0.8.1 (16-Dec-2012)
-
-Baseline version (no earlier release notes)
