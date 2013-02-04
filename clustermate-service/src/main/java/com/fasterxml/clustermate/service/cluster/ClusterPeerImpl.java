@@ -491,8 +491,8 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (delay > 0L) {
             // only bother informing if above 50 msec sleep
             if (delay >= 50L) {
-                LOG.info("With {} listed entries, {} seconds behind, will do {} second sleep",
-                        new Object[] { insertedEntryCount, String.format("%.2f", secsBehind), (delay / 1000L)});
+                LOG.info("With {} listed entries, {} seconds behind, will do {} msec sleep",
+                        new Object[] { insertedEntryCount, String.format("%.2f", secsBehind), delay});
             }
             _timeMaster.sleep(delay);
         }
