@@ -337,44 +337,53 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
                 break;
             }
 
-            long targetTime, delay;
-            if (r == IterationResult.TERMINATED_FOR_TIMESTAMP) {
-                // and running out of valid data by terminating for timestamp; if so, we have seen
-                // a later timestamp, but one that's not valid to use
-                // So how long would we need to wait?
-                targetTime = (cb.getNextTimestamp() + _cfgSyncGracePeriodMsecs);
-                delay = targetTime - _timeMaster.currentTimeMillis();
-            } else if (r == IterationResult.FULLY_ITERATED) { // means we got through all data (nothing to see)
-                // Oh. Also, if we got this far, we better update last-seen timestamp;
-                // otherwise we'll be checking same last entry over and over again
-                lastSeenTimestamp = upTo;
-                // NOTE: 'upTo' is about "currentTime - gracePeriod"; but our target really should
-                // be at least currentTime PLUS grace period; first timepoint when new stuff might
-                // have become visible
-                delay = _cfgSyncGracePeriodMsecs;
-                targetTime = _timeMaster.currentTimeMillis() + delay;
-            } else { // this then should be TERMINATED_FOR_ENTRY, which means entries were added, no need for delay
-                break;
-            }
+            // No waiting if there are results
             if (result.size() > 0) {
-                break;
-            }
-          
-//LOG.warn("No SYNCs to LIST; should wait {} msecs", delay);
-
-            if (delay <= 0L) { // sanity check, should not occur
-                LOG.warn("No SYNCs to list, but calculated delay is {}, which is invalid; ignoring", delay);
+                if (r == IterationResult.FULLY_ITERATED) { // means we got through all data (nothing to see)
+                    // Oh. Also, if we got this far, we better update last-seen timestamp;
+                    // otherwise we'll be checking same last entry over and over again
+                    lastSeenTimestamp = upTo;
+                }
                 break;
             }
             
-            if (delay > _cfgMaxLongPollTimeMsecs) { // can we delay up to that long? If not:
-                Thread.sleep(_cfgMaxLongPollTimeMsecs);
-                // and recalculate to see how long to ask client to wait (since actual time elapsed may differ)
-                clientWait = targetTime - _timeMaster.currentTimeMillis();
-                break;
+            // Behavior for empty lists differs between first and second round.
+            // During first round, we will try bit of server-side sleep (only)
+            if (round == 0) {
+                long delay;
+                if (r == IterationResult.TERMINATED_FOR_TIMESTAMP) {
+                    // and running out of valid data by terminating for timestamp; if so, we have seen
+                    // a later timestamp, but one that's not out of sync grace period yet
+                    long targetTime = (cb.getNextTimestamp() + _cfgSyncGracePeriodMsecs);
+                    delay = targetTime - _timeMaster.currentTimeMillis();
+                } else if (r == IterationResult.FULLY_ITERATED) { // means we got through all data (nothing to see)
+                    lastSeenTimestamp = upTo;
+                    delay = _cfgSyncGracePeriodMsecs;
+                } else { // this then should be TERMINATED_FOR_ENTRY, which means entries were added, no need for delay
+                    break;
+                }
+                if (delay <= 0L) { // sanity check, should not occur
+                    LOG.warn("No SYNCs to list, but calculated delay is {}, which is invalid; ignoring", delay);
+                } else {
+//LOG.warn("Server long-poll wait: {} msecs", delay);
+                    Thread.sleep(Math.min(_cfgMaxLongPollTimeMsecs, delay));
+                }
+            } else {
+                // and during second round, inform client how long it should sleep
+                if (r == IterationResult.TERMINATED_FOR_TIMESTAMP) {
+                    long targetTime = (cb.getNextTimestamp() + _cfgSyncGracePeriodMsecs);
+                    clientWait = targetTime - _timeMaster.currentTimeMillis();
+                } else if (r == IterationResult.FULLY_ITERATED) {
+                    lastSeenTimestamp = upTo;
+                    clientWait = _cfgSyncGracePeriodMsecs;
+                } // otherwise should be TERMINATED_FOR_ENTRY, which means entries were added, no need for delay
+
+//LOG.warn("Server setting clientWait at {} msecs", clientWait);
+
+                if (clientWait < 0L) { // sanity check, should not occur
+                    LOG.warn("No SYNCs to list, but calculated client-delay is {}, which is invalid", clientWait);
+                }
             }
-            // yes: we should get more data; so sleep, try again
-            Thread.sleep(delay);
         }
         SyncListResponse<E> resp = new SyncListResponse<E>(result);
         // one more twist; if no entries found, can sync up to 'upUntil' time...

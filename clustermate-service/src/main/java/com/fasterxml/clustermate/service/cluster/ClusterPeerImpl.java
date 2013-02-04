@@ -48,11 +48,12 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     private final static long MINIMAL_SLEEP_MSECS = 10L;
     
     /**
-     * If synclist is empty, we can wait for... say, 10 seconds?
+     * If synclist is empty and server does not instruct us, simply sleep for
+     * 1 second (to try avoid congestion)
      */
-    private final static long SLEEP_FOR_EMPTY_SYNCLIST_MSECS = 10000L;
+    private final static long SLEEP_FOR_EMPTY_SYNCLIST_MSECS = 1000L;
     
-    // no real hurry, so just use 10 seconds
+    // no real hurry; use 20 seconds to account for GC, congestion etc
     private final static TimeSpan TIMEOUT_FOR_SYNCLIST = new TimeSpan(10L, TimeUnit.SECONDS);
 
     /**
@@ -442,13 +443,14 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (insertedEntryCount == 0) { // nothing to update
             // may still need to update timestamp?
             _updatePersistentState(listTime, syncResp.lastSeen());
-            
-            long timeSpent = _timeMaster.currentTimeMillis() - listTime;
-            long sleepMsecs = SLEEP_FOR_EMPTY_SYNCLIST_MSECS - timeSpent;
 
-            if (sleepMsecs >= MINIMAL_SLEEP_MSECS) {
-                _timeMaster.sleep(sleepMsecs);
+            // Ok: maybe server instructed us as to how long to sleep?
+            long sleepMsecs = syncResp.clientWait;
+            if (sleepMsecs < MINIMAL_SLEEP_MSECS) { // if not, use some lowish default amount
+                sleepMsecs = SLEEP_FOR_EMPTY_SYNCLIST_MSECS;
             }
+//            long timeSpent = _timeMaster.currentTimeMillis() - listTime;
+            _timeMaster.sleep(sleepMsecs);
             return;
         }
         // Ok, we got something, good.
@@ -779,26 +781,13 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     private long _calculateSleepBetweenSync(int listedCount, long secondsBehind)
     {
-        // if we are behind by more than 60 minutes, shortest delay
-        if (secondsBehind >= 3600) {
-            return 10L;
+        // if we are behind by more than 5 minutes, or get "full" response, no delay:
+        if ((secondsBehind >= 300)
+                || (listedCount >= _stuff.getServiceConfig().cfgMaxEntriesPerSyncList)) {
+            return 0L;
         }
-        // and if more than 30, trivial delay
-        if (secondsBehind >= 1800) {
-            return 25L;
-        }
-        // otherwise, longer delay if we got few entries
-        if (listedCount < 10) { // 10 seconds if few entries
-            return 10 * 1000L;
-        }
-        if (listedCount < 50) { // 5 seconds for medium loads
-            return 5 * 1000L;
-        }
-        // If we get large number, reconsider; esp. with "full" response
-        if (listedCount >= _stuff.getServiceConfig().cfgMaxEntriesPerSyncList) {
-            return 10L;
-        }
-        return 1000L;
+        // otherwise nominal delay
+        return 50L;
     }
     
     /**
