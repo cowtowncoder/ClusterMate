@@ -34,11 +34,17 @@ public abstract class StoredEntryConverter<K extends EntryKey,
             byte[] buffer, int offset, int length);
 
     /**
-     * Method for constructing implementation specific {@link ListItem} instances
+     * Method for constructing implementation minimal {@link ListItem} instances
      * (subtypes) from raw {@link Storable}
      */
-    public abstract ListItem minimalListItemFromStorable(Storable raw);
+    public ListItem minimalListItemFromStorable(Storable raw) {
+        return defaultMinimalListItemFromStorable(raw);
+    }
 
+    /**
+     * Method for constructing implementation implementation-specific
+     * full {@link ListItem} instances (subtypes) from raw {@link Storable}
+     */
     public abstract L fullListItemFromStorable(Storable raw);
     
     // // // Metadata handling
