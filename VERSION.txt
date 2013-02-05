@@ -2,16 +2,18 @@ Project: ClusterMate
 
 0.8.7
 
+#12: Implement/require external String representation for Keys.
+
 0.8.6 (03-Feb-2013)
 
-* #11: Use long-polling for SYNC LIST operation
+#11: Use long-polling for SYNC LIST operation
 
 0.8.5
 
-* Add 'itemCount' property in 'OperationDiagnostics', populate for sync list, pull,
+- Add 'itemCount' property in 'OperationDiagnostics', populate for sync list, pull,
   list entries
-* Add 'ListItem' parameterization, to allow custom sub-classes.
-* Make 'LastAccessUpdatedMethod' an interface to make values configurable
+- Add 'ListItem' parameterization, to allow custom sub-classes.
+- Make 'LastAccessUpdatedMethod' an interface to make values configurable
 
 0.8.4 and earlier
 
