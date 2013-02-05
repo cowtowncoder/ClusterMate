@@ -25,6 +25,12 @@ public class ListItem
         length = l;
     }
 
+    protected ListItem(ListItem base) {
+        key = base.key;
+        hash = base.hash;
+        length = base.length;
+    }
+    
     // Use shorter public names to save some space
     
     public StorableKey getKey() { return key; }

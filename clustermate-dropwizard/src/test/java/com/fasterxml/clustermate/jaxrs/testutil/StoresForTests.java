@@ -6,25 +6,26 @@ import com.sleepycat.je.Environment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.clustermate.api.msg.ListItem;
+import com.fasterxml.storemate.shared.TimeMaster;
+import com.fasterxml.storemate.store.StorableStore;
+
 import com.fasterxml.clustermate.service.bdb.LastAccessStore;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 import com.fasterxml.clustermate.service.store.StoresImpl;
-import com.fasterxml.storemate.shared.TimeMaster;
-import com.fasterxml.storemate.store.StorableStore;
 
 public class StoresForTests extends StoresImpl<TestKey, StoredEntry<TestKey>>
 {
     public StoresForTests(ServiceConfig config, TimeMaster timeMaster, ObjectMapper jsonMapper,
-            StoredEntryConverter<TestKey, StoredEntry<TestKey>,ListItem> entryFactory, StorableStore entryStore) {
+            StoredEntryConverter<TestKey, StoredEntry<TestKey>,FakeFullListItem> entryFactory,
+            StorableStore entryStore) {
         this(config, timeMaster, jsonMapper,
                 entryFactory, entryStore, null);
     }
 
     public StoresForTests(ServiceConfig config, TimeMaster timeMaster, ObjectMapper jsonMapper,
-            StoredEntryConverter<TestKey, StoredEntry<TestKey>,ListItem> entryConverter,
+            StoredEntryConverter<TestKey, StoredEntry<TestKey>,FakeFullListItem> entryConverter,
             StorableStore entryStore, File bdbEnvRoot)
     {
         super(config, timeMaster, jsonMapper, entryConverter, entryStore, bdbEnvRoot);

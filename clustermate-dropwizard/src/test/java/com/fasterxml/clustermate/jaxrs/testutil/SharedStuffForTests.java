@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.jaxrs.testutil;
 
 import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -14,7 +13,7 @@ public class SharedStuffForTests extends SharedServiceStuff
 {
     private final ServiceConfigForTests _serviceConfig;
 
-    private final StoredEntryConverter<TestKey, StoredEntry<TestKey>,ListItem> _entryConverter;
+    private final StoredEntryConverter<TestKey, StoredEntry<TestKey>,FakeFullListItem> _entryConverter;
 
     /*
     /**********************************************************************
@@ -23,7 +22,7 @@ public class SharedStuffForTests extends SharedServiceStuff
      */
 
     public SharedStuffForTests(ServiceConfigForTests config, TimeMaster timeMaster,
-            StoredEntryConverter<TestKey, StoredEntry<TestKey>, ListItem> entryConverter,
+            StoredEntryConverter<TestKey, StoredEntry<TestKey>, FakeFullListItem> entryConverter,
             FileManager fileManager)
     {
         super(timeMaster, fileManager, config.getServicePathStrategy());
@@ -50,7 +49,7 @@ public class SharedStuffForTests extends SharedServiceStuff
 
     @SuppressWarnings("unchecked")
     @Override
-    public StoredEntryConverter<TestKey, StoredEntry<TestKey>,ListItem> getEntryConverter() {
+    public StoredEntryConverter<TestKey, StoredEntry<TestKey>,FakeFullListItem> getEntryConverter() {
         return _entryConverter;
     }
 

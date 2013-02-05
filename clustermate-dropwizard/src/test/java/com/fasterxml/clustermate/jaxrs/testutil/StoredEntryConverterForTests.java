@@ -13,7 +13,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 
 public class StoredEntryConverterForTests
-    extends StoredEntryConverter<TestKey, StoredEntry<TestKey>,ListItem>
+    extends StoredEntryConverter<TestKey, StoredEntry<TestKey>,FakeFullListItem>
 {
     public final static byte METADATA_VERSION_1 = 0x11;
     
@@ -113,8 +113,13 @@ public class StoredEntryConverterForTests
     }
 
     @Override
-    public ListItem listItemFromStorable(Storable raw) {
-        return defaultListItemFromStorable(raw);
+    public ListItem minimalListItemFromStorable(Storable raw) {
+        return defaultMinimalListItemFromStorable(raw);
+    }
+
+    @Override
+    public FakeFullListItem fullListItemFromStorable(Storable raw) {
+        return new FakeFullListItem(defaultMinimalListItemFromStorable(raw));
     }
     
     /*

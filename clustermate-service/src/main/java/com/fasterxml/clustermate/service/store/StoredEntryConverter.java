@@ -37,7 +37,9 @@ public abstract class StoredEntryConverter<K extends EntryKey,
      * Method for constructing implementation specific {@link ListItem} instances
      * (subtypes) from raw {@link Storable}
      */
-    public abstract L listItemFromStorable(Storable raw);
+    public abstract ListItem minimalListItemFromStorable(Storable raw);
+
+    public abstract L fullListItemFromStorable(Storable raw);
     
     // // // Metadata handling
     
@@ -65,7 +67,7 @@ public abstract class StoredEntryConverter<K extends EntryKey,
      * Helper method that can be used as the baseline implementation for 
      * {@link #listItemFromStorable(Storable)} by tests.
      */
-    protected ListItem defaultListItemFromStorable(Storable raw) {
+    protected ListItem defaultMinimalListItemFromStorable(Storable raw) {
         return new ListItem(raw.getKey(), raw.getContentHash(), raw.getActualUncompressedLength());
     }
 }
