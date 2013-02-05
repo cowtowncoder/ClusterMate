@@ -98,7 +98,9 @@ public abstract class StoreClient<K extends EntryKey,
         ObjectMapper mapper = config.getJsonMapper();
         _listReaders.put(ListItemType.ids, new GenericContentConverter<ListResponse.IdListResponse>(mapper, ListResponse.IdListResponse.class));
         _listReaders.put(ListItemType.names, new GenericContentConverter<ListResponse.NameListResponse>(mapper, ListResponse.NameListResponse.class));
-        _listReaders.put(ListItemType.entries, new GenericContentConverter<ListResponse.ItemListResponse>(mapper, ListResponse.ItemListResponse.class));
+        _listReaders.put(ListItemType.minimalEntries,
+                new GenericContentConverter<ListResponse.MinimalItemListResponse>(mapper,
+                        ListResponse.MinimalItemListResponse.class));
     }
 
     /**

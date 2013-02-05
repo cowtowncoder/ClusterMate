@@ -54,9 +54,18 @@ public abstract class ListResponse<T> // not a CRUD request/response
         @Override public ListItemType type() { return ListItemType.names; }
     }
 
-    public static final class ItemListResponse extends ListResponse<ListItem> {
-        public ItemListResponse() { }
-        public ItemListResponse(List<ListItem> entries, StorableKey lastSeen) { super(entries, lastSeen); }
-        @Override public ListItemType type() { return ListItemType.entries; }
+    public static final class MinimalItemListResponse extends ListResponse<ListItem> {
+        public MinimalItemListResponse() { }
+        public MinimalItemListResponse(List<ListItem> entries, StorableKey lastSeen) { super(entries, lastSeen); }
+        @Override public ListItemType type() { return ListItemType.minimalEntries; }
+    }
+
+    public static final class FullItemListResponse<I extends ListItem> extends ListResponse<I> {
+        public FullItemListResponse() { }
+        public FullItemListResponse(List<I> entries, StorableKey lastSeen) {
+            super(entries, lastSeen);
+        }
+
+        @Override public ListItemType type() { return ListItemType.fullEntries; }
     }
 }

@@ -17,17 +17,24 @@ public enum ListItemType
     ids(StorableKey.class),
     
     /**
-     * Entries are textual representations of ids: may or may not be convertible back
-     * to ids, depending on how ids are converted.
+     * Entries are external textual representations of ids; Strings that can be converted
+     * back to raw ids as necessary, but can also be printed out for diagnostics.
      * Return type will be {@link java.lang.String}
      */
     names(String.class),
     
     /**
-     * Full object entries that include id (in binary form) as well as additional
-     * StoreMate-level metadata.
+     * Object entries that include id (in binary form) as well as small set of
+     * additional StoreMate-level metadata.
      */
-    entries(ListItem.class);
+    minimalEntries(ListItem.class),
+    
+    /**
+     * Object entries are {@link ListItem} subtypes that contain additional information
+     * that service provides.
+     */
+    fullEntries(ListItem.class)
+    ;
 
     private final Class<?> _valueType;
     

@@ -562,11 +562,11 @@ public abstract class StoreHandler<
         ListResponse<?> listResponse = null;
         
         switch (listType) {
-        case entries:
+        case minimalEntries:
             {
                 List<ListItem> items = _listItems(rawPrefix, lastSeen, limits);
                 ListItem lastItem = _last(items);
-                listResponse = new ListResponse.ItemListResponse(items,
+                listResponse = new ListResponse.MinimalItemListResponse(items,
                         (lastItem == null) ? null : lastItem.getKey());
             }
             break;
@@ -586,6 +586,8 @@ public abstract class StoreHandler<
                 listResponse = new ListResponse.NameListResponse(names, _last(ids));
             }
             break;
+        case fullEntries:
+            throw new IllegalStateException("Not yet supported");
         }
         
         if (metadata != null) {
