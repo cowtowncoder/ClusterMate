@@ -51,6 +51,15 @@ public abstract class EntryKeyConverter<K extends EntryKey>
      * @since 0.8.7
      */
     public abstract String keyToString(K key);
+
+    /**
+     * Optional method for converting key into external String representation
+     * (one that can be converted back using {@link #stringToKey}, losslessly).
+     * Useful when exposing keys to AJAX interfaces, or debugging.
+     * 
+     * @since 0.8.7
+     */
+    public abstract String rawToString(StorableKey key);
     
     /*
     /**********************************************************************

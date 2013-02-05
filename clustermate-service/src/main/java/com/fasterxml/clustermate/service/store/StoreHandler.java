@@ -581,7 +581,7 @@ public abstract class StoreHandler<
                 List<StorableKey> ids = _listIds(rawPrefix, lastSeen, limits);
                 ArrayList<String> names = new ArrayList<String>(ids.size());
                 for (StorableKey id : ids) {
-                    names.add(id.toString());
+                    names.add(_keyConverter.rawToString(id));
                 }
                 listResponse = new ListResponse.NameListResponse(names, _last(ids));
             }

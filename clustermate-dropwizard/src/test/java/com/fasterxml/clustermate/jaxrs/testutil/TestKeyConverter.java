@@ -92,6 +92,32 @@ public class TestKeyConverter
             }
         });
     }
+
+    @Override
+    public TestKey stringToKey(String external) {
+        if (!external.startsWith(TestKey.TEST_KEY_PREFIX)) {
+            throw new IllegalArgumentException("Keys must start with prefix, got: "+external);
+        }
+        external = external.substring(TestKey.TEST_KEY_PREFIX.length());
+        int ix = external.indexOf(TestKey.TEST_KEY_SEPARATOR);
+        if (ix < 0) {
+            throw new IllegalArgumentException("Key missing separator: "+external);
+        }
+        return construct(CustomerId.valueOf(external.substring(0, ix)), external.substring(ix+1));
+    }
+
+    @Override
+    public String keyToString(TestKey key) {
+        // works here, unlike with many real key types
+        return key.toString();
+    }
+
+    @Override
+    public String rawToString(StorableKey key) {
+        // could be optimized, but no point for tests
+        return keyToString(rawToEntryKey(key));
+    }
+    
     /**
      * Method called to figure out raw hash code to use for routing request
      * regarding given content key.
@@ -183,24 +209,5 @@ public class TestKeyConverter
     @Override
     public IncrementalHasher32 createStreamingContentHasher() {
         return new IncrementalMurmur3Hasher();
-    }
-
-    @Override
-    public TestKey stringToKey(String external) {
-        if (!external.startsWith(TestKey.TEST_KEY_PREFIX)) {
-            throw new IllegalArgumentException("Keys must start with prefix, got: "+external);
-        }
-        external = external.substring(TestKey.TEST_KEY_PREFIX.length());
-        int ix = external.indexOf(TestKey.TEST_KEY_SEPARATOR);
-        if (ix < 0) {
-            throw new IllegalArgumentException("Key missing separator: "+external);
-        }
-        return construct(CustomerId.valueOf(external.substring(0, ix)), external.substring(ix+1));
-    }
-
-    @Override
-    public String keyToString(TestKey key) {
-        // works here, unlike with many real key types
-        return key.toString();
     }
 }
