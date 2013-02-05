@@ -18,7 +18,7 @@ import com.fasterxml.clustermate.service.sync.SyncListResponse;
  */
 public class SyncListTest extends JaxrsStoreTestBase
 {
-    final static PartitionId CLIENT_ID = PartitionId.valueOf(1234);
+    final static CustomerId CLIENT_ID = CustomerId.valueOf(1234);
 
     @Override
     public void setUp() {

@@ -8,6 +8,8 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
 
 public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<TestKey>, ListItem>
 {
+    public final static CustomerId CUSTOMER_WITH_GROUPING = CustomerId.valueOf("GRPD");
+    
     public StoreHandlerForTests(SharedServiceStuff stuff,
             Stores<TestKey, StoredEntry<TestKey>> stores,
             ClusterViewByServer cluster)
@@ -18,8 +20,8 @@ public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<Test
     @Override
     protected LastAccessUpdateMethod _findLastAccessUpdateMethod(ServiceRequest request, TestKey key)
     {
-        return key.hasGroupId() ? FakeLastAccess.GROUPED
-                : FakeLastAccess.INDIVIDUAL;
+        return (key.getCustomerId() == CUSTOMER_WITH_GROUPING)
+                ? FakeLastAccess.GROUPED : FakeLastAccess.INDIVIDUAL;
     }
         
     @Override

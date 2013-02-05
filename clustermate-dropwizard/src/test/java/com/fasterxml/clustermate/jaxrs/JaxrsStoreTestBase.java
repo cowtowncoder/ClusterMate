@@ -146,12 +146,8 @@ public abstract class JaxrsStoreTestBase extends TestCase
     /**********************************************************************
      */
     
-    protected TestKey contentKey(PartitionId clientId, String fullPath) {
+    protected TestKey contentKey(CustomerId clientId, String fullPath) {
         return _keyConverter.construct(clientId, fullPath);
-    }
-
-    protected TestKey contentKey(PartitionId clientId, String groupId, String fullPath) {
-        return _keyConverter.construct(clientId, groupId, fullPath);
     }
 
     protected TestKey contentKey(StorableKey raw) {

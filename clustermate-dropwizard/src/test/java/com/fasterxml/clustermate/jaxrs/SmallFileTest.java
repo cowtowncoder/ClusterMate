@@ -20,7 +20,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  */
 public class SmallFileTest extends JaxrsStoreTestBase
 {
-    final static PartitionId CLIENT_ID = PartitionId.valueOf(1234);
+    final static CustomerId CLIENT_ID = CustomerId.valueOf(1234);
 
     final static String TEST_PREFIX = "small";
 

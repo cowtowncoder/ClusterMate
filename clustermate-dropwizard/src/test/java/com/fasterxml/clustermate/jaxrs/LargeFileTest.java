@@ -17,7 +17,7 @@ public class LargeFileTest extends JaxrsStoreTestBase
 {
     final static int MAX_PAYLOAD_IN_MEMORY = StoreConfig.DEFAULT_MIN_PAYLOAD_FOR_STREAMING-1;
 
-    final static PartitionId CLIENT_ID = PartitionId.valueOf("BIG_");
+    final static CustomerId CLIENT_ID = CustomerId.valueOf("BIG_");
 
     @Override
     public void setUp() {
@@ -89,7 +89,7 @@ public class LargeFileTest extends JaxrsStoreTestBase
             fail("Odd path: "+path);
         }
         String last = path.substring(path.lastIndexOf('/')+1);
-        assertEquals("0000:BIG___data_big_1.L", last);
+        assertEquals("0000:BIG_data_big_1.L", last);
 
         assertEquals(Compression.LZF, entry.getCompression());
         assertEquals(BIG_DATA.length, entry.getActualUncompressedLength());

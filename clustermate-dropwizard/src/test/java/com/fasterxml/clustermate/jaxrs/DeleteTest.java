@@ -18,7 +18,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  */
 public class DeleteTest extends JaxrsStoreTestBase
 {
-    final static PartitionId CLIENT_ID = PartitionId.valueOf(123);
+    final static CustomerId CLIENT_ID = CustomerId.valueOf(123);
 
     @Override
     public void setUp() {

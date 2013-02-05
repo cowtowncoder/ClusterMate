@@ -40,7 +40,7 @@ public class ServiceConfigForTests
     
     @Override
     public StoredEntryConverter<?,?,?> getEntryConverter() {
-        PartitionId defClientId = getDefaultPartition();
+        CustomerId defClientId = getDefaultPartition();
         return new StoredEntryConverterForTests(TestKeyConverter.defaultInstance(defClientId));
     }
 
@@ -50,13 +50,13 @@ public class ServiceConfigForTests
     /**********************************************************************
      */
 
-    public PartitionId getDefaultPartition() throws IllegalArgumentException
+    public CustomerId getDefaultPartition() throws IllegalArgumentException
     {
         if (defaultPartition == null
                 || "".equals(defaultPartition)) {
             return null;
         }
-        PartitionId cid = PartitionId.valueOf(defaultPartition);
+        CustomerId cid = CustomerId.valueOf(defaultPartition);
         return (cid.asInt() == 0) ? null : cid;
     }
     
@@ -72,7 +72,7 @@ public class ServiceConfigForTests
         return this;
     }
 
-    public ServiceConfigForTests overrideDefaultPartition(PartitionId def) {
+    public ServiceConfigForTests overrideDefaultPartition(CustomerId def) {
         defaultPartition = (def == null) ? null : def.toString();
         return this;
     }

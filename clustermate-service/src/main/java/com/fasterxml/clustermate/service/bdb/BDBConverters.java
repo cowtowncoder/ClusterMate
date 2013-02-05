@@ -10,8 +10,8 @@ public class BDBConverters
      * into BDB-JE key.
      */
     public final static SimpleConverter simpleConverter = new SimpleConverter();
-    
-    private static class SimpleConverter
+
+    public static class SimpleConverter
         implements WithBytesCallback<DatabaseEntry>
     {
         @Override

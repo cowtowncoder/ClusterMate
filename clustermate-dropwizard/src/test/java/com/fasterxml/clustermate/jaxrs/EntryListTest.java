@@ -16,10 +16,9 @@ import com.fasterxml.clustermate.json.ClusterMateObjectMapper;
 
 public class EntryListTest extends JaxrsStoreTestBase
 {
-    final static PartitionId CLIENT_ID = PartitionId.valueOf(1234);
-
-    final static String GROUP1 = "groupA";
-    final static String GROUP2 = "groupB";
+    final static CustomerId CUSTOMER_ID1 = CustomerId.valueOf(1234);
+    final static CustomerId CUSTOMER_ID2 = CustomerId.valueOf(4567);
+    final static CustomerId CUSTOMER_ID3 = CustomerId.valueOf(6666);
 
     final static byte[] SMALL_DATA = new byte[] { 1, 2, 3, 4, 5 };
 
@@ -40,11 +39,11 @@ public class EntryListTest extends JaxrsStoreTestBase
         // First, add couple of entries
         StorableStore entries = resource.getStores().getEntryStore();
 
-        TestKey key1 = _addEntry(resource, GROUP1, "foo");
-        TestKey key2 = _addEntry(resource, GROUP2, "more");
-        TestKey key3 = _addEntry(resource, GROUP1, "bar");
-        TestKey key4 = _addEntry(resource, GROUP2, "data");
-        _addEntry(resource, null, "abcdef");
+        TestKey key1 = _addEntry(resource, CUSTOMER_ID1, "foo");
+        TestKey key2 = _addEntry(resource, CUSTOMER_ID2, "more");
+        TestKey key3 = _addEntry(resource, CUSTOMER_ID1, "bar");
+        TestKey key4 = _addEntry(resource, CUSTOMER_ID2, "data");
+        _addEntry(resource, CUSTOMER_ID3, "abcdef");
 
         assertEquals(5, entries.getEntryCount());
 
@@ -52,7 +51,7 @@ public class EntryListTest extends JaxrsStoreTestBase
         FakeHttpResponse response = new FakeHttpResponse();
         FakeHttpRequest request = new FakeHttpRequest()
             .addQueryParam(ClusterMateConstants.QUERY_PARAM_TYPE, ListItemType.ids.toString());
-        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP2, ""), null);
+        resource.getHandler().listEntries(request, response, contentKey(CUSTOMER_ID2, ""), null);
         
         if (response.getStatus() != 200) {
             fail("Failed to list (status "+response.getStatus()+"), entity: "+response.getEntity());
@@ -74,7 +73,7 @@ public class EntryListTest extends JaxrsStoreTestBase
         request = new FakeHttpRequest()
             .addQueryParam(ClusterMateConstants.QUERY_PARAM_TYPE, ListItemType.ids.toString())
             .addQueryParam(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES, "1");
-        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, ""), null);
+        resource.getHandler().listEntries(request, response, contentKey(CUSTOMER_ID1, ""), null);
         assertEquals(200, response.getStatus());
         resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
 
@@ -88,7 +87,7 @@ public class EntryListTest extends JaxrsStoreTestBase
         request = new FakeHttpRequest()
             .addQueryParam(ClusterMateConstants.QUERY_PARAM_TYPE, ListItemType.ids.toString())
             .addQueryParam(ClusterMateConstants.QUERY_PARAM_LAST_SEEN, toBase64(key3));
-        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, ""), null);
+        resource.getHandler().listEntries(request, response, contentKey(CUSTOMER_ID1, ""), null);
         assertEquals(200, response.getStatus());
         resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
 
@@ -101,7 +100,7 @@ public class EntryListTest extends JaxrsStoreTestBase
         request = new FakeHttpRequest()
             .addQueryParam(ClusterMateConstants.QUERY_PARAM_TYPE, ListItemType.ids.toString())
             .addQueryParam(ClusterMateConstants.QUERY_PARAM_LAST_SEEN, toBase64(key1));
-        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, ""), null);
+        resource.getHandler().listEntries(request, response, contentKey(CUSTOMER_ID1, ""), null);
         assertEquals(200, response.getStatus());
         resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
 
@@ -113,7 +112,7 @@ public class EntryListTest extends JaxrsStoreTestBase
         response = new FakeHttpResponse();
         request = new FakeHttpRequest()
             .addQueryParam(ClusterMateConstants.QUERY_PARAM_TYPE, ListItemType.ids.toString());
-        resource.getHandler().listEntries(request, response, contentKey(CLIENT_ID, GROUP1, "fo"), null);
+        resource.getHandler().listEntries(request, response, contentKey(CUSTOMER_ID1, "fo"), null);
         assertEquals(200, response.getStatus());
         resultList = MAPPER.readValue(collectOutput(response), ListResponse.IdListResponse.class);
         assertNotNull(resultList);
@@ -126,9 +125,9 @@ public class EntryListTest extends JaxrsStoreTestBase
     }
 
     private TestKey _addEntry(StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource,
-            String group, String path) throws IOException
+            CustomerId customerId, String path) throws IOException
     {
-        final TestKey KEY = contentKey(CLIENT_ID, group, path);
+        final TestKey KEY = contentKey(customerId, path);
 
         FakeHttpResponse response = new FakeHttpResponse();
         resource.getHandler().getEntry(new FakeHttpRequest(), response, KEY);

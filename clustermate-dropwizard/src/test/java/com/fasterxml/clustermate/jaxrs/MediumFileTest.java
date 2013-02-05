@@ -15,7 +15,7 @@ import com.fasterxml.storemate.store.StorableStore;
 
 public class MediumFileTest extends JaxrsStoreTestBase
 {
-    final static PartitionId CLIENT_ID = PartitionId.valueOf("MED_");
+    final static CustomerId CLIENT_ID = CustomerId.valueOf("MED_");
 
     @Override
     public void setUp() {

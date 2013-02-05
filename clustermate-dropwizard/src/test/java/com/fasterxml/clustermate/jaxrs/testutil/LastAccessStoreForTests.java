@@ -25,7 +25,9 @@ public class LastAccessStoreForTests
             case NONE:
                 return null;
             case GROUPED: // important: not just group id, but also client id
-                return key.withGroupPrefix(BDBConverters.simpleConverter);
+                int cid = key.getCustomerId().asInt();
+                byte[] b = new byte[] { (byte) (cid>>24), (byte)(cid>>16), (byte)(cid>>8), (byte)cid };
+                return BDBConverters.simpleConverter.withBytes(b, 0, b.length);
             case INDIVIDUAL: // whole key, including client id, group id length
                 return key.asStorableKey().with(BDBConverters.simpleConverter);
             }

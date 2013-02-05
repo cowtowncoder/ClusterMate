@@ -34,6 +34,24 @@ public abstract class EntryKeyConverter<K extends EntryKey>
      */
     public abstract K rawToEntryKey(StorableKey key);
 
+    /**
+     * Optional method for converting external textual key representation
+     * into internal one.
+     * Useful when exposing keys to AJAX interfaces, or debugging.
+     * 
+     * @since 0.8.7
+     */
+    public abstract K stringToKey(String external);
+
+    /**
+     * Optional method for converting key into external String representation
+     * (one that can be converted back using {@link #stringToKey}, losslessly).
+     * Useful when exposing keys to AJAX interfaces, or debugging.
+     * 
+     * @since 0.8.7
+     */
+    public abstract String keyToString(K key);
+    
     /*
     /**********************************************************************
     /* Hash code calculation

@@ -17,7 +17,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
 public class LastUpdatedTest extends JaxrsStoreTestBase
 {
     // exact id is arbitrary, but use per-test ids for debuggability
-    final static PartitionId CLIENT_ID = PartitionId.valueOf("LAST");
+    final static CustomerId UNGROUPED = CustomerId.valueOf("OTHR");
 
     @Override
     public void setUp() {
@@ -30,13 +30,9 @@ public class LastUpdatedTest extends JaxrsStoreTestBase
     {
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(1000L);
         
-        final TestKey KEY1A = contentKey(CLIENT_ID, "group1", "grouped/key1");
-        final TestKey KEY1B = contentKey(CLIENT_ID, "group1", "grouped/key2");
-        final TestKey KEY2 = contentKey(CLIENT_ID, "stuff/ungrouped.txt");
-
-        assertTrue(KEY1A.hasGroupId());
-        assertTrue(KEY1B.hasGroupId());
-        assertFalse(KEY2.hasGroupId());
+        final TestKey KEY1A = contentKey(StoreHandlerForTests.CUSTOMER_WITH_GROUPING, "grouped/key1");
+        final TestKey KEY1B = contentKey(StoreHandlerForTests.CUSTOMER_WITH_GROUPING,"grouped/key2");
+        final TestKey KEY2 = contentKey(UNGROUPED, "stuff/ungrouped.txt");
         
         // what data we use does not really matter; use diff styles for different compression
         StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("LastUpdatedTest", timeMaster, true);

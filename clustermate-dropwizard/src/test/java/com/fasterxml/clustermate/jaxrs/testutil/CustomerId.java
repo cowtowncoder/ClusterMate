@@ -5,9 +5,8 @@ import java.io.ByteArrayOutputStream;
 /**
  * Implementation of the highest level partitioning of key spaces; typically
  * mapped to different using applications/clients or such.
- * No operation can span partitions.
  */
-public final class PartitionId
+public final class CustomerId
 {
     // Fundamental limit we enforce is that we allow up to 9 digits (not including
     // ignorable leading zeroes)
@@ -22,24 +21,24 @@ public final class PartitionId
      * We use this marker value to denote internal value of 0, which is typically
      * used as sort of "null Object".
      */
-    public final static PartitionId NA = new PartitionId(0, "0");
+    public final static CustomerId NA = new CustomerId(0, "0");
     
     protected final int _value;
 
     protected volatile String _asString;
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Construction
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Construction
+    /**********************************************************************
      */
     
-    protected PartitionId(int internalValue, String stringRepr) {
+    protected CustomerId(int internalValue, String stringRepr) {
         _value = internalValue;
         _asString = stringRepr;
     }
     
-    public static PartitionId valueOf(int numeric)
+    public static CustomerId valueOf(int numeric)
     {
         if (numeric <= 0) {
             if (numeric == 0) {
@@ -48,7 +47,7 @@ public final class PartitionId
             throw new IllegalArgumentException("Invalid Partition Id ("+numeric+"): can not be negative number");
         }
         if (numeric <= MAX_NUMERIC) {
-            return new PartitionId(numeric, null);
+            return new CustomerId(numeric, null);
         }
         // Intermediate range...
         if (numeric <= MAX_NON_MNEMONIC) {
@@ -63,10 +62,10 @@ public final class PartitionId
         ch = (ch << 8) | _validateChar(numeric >> 16 , 2, numeric);
         ch = (ch << 8) | _validateChar(numeric >> 8, 3, numeric);
         ch = (ch << 8) | _validateChar(numeric, 4, numeric);
-        return new PartitionId(ch, null);
+        return new CustomerId(ch, null);
     }
 
-    public static PartitionId valueOf(String mnemonic)
+    public static CustomerId valueOf(String mnemonic)
     {
         int len = (mnemonic == null) ? 0 : mnemonic.length();
         if (len == 0) {
@@ -83,7 +82,7 @@ public final class PartitionId
         throw new IllegalArgumentException("Invalid partition '"+mnemonic+"': does not start with upper-case letter or digit");
     }
 
-    public static PartitionId from(byte[] buffer, int offset)
+    public static CustomerId from(byte[] buffer, int offset)
     {
         int rawId = ((buffer[offset++]) << 24)
                 | ((buffer[offset++] & 0xFF) << 16)
@@ -93,17 +92,17 @@ public final class PartitionId
         return valueOf(rawId);
     }
     
-    protected static PartitionId _menomicValueOf(String mnemonic, int ch)
+    protected static CustomerId _menomicValueOf(String mnemonic, int ch)
     {
         // and obey the other constraints: start with upper case ASCII letter (A-Z)
         // and then have 3 upper-case ASCII letters, numbers and/or underscores
         ch = (ch << 8) | _validateChar(mnemonic, 1);
         ch = (ch << 8) | _validateChar(mnemonic, 2);
         ch = (ch << 8) | _validateChar(mnemonic, 3);
-        return new PartitionId(ch, mnemonic);
+        return new CustomerId(ch, mnemonic);
     }
 
-    protected static PartitionId _numericValueOf(String mnemonic, int ch, final int len)
+    protected static CustomerId _numericValueOf(String mnemonic, int ch, final int len)
     {
         ch -= '0';
         // first: trim leading zeroes, if any; also handles "all zeroes" case
@@ -137,7 +136,7 @@ public final class PartitionId
             _throwTooBig(mnemonic);
         }
         // let's not pass String as it may be non-canonical (leading zeroes)
-        return new PartitionId(ch, null);
+        return new CustomerId(ch, null);
     }
 
     private static void _throwTooBig(String idStr) {
@@ -172,9 +171,9 @@ public final class PartitionId
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Accessors
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Accessors
+    /**********************************************************************
      */
 
     /**
@@ -216,9 +215,9 @@ public final class PartitionId
     }
     
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Overridden standard methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Overridden standard methods
+    /**********************************************************************
      */
 
     @Override
@@ -243,7 +242,7 @@ public final class PartitionId
         if (other == this) return true;
         if (other == null) return false;
         if (other.getClass() != getClass()) return false;
-        return ((PartitionId) other)._value == _value;
+        return ((CustomerId) other)._value == _value;
     }
 
     private final static String _toString(int value)

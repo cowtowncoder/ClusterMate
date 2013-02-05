@@ -23,18 +23,15 @@ public class TestKeyConverter
     extends EntryKeyConverter<TestKey>
 {
     /**
-     * Keys have 6-byte fixed prefix, to include clientId and information
-     * on group id length.
+     * Keys have 4-byte fixed prefix, to include customer id.
      */
-    public final static int DEFAULT_KEY_HEADER_LENGTH = 6;
-
-    public final static int MAX_NAMESPACE_BYTE_LENGTH = 0x7FFF;
+    public final static int DEFAULT_KEY_HEADER_LENGTH = 4;
 
     /**
      * Client id default value used if no value found from request path;
      * if null, client id is not optional.
      */
-    protected final PartitionId _defaultPartition;
+    protected final CustomerId _defaultCustomer;
 
     /**
      * Object we use for calculating high-quality hash codes, both for routing (for keys)
@@ -48,20 +45,20 @@ public class TestKeyConverter
     /**********************************************************************
      */
 
-    protected TestKeyConverter(PartitionId defaultClientId) {
+    protected TestKeyConverter(CustomerId defaultClientId) {
         this(defaultClientId, new BlockMurmur3Hasher());
     }
     
-    protected TestKeyConverter(PartitionId defaultPartition, BlockHasher32 blockHasher)
+    protected TestKeyConverter(CustomerId defaultCustomer, BlockHasher32 blockHasher)
     {
-        _defaultPartition = defaultPartition;
+        _defaultCustomer = defaultCustomer;
         _hasher = blockHasher;
     }
     
     /**
      * Accessor for getting default converter instance.
      */
-    public static TestKeyConverter defaultInstance(PartitionId defaultClientId) {
+    public static TestKeyConverter defaultInstance(CustomerId defaultClientId) {
         return new TestKeyConverter(defaultClientId);
     }
 
@@ -91,9 +88,7 @@ public class TestKeyConverter
                         | ((buffer[++offset] & 0xFF) << 8)
                         | (buffer[++offset] & 0xFF)
                         ;
-                int groupIdLength = ((buffer[++offset] & 0xFF) << 8)
-                        | (buffer[++offset] & 0xFF);
-                return new TestKey(rawKey, PartitionId.valueOf(cid), groupIdLength);
+                return new TestKey(rawKey, CustomerId.valueOf(cid));
             }
         });
     }
@@ -112,69 +107,17 @@ public class TestKeyConverter
     /**********************************************************************
      */
 
-    /**
-     * Method called to construct a {@link TestKey}
-     * that does not have group id.
-     */
-    public TestKey construct(PartitionId clientId, String fullPath) {
-        return construct(clientId, fullPath, 0);
-    }
-    
-    public TestKey construct(PartitionId clientId, String fullPath,
-            int groupIdLengthInBytes)
+    public TestKey construct(CustomerId customerId, String fullPath)
     {
-        if (groupIdLengthInBytes > MAX_NAMESPACE_BYTE_LENGTH) {
-            throw new IllegalArgumentException("Group id byte length too long ("+groupIdLengthInBytes
-                    +"), can not exceed "+MAX_NAMESPACE_BYTE_LENGTH);
-        }
+        byte[] b = UTF8Encoder.encodeAsUTF8(fullPath, DEFAULT_KEY_HEADER_LENGTH, 0, false);
+        customerId.append(b, 0);
+        return new TestKey(new StorableKey(b), customerId);
+    }
+
+    public StorableKey storableKey(CustomerId clientId, String fullPath)
+    {
         byte[] b = UTF8Encoder.encodeAsUTF8(fullPath, DEFAULT_KEY_HEADER_LENGTH, 0, false);
         clientId.append(b, 0);
-        // group id length is a positive 16-bit short, MSB:
-        b[4] = (byte) (groupIdLengthInBytes >> 8);
-        b[5] = (byte) groupIdLengthInBytes;
-
-        return new TestKey(new StorableKey(b), clientId, groupIdLengthInBytes);
-    }
-
-    /**
-     * Method called to construct a {@link TestKey} given a two-part
-     * path; group id as prefix, and additional path scoped by group id.
-     */
-    public TestKey construct(PartitionId clientId, String groupId,
-            String path)
-    {
-        // sanity check for "no group id" case
-        if (groupId == null || groupId.length() == 0) {
-            return construct(clientId, path);
-        }
-        
-        byte[] prefixPart = UTF8Encoder.encodeAsUTF8(groupId, DEFAULT_KEY_HEADER_LENGTH, 0, false);
-        final int groupIdLengthInBytes = prefixPart.length - DEFAULT_KEY_HEADER_LENGTH;
-        if (groupIdLengthInBytes > MAX_NAMESPACE_BYTE_LENGTH) {
-            throw new IllegalArgumentException("Group id byte length too long ("+groupIdLengthInBytes
-                    +"), can not exceed "+MAX_NAMESPACE_BYTE_LENGTH);
-        }
-        clientId.append(prefixPart, 0);
-        prefixPart[4] = (byte) (groupIdLengthInBytes >> 8);
-        prefixPart[5] = (byte) groupIdLengthInBytes;
-        
-        // so far so good: and now append actual path
-        byte[] fullKey = UTF8Encoder.encodeAsUTF8(prefixPart, path);
-        return new TestKey(new StorableKey(fullKey), clientId, groupIdLengthInBytes);
-    }
-
-    public StorableKey storableKey(PartitionId clientId, String fullPath, int groupIdLengthInBytes)
-    {
-        if (groupIdLengthInBytes > MAX_NAMESPACE_BYTE_LENGTH) {
-            throw new IllegalArgumentException("Group id byte length too long ("+groupIdLengthInBytes
-                    +"), can not exceed "+MAX_NAMESPACE_BYTE_LENGTH);
-        }
-        byte[] b = UTF8Encoder.encodeAsUTF8(fullPath, DEFAULT_KEY_HEADER_LENGTH, 0, false);
-        clientId.append(b, 0);
-        // group id length is a positive 16-bit short, MSB:
-        b[4] = (byte) (groupIdLengthInBytes >> 8);
-        b[5] = (byte) groupIdLengthInBytes;
-
         return new StorableKey(b);
     }
 
@@ -191,14 +134,8 @@ public class TestKeyConverter
         /* ClientId: could either add as a segment, or query param.
          * For now, do latter.
          */
-        b = (B) b.addParameter(StoreTestConstants.V_QUERY_PARAM_PARTITION_ID, key.getPartitionId().toString());
+        b = (B) b.addParameter(StoreTestConstants.V_QUERY_PARAM_CUSTOMER_ID, key.getCustomerId().toString());
         String path = key.getExternalPath();
-        int groupLen = key.getGroupIdLength();
-        if (groupLen > 0) {
-            b = (B) b.addParameter(StoreTestConstants.V_QUERY_PARAM_NAMESPACE_ID, key.getGroupId());
-            // and then remove group-id part
-            path = path.substring(groupLen);
-        }
         // also: while not harmful, let's avoid escaping embedded slashes (slightly more compact)
         b = (B) b.addPathSegmentsRaw(path);
         return b;
@@ -207,27 +144,19 @@ public class TestKeyConverter
     @Override
     public <P extends DecodableRequestPath> TestKey extractFromPath(P path)
     {
-        String clientIdStr = path.getQueryParameter(StoreTestConstants.V_QUERY_PARAM_PARTITION_ID);
-        PartitionId clientId;
-        if (clientIdStr == null || clientIdStr.length() == 0) {
-            if (_defaultPartition == null) {
+        String customerStr = path.getQueryParameter(StoreTestConstants.V_QUERY_PARAM_CUSTOMER_ID);
+        CustomerId customerId;
+        if (customerStr == null || customerStr.length() == 0) {
+            if (_defaultCustomer == null) {
                 throw new IllegalArgumentException("No ClientId found from path: "+path);
             }
-            clientId = _defaultPartition;
+            customerId = _defaultCustomer;
         } else {
-            clientId = PartitionId.valueOf(clientIdStr);
+            customerId = CustomerId.valueOf(customerStr);
         }
-        final String groupId = path.getQueryParameter(StoreTestConstants.V_QUERY_PARAM_NAMESPACE_ID);
-        // but ignore empty one
         final String filename = path.getDecodedPath();
-        if (groupId != null) {
-            if (groupId.length() > 0) {
-//System.err.println("Group key: path ("+filename.length()+"): '"+filename+"'; group '"+groupId+"'");
-                return construct(clientId, groupId, filename);
-            }
-        }
 //System.err.println("Non-group key: path ("+filename.length()+"): '"+filename+"'");
-        return construct(clientId, filename);
+        return construct(customerId, filename);
     }
 
     /*
@@ -236,17 +165,9 @@ public class TestKeyConverter
     /**********************************************************************
      */
 
-    protected int rawHashForRouting(TestKey key, BlockHasher32 hasher)
-    {
-        // first: skip metadata (clientId, group id length indicator)
-        int offset = TestKeyConverter.DEFAULT_KEY_HEADER_LENGTH;
-        StorableKey rawKey = key.asStorableKey();
-        int length = rawKey.length() - offset;
-        // second include only group id (if got one), or full thing
-        if (key.hasGroupId()) {
-            length = key.getGroupIdLength();
-        }
-        return rawKey.hashCode(hasher, offset, length);
+    protected int rawHashForRouting(TestKey key, BlockHasher32 hasher) {
+        // simple for now; only use customerId for routing
+        return key.getCustomerId().hashCode();
     }
 
     @Override
@@ -262,5 +183,24 @@ public class TestKeyConverter
     @Override
     public IncrementalHasher32 createStreamingContentHasher() {
         return new IncrementalMurmur3Hasher();
+    }
+
+    @Override
+    public TestKey stringToKey(String external) {
+        if (!external.startsWith(TestKey.TEST_KEY_PREFIX)) {
+            throw new IllegalArgumentException("Keys must start with prefix, got: "+external);
+        }
+        external = external.substring(TestKey.TEST_KEY_PREFIX.length());
+        int ix = external.indexOf(TestKey.TEST_KEY_SEPARATOR);
+        if (ix < 0) {
+            throw new IllegalArgumentException("Key missing separator: "+external);
+        }
+        return construct(CustomerId.valueOf(external.substring(0, ix)), external.substring(ix+1));
+    }
+
+    @Override
+    public String keyToString(TestKey key) {
+        // works here, unlike with many real key types
+        return key.toString();
     }
 }
