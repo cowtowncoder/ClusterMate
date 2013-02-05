@@ -5,6 +5,8 @@ using single-node storage components provided by
 [StoreMate](https://github.com/cowtowncoder/StoreMate) project.
 It is designed as a toolkit for building distributed storage systems, either for stand-alone systems or as base for other distributed systems (like message queues).
 
+Project license is [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
+
 Check out [Project Wiki](http://github.com/cowtowncoder/ClusterMate/wiki) for more.
 
 # Status
