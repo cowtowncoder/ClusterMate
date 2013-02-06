@@ -38,9 +38,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
 {
     /**
      * If access to peer's sync/list fails, wait for this duration before
-     * trying again
+     * trying again.
      */
-    private final static long SLEEP_FOR_SYNCLIST_ERRORS_MSECS = 5000L;
+    private final static long SLEEP_FOR_SYNCLIST_ERRORS_MSECS = 10000L;
 
     private final static long SLEEP_FOR_SYNCPULL_ERRORS_MSECS = 3000L;
 
@@ -413,7 +413,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         
         long listTime = _timeMaster.currentTimeMillis();
         SyncListResponse<?> syncResp = _fetchSyncList();
-        if (syncResp == null) { // only for errors
+        if (syncResp == null) { // only for hard errors
             _timeMaster.sleep(SLEEP_FOR_SYNCLIST_ERRORS_MSECS);
             return;
         }
