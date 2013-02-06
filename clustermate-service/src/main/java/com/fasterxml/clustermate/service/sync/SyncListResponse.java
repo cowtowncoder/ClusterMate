@@ -5,6 +5,7 @@ import java.util.*;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
+import com.fasterxml.clustermate.api.msg.ExtensibleType;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**
@@ -17,6 +18,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  */
 @JsonInclude(JsonInclude.Include.NON_DEFAULT)
 public class SyncListResponse<E extends StoredEntry<?>>
+    extends ExtensibleType
 {
     /**
      * Error message, if any
@@ -60,7 +62,7 @@ public class SyncListResponse<E extends StoredEntry<?>>
             entries.add(SyncListResponseEntry.valueOf(e));
         }
     }
-
+    
     // NOTE: only to be used internally
     private SyncListResponse(boolean dummy) {
         entries = Collections.emptyList();

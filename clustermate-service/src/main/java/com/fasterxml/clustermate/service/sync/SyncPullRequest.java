@@ -2,13 +2,14 @@ package com.fasterxml.clustermate.service.sync;
 
 import java.util.*;
 
+import com.fasterxml.clustermate.api.msg.ExtensibleType;
 import com.fasterxml.storemate.shared.StorableKey;
 
 /**
  * Simple value class used for containing information for
  * a "sync pull" operation.
  */
-public class SyncPullRequest
+public class SyncPullRequest extends ExtensibleType
 {
     public List<StorableKey> entries;
     

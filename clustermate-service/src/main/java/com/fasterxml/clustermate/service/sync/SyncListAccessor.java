@@ -141,8 +141,9 @@ public class SyncListAccessor implements StartAndStoppable
             int statusCode = conn.getResponseCode();
             if (IOUtil.isHTTPSuccess(statusCode)) {
                 InputStream in = conn.getInputStream();
+                SyncListResponse<?> resp;
                 try {
-                    return _syncListReader.readValue(in);
+                    resp = _syncListReader.readValue(in);
                 } catch (IOException e) {
                     throw new IOException("Invalid sync list returned by '"+urlStr+"', failed to parse Smile: "+e.getMessage());
                 } finally {
@@ -150,6 +151,11 @@ public class SyncListAccessor implements StartAndStoppable
                         in.close();
                     } catch (Exception e) { }
                 }
+                // Bit of validation, as unknown props are allowed:
+                if (resp.hasUnknownProperties()) {
+                    LOG.warn("Unrecognized properties in SyncListResponse: "+resp.unknownProperties());
+                }
+                return resp;
             }
             handleHTTPFailure(conn, urlStr, statusCode, "fetchSyncList");
         } catch (Exception e) {

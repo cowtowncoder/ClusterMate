@@ -12,6 +12,7 @@ import com.fasterxml.storemate.shared.util.*;
 import com.fasterxml.storemate.store.file.FileManager;
 
 import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.msg.ExtensibleType;
 import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
@@ -25,6 +26,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  * indicators; and then a 0-length marker at the end.
  */
 public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
+    extends ExtensibleType
     implements StreamingResponseContent
 {
     // // We will use a crude additional verification, by surrounding

@@ -252,7 +252,7 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
      * need be.
      */
     @SuppressWarnings("unchecked")
-    public <OUT extends ServiceResponse> OUT  pullEntries(ServiceRequest request, OUT response,
+    public <OUT extends ServiceResponse> OUT pullEntries(ServiceRequest request, OUT response,
             InputStream in,
             OperationDiagnostics metadata) throws StoreException
     {
@@ -262,6 +262,11 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         } catch (Exception e) {
             return (OUT) badRequest(response, "JSON parsing error: %s", e.getMessage());
         }
+        // Bit of validation, as unknown props are allowed:
+        if (requestEntity.hasUnknownProperties()) {
+            LOG.warn("Unrecognized properties in SyncPullRequest: "+requestEntity.unknownProperties());
+        }
+        
         List<StorableKey> ids = requestEntity.entries;
         ArrayList<E> entries = new ArrayList<E>(ids.size());
         StorableStore store = _stores.getEntryStore();
