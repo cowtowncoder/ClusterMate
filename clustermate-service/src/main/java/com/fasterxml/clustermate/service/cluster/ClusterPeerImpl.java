@@ -433,7 +433,15 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                         Long.toHexString(_lastClusterHash), Long.toHexString(syncResp.clusterHash));
             }
         }
-        
+        final long lastSeenTimestamp = syncResp.lastSeen();
+        // Sanity check; should never happen
+        if (lastSeenTimestamp <= 0L) {
+            LOG.error("Invalid lastSeen timestamp value {} for SyncList, from {}",
+                    lastSeenTimestamp, _syncState.getAddress());
+            // should we sleep bit extra? Probably good to avoid flooding logs, if we end up here
+            Thread.sleep(100L);
+        }
+
         // comment out or remove for production; left here during testing:
 //long diff = (listTime - syncResp.lastSeen()) >> 10; // in seconds
 //LOG.warn("Received syncList with {} responses; last timestamp {} secs ago", syncResp.size(), diff);

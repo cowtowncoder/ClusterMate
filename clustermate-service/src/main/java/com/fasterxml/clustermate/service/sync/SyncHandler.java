@@ -330,10 +330,7 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
 
             // "timeout" is indicated by termination at primary key:
             if (r == IterationResult.TERMINATED_FOR_KEY) {
-                long l = cb.getLastSeenTimestamp();
-                if (l > 0) {
-                    lastSeenTimestamp = l;
-                }
+                lastSeenTimestamp = cb.getLastSeenTimestamp();
                 int totals = cb.getTotal();
                 long msecs = _timeMaster.realSystemTimeMillis() - realStartTime;
                 double secs = msecs / 1000.0;
@@ -348,6 +345,8 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
                     // Oh. Also, if we got this far, we better update last-seen timestamp;
                     // otherwise we'll be checking same last entry over and over again
                     lastSeenTimestamp = upTo;
+                } else {
+                    lastSeenTimestamp = cb.getLastSeenTimestamp();
                 }
                 break;
             }

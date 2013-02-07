@@ -20,6 +20,12 @@ public class SyncListTest extends JaxrsStoreTestBase
 {
     final static CustomerId CLIENT_ID = CustomerId.valueOf(1234);
 
+    /**
+     * NOTE: should determine from server settings for "cfgSyncGracePeriod", but
+     * for now can be inlined.
+     */
+    final long GRACE_PERIOD = 5000L;
+    
     @Override
     public void setUp() {
         initTestLogging();
@@ -61,6 +67,9 @@ public class SyncListTest extends JaxrsStoreTestBase
         
         response = new FakeHttpResponse();
         OperationDiagnostics diag = new OperationDiagnostics();        
+        
+        final long callTime = timeMaster.currentTimeMillis();
+        
         syncH.listEntries(syncReq, response, creationTime, diag);
         assertTrue(response.hasStreamingContent());
         assertEquals(200, response.getStatus());
@@ -73,6 +82,10 @@ public class SyncListTest extends JaxrsStoreTestBase
         assertNull(syncList.message);
         assertNotNull(syncList.entries);
         assertEquals(1, syncList.entries.size());
+
+        // Last actual timestamp would be 1234L; but we should get "currentTime - gracePeriod" here
+        // NOTE: will break if config defaults change. Should be improved somehow.
+        assertEquals(callTime - GRACE_PERIOD , syncList.lastSeen());
 
         // clean up:
         resource.getStores().stop();
@@ -127,6 +140,7 @@ public class SyncListTest extends JaxrsStoreTestBase
         syncReq.addQueryParam(ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH, ""+localRange.getLength());
         syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ContentType.SMILE.toString());
         
+        final long callTime = timeMaster.currentTimeMillis();
         response = new FakeHttpResponse();
         OperationDiagnostics diag = new OperationDiagnostics();        
         syncH.listEntries(syncReq, response, creationTime, diag);
@@ -142,5 +156,7 @@ public class SyncListTest extends JaxrsStoreTestBase
         // Important: we MUST get all 3, as they have same timestamp
         assertEquals(3, syncList.entries.size());
         assertEquals(3, diag.getItemCount());
+        
+        assertEquals(callTime - GRACE_PERIOD, syncList.lastSeen());
     }
 }
