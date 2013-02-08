@@ -587,7 +587,7 @@ public abstract class StoreHandler<
                     listResponse = new ListResponse.MinimalItemListResponse(items,
                             (lastItem == null) ? null : lastItem.getKey());
                 } else {
-                    listResponse = new ListResponse.FullItemListResponse(items,
+                    listResponse = new ListResponse<ListItem>(items,
                             (lastItem == null) ? null : lastItem.getKey());
                 }
             }

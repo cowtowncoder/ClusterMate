@@ -64,6 +64,9 @@ public class ListResponse<T> // not a CRUD request/response
         @Override public ListItemType type() { return ListItemType.minimalEntries; }
     }
 
+    // 07-Feb-2013, tatu: Ought to work, but does NOT work due to Jackson (2.1.3) bug with
+    //    generic type resolution
+    /*
     public static final class FullItemListResponse extends ListResponse<ListItem> {
         public FullItemListResponse() { }
         public FullItemListResponse(List<ListItem> entries, StorableKey lastSeen) {
@@ -71,4 +74,5 @@ public class ListResponse<T> // not a CRUD request/response
         }
         @Override public ListItemType type() { return ListItemType.fullEntries; }
     }
+    */
 }
