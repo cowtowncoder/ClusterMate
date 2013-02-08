@@ -344,18 +344,13 @@ public abstract class StoreHandler<
             K key, InputStream dataIn, OperationDiagnostics metadata)
     {
         final int checksum = _decodeInt(request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM), 0);
-        String paramKey = null, paramValue = null;
-        paramKey = ClusterMateConstants.QUERY_PARAM_MIN_SINCE_ACCESS_TTL;
-        paramValue = request.getQueryParameter(paramKey);
-        TimeSpan minTTL = _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
-        paramKey = ClusterMateConstants.QUERY_PARAM_MAX_TTL;
-        paramValue = request.getQueryParameter(paramKey);
-        TimeSpan maxTTL = _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
+        TimeSpan minTTL = findMinTTLParameter(request, key);
+        TimeSpan maxTTL = findMaxTTLParameter(request, key);
 
         return putEntry(request, response, key, checksum, dataIn,
                 minTTL, maxTTL, metadata);
-    }   
-
+    }
+    
     // Public due to unit tests
     public ServiceResponse putEntry(ServiceRequest request, ServiceResponse response,
             K key, int checksum,// 32-bit hash by client
@@ -380,11 +375,15 @@ public abstract class StoreHandler<
         // not that of compressed (latter is easy to calculate on server anyway)
         StorableCreationMetadata stdMetadata = new StorableCreationMetadata(inputCompression,
         		checksum, 0);
+
+        int minTTLSecs = (minTTLSinceAccess == null) ? findMinTTLDefaultSecs(request, key)
+                : (int) (minTTLSinceAccess.getMillis() / 1000);
+        int maxTTLSecs = (maxTTL == null) ? findMaxTTLDefaultSecs(request, key)
+                : (int) (maxTTL.getMillis() / 1000);
+
         ByteContainer customMetadata = _entryConverter.createMetadata(creationTime,
                 ((lastAcc == null) ? 0 : lastAcc.asByte()),
-                ((minTTLSinceAccess == null) ? _cfgDefaultMinTTLSecs : (int) minTTLSinceAccess.getMillis()),
-                ((maxTTL == null) ? _cfgDefaultMaxTTLSecs : (int) maxTTL.getMillis())
-                );
+                minTTLSecs, maxTTLSecs);
         StorableCreationResult result;
         try {
             result = _stores.getEntryStore().insert(key.asStorableKey(),
@@ -396,10 +395,10 @@ public abstract class StoreHandler<
                         (PutResponse.badArg(key, "Bad Compression information passed: "+e.getMessage()));
             case BAD_CHECKSUM:
                 return response.badRequest
-                        (PutResponse.badArg(key, "Bad checksum information passed: "+e.getMessage()));
+                        (PutResponse.badArg(key, "Bad Checksum information passed: "+e.getMessage()));
             case BAD_LENGTH:
                 return response.badRequest
-                        (PutResponse.badArg(key, "Bad length information passed: "+e.getMessage()));
+                        (PutResponse.badArg(key, "Bad Length information passed: "+e.getMessage()));
             }
             return internalPutError(response, key,
                     e, "Failed to PUT an entry: "+e.getMessage());
@@ -679,6 +678,43 @@ public abstract class StoreHandler<
             /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(cb, lastSeen);
         }
         return result;
+    }
+
+    /*
+    /**********************************************************************
+    /* Customizable handling for query parameter access, defaulting
+    /**********************************************************************
+     */
+    
+    /**
+     * Overridable helper method used for figuring out request parameter used to
+     * pass "minimum time-to-live since last access" (or, if no access tracked,
+     * since creation).
+     */
+    protected TimeSpan findMinTTLParameter(ServiceRequest request, K key)
+    {
+        String paramKey = ClusterMateConstants.QUERY_PARAM_MIN_SINCE_ACCESS_TTL;
+        String paramValue = request.getQueryParameter(paramKey);
+        return _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
+    }
+
+    /**
+     * Overridable helper method used for figuring out request parameter used to
+     * pass "maximum time-to-live since creation".
+     */
+    protected TimeSpan findMaxTTLParameter(ServiceRequest request, K key)
+    {
+        String paramKey = ClusterMateConstants.QUERY_PARAM_MAX_TTL;
+        String paramValue = request.getQueryParameter(paramKey);
+        return _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
+    }
+
+    protected int findMinTTLDefaultSecs(ServiceRequest request, K key) {
+        return _cfgDefaultMinTTLSecs;
+    }
+
+    protected int findMaxTTLDefaultSecs(ServiceRequest request, K key) {
+        return _cfgDefaultMaxTTLSecs;
     }
     
     /*

@@ -6,7 +6,7 @@ import com.fasterxml.storemate.shared.StorableKey;
  * Full result entry contained in {@link ExtensibleType} (as an alternative
  * to ids, {@link StorableKey}).
  *<p>
- * Note that since this extends {@link ExtensibleItem}, extension by adding
+ * Note that since this extends {@link ExtensibleType}, extension by adding
  * new entries should be relatively safe, even if old(er) clients; but
  * caller would do well to check if unrecognized properties were found.
  */

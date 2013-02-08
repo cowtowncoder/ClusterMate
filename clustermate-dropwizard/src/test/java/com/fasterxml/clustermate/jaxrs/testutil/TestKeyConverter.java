@@ -13,11 +13,6 @@ import com.fasterxml.storemate.shared.util.WithBytesCallback;
 
 /**
  * Test implementation of {@link EntryKeyConverter}.
- *<p>
- * In addition class implements encoding and decoding of the entry keys
- * (of type {@link TestKey}): uses {@link StoreTestConstants#V_QUERY_PARAM_PARTITION_ID}
- * and {@link StoreTestConstants#V_QUERY_PARAM_NAMESPACE_ID} in addition to path
- * (which is regular filename).
  */
 public class TestKeyConverter
     extends EntryKeyConverter<TestKey>
