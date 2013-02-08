@@ -4,6 +4,7 @@ Project: ClusterMate
 
 #12: Implement/require external String representation for Keys.
 - Add 'ExtensibleType' base class, to try to improve forwards compatibility
+- Fix issues with handling (or lack thereof) of "full items" (ListItem sub-classes)
 
 0.8.6 (03-Feb-2013)
 
