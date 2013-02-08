@@ -1,6 +1,7 @@
 package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 
@@ -22,6 +23,8 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
     // may need JSON writer for errors:
     protected final ObjectWriter _jsonWriter;
 
+    protected final AtomicBoolean _terminated = new AtomicBoolean(false);
+    
     public SyncListServlet(SharedServiceStuff stuff, ClusterViewByServer clusterView,
             SyncHandler<K,E> h)
     {
@@ -31,6 +34,12 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
         _jsonWriter = stuff.jsonWriter();
     }
 
+    @Override
+    public void destroy() {
+        _terminated.set(true);
+        super.destroy();
+    }
+    
     @Override
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
@@ -49,7 +58,12 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
                 try {
                     response = _syncHandler.listEntries(request, response, since, stats);
                 } catch (InterruptedException e) {
-                    throw new IOException(e);
+                    // Swallow during shutdown (mostly during tests)
+                    if (!_terminated.get()) {
+                        throw new IOException(e);
+                    }
+                    LOG.info("SyncListServlet interupted due to termination, ignoring");
+                    return;
                 }
                 _addStdHeaders(response);
             }

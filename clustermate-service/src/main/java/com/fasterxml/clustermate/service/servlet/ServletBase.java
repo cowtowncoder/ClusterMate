@@ -16,7 +16,7 @@ import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 @SuppressWarnings("serial")
 public class ServletBase extends HttpServlet
 {
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
+    protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
     protected final ClusterViewByServer _clusterView;
 
