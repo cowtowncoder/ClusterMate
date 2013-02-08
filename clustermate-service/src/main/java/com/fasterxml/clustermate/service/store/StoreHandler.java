@@ -618,7 +618,10 @@ public abstract class StoreHandler<
         throws StoreException
     {
         // we could check if all entries were iterated (with result code); for now we won't
-        ListItemsCallback cb = new ListItemsCallback(_timeMaster, _entryConverter, prefix, limits);
+        ListItemsCallback cb = (itemType == ListItemType.fullEntries)
+                ? new FullListItemsCallback(_timeMaster, _entryConverter, prefix, limits)
+                : new ListItemsCallback(_timeMaster, _entryConverter, prefix, limits)
+                ;
         /* Two cases; either starting without last seen -- in which case we should include
          * the first entry -- or with last-seen, in which case it is to be skipped.
          */
@@ -636,7 +639,6 @@ public abstract class StoreHandler<
             ListLimits limits)
         throws StoreException
     {
-        
         final long maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
         final int maxEntries = limits.getMaxEntries();
         final ArrayList<StorableKey> result = new ArrayList<StorableKey>(100);
@@ -854,6 +856,7 @@ public abstract class StoreHandler<
             super(timeMaster, entryConverter, prefix, limits);
         }
 
+        @Override
         protected ListItem toListItem(Storable entry) {
             return _entryConverter.fullListItemFromStorable(entry);
         }
