@@ -111,12 +111,11 @@ public abstract class StoreClient<K extends EntryKey,
         /* "full" ListItemType is trickier, since we need to use generic type definition
          * to parameterize appropriate Full 
          */
-        JavaType fullItemType = config.getJsonMapper().constructType(listItemType);
         // Ugh. Jackson's type resolution fails if using "FullItemListResponse"... need to work around it
         JavaType fullResponseType = config.getJsonMapper().getTypeFactory().constructParametricType(
-                ListResponse.class, fullItemType);
+                ListResponse.class, listItemType);
         _listReaders.put(ListItemType.fullEntries,
-                new GenericContentConverter<ListResponse<ListItemType>>(mapper, fullResponseType));
+                new GenericContentConverter<ListResponse<ListItem>>(mapper, fullResponseType));
     }
 
     /**

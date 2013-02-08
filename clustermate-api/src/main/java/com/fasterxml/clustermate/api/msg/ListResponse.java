@@ -7,11 +7,14 @@ import com.fasterxml.storemate.shared.StorableKey;
 
 /**
  * Response message type for List requests.
+ *<p>
+ * NOTE: should be abstract, but due to some type resolution complications remains
+ * concrete.
  * 
  * @param <T> Type of entries; either simple id ({@link StorableKey}),
  *    textual name ({@link java.lang.String}) or full {@link ListItem}.
  */
-public abstract class ListResponse<T> // not a CRUD request/response
+public class ListResponse<T> // not a CRUD request/response
 {
     /**
      * Error message for failed requests
@@ -40,7 +43,8 @@ public abstract class ListResponse<T> // not a CRUD request/response
         return (items == null) ? 0 : items.size();
     }
     
-    public abstract ListItemType type();
+    public ListItemType type() { throw new IllegalStateException(); }
+//    public abstract ListItemType type();
     
     public static final class IdListResponse extends ListResponse<StorableKey> {
         public IdListResponse() { }
@@ -60,16 +64,11 @@ public abstract class ListResponse<T> // not a CRUD request/response
         @Override public ListItemType type() { return ListItemType.minimalEntries; }
     }
 
-    /* NOTE: generic type ought to use parameter 'I extends ListItem', but with current
-     * Jackson (2.1.3) that will give us StackOverflow due to a bug... bummer.
-     * So we'll just fake it.
-     */
     public static final class FullItemListResponse extends ListResponse<ListItem> {
         public FullItemListResponse() { }
         public FullItemListResponse(List<ListItem> entries, StorableKey lastSeen) {
             super(entries, lastSeen);
         }
-
         @Override public ListItemType type() { return ListItemType.fullEntries; }
     }
 }
