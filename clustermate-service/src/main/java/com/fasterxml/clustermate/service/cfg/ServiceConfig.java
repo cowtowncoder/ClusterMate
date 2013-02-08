@@ -163,7 +163,7 @@ public abstract class ServiceConfig
      * less than 3 hours after last access or creation.
      */
     public TimeSpan cfgDefaultSinceAccessTTL = new TimeSpan("3h");
-
+    
     /**
      * By default we will not run cleanup more often than once per hour.
      * The first cleanup will typically be run earlier than delay.
@@ -244,6 +244,24 @@ public abstract class ServiceConfig
             cfgSyncMaxLongPollTime = new TimeSpan(periodDesc);
         } catch (Exception e) {
             throw new IllegalArgumentException("Invalid max setting definition '"+periodDesc+"': "+e.getMessage());
+        }
+        return this;
+    }
+
+    public ServiceConfig overrideDefaultMaxTTL(String periodDesc) {
+        try {
+            cfgDefaultMaxTTL = new TimeSpan(periodDesc);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid max TTL definition '"+periodDesc+"': "+e.getMessage());
+        }
+        return this;
+    }
+    
+    public ServiceConfig overrideDefaultSinceAccessTTL(String periodDesc) {
+        try {
+            cfgDefaultSinceAccessTTL = new TimeSpan(periodDesc);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid min TTL definition '"+periodDesc+"': "+e.getMessage());
         }
         return this;
     }
