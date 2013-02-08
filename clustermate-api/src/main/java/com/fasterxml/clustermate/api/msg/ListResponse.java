@@ -60,9 +60,13 @@ public abstract class ListResponse<T> // not a CRUD request/response
         @Override public ListItemType type() { return ListItemType.minimalEntries; }
     }
 
-    public static final class FullItemListResponse<I extends ListItem> extends ListResponse<I> {
+    /* NOTE: generic type ought to use parameter 'I extends ListItem', but with current
+     * Jackson (2.1.3) that will give us StackOverflow due to a bug... bummer.
+     * So we'll just fake it.
+     */
+    public static final class FullItemListResponse extends ListResponse<ListItem> {
         public FullItemListResponse() { }
-        public FullItemListResponse(List<I> entries, StorableKey lastSeen) {
+        public FullItemListResponse(List<ListItem> entries, StorableKey lastSeen) {
             super(entries, lastSeen);
         }
 

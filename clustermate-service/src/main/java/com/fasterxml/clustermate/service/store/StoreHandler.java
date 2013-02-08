@@ -562,14 +562,6 @@ public abstract class StoreHandler<
         ListResponse<?> listResponse = null;
         
         switch (listType) {
-        case minimalEntries:
-            {
-                List<ListItem> items = _listItems(rawPrefix, lastSeen, limits);
-                ListItem lastItem = _last(items);
-                listResponse = new ListResponse.MinimalItemListResponse(items,
-                        (lastItem == null) ? null : lastItem.getKey());
-            }
-            break;
         case ids:
             {
                 List<StorableKey> ids = _listIds(rawPrefix, lastSeen, limits);
@@ -586,8 +578,22 @@ public abstract class StoreHandler<
                 listResponse = new ListResponse.NameListResponse(names, _last(ids));
             }
             break;
+        case minimalEntries:
         case fullEntries:
-            throw new IllegalStateException("Not yet supported");
+            {
+                List<ListItem> items = _listItems(listType, rawPrefix, lastSeen, limits);
+                ListItem lastItem = _last(items);
+                if (listType == ListItemType.minimalEntries) {
+                    listResponse = new ListResponse.MinimalItemListResponse(items,
+                            (lastItem == null) ? null : lastItem.getKey());
+                } else {
+                    listResponse = new ListResponse.FullItemListResponse(items,
+                            (lastItem == null) ? null : lastItem.getKey());
+                }
+            }
+            break;
+        default:
+            throw new IllegalStateException();
         }
         
         if (metadata != null) {
@@ -607,43 +613,12 @@ public abstract class StoreHandler<
         return list.get(list.size() - 1);
     }
     
-    protected List<ListItem> _listItems(final StorableKey prefix, StorableKey lastSeen,
-            ListLimits limits)
+    protected List<ListItem> _listItems(ListItemType itemType, StorableKey prefix,
+            StorableKey lastSeen, ListLimits limits)
         throws StoreException
     {
-        final long maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
-        final int maxEntries = limits.getMaxEntries();
-        final ArrayList<ListItem> result = new ArrayList<ListItem>(100);
-
         // we could check if all entries were iterated (with result code); for now we won't
-        StorableIterationCallback cb = new StorableIterationCallback() {
-            public int counter; // to avoid checking systime too often
-
-            @Override
-            public IterationAction verifyKey(StorableKey key) {
-                if (!key.hasPrefix(prefix)) {
-                    return IterationAction.TERMINATE_ITERATION;
-                }
-                if ((++counter & 15) == 0) { // check for every 16 items
-                    if (!result.isEmpty()) { // do NOT terminate after at least one entry included
-                        if (_timeMaster.currentTimeMillis() >= maxTime) {
-                            return IterationAction.TERMINATE_ITERATION;
-                        }
-                    }
-                }
-                return IterationAction.PROCESS_ENTRY;
-            }
-            @Override
-            public IterationAction processEntry(Storable entry) throws StoreException {
-                result.add(new ListItem(entry.getKey(),
-                        entry.getContentHash(), entry.getActualUncompressedLength()));
-                if (result.size() >= maxEntries) {
-                    return IterationAction.TERMINATE_ITERATION;
-                }
-                return IterationAction.PROCESS_ENTRY;
-            }
-            
-        };
+        ListItemsCallback cb = new ListItemsCallback(_timeMaster, _entryConverter, prefix, limits);
         /* Two cases; either starting without last seen -- in which case we should include
          * the first entry -- or with last-seen, in which case it is to be skipped.
          */
@@ -654,7 +629,7 @@ public abstract class StoreHandler<
             // we could check if all entries were iterated (with result code); for now we won't
             /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(cb, lastSeen);
         }
-        return result;
+        return cb.getResult();
     }
 
     protected List<StorableKey> _listIds(final StorableKey prefix, StorableKey lastSeen,
@@ -864,5 +839,77 @@ public abstract class StoreHandler<
                 t = t.getCause();
         }
         return t;
+    }
+
+    /*
+    /**********************************************************************
+    /* Helper classes
+    /**********************************************************************
+     */
+
+    protected static class FullListItemsCallback extends ListItemsCallback
+    {
+        public FullListItemsCallback(TimeMaster timeMaster, StoredEntryConverter<?,?,?> entryConverter,
+                StorableKey prefix, ListLimits limits) {
+            super(timeMaster, entryConverter, prefix, limits);
+        }
+
+        protected ListItem toListItem(Storable entry) {
+            return _entryConverter.fullListItemFromStorable(entry);
+        }
+    }
+    
+    protected static class ListItemsCallback extends StorableIterationCallback
+    {
+        protected final TimeMaster _timeMaster;
+        protected final StoredEntryConverter<?,?,?> _entryConverter;
+
+        protected final StorableKey prefix;
+        protected final long maxTime;
+        protected final int maxEntries;
+
+        protected final ArrayList<ListItem> result = new ArrayList<ListItem>(100);
+        
+        public int counter; // to avoid checking systime too often
+
+        public ListItemsCallback(TimeMaster timeMaster, StoredEntryConverter<?,?,?> entryConverter,
+                StorableKey prefix, ListLimits limits)
+        {
+            _timeMaster = timeMaster;
+            _entryConverter = entryConverter;
+            maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
+            maxEntries = limits.getMaxEntries();
+            this.prefix = prefix;
+        }
+
+        public List<ListItem> getResult() { return result; }
+        
+        @Override
+        public IterationAction verifyKey(StorableKey key) {
+            if (!key.hasPrefix(prefix)) {
+                return IterationAction.TERMINATE_ITERATION;
+            }
+            if ((++counter & 15) == 0) { // check for every 16 items
+                if (!result.isEmpty()) { // do NOT terminate after at least one entry included
+                    if (_timeMaster.currentTimeMillis() >= maxTime) {
+                        return IterationAction.TERMINATE_ITERATION;
+                    }
+                }
+            }
+            return IterationAction.PROCESS_ENTRY;
+        }
+
+        @Override
+        public IterationAction processEntry(Storable entry) throws StoreException {
+            result.add(toListItem(entry));
+            if (result.size() >= maxEntries) {
+                return IterationAction.TERMINATE_ITERATION;
+            }
+            return IterationAction.PROCESS_ENTRY;
+        }
+
+        protected ListItem toListItem(Storable entry) {
+            return _entryConverter.minimalListItemFromStorable(entry);
+        }
     }
 }
