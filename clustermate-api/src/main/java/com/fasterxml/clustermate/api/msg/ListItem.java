@@ -3,19 +3,26 @@ package com.fasterxml.clustermate.api.msg;
 import com.fasterxml.storemate.shared.StorableKey;
 
 /**
- * Full result entry contained in {@link ListResponse} (as an alternative
+ * Full result entry contained in {@link ExtensibleType} (as an alternative
  * to ids, {@link StorableKey}).
+ *<p>
+ * Note that since this extends {@link ExtensibleItem}, extension by adding
+ * new entries should be relatively safe, even if old(er) clients; but
+ * caller would do well to check if unrecognized properties were found.
  */
-public class ListItem
+public class ListItem extends ExtensibleType
 {
     // NOTE: names MUST match with accessor names
     
     protected StorableKey key;
-
+    
     protected int hash;
 
     protected long length;
     
+    /**
+     * Default constructor only to be used for deserialization
+     */
     protected ListItem() { }
     
     public ListItem(StorableKey k, int h, long l)
@@ -24,7 +31,7 @@ public class ListItem
         hash = h;
         length = l;
     }
-
+    
     protected ListItem(ListItem base) {
         key = base.key;
         hash = base.hash;
