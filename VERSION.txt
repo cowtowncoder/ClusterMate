@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.8.8
+
+...
+
 0.8.7
 
 #12: Implement/require external String representation for Keys.
