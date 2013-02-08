@@ -20,7 +20,7 @@ import com.fasterxml.clustermate.std.JdkClusterStatusAccessor;
 public abstract class StoreClientBootstrapper<
     K extends EntryKey,
     CONFIG extends StoreClientConfig<K, CONFIG>,
-    STORE extends StoreClient<K, CONFIG>,
+    STORE extends StoreClient<K, CONFIG, ?>,
     BOOTSTRAPPER extends StoreClientBootstrapper<K, CONFIG, STORE, BOOTSTRAPPER>
 >
     extends Loggable

@@ -5,10 +5,12 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.clustermate.api.*;
+import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.client.operation.*;
 import com.fasterxml.clustermate.client.util.GenericContentConverter;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.util.ByteAggregator;
@@ -17,7 +19,8 @@ import com.fasterxml.storemate.shared.util.ByteAggregator;
  * Client used for accessing temporary store service.
  */
 public abstract class StoreClient<K extends EntryKey,
-    CONFIG extends StoreClientConfig<K, CONFIG>
+    CONFIG extends StoreClientConfig<K, CONFIG>,
+    L extends ListItem
 >
     extends Loggable
 {
@@ -82,7 +85,11 @@ public abstract class StoreClient<K extends EntryKey,
     /**********************************************************************
      */
 
-    protected StoreClient(CONFIG config,
+    /**
+     * @param config Client configuration to use
+     * @param listItemType Concrete {@link ListItem} type for implementation
+     */
+    protected StoreClient(CONFIG config, Class<L> listItemType,
             ClusterStatusAccessor statusAccessor, ClusterViewByClient<K> clusterView,
             NetworkClient<K> httpClientImpl)
     {
@@ -101,6 +108,13 @@ public abstract class StoreClient<K extends EntryKey,
         _listReaders.put(ListItemType.minimalEntries,
                 new GenericContentConverter<ListResponse.MinimalItemListResponse>(mapper,
                         ListResponse.MinimalItemListResponse.class));
+        /* "full" ListItemType is trickier, since we need to use generic type definition
+         * to parameterize appropriate Full 
+         */
+        JavaType fullResponseType = config.getJsonMapper().getTypeFactory().constructParametricType(
+                ListResponse.FullItemListResponse.class, listItemType);
+        _listReaders.put(ListItemType.fullEntries,
+                new GenericContentConverter<ListResponse.FullItemListResponse<L>>(mapper, fullResponseType));
     }
 
     /**

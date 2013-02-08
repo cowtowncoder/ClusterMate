@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.client.util;
 
 import java.io.*;
 
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
@@ -19,11 +20,14 @@ public class GenericContentConverter<T> implements ContentConverter<T>
 
     protected final ObjectReader _jsonReader;
 
-    public GenericContentConverter(ObjectMapper jsonMapper, Class<T> targetType)
-    {
+    public GenericContentConverter(ObjectMapper jsonMapper, Class<T> targetType) {
         _jsonReader = jsonMapper.reader(targetType);
     }
 
+    public GenericContentConverter(ObjectMapper jsonMapper, JavaType targetType) {
+        _jsonReader = jsonMapper.reader(targetType);
+    }
+    
     @Override
     public T convert(ContentType contentType, InputStream in)
         throws IOException
