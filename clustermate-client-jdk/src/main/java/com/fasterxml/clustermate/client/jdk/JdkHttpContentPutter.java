@@ -1,13 +1,11 @@
 package com.fasterxml.clustermate.client.jdk;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
@@ -16,7 +14,6 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
 import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.shared.util.IOUtil;
-import com.fasterxml.storemate.shared.util.WithBytesCallback;
 
 /**
  * Helper accessors class used for making a single PUT call to a single
@@ -47,9 +44,7 @@ public class JdkHttpContentPutter<K extends EntryKey>
             return CallFailure.timeout(_server, startTime, startTime);
         }
         try {
-//          return _tryPutBlocking
-            return _tryPutAsync
-                    (config, endOfTime, contentId, content, startTime, timeout);
+            return _tryPut(config, endOfTime, contentId, content, startTime, timeout);
         } catch (Exception e) {
             return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e);
         }
@@ -57,62 +52,12 @@ public class JdkHttpContentPutter<K extends EntryKey>
 
     /*
     /**********************************************************************
-    /* Implementation: blocking
+    /* Blocking implementation
     /**********************************************************************
      */
 
-    /*
-    // With Apache HC:
-    public CallFailure _tryPutBlocking(CallConfig config, long endOfTime,
-            String contentId, PutContentProvider content,
-            final long startTime, final long timeout)
-        throws IOException, ExecutionException, InterruptedException, URISyntaxException
-    {
-        final String path = resourcePath(_server.resourceEndpoint(), contentId);
-        URIBuilder ub = new URIBuilder(path);
-        int checksum = content.getChecksum32();
-        addStandardParams(ub, checksum);
-        HttpPut put = new HttpPut(ub.build());
-        put.setEntity(new InputStreamEntity(content.asStream(), -1L));
-
-        HttpResponse response = _blockingHC.execute(put);
-        int statusCode = response.getStatusLine().getStatusCode();
-        HttpEntity entity = response.getEntity();        
-        
-        // one more thing: handle standard headers, if any?
-//        handleHeaders(_server, resp, startTime);
-
-        if (HttpUtil.isSuccess(statusCode)) {
-            EntityUtils.consume(entity);
-//            InputStream in = entity.getContent();
-//            while (in.skip(Integer.MAX_VALUE) > 0L) { }
-//            in.close();
-            return null;
-        }
-        // if not, why not? Any well-known problems?
-        // then the default fallback
-        String msg = HttpUtil.getExcerpt(EntityUtils.toByteArray(entity));
-        return CallFailure.general(_server, statusCode, startTime, System.currentTimeMillis(), msg);
-    }
-
-//    protected <T extends HttpRequest> T addStandardParams(T request)
-    protected URIBuilder addStandardParams(URIBuilder builder,
-            int checksum)
-    {
-        builder.addParameter(Constants.HTTP_QUERY_PARAM_CHECKSUM, 
-                (checksum == 0) ? "0" : String.valueOf(checksum));
-        return builder;
-    }
-*/
-
-    /*
-    /**********************************************************************
-    /* Call implementation
-    /**********************************************************************
-     */
-    
-    // And with async-http-client:
-    public CallFailure _tryPutAsync(CallConfig config, long endOfTime,
+    @SuppressWarnings("resource")
+    public CallFailure _tryPut(CallConfig config, long endOfTime,
             K contentId, PutContentProvider content,
             final long startTime, final long timeout)
         throws IOException, ExecutionException, InterruptedException
@@ -120,102 +65,67 @@ public class JdkHttpContentPutter<K extends EntryKey>
         JdkHttpClientPathBuilder path = _server.rootPath();
         path = _pathFinder.appendStoreEntryPath(path);
         path = _keyConverter.appendToPath(path, contentId);       
+        /*
         BoundRequestBuilder reqBuilder = path.putRequest(_httpClient);
         Generator<K> gen = new Generator<K>(content, _keyConverter);
         int checksum = gen.getChecksum();
         reqBuilder = addCheckSum(reqBuilder, checksum);
         reqBuilder = reqBuilder.setBody(gen);
-        ListenableFuture<Response> futurama = _httpClient.executeRequest(reqBuilder.build());
+        */
 
-        // First, see if we can get the answer without time out...
-        Response resp;
+        // Minor optimization; only using chunking if necessary
+
+        // Ok; and then figure out most optimal way for getting content:
+
+        OutputStream out = null;
+        HttpURLConnection conn;
+
         try {
-            resp = futurama.get(timeout, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            return CallFailure.timeout(_server, startTime, System.currentTimeMillis());
+            ByteContainer bc = content.contentAsBytes();
+            if (bc != null) { // most efficient, yay
+                int checksum = _keyConverter.contentHashFor(bc);
+                path = addChecksum(path, checksum);
+                URL url = path.asURL();
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setFixedLengthStreamingMode(bc.byteLength());
+                conn.setRequestMethod("PUT");
+                out = conn.getOutputStream();
+                bc.writeBytes(out);
+            } else {
+                InputStream in; // closed in copy()
+                File f = content.contentAsFile();
+                if (f != null) {
+                    in = new FileInputStream(f);
+                } else {
+                    in = content.contentAsStream();
+                }
+                URL url = path.asURL();
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setChunkedStreamingMode(CHUNK_SIZE);
+                conn.setRequestMethod("PUT");
+                out = conn.getOutputStream();
+                copy(in, out, true);
+            }
+        } finally {
+            if (out != null) {
+                try { out.close(); } catch (IOException e) {
+                    logWarn("Problems closing stream: "+e.getMessage());
+                }
+            }
         }
-
-        // and if so, is it successful?
-        int statusCode = resp.getStatusCode();
+        int statusCode = conn.getResponseCode();
 
         // one more thing: handle standard headers, if any?
-        handleHeaders(_server, resp, startTime);
+        handleHeaders(_server, conn, startTime);
 
         if (IOUtil.isHTTPSuccess(statusCode)) {
-            drain(resp);
+            drain(conn, statusCode);
             return null;
         }
         // if not, why not? Any well-known problems?
 
         // then the default fallback
-        String msg = getExcerpt(resp, config.getMaxExcerptLength());
+        String msg = getExcerpt(conn, statusCode, config.getMaxExcerptLength());
         return CallFailure.general(_server, statusCode, startTime, System.currentTimeMillis(), msg);
-    }
-
-    /*
-    /**********************************************************************
-    /* Helper classes
-    /**********************************************************************
-     */
-
-    protected final static class Generator<K extends EntryKey>
-        implements BodyGenerator
-    {
-        protected final PutContentProvider _content;
-        protected final EntryKeyConverter<K> _keyConverter;
-
-        protected final AtomicInteger _checksum;
-
-        public Generator(PutContentProvider content, EntryKeyConverter<K> keyConverter)
-        {
-            _content = content;
-            _keyConverter = keyConverter;
-            // Let's see if we can calculate content checksum early, for even the first request
-            int checksum = 0;
-            ByteContainer bytes = _content.contentAsBytes();
-            if (bytes != null) {
-                checksum = _keyConverter.contentHashFor(bytes);
-            }
-            _checksum = new AtomicInteger(checksum);
-        }
-
-        public int getChecksum() {
-            return _checksum.get();
-        }
-        
-        @Override
-        public Body createBody() throws IOException
-        {
-            int checksum = _checksum.get();
-            ByteContainer bytes = _content.contentAsBytes();
-            if (bytes != null) {
-                if (checksum == 0) {
-                    checksum = _keyConverter.contentHashFor(bytes);
-                    _checksum.set(checksum);
-                }
-                return bytes.withBytes(BodyCallback.instance);
-            }
-            File f = _content.contentAsFile();
-            if (f != null) {
-                try {
-                    return new BodyFileBacked(f, _content.length(), _checksum);
-                } catch (IOException ie) {
-                    throw new IllegalStateException("Failed to open file '"+f.getAbsolutePath()+"': "
-                            +ie.getMessage(), ie);
-                }
-            }
-            // sanity check; we'll never get here:
-            throw new IOException("No suitable body generation method found");
-        }
-    }
-    
-    protected final static class BodyCallback implements WithBytesCallback<Body>
-    {
-        public final static BodyCallback instance = new BodyCallback();
-        
-        @Override
-        public Body withBytes(byte[] buffer, int offset, int length) {
-            return new BodyByteBacked(buffer, offset, length);
-        }
     }
 }

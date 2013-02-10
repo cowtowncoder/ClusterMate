@@ -9,6 +9,7 @@ import com.fasterxml.storemate.shared.util.BufferRecycler;
 import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
+import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
 /**
  * Intermediate base class used by accessors that use
@@ -79,14 +80,11 @@ public abstract class BaseJdkHttpAccessor<K extends EntryKey> extends Loggable
     /**********************************************************************
      */
 
-    /*
-    protected void addCheckSum(HttpURLConnection conn, int checksum)
+    protected JdkHttpClientPathBuilder addChecksum(JdkHttpClientPathBuilder path, int checksum)
     {
-        reqBuilder = reqBuilder.addQueryParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM,
+        return path.addParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM,
                 (checksum == 0) ? "0" : String.valueOf(checksum));
-        return reqBuilder;
     }
-    */
     
     /*
     /**********************************************************************

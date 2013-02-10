@@ -26,11 +26,6 @@ public abstract class BaseJdkHttpNetworkClient<
     {
         _config = config;
         _mapper = config.getJsonMapper();
-        /*
-            .setConnectionTimeoutInMs((int)config.getCallConfig().getConnectTimeoutMsecs())
-            .setMaximumConnectionsPerHost(5) // default of 2 is too low
-            .setMaximumConnectionsTotal(30) // and 10 is bit skimpy too
-            */
     }
 
     /*
