@@ -53,7 +53,7 @@ public class JdkHttpContentGetter<K extends EntryKey>
             URL url = path.asURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setChunkedStreamingMode(CHUNK_SIZE);
+//            conn.setChunkedStreamingMode(CHUNK_SIZE);
             // plus, allow use of GZIP and LZF
             conn.setRequestProperty(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION,
                     "lzf, gzip, identity");

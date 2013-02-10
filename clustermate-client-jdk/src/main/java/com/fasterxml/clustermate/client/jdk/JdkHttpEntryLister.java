@@ -1,6 +1,8 @@
 package com.fasterxml.clustermate.client.jdk;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -40,50 +42,42 @@ public class JdkHttpEntryLister<K extends EntryKey>
         
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
-        final long timeout = Math.min(endOfTime - startTime, config.getGetCallTimeoutMsecs());
-        if (timeout < config.getMinimumTimeoutMsecs()) {
+        final long timeoutMsecs = Math.min(endOfTime - startTime, config.getGetCallTimeoutMsecs());
+        if (timeoutMsecs < config.getMinimumTimeoutMsecs()) {
             return failed(CallFailure.timeout(_server, startTime, startTime));
         }
+        
         JdkHttpClientPathBuilder path = _server.rootPath();
         path = _pathFinder.appendStoreListPath(path);
         path = _keyConverter.appendToPath(path, prefix);
-        BoundRequestBuilder reqBuilder = path
-                .listRequest(_httpClient)
-                .addQueryParameter(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES, String.valueOf(maxResults))
-                .addQueryParameter(ClusterMateConstants.QUERY_PARAM_TYPE, type.toString())
+        path.addParameter(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES, String.valueOf(maxResults))
+                .addParameter(ClusterMateConstants.QUERY_PARAM_TYPE, type.toString())
                 ;
-        
         if (lastSeen != null) {
-            reqBuilder = reqBuilder
-                    .addQueryParameter(ClusterMateConstants.QUERY_PARAM_LAST_SEEN, toBase64(lastSeen.asBytes()));
+            path = path.addParameter(ClusterMateConstants.QUERY_PARAM_LAST_SEEN, toBase64(lastSeen.asBytes()));
         }
-
         InputStream in = null;
+
         try {
-            Future<Response> futurama = _httpClient.executeRequest(reqBuilder.build());
-            // First, see if we can get the answer without time out...
-            Response resp;
-            try {
-                resp = futurama.get(timeout, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                return failed(CallFailure.timeout(_server, startTime, System.currentTimeMillis()));
-            }
-            // and if so, is it successful?
-            int statusCode = resp.getStatusCode();
-            // one thing first: handle standard headers, if any?
-            handleHeaders(_server, resp, startTime);
+            URL url = path.asURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            setTimeouts(conn, timeoutMsecs);
+            conn.setRequestMethod("GET");
+            conn.setChunkedStreamingMode(CHUNK_SIZE);
+            int statusCode = conn.getResponseCode();
+            handleHeaders(_server, conn, startTime);
 
             // call ok?
             if (!IOUtil.isHTTPSuccess(statusCode)) {
                 // if not, why not? Any well-known problems? (besides timeout that was handled earlier)
 
                 // then the default fallback
-                String msg = getExcerpt(resp, config.getMaxExcerptLength());
+                String msg = getExcerpt(conn, statusCode, config.getMaxExcerptLength());
                 return failed(CallFailure.general(_server, statusCode, startTime, System.currentTimeMillis(), msg));
             }
-            ContentType contentType = findContentType(resp, ContentType.JSON);
-            in = resp.getResponseBodyAsStream();
-            return new JdkHttpEntryListResult<T>(converter.convert(contentType, in));
+            ContentType contentType = findContentType(conn, ContentType.JSON);
+            in = conn.getInputStream();
+            return new JdkHttpEntryListResult<T>(conn, converter.convert(contentType, in));
         } catch (Exception e) {
             if (in != null) {
                 try {

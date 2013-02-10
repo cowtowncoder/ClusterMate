@@ -59,17 +59,17 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
      */
      
     @Override
-    public RequestPathBuilder addPathSegment(String segment) {
+    public JdkHttpClientPathBuilder addPathSegment(String segment) {
         return _appendSegment(segment, true);
     }
 
     @Override
-    public RequestPathBuilder addPathSegmentsRaw(String segments) {
+    public JdkHttpClientPathBuilder addPathSegmentsRaw(String segments) {
         return _appendSegment(segments, false);
     }
     
     @Override
-    public RequestPathBuilder addParameter(String key, String value)
+    public JdkHttpClientPathBuilder addParameter(String key, String value)
     {
          if (_queryParams == null) {
               _queryParams = new ArrayList<String>(8);
@@ -144,7 +144,7 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
     /*********************************************************************
      */
     
-    protected final RequestPathBuilder _appendSegment(String segment, boolean escapeSlash)
+    protected final JdkHttpClientPathBuilder _appendSegment(String segment, boolean escapeSlash)
     {
           if (_path == null) {
                _path = _urlEncoder.encode(segment, escapeSlash);
