@@ -1,10 +1,12 @@
 package com.fasterxml.clustermate.client.jdk;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.clustermate.api.*;
+import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.Loggable;
 import com.fasterxml.clustermate.client.StoreClientConfig;
@@ -36,6 +38,25 @@ public abstract class JdkHttpBasedAccessor<K extends EntryKey> extends Loggable
     /**********************************************************************
      */
 
+    protected long _parseLongHeader(HttpURLConnection conn, String headerName)
+    {
+        String lenStr = conn.getHeaderField(headerName);
+       long l;
+       if (lenStr == null) {
+           return -1L;
+       }
+       lenStr = lenStr.trim();
+       if (lenStr.length() == 0) {
+           return -1L;
+       }
+       try {
+           return  Long.parseLong(lenStr.trim());
+       } catch (NumberFormatException e) {
+           String desc = (lenStr == null) ? "null" : "\""+lenStr+"\"";
+           throw new IllegalArgumentException("Bad numeric value for header '"+headerName+"': "+desc);
+       }
+    }
+    
     protected void drain(Response resp)
     {
         try {

@@ -1,5 +1,7 @@
 package com.fasterxml.clustermate.std;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +22,9 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
     protected String _path;
 
     protected List<String> _queryParams;
-     
+
+    protected transient URL _url;
+    
     public JdkHttpClientPathBuilder(IpAndPort server) {
         this(server, null, null);
     }
@@ -115,6 +119,25 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
          return _url();
     }
 
+    /*
+    /*********************************************************************
+    /* Extended API
+    /*********************************************************************
+     */
+
+    public URL asURL()
+    {
+        if (_url == null) {
+            String urlStr = _url();
+            try {
+                _url = new URL(urlStr);
+            } catch (MalformedURLException e) {
+                throw new IllegalArgumentException("Invalid URL: "+urlStr);
+            }
+        }
+        return _url;
+    }
+    
     /*
     /*********************************************************************
     /* Internal methods
