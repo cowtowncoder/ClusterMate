@@ -1,0 +1,144 @@
+package com.fasterxml.clustermate.client.jdk;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.client.*;
+import com.fasterxml.clustermate.client.call.CallConfig;
+import com.fasterxml.clustermate.client.call.ContentHeader;
+import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
+import com.fasterxml.storemate.shared.util.IOUtil;
+
+/**
+ * Helper object for making HEAD requests.
+ */
+public class JdkHttpContentHeader<K extends EntryKey>
+    extends JdkHttpBasedAccessor<K>
+    implements ContentHeader<K>
+{
+    protected final ClusterServerNode _server;
+    
+    public JdkHttpContentHeader(StoreClientConfig<K,?> storeConfig,
+            ClusterServerNode server)
+    {
+        super(storeConfig);
+        _server = server;
+    }
+
+    /*
+    /**********************************************************************
+    /* Call implementation
+    /**********************************************************************
+     */
+    
+    @Override
+    public JdkHttpHeadCallResult tryHead(CallConfig config, long endOfTime, K contentId)
+    {
+        // first: if we can't spend at least 10 msecs, let's give up:
+        final long startTime = System.currentTimeMillis();
+        long timeout = Math.min(endOfTime - startTime, config.getGetCallTimeoutMsecs());
+        if (timeout < config.getMinimumTimeoutMsecs()) {
+            return new JdkHttpHeadCallResult(CallFailure.timeout(_server, startTime, startTime));
+        }
+
+        try {
+            JdkHttpClientPathBuilder path = _server.rootPath();
+            path = _pathFinder.appendStoreEntryPath(path);
+            path = _keyConverter.appendToPath(path, contentId);
+            BoundRequestBuilder reqBuilder = path.headRequest(_httpClient);
+
+            HeadHandler<K> hh = new HeadHandler<K>(this, _server, startTime);
+            ListenableFuture<Object> futurama = _httpClient.executeRequest(reqBuilder.build(), hh);
+            // First, see if we can get the answer without time out...
+            try {
+            	futurama.get(timeout, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                return new JdkHttpHeadCallResult(CallFailure.timeout(_server, startTime, System.currentTimeMillis()));
+            }
+            // and if so, is it successful?
+            int statusCode = hh.statusCode;
+            // call ok?
+            if (!IOUtil.isHTTPSuccess(statusCode)) {
+            	if (hh.fail != null) {
+                    return new JdkHttpHeadCallResult(CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), hh.fail));
+            	}
+                // if not, why not? Any well-known problems? (besides timeout that was handled earlier)
+                return new JdkHttpHeadCallResult(CallFailure.general(_server, statusCode, startTime,
+                		System.currentTimeMillis(), "N/A"));
+            }
+            String lenStr = hh.contentLength;
+            try {
+            	long l;
+            	if (lenStr == null || (lenStr = lenStr.trim()).length() == 0) {
+            		l = -1;
+            	} else {
+            		l = Long.parseLong(lenStr.trim());
+            	}
+                return new JdkHttpHeadCallResult(200, l);
+            } catch (Exception e) {
+                String desc = (lenStr == null) ? "null" : "\""+lenStr+"\"";
+                return new JdkHttpHeadCallResult(CallFailure.formatException(_server,
+                        statusCode, startTime, System.currentTimeMillis(),
+                        "Invalid '"+ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH+"' value: "+desc));
+            }
+        } catch (Exception e) {
+            return new JdkHttpHeadCallResult(CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e));
+        }
+    }
+
+    private final static class HeadHandler<K extends EntryKey>
+        implements AsyncHandler<Object>
+    {
+        private final JdkHttpContentHeader<K> _parent;
+        private final ClusterServerNode _server;
+        private final long _startTime;
+    	
+        public Throwable fail;
+        public int statusCode = -1;
+        public String contentLength = null;
+
+        public HeadHandler(JdkHttpContentHeader<K> parent, ClusterServerNode server, long startTime)
+        {
+            _parent = parent;
+            _server = server;
+            _startTime = startTime;
+        }
+
+        /*
+        @Override
+        public void onThrowable(Throwable t) {
+            fail = t;
+        }
+
+        @Override
+        public int onBodyPartReceived(HttpResponseBodyPart bodyPart) {
+            // we shouldn't get any, but whatever
+            return 0;
+        }
+
+        @Override
+        public int onStatusReceived(HttpResponseStatus responseStatus) {
+            statusCode = responseStatus.getStatusCode();
+            if (!IOUtil.isHTTPSuccess(statusCode)) {
+                return STATE.ABORT;
+            }
+            return STATE.CONTINUE;
+        }
+
+        @Override
+        public com.ning.http.client.AsyncHandler.STATE onHeadersReceived(HttpResponseHeaders headers)
+        {
+            _parent.handleHeaders(_server, headers.getHeaders(), _startTime);
+            contentLength = headers.getHeaders().getFirstValue(ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH);
+            return STATE.CONTINUE;
+        }
+
+        @Override
+        public Object onCompleted() {
+            return null;
+        }
+        */
+    }
+}

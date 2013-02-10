@@ -1,0 +1,27 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion> 
+  <parent>
+    <groupId>com.fasterxml.clustermate</groupId>
+    <artifactId>clustermate-parent</artifactId>
+    <version>0.8.8-SNAPSHOT</version>
+  </parent>
+  <artifactId>clustermate-client-jdk</artifactId>
+  <name>ClusterMate-client-JDK</name>
+  <packaging>jar</packaging>
+  <description>ClusterMate NetworkClient implementation built on default
+JDK-provided HTTP client (HTTPUrlConnection)
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+</project>
