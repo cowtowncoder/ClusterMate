@@ -23,7 +23,7 @@ import com.fasterxml.storemate.shared.util.WithBytesCallback;
  * server node.
  */
 public class JdkHttpContentPutter<K extends EntryKey>
-    extends JdkHttpBasedAccessor<K>
+    extends BaseJdkHttpAccessor<K>
     implements ContentPutter<K>
 {
     protected final ClusterServerNode _server;

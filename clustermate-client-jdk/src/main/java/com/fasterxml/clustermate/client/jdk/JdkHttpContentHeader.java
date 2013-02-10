@@ -15,7 +15,7 @@ import com.fasterxml.storemate.shared.util.IOUtil;
  * Helper object for making HEAD requests.
  */
 public class JdkHttpContentHeader<K extends EntryKey>
-    extends JdkHttpBasedAccessor<K>
+    extends BaseJdkHttpAccessor<K>
     implements ContentHeader<K>
 {
     protected final ClusterServerNode _server;
@@ -42,18 +42,18 @@ public class JdkHttpContentHeader<K extends EntryKey>
         if (timeoutMsecs < config.getMinimumTimeoutMsecs()) {
             return new JdkHttpHeadCallResult(CallFailure.timeout(_server, startTime, startTime));
         }
-
         try {
             JdkHttpClientPathBuilder path = _server.rootPath();
             path = _pathFinder.appendStoreEntryPath(path);
             path = _keyConverter.appendToPath(path, contentId);
             URL url = path.asURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            // not optimal, will have to do:
-            conn.setConnectTimeout((int) timeoutMsecs);
-            conn.setReadTimeout((int) timeoutMsecs);
+            conn.setRequestMethod("HEAD");
+            setTimeouts(conn, timeoutMsecs);
             int statusCode = conn.getResponseCode();
+            // one thing first: handle standard headers, if any?
+            handleHeaders(_server, conn, startTime);
+
             // call ok?
             if (!IOUtil.isHTTPSuccess(statusCode)) {
                 // if not, why not? Any well-known problems? (besides timeout that was handled earlier)
@@ -62,7 +62,7 @@ public class JdkHttpContentHeader<K extends EntryKey>
             }
             try {
                 return new JdkHttpHeadCallResult(conn, ClusterMateConstants.HTTP_STATUS_OK,
-                        _parseLongHeader(conn, ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH));
+                        parseLongHeader(conn, ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH));
             } catch (Exception e) {
                 return new JdkHttpHeadCallResult(CallFailure.formatException(_server,
                         statusCode, startTime, System.currentTimeMillis(), e.getMessage()));

@@ -17,7 +17,7 @@ import com.fasterxml.clustermate.client.util.ContentConverter;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
 public class JdkHttpEntryLister<K extends EntryKey>
-    extends JdkHttpBasedAccessor<K>
+    extends BaseJdkHttpAccessor<K>
     implements EntryLister<K>
 {
     protected final ClusterServerNode _server;

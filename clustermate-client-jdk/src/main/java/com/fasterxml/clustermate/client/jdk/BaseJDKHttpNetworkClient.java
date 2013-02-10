@@ -8,7 +8,7 @@ import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
-public abstract class BaseJDKHttpNetworkClient<
+public abstract class BaseJdkHttpNetworkClient<
     K extends EntryKey,
     CONFIG extends StoreClientConfig<K,CONFIG>
 >
@@ -22,7 +22,7 @@ public abstract class BaseJDKHttpNetworkClient<
      * The usual constructor to call; configures AHC using standard
      * settings.
      */
-    protected BaseJDKHttpNetworkClient(CONFIG config)
+    protected BaseJdkHttpNetworkClient(CONFIG config)
     {
         _config = config;
         _mapper = config.getJsonMapper();
