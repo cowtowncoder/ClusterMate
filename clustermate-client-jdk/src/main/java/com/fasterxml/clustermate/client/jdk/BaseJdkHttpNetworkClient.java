@@ -47,7 +47,7 @@ public abstract class BaseJdkHttpNetworkClient<
     
     @Override
     public EntryAccessors<K> getEntryAccessors() {
-        return new JDKHttpEntryAccessors<K>(_config);
+        return new JdkHttpEntryAccessors<K>(_config);
     }
 
     @Override

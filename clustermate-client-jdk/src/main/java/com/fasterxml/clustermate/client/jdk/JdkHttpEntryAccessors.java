@@ -4,11 +4,11 @@ import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.*;
 
-public class JDKHttpEntryAccessors<K extends EntryKey> implements EntryAccessors<K>
+public class JdkHttpEntryAccessors<K extends EntryKey> implements EntryAccessors<K>
 {
     protected final StoreClientConfig<K,?> _storeConfig;
     
-    public JDKHttpEntryAccessors(StoreClientConfig<K,?> storeConfig)
+    public JdkHttpEntryAccessors(StoreClientConfig<K,?> storeConfig)
     {
         _storeConfig = storeConfig;
     }
