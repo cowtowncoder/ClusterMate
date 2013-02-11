@@ -13,6 +13,7 @@ import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
 import com.fasterxml.storemate.shared.ByteContainer;
+import com.fasterxml.storemate.shared.hash.HashConstants;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 /**
@@ -65,28 +66,23 @@ public class JdkHttpContentPutter<K extends EntryKey>
         JdkHttpClientPathBuilder path = _server.rootPath();
         path = _pathFinder.appendStoreEntryPath(path);
         path = _keyConverter.appendToPath(path, contentId);       
-        /*
-        BoundRequestBuilder reqBuilder = path.putRequest(_httpClient);
-        Generator<K> gen = new Generator<K>(content, _keyConverter);
-        int checksum = gen.getChecksum();
-        reqBuilder = addCheckSum(reqBuilder, checksum);
-        reqBuilder = reqBuilder.setBody(gen);
-        */
-
-        // Minor optimization; only using chunking if necessary
-
         // Ok; and then figure out most optimal way for getting content:
 
         OutputStream out = null;
         HttpURLConnection conn;
+        int hash = content.getContentHash();
 
         try {
             ByteContainer bc = content.contentAsBytes();
             if (bc != null) { // most efficient, yay
-                int checksum = _keyConverter.contentHashFor(bc);
-                path = addChecksum(path, checksum);
+                if (hash == HashConstants.NO_CHECKSUM) {
+                    hash = _keyConverter.contentHashFor(bc);
+                    content.setContentHash(hash);
+                }
+                path = addChecksum(path, hash);
                 URL url = path.asURL();
                 conn = (HttpURLConnection) url.openConnection();
+                conn.setDoOutput(true);
                 conn.setFixedLengthStreamingMode(bc.byteLength());
                 conn.setRequestMethod("PUT");
                 out = conn.getOutputStream();
@@ -94,13 +90,18 @@ public class JdkHttpContentPutter<K extends EntryKey>
             } else {
                 InputStream in; // closed in copy()
                 File f = content.contentAsFile();
+                // !!! TODO: add wrapper for calculating hash sum, if not yet calculated
                 if (f != null) {
                     in = new FileInputStream(f);
                 } else {
                     in = content.contentAsStream();
                 }
+                if (hash != HashConstants.NO_CHECKSUM) {
+                    path = addChecksum(path, hash);
+                }
                 URL url = path.asURL();
                 conn = (HttpURLConnection) url.openConnection();
+                conn.setDoOutput(true);
                 conn.setChunkedStreamingMode(CHUNK_SIZE);
                 conn.setRequestMethod("PUT");
                 out = conn.getOutputStream();

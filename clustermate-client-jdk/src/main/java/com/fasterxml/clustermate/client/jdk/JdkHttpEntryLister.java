@@ -58,21 +58,20 @@ public class JdkHttpEntryLister<K extends EntryKey>
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             setTimeouts(conn, timeoutMsecs);
             conn.setRequestMethod("GET");
-            conn.setChunkedStreamingMode(CHUNK_SIZE);
             int statusCode = conn.getResponseCode();
-            handleHeaders(_server, conn, startTime);
 
             // call ok?
             if (!IOUtil.isHTTPSuccess(statusCode)) {
                 // if not, why not? Any well-known problems? (besides timeout that was handled earlier)
-
-                // then the default fallback
                 String msg = getExcerpt(conn, statusCode, config.getMaxExcerptLength());
+                handleHeaders(_server, conn, startTime);
                 return failed(CallFailure.general(_server, statusCode, startTime, System.currentTimeMillis(), msg));
             }
             ContentType contentType = findContentType(conn, ContentType.JSON);
             in = conn.getInputStream();
-            return new JdkHttpEntryListResult<T>(conn, converter.convert(contentType, in));
+            ListResponse<T> resp = converter.convert(contentType, in);
+            handleHeaders(_server, conn, startTime);
+            return new JdkHttpEntryListResult<T>(conn, resp);
         } catch (Exception e) {
             if (in != null) {
                 try {

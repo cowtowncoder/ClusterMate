@@ -2,7 +2,7 @@ Project: ClusterMate
 
 0.8.8
 
-...
+#15: Implement client accessor that uses default JDK-provided http client
 
 0.8.7
 

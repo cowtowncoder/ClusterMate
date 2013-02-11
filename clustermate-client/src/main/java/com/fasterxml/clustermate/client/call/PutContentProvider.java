@@ -30,4 +30,8 @@ public interface PutContentProvider
     public File contentAsFile() throws java.io.IOException;
     
     public java.io.InputStream contentAsStream() throws java.io.IOException;
+
+    public int getContentHash();
+    
+    public void setContentHash(int hash);
 }
