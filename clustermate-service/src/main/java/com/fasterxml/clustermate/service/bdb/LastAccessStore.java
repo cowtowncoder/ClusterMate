@@ -80,12 +80,12 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
         if (lastAccessKey == null) {
             return null;
         }
-        DatabaseEntry data = new DatabaseEntry();
-        OperationStatus status = _store.get(null, lastAccessKey, data, null);
+        DatabaseEntry entry = new DatabaseEntry();
+        OperationStatus status = _store.get(null, lastAccessKey, entry, null);
         switch (status) {
         case SUCCESS:
         case KEYEXIST:
-            return _entryConverter.createLastAccessed(data.getData());
+            return _entryConverter.createLastAccessed(entry.getData(), entry.getOffset(), entry.getSize());
         case KEYEMPTY: // was deleted during operation.. shouldn't be getting
         case NOTFOUND:
             // fall through

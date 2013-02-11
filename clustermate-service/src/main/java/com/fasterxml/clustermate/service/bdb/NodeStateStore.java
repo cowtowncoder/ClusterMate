@@ -179,7 +179,8 @@ public class NodeStateStore
     }
 
     protected IpAndPort _keyFromDB(DatabaseEntry entry) {
-        return new IpAndPort(UTF8Encoder.decodeFromUTF8(entry.getData()));
+        return new IpAndPort(UTF8Encoder.decodeFromUTF8(entry.getData(),
+                entry.getOffset(), entry.getSize()));
     }
     
     protected DatabaseEntry _toDB(ActiveNodeState state) throws IOException {
@@ -187,6 +188,6 @@ public class NodeStateStore
     }
 
     protected ActiveNodeState _fromDB(DatabaseEntry entry) throws IOException {
-        return _jsonReader.readValue(entry.getData());
+        return _jsonReader.readValue(entry.getData(), entry.getOffset(), entry.getSize());
     }
 }

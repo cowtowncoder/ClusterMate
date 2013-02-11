@@ -63,6 +63,8 @@ public abstract class StoredEntryConverter<K extends EntryKey,
 
     public abstract EntryLastAccessed createLastAccessed(byte[] raw);
 
+    public abstract EntryLastAccessed createLastAccessed(byte[] raw, int offset, int length);
+    
     /*
     /**********************************************************************
     /* Default implementations (mostly for unit tests)
