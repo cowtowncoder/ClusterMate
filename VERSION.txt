@@ -1,10 +1,10 @@
 Project: ClusterMate
 
-0.8.8
+0.8.8 (11-Feb-2013)
 
 #15: Implement client accessor that uses default JDK-provided http client
 
-0.8.7
+0.8.7 (05-Feb-2013)
 
 #12: Implement/require external String representation for Keys.
 - Add 'ExtensibleType' base class, to try to improve forwards compatibility
@@ -14,7 +14,7 @@ Project: ClusterMate
 
 #11: Use long-polling for SYNC LIST operation
 
-0.8.5
+0.8.5 (01-Feb-2013)
 
 - Add 'itemCount' property in 'OperationDiagnostics', populate for sync list, pull,
   list entries
@@ -27,3 +27,5 @@ Project: ClusterMate
 #8: Fix problems with file auto-cleaning, dangling metadata, failing sync pulls
 #6: Provide Etag for GET, when content hash known
 #7: Support conditional GET with Etag
+
+Earlier notes not maintained; first version (0.5.0) released in September 2012
