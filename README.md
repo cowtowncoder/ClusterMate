@@ -42,12 +42,18 @@ Default storage system has following features:
 Project is a multi-module Maven project.
 Sub-modules are can be grouped in following categories:
 
-* api: Basic datatypes shared by client and service modules
+* `api`: Basic datatypes shared by client and service modules
 * `json`: [Jackson](https://github.com/FasterXML/jackson-databind) converters for core datatypes from 'api' module and StoreMate
 or client-server and server-server communication
-* client:
+* `client`:
  * single-node access components ("call")
  * clustered-access ("operation")
-* service:
+ * Specific sub-modules for different HTTP clients:
+  * `client-ahc` for implementation using [Async HTTP Client](https://github.com/AsyncHttpClient/async-http-client)
+ * `client-jdk` that uses basic JDK-provided `java.net.HttpURLConnection`
+* `service`:
+ * Configurable implementation of distributed store and matching entry points
+* `dropwizard`
+ * Deployable container around `service` that exposes CRUD endpoints, entry listing, building on [DropWizard](https://github.com/codahale/dropwizard) framework (which runs on Jersey+Jetty)
 
 
