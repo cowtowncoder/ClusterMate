@@ -636,8 +636,13 @@ public abstract class StoreClient<K extends EntryKey,
 
     /**
      * Method called to GET specified content from an appropriate server node,
-     * and to pass it to specified processor for actual handling such as writing
-     * to a file.
+     * and to pass it to specified processor for actual handling such as
+     * aggregating or writing to an output stream.
+     *<p>
+     * NOTE: definition of "success" for result object is whether operation succeeded
+     * in finding entry iff one exists -- but if entry did not exist, operation may
+     * still succeed. To check whether entry was fetched, you will need to use
+     * {@link GetOperationResult#entryFound()}.
      * 
      * @return Result object that indicates state of the operation as whole,
      *   including information on servers that were accessed during operation.
@@ -650,6 +655,21 @@ public abstract class StoreClient<K extends EntryKey,
         return getContent(_config, key, processor, null);
     }
     
+    /**
+     * Method called to GET specified content from an appropriate server node,
+     * and to pass it to specified processor for actual handling such as
+     * aggregating or writing to an output stream.
+     *<p>
+     * NOTE: definition of "success" for result object is whether operation succeeded
+     * in finding entry iff one exists -- but if entry did not exist, operation may
+     * still succeed. To check whether entry was fetched, you will need to use
+     * {@link GetOperationResult#entryFound()}.
+     * 
+     * @return Result object that indicates state of the operation as whole,
+     *   including information on servers that were accessed during operation.
+     *   Caller is expected to check details from this object to determine
+     *   whether operation was successful or not.
+     */
     public final <T> GetOperationResult<T> getContent(CONFIG config, K key,
             GetContentProcessor<T> processor)
         throws InterruptedException

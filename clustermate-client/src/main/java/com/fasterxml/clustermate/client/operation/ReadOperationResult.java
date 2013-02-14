@@ -6,6 +6,10 @@ import com.fasterxml.clustermate.client.ClusterServerNode;
 
 /**
  * Intermediate base class for read operations (GET, HEAD, List).
+ * Note that definitions of {@link #failed} and {@link #succeeded()} refer
+ * to success of operation itself, but do <b>NOT</b> necessarily mean
+ * that content was found: it is possible for operation to succeed but
+ * content not to be found (not to exist).
  */
 public class ReadOperationResult<T extends ReadOperationResult<T>>
     extends OperationResultImpl<T>
@@ -90,6 +94,8 @@ public class ReadOperationResult<T extends ReadOperationResult<T>>
     public boolean failed() { return getSuccessCount() == 0; }
     public boolean succeeded() { return getSuccessCount() > 0; }
 
+    public boolean entryFound() { return _server != null; }
+    
     public int getMissingCount() {
         return (_serversWithoutEntry == null) ? 0 : _serversWithoutEntry.size();
     }
