@@ -99,4 +99,8 @@ public class ReadOperationResult<T extends ReadOperationResult<T>>
     public int getMissingCount() {
         return (_serversWithoutEntry == null) ? 0 : _serversWithoutEntry.size();
     }
+
+    public ClusterServerNode getSuccessServer() {
+        return _server;
+    }
 }

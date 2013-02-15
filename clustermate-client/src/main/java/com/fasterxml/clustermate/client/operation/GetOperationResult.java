@@ -23,6 +23,9 @@ public class GetOperationResult<T> extends ReadOperationResult<GetOperationResul
 
     public GetOperationResult<T> setContents(ClusterServerNode server, T contents)
     {
+        if (server == null) {
+            throw new IllegalArgumentException("Should not set null server");
+        }
         if (_server != null) {
             throw new IllegalStateException("Already received successful response from "+_server+"; trying to override with "+server);
         }
