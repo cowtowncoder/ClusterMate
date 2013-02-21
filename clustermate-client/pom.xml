@@ -33,6 +33,13 @@ ClusterMate-based service.
       <version>${project.version}</version>
     </dependency>
 
+    <!-- And we do logging; J.U.L is such a PoC that slf4j dependency warranted -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${version.slf4j}</version>
+    </dependency>
+
     <!-- need Jackson for some stuff, dont we? -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

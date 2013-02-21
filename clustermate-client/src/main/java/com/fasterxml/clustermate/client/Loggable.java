@@ -1,94 +1,57 @@
 package com.fasterxml.clustermate.client;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base class defined just to allow overriding logging of warning
- * messages; by default we'll just use JUL logging.
+ * messages, should someone deeply care
  */
 public abstract class Loggable
 {
-    /**
-     * Nasty hack to support tests, where we may want to force different
-     * logging levels.
-     */
-    private static Level _globalLogLevel = null;
-    
-    /**
-     * Class used as the id for loggers we access.
-     */
-    protected final Class<?> _loggingFor;
-
-    /**
-     * Locker object we use when lazily constructing Logger to use.
-     */
-    protected final Object _loggerLock = new Object();
-
-    protected Logger stdLogger;
+    protected final Logger _logger;
 
     protected Loggable() {
-        _loggingFor = getClass();
+        _logger = LoggerFactory.getLogger(getClass());
     }
     
     protected Loggable(Class<?> loggingFor) {
-        _loggingFor = loggingFor;
+        _logger = LoggerFactory.getLogger(loggingFor);
     }
 
     public boolean isInfoEnabled() {
-        return _logger().isLoggable(Level.INFO);
+        return _logger.isInfoEnabled();
     }
     
-    public void logInfo(String msg)
-    {
-        _logger().log(Level.INFO, msg);
+    public void logInfo(String msg) {
+        _logger.info(msg);
+    }
+
+    public void logInfo(String msg, Object... args) {
+        _logger.info(msg, args);
     }
     
     public void logWarn(String msg) {
-        logWarn(null, msg);
+        _logger.warn(msg);
+    }
+
+    public void logWarn(String msg, Object... args) {
+        _logger.warn(msg, args);
     }
     
-    public void logWarn(Throwable t, String msg)
-    {
-        // dynamic just because sub-classes probably don't need anything to do with JUL Logger:
-        Logger logger = _logger();
-        if (t == null) {
-            logger.log(Level.WARNING, msg);
-        } else {
-            logger.log(Level.WARNING, msg, t);
-        }
+    public void logWarn(Throwable t, String msg) {
+        _logger.warn(msg, t);
     }
 
     public void logError(String msg) {
-        logError(null, msg);
+        _logger.error(msg);
+    }
+
+    public void logError(String msg, Object... args) {
+        _logger.error(msg, args);
     }
     
-    public void logError(Throwable t, String msg)
-    {
-        Logger logger = _logger();
-        if (t == null) {
-            logger.log(Level.SEVERE, msg);
-        } else {
-            logger.log(Level.SEVERE, msg, t);
-        }
-    }
-
-    protected Logger _logger()
-    {
-        synchronized (_loggerLock) {
-            Logger logger = stdLogger;
-            if (logger == null) {
-                logger = Logger.getLogger(_loggingFor.getClass().getName());
-                if (_globalLogLevel != null) {
-                    logger.setLevel(_globalLogLevel);
-                }
-                stdLogger = logger;
-            }
-            return logger;
-        }
-    }
-
-    public static void setTestLogLevel(Level l) {
-        _globalLogLevel = l;
+    public void logError(Throwable t, String msg) {
+        _logger.error(msg, t);
     }
 }
