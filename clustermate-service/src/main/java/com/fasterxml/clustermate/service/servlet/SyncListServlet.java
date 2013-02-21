@@ -57,6 +57,12 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
             } else {
                 try {
                     response = _syncHandler.listEntries(request, response, since, stats);
+                } catch (IllegalStateException e) {
+                    // Swallow during shutdown
+                    if (!_terminated.get()) {
+                        LOG.error("Failed syncHandler.listEntries(): "+e.getMessage(), e);
+                    }
+                    response.internalError("Failed syncHandler.listEntries(): "+e.getMessage());
                 } catch (InterruptedException e) {
                     // Swallow during shutdown (mostly during tests)
                     if (!_terminated.get()) {
