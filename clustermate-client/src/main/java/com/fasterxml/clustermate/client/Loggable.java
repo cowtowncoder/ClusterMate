@@ -54,4 +54,12 @@ public abstract class Loggable
     public void logError(Throwable t, String msg) {
         _logger.error(msg, t);
     }
+
+    /**
+     * Accessor method that should ONLY be called by tests to possibly
+     * suppress logging of some entries.
+     */
+    public Logger getLogger() {
+        return _logger;
+    }
 }
