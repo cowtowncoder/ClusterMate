@@ -144,13 +144,13 @@ public class DeleteTest extends JaxrsStoreTestBase
     
     /**
      * Test that verifies that an attempt to re-create a deleted resource
-     * fails.
+     * fails, unless specifically instructed to be allowed
      */
-    public void testDeleteTryRecreate() throws Exception
+    public void testDeleteTryRecreateFail() throws Exception
     {
         long startTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("deleteRecreate", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("deleteRecreateFAIL", timeMaster, true);
         final byte[] DATA1 = "bit of data".getBytes("UTF-8");
 
         StorableStore entries = resource.getStores().getEntryStore();
@@ -186,5 +186,79 @@ public class DeleteTest extends JaxrsStoreTestBase
         assertEquals(410, response.getStatus());
         PutResponse<?> pr = (PutResponse<?>) response.getEntity();
         verifyMessage("Failed PUT: trying to recreate", pr.message);
+
+        // and also should not be visible any more
+        response = new FakeHttpResponse();
+        resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
+        assertEquals(204, response.getStatus());
+    }
+
+    /**
+     * Test that verifies that an attempt to re-create a deleted resource
+     * success iff explicitly allowed.
+     */
+    public void testDeleteTryRecreateOK() throws Exception
+    {
+        long startTime = 1234L;
+        final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("deleteRecreateOK", timeMaster, true);
+        // IMPORTANT: need to explicitly enable
+        resource.getServiceConfig().cfgAllowUndelete = true;
+        final String PAYLOAD = "tiny gob of stuff, ends up inlined";
+        final byte[] DATA1 = PAYLOAD.getBytes("UTF-8");
+
+        StorableStore entries = resource.getStores().getEntryStore();
+        assertEquals(0, entries.getEntryCount());
+
+        final String KEY1 = "data/small/1";
+        final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, KEY1);
+
+        // PUT, DELETE
+        FakeHttpResponse response = new FakeHttpResponse();
+        resource.getHandler().putEntry(new FakeHttpRequest(), response,
+                INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
+                null, null, null);
+        assertEquals(200, response.getStatus());
+        assertEquals(1, entries.getEntryCount());
+
+        timeMaster.advanceCurrentTimeMillis(10L);
+        resource.getHandler().removeEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
+        assertEquals(200, response.getStatus());
+        assertSame(DeleteResponse.class, response.getEntity().getClass());
+        DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
+        assertEquals(INTERNAL_KEY1.toString(), dr.key);
+        assertEquals(startTime, dr.creationTime);
+        // count won't change, since there's tombstone:
+        assertEquals(1, entries.getEntryCount());
+
+        // and this ought to be fine too
+        response = new FakeHttpResponse();
+        resource.getHandler().putEntry(new FakeHttpRequest(), response,
+                INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
+                null, null, null);
+        assertEquals(200, response.getStatus());
+        PutResponse<?> pr = (PutResponse<?>) response.getEntity();
+        assertNotNull(pr);
+
+        // and make entry accessible
+        response = new FakeHttpResponse();
+        resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
+        assertEquals(200, response.getStatus());
+
+        assertTrue(response.hasInlinedData());
+        byte[] data = collectOutput(response);
+        assertEquals(PAYLOAD, new String(data, "UTF-8"));
+
+        // Oh. One more try; now with different data, ought to fail. So, DELETE again:
+        resource.getHandler().removeEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
+        assertEquals(200, response.getStatus());
+        // and then try PUT with bit different data...
+
+        response = new FakeHttpResponse();
+        final byte[] DATA2 = "Foobar!".getBytes("UTF-8");
+        resource.getHandler().putEntry(new FakeHttpRequest(), response,
+                INTERNAL_KEY1, calcChecksum(DATA2), new ByteArrayInputStream(DATA2),
+                null, null, null);
+        assertEquals(409, response.getStatus());
     }
 }

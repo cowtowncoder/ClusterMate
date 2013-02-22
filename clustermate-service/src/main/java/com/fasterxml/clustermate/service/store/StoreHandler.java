@@ -86,23 +86,13 @@ public abstract class StoreHandler<
     /* Configuration
     /**********************************************************************
      */
+
+    protected final ServiceConfig _serviceConfig;
     
     /**
      * Whether server-side (auto-)compression is enabled or not.
      */
     protected final boolean _cfgCompressionEnabled;
-
-    /**
-     * Whether it is ok to PUT/POST entries to "undelete" formerly
-     * DELETEd entries (assuming hashes still match)
-     */
-    protected final boolean _cfgAllowUndelete;
-
-    /**
-     * Whether to return 204 or 404 for tombstone entries (entries
-     * recently deleted): 204 if true, 404 if false.
-     */
-    protected final boolean _cfgReportDeletedAsEmpty;
 
     protected final int _cfgDefaultMinTTLSecs;
     protected final int _cfgDefaultMaxTTLSecs;
@@ -127,15 +117,12 @@ public abstract class StoreHandler<
         _listJsonWriter = stuff.jsonWriter();
         _listSmileWriter = stuff.smileWriter();
 
-        final ServiceConfig config = stuff.getServiceConfig();
-
-        _cfgAllowUndelete = config.cfgAllowUndelete;
-        _cfgReportDeletedAsEmpty = config.cfgReportDeletedAsEmpty;
+        _serviceConfig = stuff.getServiceConfig();
 
         _entryConverter = stuff.getEntryConverter();
         // seconds used (over millis) to fit in 32-bit int when stored
-        _cfgDefaultMinTTLSecs = (int) (config.cfgDefaultSinceAccessTTL.getMillis() / 1000L);
-        _cfgDefaultMaxTTLSecs = (int) (config.cfgDefaultMaxTTL.getMillis() / 1000L);
+        _cfgDefaultMinTTLSecs = (int) (_serviceConfig.cfgDefaultSinceAccessTTL.getMillis() / 1000L);
+        _cfgDefaultMaxTTLSecs = (int) (_serviceConfig.cfgDefaultMaxTTL.getMillis() / 1000L);
     }
 
     /*
@@ -350,6 +337,8 @@ public abstract class StoreHandler<
         return putEntry(request, response, key, checksum, dataIn,
                 minTTL, maxTTL, metadata);
     }
+
+    
     
     // Public due to unit tests
     public ServiceResponse putEntry(ServiceRequest request, ServiceResponse response,
@@ -368,7 +357,6 @@ public abstract class StoreHandler<
         if (inputCompression == Compression.NONE) {
             inputCompression = null;
         }
-        // TODO: pass in LastAccessUpdateMethod...
         LastAccessUpdateMethod lastAcc = _findLastAccessUpdateMethod(request, key);
 
         // assumption here is that we may be passed hash code of orig content, but
@@ -386,8 +374,17 @@ public abstract class StoreHandler<
                 minTTLSecs, maxTTLSecs);
         StorableCreationResult result;
         try {
-            result = _stores.getEntryStore().insert(key.asStorableKey(),
-                    dataIn, stdMetadata, customMetadata);
+            /* This gets quite convoluted but that's how it goes: if undelete is
+             * allowed, we must use different method:
+             */
+            if (_serviceConfig.cfgAllowUndelete) {
+                result = _stores.getEntryStore().upsertConditionally(key.asStorableKey(),
+                        dataIn, stdMetadata, customMetadata, true,
+                        AllowUndeletingUpdates.instance);
+            } else {
+                result = _stores.getEntryStore().insert(key.asStorableKey(),
+                        dataIn, stdMetadata, customMetadata);
+            }
         } catch (StoreException.Input e) { // something client did wrong
             switch (e.getProblem()) {
             case BAD_COMPRESSION:
@@ -415,7 +412,7 @@ public abstract class StoreHandler<
             _logDuplicatePut(key);
             // first: will not allow "recreating" a soft-deleted entry
             if (prev.isDeleted()) {
-                if (!_cfgAllowUndelete) {
+                if (!_serviceConfig.cfgAllowUndelete) {
                     String prob = "Failed PUT: trying to recreate deleted entry '"+key+"'";
                     return response.gone(PutResponse.error(key, prev, prob));
                 }
@@ -731,7 +728,7 @@ public abstract class StoreHandler<
     protected ServiceResponse handleGetForDeleted(ServiceRequest request, ServiceResponse response,
             K key, Storable contents)
     {
-        if (_cfgReportDeletedAsEmpty) {
+        if (_serviceConfig.cfgReportDeletedAsEmpty) {
             return response.noContent();
         }
         return response.notFound(new GetErrorResponse<K>(key, "No entry found for key '"+key+"'"));

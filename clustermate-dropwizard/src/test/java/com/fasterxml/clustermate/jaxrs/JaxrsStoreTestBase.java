@@ -100,7 +100,6 @@ public abstract class JaxrsStoreTestBase extends TestCase
         throws IOException
     {
         ServiceConfigForTests config = createSimpleTestConfig(testSuffix, cleanUp);
-
         File fileDir = config.storeConfig.dataRootForFiles;
         // can just use the default file manager impl...
         FileManager files = new FileManager(new FileManagerConfig(fileDir), timeMaster,

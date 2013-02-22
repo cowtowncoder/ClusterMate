@@ -15,6 +15,7 @@ import com.fasterxml.clustermate.api.OperationType;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
+import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -32,6 +33,8 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
     /* Helper objects
     /**********************************************************************
      */
+
+    protected final SharedServiceStuff _stuff;
     
     protected final StoreHandler<K,E,?> _storeHandler;
 
@@ -48,6 +51,7 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
     public StoreResource(SharedServiceStuff stuff, ClusterViewByServer clusterView,
             StoreHandler<K,E,?> storeHandler)
     {
+        _stuff = stuff;
         _storeHandler = storeHandler;
         _clusterView = clusterView;
         _keyConverter = stuff.getKeyConverter();
@@ -59,6 +63,10 @@ public abstract class StoreResource<K extends EntryKey, E extends StoredEntry<K>
     /**********************************************************************
      */
 
+    public ServiceConfig getServiceConfig() {
+        return _stuff.getServiceConfig();
+    }
+    
     /**
      * Method to be only used by unit tests...
      */
