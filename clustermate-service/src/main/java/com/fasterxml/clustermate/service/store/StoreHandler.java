@@ -554,6 +554,8 @@ public abstract class StoreHandler<
         if (maxStr != null) {
             limits = limits.withMaxEntries(_decodeInt(maxStr, limits.getMaxEntries()));
         }
+
+        // !!! TODO: allow listing of tombstones?
         
         ListResponse<?> listResponse = null;
         
@@ -632,7 +634,7 @@ public abstract class StoreHandler<
     }
 
     protected List<StorableKey> _listIds(final StorableKey prefix, StorableKey lastSeen,
-            ListLimits limits)
+            final ListLimits limits)
         throws StoreException
     {
         final long maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
@@ -658,6 +660,7 @@ public abstract class StoreHandler<
                 // no need for entry; key has all the data
                 return IterationAction.SKIP_ENTRY;
             }
+
             @Override
             public IterationAction processEntry(Storable entry) throws StoreException {
                 // should never get called
@@ -682,7 +685,7 @@ public abstract class StoreHandler<
     /* Customizable handling for query parameter access, defaulting
     /**********************************************************************
      */
-    
+
     /**
      * Overridable helper method used for figuring out request parameter used to
      * pass "minimum time-to-live since last access" (or, if no access tracked,
@@ -744,7 +747,7 @@ public abstract class StoreHandler<
     {
         return response.notFound(new GetErrorResponse<K>(key, "No entry found for key '"+key+"'"));
     }
-    
+
     /*
     /**********************************************************************
     /* Abstract methods for sub-classes
@@ -903,11 +906,12 @@ public abstract class StoreHandler<
         protected final StorableKey prefix;
         protected final long maxTime;
         protected final int maxEntries;
+        protected final boolean includeTombstones;
 
         protected final ArrayList<ListItem> result = new ArrayList<ListItem>(100);
         
         public int counter; // to avoid checking systime too often
-
+        
         public ListItemsCallback(TimeMaster timeMaster, StoredEntryConverter<?,?,?> entryConverter,
                 StorableKey prefix, ListLimits limits)
         {
@@ -915,6 +919,7 @@ public abstract class StoreHandler<
             _entryConverter = entryConverter;
             maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
             maxEntries = limits.getMaxEntries();
+            includeTombstones = limits.getIncludeTombstones();
             this.prefix = prefix;
         }
 
@@ -936,10 +941,13 @@ public abstract class StoreHandler<
         }
 
         @Override
-        public IterationAction processEntry(Storable entry) throws StoreException {
-            result.add(toListItem(entry));
-            if (result.size() >= maxEntries) {
-                return IterationAction.TERMINATE_ITERATION;
+        public IterationAction processEntry(Storable entry) throws StoreException
+        {
+            if (includeTombstones || !entry.isDeleted()) {
+                result.add(toListItem(entry));
+                if (result.size() >= maxEntries) {
+                    return IterationAction.TERMINATE_ITERATION;
+                }
             }
             return IterationAction.PROCESS_ENTRY;
         }
