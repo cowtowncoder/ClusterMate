@@ -640,6 +640,7 @@ public abstract class StoreHandler<
         final long maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
         final int maxEntries = limits.getMaxEntries();
         final ArrayList<StorableKey> result = new ArrayList<StorableKey>(100);
+        final boolean includeTombstones = limits.getIncludeTombstones();
 
         StorableIterationCallback cb = new StorableIterationCallback() {
             public int counter; // to avoid checking systime too often
@@ -649,6 +650,16 @@ public abstract class StoreHandler<
                 if (!key.hasPrefix(prefix)) {
                     return IterationAction.TERMINATE_ITERATION;
                 }
+                // Can add right away, if it's ok to include tombstones
+                if (includeTombstones) {
+                    return _addEntry(key);
+                }
+                // otherwise need to peek in entry itself
+                return IterationAction.PROCESS_ENTRY;
+            }
+
+            private final IterationAction _addEntry(StorableKey key)
+            {
                 result.add(key);
                 if (result.size() >= maxEntries) {
                     return IterationAction.TERMINATE_ITERATION;
@@ -663,8 +674,10 @@ public abstract class StoreHandler<
 
             @Override
             public IterationAction processEntry(Storable entry) throws StoreException {
-                // should never get called
-                throw new IllegalStateException();
+                if (includeTombstones || entry.isDeleted()) {
+                    return IterationAction.SKIP_ENTRY;
+                }
+                return _addEntry(entry.getKey());
             }
         };
         /* Two cases; either starting without last seen -- in which case we should include
