@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.8.9
+
+#17: Filter out tombstones from `listEntries`.
+
 0.8.8 (11-Feb-2013)
 
 #15: Implement client accessor that uses default JDK-provided http client
