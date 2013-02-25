@@ -5,6 +5,11 @@ using single-node storage components provided by
 [StoreMate](https://github.com/cowtowncoder/StoreMate) project.
 It is designed as a toolkit for building distributed storage systems, either for stand-alone systems or as base for other distributed systems (like message queues).
 
+`ClusterMate` adds hash-based partitioning of content to implement replicated storage.
+Although most work is done by clients (base client library implementation included), additional timestamp-based synchronization mechanism is provided for content repair.
+Repair mechanism is also used when replacing failed nodes or expanding/shrinking cluster.
+Conflict resolution is configurable; details depend on higher-level system (`TransiStore`, for example, has very simple model due to immutable contents).
+
 Project license is [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
 
 Check out [Project Wiki](http://github.com/cowtowncoder/ClusterMate/wiki) for more.
