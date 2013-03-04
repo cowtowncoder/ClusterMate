@@ -45,10 +45,10 @@
     <javac.target.version>1.6</javac.target.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     
-    <version.storemate>0.9.3</version.storemate>
+    <version.storemate>0.9.4-SNAPSHOT</version.storemate>
     <version.jackson.annotations>2.1.2</version.jackson.annotations>
-    <version.jackson.core>2.1.3</version.jackson.core>
-    <version.jackson.smile>2.1.3</version.jackson.smile>
+    <version.jackson.core>2.1.4</version.jackson.core>
+    <version.jackson.smile>2.1.4</version.jackson.smile>
     <version.slf4j>1.7.2</version.slf4j>
 
   </properties>
