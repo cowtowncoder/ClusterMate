@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.8.10 (04-Mar-2013)
+
+- Update StoreMate dependency
+
 0.8.9 (25-Feb-2013)
 
 #17: Filter out tombstones from `listEntries`.
