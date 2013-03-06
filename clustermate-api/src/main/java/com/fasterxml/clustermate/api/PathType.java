@@ -10,6 +10,10 @@ public enum PathType
     STORE_LIST, // multi-entry listings
     STORE_STATUS, // diagnostics interface
 
+    // re-routing store access
+    STORE_FIND_ENTRY, // like STORE_ENTRY, but re-routes if necessary
+    STORE_FIND_LIST, // like STORE_LIST, but re-routes if necessary
+    
     // access to node status: GET for status, PUT for update, POST for hello/bye
     NODE_STATUS,
 

@@ -1,6 +1,5 @@
 package com.fasterxml.clustermate.api;
 
-
 /**
  * Type that defines how references are built to access
  * a StoreMate service node.
@@ -27,6 +26,12 @@ public abstract class RequestPathStrategy
 
     public abstract <B extends RequestPathBuilder> B appendStoreListPath(B nodeRoot);
 
+    public abstract <B extends RequestPathBuilder> B appendStoreStatusPath(B nodeRoot);
+    
+    public abstract <B extends RequestPathBuilder> B appendStoreFindEntryPath(B nodeRoot);
+
+    public abstract <B extends RequestPathBuilder> B appendStoreFindListPath(B nodeRoot);
+    
     // // Node status, related:
     
     public abstract <B extends RequestPathBuilder> B appendNodeStatusPath(B nodeRoot);

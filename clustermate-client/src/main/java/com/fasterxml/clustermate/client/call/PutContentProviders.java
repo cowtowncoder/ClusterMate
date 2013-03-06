@@ -31,11 +31,13 @@ public class PutContentProviders
         implements PutContentProvider
     {
         protected final AtomicInteger _contentHash = new AtomicInteger(HashConstants.NO_CHECKSUM);
-        
+
+        @Override
         public int getContentHash() {
             return _contentHash.get();
         }
 
+        @Override
         public void setContentHash(int hash) {
             // Should get same value always, but just to make sure we never
             // change value, or overwrite with "no hash"

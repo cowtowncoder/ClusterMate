@@ -32,6 +32,9 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
 
     protected final ServletBase _syncListServlet;
     protected final ServletBase _syncPullServlet;
+
+    protected final ServletBase _storeFindEntryServlet;
+    protected final ServletBase _storeFindListServlet;
     
     /*
     /**********************************************************************
@@ -74,6 +77,10 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
 
         _storeEntryServlet = storeEntryServlet;
         _storeListServlet = storeListServlet;
+
+        // !!! TODO:
+        _storeFindEntryServlet = null;
+        _storeFindListServlet = null;
     }
 
     /*
@@ -183,16 +190,22 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
             switch (type) {
             case NODE_STATUS:
                 return _nodeStatusServlet;
+
             case STORE_ENTRY:
                 return _storeEntryServlet;
             case STORE_LIST:
                 return _storeListServlet;
+            case STORE_FIND_ENTRY:
+                return _storeFindEntryServlet;
+            case STORE_FIND_LIST:
+                return _storeFindListServlet;
+            case STORE_STATUS: // is this needed?
+                return null;
+
             case SYNC_LIST:
                 return _syncListServlet;
             case SYNC_PULL:
                 return _syncPullServlet;
-            case STORE_STATUS: // is this needed?
-                return null;
             }
         }
         return null;

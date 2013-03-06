@@ -19,7 +19,9 @@ public class PathsForTests extends RequestPathStrategy
     protected final static String SECOND_SEGMENT_STORE_ENTRY = "entry";
     protected final static String SECOND_SEGMENT_STORE_LIST = "list";
     protected final static String SECOND_SEGMENT_STORE_STATUS = "status";
-
+    protected final static String SECOND_SEGMENT_STORE_FIND_ENTRY = "findEntry";
+    protected final static String SECOND_SEGMENT_STORE_FIND_LIST = "findList";
+    
     protected final static String SECOND_SEGMENT_NODE_STATUS = "status";
 
     protected final static String SECOND_SEGMENT_SYNC_LIST = "list";
@@ -39,6 +41,21 @@ public class PathsForTests extends RequestPathStrategy
     @Override
     public <K extends RequestPathBuilder> K appendStoreListPath(K nodeRoot) {
         return (K) _storePath(nodeRoot).addPathSegment(SECOND_SEGMENT_STORE_LIST);
+    }
+
+    @Override
+    public <K extends RequestPathBuilder> K appendStoreStatusPath(K nodeRoot) {
+        return (K) _storePath(nodeRoot).addPathSegment(SECOND_SEGMENT_STORE_STATUS);
+    }
+
+    @Override
+    public <K extends RequestPathBuilder> K appendStoreFindEntryPath(K nodeRoot) {
+        return (K) _storePath(nodeRoot).addPathSegment(SECOND_SEGMENT_STORE_FIND_ENTRY);
+    }
+
+    @Override
+    public <K extends RequestPathBuilder> K appendStoreFindListPath(K nodeRoot) {
+        return (K) _storePath(nodeRoot).addPathSegment(SECOND_SEGMENT_STORE_FIND_LIST);
     }
 
     @Override
@@ -76,6 +93,12 @@ public class PathsForTests extends RequestPathStrategy
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_STORE_STATUS)) {
                 return PathType.STORE_STATUS;
             }
+            if (pathDecoder.matchPathSegment(SECOND_SEGMENT_STORE_FIND_ENTRY)) {
+                return PathType.STORE_FIND_ENTRY;
+            }
+            if (pathDecoder.matchPathSegment(SECOND_SEGMENT_STORE_FIND_LIST)) {
+                return PathType.STORE_FIND_LIST;
+            }
         } else if (pathDecoder.matchPathSegment(FIRST_SEGMENT_NODE)) {
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_NODE_STATUS)) {
                 return PathType.NODE_STATUS;
@@ -98,7 +121,7 @@ public class PathsForTests extends RequestPathStrategy
     // Internal methods
     ///////////////////////////////////////////////////////////////////////
      */
-    
+
     protected <K extends RequestPathBuilder> K _storePath(K nodeRoot) {
         return (K) nodeRoot.addPathSegment(FIRST_SEGMENT_STORE);
     }
