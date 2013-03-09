@@ -1,9 +1,7 @@
 package com.fasterxml.clustermate.client.cluster;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.client.*;
@@ -36,17 +34,14 @@ public class ClusterViewByClientImpl<K extends EntryKey>
     private AtomicReference<ClusterServerNode[]> _states = new AtomicReference<ClusterServerNode[]>(
             new ClusterServerNode[0]);
 
-    /**
-     * Monotonically increasing counter we use for lazily constructing
-     * and invalidating routing information, mapping from key hashes
-     * to {@link NodesForKey} objects.
-     */
-    private final AtomicInteger _version = new AtomicInteger(1);
-
-    private final AtomicReferenceArray<NodesForKey> _routing;
-
     private final EntryAccessors<K> _entryAccessors;
 
+    /**
+     * Helper object that knows how to find node(s) to send requests to, for
+     * given key.
+     */
+    private final HashRouter<K> _hashRouter;
+    
     /*
     /**********************************************************************
     /* Construction
@@ -62,7 +57,6 @@ public class ClusterViewByClientImpl<K extends EntryKey>
             NetworkClient<K> client, KeySpace keyspace)
     {
         _keyspace = keyspace;
-        _routing = new AtomicReferenceArray<NodesForKey>(keyspace.getLength());
         if (client == null) {
             _client = null;
             _keyConverter = null;
@@ -77,6 +71,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
         } else {
             _rootPathSegments = storeConfig.getBasePath();
         }
+        _hashRouter = new HashRouter<K>(keyspace, _keyConverter, _states);
     }
     
     public static <K extends EntryKey> ClusterViewByClientImpl<K> forTesting(KeySpace keyspace)
@@ -119,7 +114,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
 
     @Override
     public int getCoverage() {
-        return _getCoverage(_states());
+        return _getCoverage(_states.get());
     }
 
     // separate method for testing:
@@ -133,20 +128,8 @@ public class ClusterViewByClientImpl<K extends EntryKey>
     }
 
     @Override
-    public NodesForKey getNodesFor(K key)
-    {
-        int fullHash = _keyConverter.routingHashFor(key);
-        KeyHash hash = new KeyHash(fullHash, _keyspace.getLength());
-        int currVersion = _version.get();
-        int modulo = hash.getModuloHash();
-        NodesForKey nodes = _routing.get(modulo);
-        // fast (and common) case: pre-calculated, valid info exists:
-        if (nodes != null && nodes.version() == currVersion) {
-            return nodes;
-        }
-        NodesForKey newNodes = _calculateNodes(currVersion, hash);
-        _routing.compareAndSet(modulo, nodes, newNodes);
-        return newNodes;
+    public NodesForKey getNodesFor(K key) {
+        return _hashRouter.getNodesFor(key);
     }
 
     /*
@@ -218,7 +201,19 @@ public class ClusterViewByClientImpl<K extends EntryKey>
             invalidateRouting();
         }
     }
-    
+
+    /*
+    /**********************************************************************
+    /* Test support
+    /**********************************************************************
+     */
+
+    protected NodesForKey _calculateNodes(int version, KeyHash keyHash,
+            ClusterServerNode[] allNodes)
+    {
+        return _hashRouter._calculateNodes(version, keyHash, allNodes);
+    }
+
     /*
     /**********************************************************************
     /* Internal methods
@@ -239,79 +234,12 @@ public class ClusterViewByClientImpl<K extends EntryKey>
         _nodes.put(key, state);
         _states.set(_nodes.values().toArray(new ClusterServerNodeImpl[_nodes.size()]));
     }
-    
-    private ClusterServerNode[] _states() {
-        return _states.get();
-    }
 
     /**
      * Method called when server node state information changes in a way that
      * may affect routing of requests.
      */
-    private void invalidateRouting()
-    {
-        _version.addAndGet(1);
-    }
-
-    /**
-     * Helper method that actually calculates routing information for specific
-     * part of key space.
-     */
-    protected NodesForKey _calculateNodes(int version, KeyHash keyHash) {
-        return _calculateNodes(version, keyHash, _states());
-    }
-
-    // separate method for testing
-    protected NodesForKey _calculateNodes(int version, KeyHash keyHash,
-            ClusterServerNode[] allNodes)
-    {
-        final int allCount = allNodes.length;
-        // First: simply collect all applicable nodes:
-        ArrayList<ClusterServerNode> appl = new ArrayList<ClusterServerNode>();
-        for (int i = 0; i < allCount; ++i) {
-            ClusterServerNode state = allNodes[i];
-            if (state.getTotalRange().contains(keyHash)) {
-                appl.add(state);
-            }
-        }
-        return _sortNodes(version, keyHash, appl);
-    }
-
-    protected NodesForKey _sortNodes(int version, KeyHash keyHash,
-            Collection<ClusterServerNode> appl)
-    {
-        // edge case: no matching
-        if (appl.isEmpty()) {
-            return NodesForKey.empty(version);
-        }
-        // otherwise need to sort
-        ClusterServerNodeImpl[] matching = appl.toArray(new ClusterServerNodeImpl[appl.size()]);
-        Arrays.sort(matching, 0, appl.size(), new NodePriorityComparator(keyHash));
-        return new NodesForKey(version, matching);
-    }
-        
-    /*
-    /**********************************************************************
-    /* Helper classes
-    /**********************************************************************
-     */
-
-    /**
-     * Comparator that orders server in decreasing priority, that is, starts with
-     * the closest enabled match, ending with disabled entries.
-     */
-    private final static class NodePriorityComparator implements Comparator<ClusterServerNodeImpl>
-    {
-        private final KeyHash _keyHash;
-
-        public NodePriorityComparator(KeyHash keyHash) {
-            _keyHash = keyHash;
-        }
-        
-        @Override
-        public int compare(ClusterServerNodeImpl node1, ClusterServerNodeImpl node2)
-        {
-            return node1.calculateSortingDistance(_keyHash) - node2.calculateSortingDistance(_keyHash);
-        }
+    private final void invalidateRouting() {
+        _hashRouter.invalidateRouting();
     }
 }
