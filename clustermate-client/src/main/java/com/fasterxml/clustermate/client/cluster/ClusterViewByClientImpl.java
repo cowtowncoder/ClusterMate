@@ -5,18 +5,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
-import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.api.KeyHash;
-import com.fasterxml.clustermate.api.KeySpace;
-import com.fasterxml.clustermate.api.NodeState;
-import com.fasterxml.clustermate.api.RequestPath;
-import com.fasterxml.clustermate.api.RequestPathBuilder;
-import com.fasterxml.clustermate.client.ClusterViewByClient;
-import com.fasterxml.clustermate.client.EntryAccessors;
-import com.fasterxml.clustermate.client.NetworkClient;
-import com.fasterxml.clustermate.client.NodesForKey;
-import com.fasterxml.clustermate.client.StoreClientConfig;
+import com.fasterxml.clustermate.api.*;
+import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
 import com.fasterxml.storemate.shared.IpAndPort;
 
@@ -40,10 +30,11 @@ public class ClusterViewByClientImpl<K extends EntryKey>
 	private final Map<IpAndPort, ClusterServerNodeImpl> _nodes = new LinkedHashMap<IpAndPort, ClusterServerNodeImpl>();
 
     /**
-     * Since we will need to iterate over server node 
+     * Since we will need to iterate over server nodes, let's use pre-calculated
+     * array.
      */
-    private AtomicReference<ClusterServerNodeImpl[]> _states = new AtomicReference<ClusterServerNodeImpl[]>(
-            new ClusterServerNodeImpl[0]);
+    private AtomicReference<ClusterServerNode[]> _states = new AtomicReference<ClusterServerNode[]>(
+            new ClusterServerNode[0]);
 
     /**
      * Monotonically increasing counter we use for lazily constructing
@@ -132,10 +123,10 @@ public class ClusterViewByClientImpl<K extends EntryKey>
     }
 
     // separate method for testing:
-    protected int _getCoverage(ClusterServerNodeImpl[] states)
+    protected int _getCoverage(ClusterServerNode[] states)
     {
         BitSet slices = new BitSet(_keyspace.getLength());
-        for (ClusterServerNodeImpl state : states) {
+        for (ClusterServerNode state : states) {
             state.getTotalRange().fill(slices);
         }
         return slices.cardinality();
@@ -157,7 +148,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
         _routing.compareAndSet(modulo, nodes, newNodes);
         return newNodes;
     }
-    
+
     /*
     /**********************************************************************
     /* Updating state
@@ -249,7 +240,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
         _states.set(_nodes.values().toArray(new ClusterServerNodeImpl[_nodes.size()]));
     }
     
-    private ClusterServerNodeImpl[] _states() {
+    private ClusterServerNode[] _states() {
         return _states.get();
     }
 
@@ -272,13 +263,13 @@ public class ClusterViewByClientImpl<K extends EntryKey>
 
     // separate method for testing
     protected NodesForKey _calculateNodes(int version, KeyHash keyHash,
-            ClusterServerNodeImpl[] allNodes)
+            ClusterServerNode[] allNodes)
     {
         final int allCount = allNodes.length;
         // First: simply collect all applicable nodes:
-        ArrayList<ClusterServerNodeImpl> appl = new ArrayList<ClusterServerNodeImpl>();
+        ArrayList<ClusterServerNode> appl = new ArrayList<ClusterServerNode>();
         for (int i = 0; i < allCount; ++i) {
-            ClusterServerNodeImpl state = allNodes[i];
+            ClusterServerNode state = allNodes[i];
             if (state.getTotalRange().contains(keyHash)) {
                 appl.add(state);
             }
@@ -287,7 +278,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
     }
 
     protected NodesForKey _sortNodes(int version, KeyHash keyHash,
-            Collection<ClusterServerNodeImpl> appl)
+            Collection<ClusterServerNode> appl)
     {
         // edge case: no matching
         if (appl.isEmpty()) {

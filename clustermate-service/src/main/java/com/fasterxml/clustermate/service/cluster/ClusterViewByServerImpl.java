@@ -172,10 +172,17 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         }
         return result;
     }
-    
+
     @Override
     public long getLastUpdated() {
         return _lastUpdated.get();
+    }
+
+    @Override
+    public boolean containsLocally(EntryKey key)
+    {
+        int hash = _stuff.getKeyConverter().routingHashFor(key);
+        return _localState.totalRange().contains(hash);
     }
 
     /*

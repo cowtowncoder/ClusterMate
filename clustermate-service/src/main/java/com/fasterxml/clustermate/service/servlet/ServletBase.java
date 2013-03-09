@@ -44,6 +44,8 @@ public class ServletBase extends HttpServlet
         }
         _basePath = servletPathBase;
     }
+
+    protected ClusterViewByServer getClusterView() { return _clusterView; }
     
     /*
     /**********************************************************************

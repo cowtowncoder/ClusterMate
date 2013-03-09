@@ -35,6 +35,12 @@ public abstract class ClusterViewByServer
     
     public abstract long getLastUpdated();
 
+    /**
+     * Helper method that can be called to see whether given key may be
+     * handled by the local service, according to its current definitions.
+     */
+    public abstract boolean containsLocally(EntryKey k);
+    
     /*
     /**********************************************************************
     /* Advanced accessors

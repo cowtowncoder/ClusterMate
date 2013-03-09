@@ -164,7 +164,6 @@ public abstract class StoreHandler<
         if (rawEntry == null) {
             return handleGetForMissing(request, response, key);
         }
-        
         // second: did we get a tombstone?
         if (rawEntry.isDeleted()) {
             ServiceResponse resp = handleGetForDeleted(request, response, key, rawEntry);
@@ -172,12 +171,11 @@ public abstract class StoreHandler<
                 return resp;
             }
         }
-
         // [issue #7]: Conditional GET with Etag
         if (_notChanged(request, rawEntry)) {
             return response.notChanged();
         }
-        
+
         final long accessTime = _timeMaster.currentTimeMillis();
         final E entry = _entryConverter.entryFromStorable(rawEntry);
 

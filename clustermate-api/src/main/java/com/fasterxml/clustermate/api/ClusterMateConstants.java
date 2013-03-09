@@ -131,7 +131,14 @@ public interface ClusterMateConstants
      * when listing entries.
      */
     public final static String QUERY_PARAM_LAST_SEEN = "lastSeen";
-    
+
+    /**
+     * Number of retries for this particular request; used mostly with entry
+     * points that re-route, and typically do round-robin dispatch using
+     * this value
+     */
+    public final static String QUERY_PARAM_RETRY_COUNT = "retry";
+
     /*
     /**********************************************************************
     /* Standard HTTP Response codes

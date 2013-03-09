@@ -26,8 +26,6 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     /* Helper objects
     /**********************************************************************
      */
-    
-//    private final Log LOG = Log.forClass(getClass());
 
     protected final StoreHandler<K,E,?> _storeHandler;
 
@@ -36,15 +34,21 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     protected final ObjectWriter _jsonWriter;
 
     protected final EntryKeyConverter<K> _keyConverter;
-
+    
     /*
     /**********************************************************************
     /* Life-cycle
     /**********************************************************************
      */
-    
+
     public StoreEntryServlet(SharedServiceStuff stuff, ClusterViewByServer clusterView,
             StoreHandler<K,E,?> storeHandler)
+    {
+        this(stuff, clusterView, storeHandler, false);
+    }
+
+    protected StoreEntryServlet(SharedServiceStuff stuff, ClusterViewByServer clusterView,
+            StoreHandler<K,E,?> storeHandler, boolean handleRouting)
     {
         // null -> use servlet path base as-is
         super(clusterView, null);
@@ -54,9 +58,26 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         _keyConverter = stuff.getKeyConverter();
     }
 
+    protected StoreEntryServlet(StoreEntryServlet<K,E> base)
+    {
+        super(base._clusterView, null);
+        _storeHandler = base._storeHandler;
+        _timeMaster = base._timeMaster;
+        _jsonWriter = base._jsonWriter;
+        _keyConverter = base._keyConverter;
+    }
+    
+    /**
+     * "Mutant factory" method used to create "routing" version of this servlet:
+     * this will basically handle request locally (as t
+     */
+    public ServletBase createRoutingServlet() {
+        return new RoutingEntryServlet<K,E>(this);
+    }
+
     /*
     /**********************************************************************
-    /* Default implementation for key handling
+    /* Default implementations for key handling
     /**********************************************************************
      */
 
@@ -67,65 +88,99 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     
     /*
     /**********************************************************************
-    /* Delegated methods for more control
+    /* Main Verb handlers
     /**********************************************************************
      */
-
+    
     @Override
-    public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
+    public final void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
         K key = _findKey(request, response);
         if (key != null) { // null means trouble; response has all we need
-            _storeHandler.getEntry(request, response, key, stats);
-            _addStdHeaders(response);
+            _handleGet(request, response, stats, key);
         }
         response.writeOut(_jsonWriter);
     }
 
     @Override
-    public void handleHead(ServletServiceRequest request, ServletServiceResponse response,
+    public final void handleHead(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
         K key = _findKey(request, response);
         if (key != null) {
-            _storeHandler.getEntryStats(request, response, key, stats);
-            _addStdHeaders(response);
+            _handleHead(request, response, stats, key);
         }
         // note: should be enough to just add headers; no content to write
     }
 
     // We'll allow POST as an alias to PUT
     @Override
-    public void handlePost(ServletServiceRequest request, ServletServiceResponse response,
+    public final void handlePost(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
         handlePut(request, response, stats);
     }
     
     @Override
-    public void handlePut(ServletServiceRequest request, ServletServiceResponse response,
+    public final void handlePut(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
         K key = _findKey(request, response);
         if (key != null) {
-            _storeHandler.putEntry(request, response, key,
-                    request.getNativeRequest().getInputStream(),
-                    stats);
-            _addStdHeaders(response);
+            _handlePut(request, response, stats, key);
         }
         response.writeOut(_jsonWriter);
     }
 
     @Override
     public void handleDelete(ServletServiceRequest request, ServletServiceResponse response,
-            OperationDiagnostics metadata) throws IOException
+            OperationDiagnostics stats) throws IOException
     {
         K key = _findKey(request, response);
         if (key != null) {
-            _storeHandler.removeEntry(request, response, key, metadata);
-            _addStdHeaders(response);
+            _handleDelete(request, response, stats, key);
         }
         response.writeOut(_jsonWriter);
     }
+
+    /*
+    /**********************************************************************
+    /* Handlers for actual operations, overridable
+    /**********************************************************************
+     */
+
+    protected void _handleGet(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats, K key)
+        throws IOException
+    {
+        _storeHandler.getEntry(request, response, key, stats);
+        _addStdHeaders(response);
+    }
+
+    protected void _handleHead(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats, K key)
+        throws IOException
+    {
+        _storeHandler.getEntryStats(request, response, key, stats);
+        _addStdHeaders(response);
+    }
+
+    protected void _handlePut(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats, K key)
+        throws IOException
+    {
+        _storeHandler.putEntry(request, response, key,
+                request.getNativeRequest().getInputStream(),
+                stats);
+        _addStdHeaders(response);
+    }
+
+    protected void _handleDelete(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats, K key)
+        throws IOException
+    {
+        _storeHandler.removeEntry(request, response, key, stats);
+        _addStdHeaders(response);
+    }    
 }
