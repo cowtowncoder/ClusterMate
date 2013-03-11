@@ -5,6 +5,10 @@ import com.fasterxml.storemate.shared.hash.HashConstants;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.util.OverwriteChecker;
 
+/**
+ * Helper class that implements policy to allow "overwrites" of deleted entries,
+ * as long as new content appears to be same as deleted one, by content hash.
+ */
 public class AllowUndeletingUpdates implements OverwriteChecker
 {
     public final static OverwriteChecker instance = new AllowUndeletingUpdates();
