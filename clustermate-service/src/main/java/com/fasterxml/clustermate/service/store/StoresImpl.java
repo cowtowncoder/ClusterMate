@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.service.store;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -38,7 +39,14 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      * Last-accessed can benefit more from cache, give it 20 megs for now
      */
     private final static long LAST_ACCESS_BDB_CACHE_SIZE = 20L * 1024L * 1024L;
-    
+
+    /**
+     * Last-access table may get rather high concurrency as it may be
+     * updated for every GET request, so let's boost from 1 to reasonably
+     * high prime number.
+     */
+    protected final static int DEFAULT_LAST_ACCESS_LOCK_TABLES = 17;
+
     /*
     /**********************************************************************
     /* Configuration
@@ -108,7 +116,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      * Error message used to indicate why initialization failed, if it did.
      */
     protected volatile String _initProblem;
-    
+
     /*
     /**********************************************************************
     /* Basic life-cycle
@@ -292,7 +300,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     public NodeStateStore getNodeStore() { return _nodeStore; }
     @Override
     public LastAccessStore<K, E> getLastAccessStore() { return _lastAccessStore; }
-
+    
     /*
     /**********************************************************************
     /* Internal methods
@@ -339,9 +347,11 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         config.setSharedCache(false);
         config.setCacheSize(NODE_BDB_CACHE_SIZE);
         config.setDurability(Durability.COMMIT_SYNC);
+        // default of 500 msec too low:
+        config.setLockTimeout(5000L, TimeUnit.MILLISECONDS);
         return config;
     }
-
+    
     protected EnvironmentConfig lastAccessEnvConfig(boolean allowCreate, boolean writeAccess)
     {
         EnvironmentConfig config = new EnvironmentConfig();
@@ -349,6 +359,10 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         config.setReadOnly(!writeAccess);
         config.setSharedCache(false);
         config.setCacheSize(LAST_ACCESS_BDB_CACHE_SIZE);
+        // default of 500 msec too low:
+        config.setLockTimeout(5000L, TimeUnit.MILLISECONDS);
+        // and to get decent concurrency, default of 1 won't do:
+        config.setConfigParam(EnvironmentConfig.LOCK_N_LOCK_TABLES, String.valueOf(DEFAULT_LAST_ACCESS_LOCK_TABLES));
         return config;
     }
 }
