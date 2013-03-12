@@ -8,7 +8,7 @@
   <groupId>com.fasterxml.clustermate</groupId>
   <artifactId>clustermate-parent</artifactId>
   <name>ClusterMate-parent</name>
-  <version>0.8.11-SNAPSHOT</version>
+  <version>0.9.0</version>
   <packaging>pom</packaging>
   <description>Parent pom for shared settings for project sub-modules
   </description>
@@ -45,7 +45,7 @@
     <javac.target.version>1.6</javac.target.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     
-    <version.storemate>0.9.6</version.storemate>
+    <version.storemate>0.9.5</version.storemate>
     <version.jackson.annotations>2.1.2</version.jackson.annotations>
     <version.jackson.core>2.1.4</version.jackson.core>
     <version.jackson.smile>2.1.4</version.jackson.smile>
