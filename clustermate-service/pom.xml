@@ -57,7 +57,7 @@
     <dependency>
       <groupId>org.skife.config</groupId>
       <artifactId>config-magic</artifactId>
-      <version>0.14</version>
+      <version>0.15</version>
     </dependency>
 
     <!-- And Jackson 2.0 for databinding; Smile for sync-data -->
