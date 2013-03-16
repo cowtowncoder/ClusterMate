@@ -17,7 +17,6 @@ ClusterMate-based service.
     <dependency>
       <groupId>com.fasterxml.storemate</groupId>
       <artifactId>storemate-shared</artifactId>
-      <version>${version.storemate}</version>
     </dependency>
 
     <dependency>
@@ -37,19 +36,16 @@ ClusterMate-based service.
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>${version.slf4j}</version>
     </dependency>
 
     <!-- need Jackson for some stuff, dont we? -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${version.jackson.core}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-smile</artifactId>
-      <version>${version.jackson.smile}</version>
     </dependency>
 
   </dependencies>

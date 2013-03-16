@@ -13,14 +13,6 @@ Async HTTP Client
   </description>
 
   <dependencies>
-<!--
-    <dependency>
-      <groupId>com.fasterxml.storemate</groupId>
-      <artifactId>storemate-shared</artifactId>
-      <version>${version.storemate}</version>
-    </dependency>
--->
-
     <dependency>
       <groupId>com.fasterxml.clustermate</groupId>
       <artifactId>clustermate-api</artifactId>
@@ -36,7 +28,6 @@ Async HTTP Client
     <dependency>
       <groupId>com.ning</groupId>
       <artifactId>async-http-client</artifactId>
-      <version>1.7.10</version>
     </dependency>
 
   </dependencies>

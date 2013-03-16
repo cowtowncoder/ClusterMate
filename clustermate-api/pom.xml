@@ -16,14 +16,12 @@ used by both server and client components.
     <dependency>
       <groupId>com.fasterxml.storemate</groupId>
       <artifactId>storemate-shared</artifactId>
-      <version>${version.storemate}</version>
     </dependency>
 
     <!-- Need Jackson annotations for couple of things -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>${version.jackson.annotations}</version>
     </dependency>
 
   </dependencies>

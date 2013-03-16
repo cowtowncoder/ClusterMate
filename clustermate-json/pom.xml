@@ -18,7 +18,6 @@ for Jackson-based JSON serialization
     <dependency>
       <groupId>com.fasterxml.storemate</groupId>
       <artifactId>storemate-shared</artifactId>
-      <version>${version.storemate}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.clustermate</groupId>
@@ -30,17 +29,14 @@ for Jackson-based JSON serialization
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>${version.jackson.annotations}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>${version.jackson.core}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${version.jackson.core}</version>
     </dependency>
   </dependencies>
 

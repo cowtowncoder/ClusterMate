@@ -44,12 +44,8 @@
     <javac.src.version>1.6</javac.src.version>
     <javac.target.version>1.6</javac.target.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    
-    <version.storemate>0.9.5</version.storemate>
-    <version.jackson.annotations>2.1.2</version.jackson.annotations>
-    <version.jackson.core>2.1.4</version.jackson.core>
-    <version.jackson.smile>2.1.4</version.jackson.smile>
-    <version.slf4j>1.7.2</version.slf4j>
+
+    <version.storemate>0.9.6-SNAPSHOT</version.storemate>
 
   </properties>
 
@@ -75,6 +71,100 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <!-- versions of libraries needed by sub-projects -->
+  <dependencyManagement>
+   <dependencies>
+     <!-- Start by importing versions StoreMate defines -->
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-parent</artifactId>
+      <version>${version.storemate}</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+
+    <!-- and then add local things we need -->
+
+    <!-- StoreMate -->
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-shared</artifactId>
+      <version>${version.storemate}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-store</artifactId>
+      <version>${version.storemate}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-backend-bdb-je</artifactId>
+      <version>${version.storemate}</version>
+    </dependency>
+
+    <!-- HTTP access may use AHC -->
+    <dependency>
+      <groupId>com.ning</groupId>
+      <artifactId>async-http-client</artifactId>
+      <version>1.7.11</version>
+    </dependency>
+
+    <!-- databinding with Jackson -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+      <version>2.1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.1.4</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.1.4</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-smile</artifactId>
+      <version>2.1.4</version>
+    </dependency>
+
+    <!-- DropWizard, its deps: -->
+    <dependency>
+        <groupId>com.yammer.dropwizard</groupId>
+        <artifactId>dropwizard-core</artifactId>
+        <version>0.6.1</version>
+    </dependency>
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-core</artifactId>
+      <version>2.1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>com.yammer.metrics</groupId>
+      <artifactId>metrics-annotation</artifactId>
+      <version>2.1.2</version>
+    </dependency>
+
+     <!-- logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.2</version>
+    </dependency>
+   </dependencies>
+  </dependencyManagement>
+
+<!--
+    
+    <version.jackson.annotations>2.1.2</version.jackson.annotations>
+    <version.jackson.core>2.1.4</version.jackson.core>
+    <version.jackson.smile>2.1.4</version.jackson.smile>
+
+-->
 
   <build>
    <pluginManagement>

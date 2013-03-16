@@ -27,19 +27,16 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>${version.slf4j}</version>
     </dependency>
 
     <!-- Dependies to StoreMate, other CM modules -->
     <dependency>
       <groupId>com.fasterxml.storemate</groupId>
       <artifactId>storemate-shared</artifactId>
-      <version>${version.storemate}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.storemate</groupId>
       <artifactId>storemate-store</artifactId>
-      <version>${version.storemate}</version>
     </dependency>
 
     <dependency>
@@ -57,31 +54,26 @@
     <dependency>
       <groupId>org.skife.config</groupId>
       <artifactId>config-magic</artifactId>
-      <version>0.15</version>
     </dependency>
 
     <!-- And Jackson 2.0 for databinding; Smile for sync-data -->
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-core</artifactId>
-      <version>${version.jackson.core}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>${version.jackson.core}</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-smile</artifactId>
-      <version>${version.jackson.smile}</version>
     </dependency>
 
     <!-- Storage of state info using BDB-JE (but not necessarily entry storage) -->
     <dependency>
       <groupId>com.sleepycat</groupId>
       <artifactId>je</artifactId>
-      <version>5.0.34</version>
     </dependency>
 
   </dependencies>
