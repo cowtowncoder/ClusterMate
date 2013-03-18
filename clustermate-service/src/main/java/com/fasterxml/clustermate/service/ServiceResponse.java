@@ -147,6 +147,10 @@ public abstract class ServiceResponse
     /**********************************************************************
      */
 
+    public final <RESP extends ServiceResponse> RESP  notChanged() {
+        return setStatus(304);
+    }
+    
     public final <RESP extends ServiceResponse> RESP badMethod() {
         // Method Not Allowed
         return setStatus(405);
@@ -169,20 +173,22 @@ public abstract class ServiceResponse
         return set(410, entity);
     }
     
-    
-    public final <RESP extends ServiceResponse> RESP  internalError(Object entity) {
-        return set(500, entity);
-    }
-
-    public final <RESP extends ServiceResponse> RESP  notChanged() {
-        return setStatus(304);
-    }
-    
     public final <RESP extends ServiceResponse> RESP  notFound() {
         return setStatus(404);
     }
     
     public final <RESP extends ServiceResponse> RESP  notFound(Object entity) {
         return set(404, entity);
+    }
+
+    public final <RESP extends ServiceResponse> RESP  internalError(Object entity) {
+        return set(500, entity);
+    }
+
+    /**
+     * Couple of choices here, but use 504 to distinguish from "unknown" 500 problem
+     */
+    public final <RESP extends ServiceResponse> RESP serviceTimeout(Object entity) {
+        return set(504, entity);
     }
 }

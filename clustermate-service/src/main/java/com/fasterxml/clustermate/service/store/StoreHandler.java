@@ -157,7 +157,14 @@ public abstract class StoreHandler<
             return invalidRange(response, key, rangeStr, e.getMessage());
         }
         String acceptableEnc = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
-        Storable rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
+        Storable rawEntry;
+
+        try {
+            rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
+        } catch (StoreException e) {
+            return _storeError(response, key, e);
+        } 
+        
         if (metadata != null) {
             metadata.setEntry(rawEntry);
         }
@@ -282,7 +289,12 @@ public abstract class StoreHandler<
     {
         // Do we need special handling for Range requests? (GET only?)
     	// Should this update last-accessed as well? (for now, won't)
-        Storable rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
+        Storable rawEntry;
+        try {
+            rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
+        } catch (StoreException e) {
+            return _storeError(response, key, e);
+        } 
         if (metadata != null) {
             metadata.setEntry(rawEntry);
         }
@@ -465,7 +477,13 @@ public abstract class StoreHandler<
             OperationDiagnostics metadata)
         throws IOException, StoreException
     {
-        StorableDeletionResult result = _stores.getEntryStore().softDelete(key.asStorableKey(), true, true);
+        StorableDeletionResult result;
+        try {
+            result = _stores.getEntryStore().softDelete(key.asStorableKey(), true, true);
+        } catch (StoreException e) {
+            return _storeError(response, key, e);
+        } 
+            
         /* Even without match, we can claim it is ok... should we?
          * From idempotency perspective, result is that there is no such
          * entry; so let's allow that and just give the usual 204.
@@ -793,7 +811,19 @@ public abstract class StoreHandler<
     protected <OUT extends ServiceResponse> OUT _badRequest(ServiceResponse response, String msg) {
         return (OUT) response.badRequest(msg).setContentTypeText();
     }
-    
+
+    @SuppressWarnings("unchecked")
+    protected  <OUT extends ServiceResponse> OUT  _storeError(ServiceResponse response, K key,
+            StoreException e) {
+        String msg;
+        if (key == null) {
+            msg = "StoreException (key "+key+"): "+e.getMessage();
+        } else {
+            msg = "StoreException: "+e.getMessage();
+        }
+        return (OUT) response.serviceTimeout(msg).setContentTypeText();
+    }
+
     private ServiceResponse invalidRange(ServiceResponse response,
             K key, String value, String errorMsg)
     {

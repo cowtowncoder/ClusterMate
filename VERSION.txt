@@ -1,8 +1,9 @@
 Project: ClusterMate
 
-0.8.10 (04-Mar-2013)
+0.9.1 (xx-Mar-2013)
 
-- Update StoreMate dependency
+- Add basic handling of StoreExceptions, to try to give caller better idea of
+  failures due to underlying storage engine
 
 0.8.9 (25-Feb-2013)
 

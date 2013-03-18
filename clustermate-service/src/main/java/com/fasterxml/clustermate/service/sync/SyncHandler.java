@@ -212,7 +212,11 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         final SyncListResponse<E> resp;
         KeyRange localRange = localState.totalRange();
         if (localRange.overlapsWith(range)) {
-            resp = _listEntries(range, since, upUntil, _maxToListPerRequest);
+            try {
+                resp = _listEntries(range, since, upUntil, _maxToListPerRequest);
+            } catch (StoreException e) {
+                return _storeError(response, e);
+            }
 
     /*
 System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+"); between "+sinceL+" and "+upUntil+", got "+entries.size()+"/"
@@ -270,13 +274,17 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         List<StorableKey> ids = requestEntity.entries;
         ArrayList<E> entries = new ArrayList<E>(ids.size());
         StorableStore store = _stores.getEntryStore();
-        
-        for (StorableKey key : ids) {
-            Storable raw = store.findEntry(key);
-            // note: this may give null as well; caller needs to check (converter passes null as-is)
-            E entry = (E) _entryConverter.entryFromStorable(raw);
-            entries.add(entry);
-        }
+
+        try {
+            for (StorableKey key : ids) {
+                Storable raw = store.findEntry(key);
+                // note: this may give null as well; caller needs to check (converter passes null as-is)
+                E entry = (E) _entryConverter.entryFromStorable(raw);
+                entries.add(entry);
+            }
+        } catch (StoreException e) {
+            return _storeError(response, e);
+        } 
         if (metadata != null) {
             metadata = metadata.setItemCount(entries.size());
         }
@@ -411,6 +419,12 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
     @Override
     protected <OUT extends ServiceResponse> OUT _badRequest(ServiceResponse response, String msg) {
         return (OUT) response.badRequest(new SyncListResponse<E>(msg)).setContentTypeJson();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected  <OUT extends ServiceResponse> OUT  _storeError(ServiceResponse response, StoreException e) {
+        String msg = "StoreException: "+e.getMessage();
+        return (OUT) response.serviceTimeout(new SyncListResponse<E>(msg)).setContentTypeJson();
     }
 
     /*

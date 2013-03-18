@@ -97,6 +97,6 @@ public abstract class HandlerBase
         String msg = (args == null || args.length == 0) ? errorTemplate : String.format(errorTemplate, args);
         return _badRequest(response, msg);
     }
-
+    
     protected abstract <OUT extends ServiceResponse> OUT _badRequest(ServiceResponse response, String msg);
 }
