@@ -424,6 +424,9 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
     @SuppressWarnings("unchecked")
     protected  <OUT extends ServiceResponse> OUT  _storeError(ServiceResponse response, StoreException e) {
         String msg = "StoreException: "+e.getMessage();
+        // 18-Mar-2013, tatu: StoreExceptions are special enough (unless proven otherwise)
+        //  such that we do want to log details -- to be tuned as necessary
+        LOG.error(msg, e);
         return (OUT) response.serviceTimeout(new SyncListResponse<E>(msg)).setContentTypeJson();
     }
 
