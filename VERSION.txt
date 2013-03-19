@@ -1,6 +1,6 @@
 Project: ClusterMate
 
-0.9.1 (xx-Mar-2013)
+0.9.1 (18-Mar-2013)
 
 - Add basic handling of StoreExceptions, to try to give caller better idea of
   failures due to underlying storage engine
