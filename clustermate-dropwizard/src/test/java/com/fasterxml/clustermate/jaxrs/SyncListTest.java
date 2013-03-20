@@ -40,7 +40,8 @@ public class SyncListTest extends JaxrsStoreTestBase
 
         SyncHandler<TestKey, StoredEntry<TestKey>> syncH = new SyncHandler<TestKey, StoredEntry<TestKey>>(resource._stuff,
                 resource.getStores(), resource.getCluster());
-        
+
+        final long SYNC_GRACE_PERIOD_MSECS = syncH.getSyncGracePeriodMsecs();
         // First, add an entry:
         StorableStore entries = resource.getStores().getEntryStore();
         final TestKey KEY1 = contentKey(CLIENT_ID, "data/entry/1");
@@ -55,29 +56,39 @@ public class SyncListTest extends JaxrsStoreTestBase
         assertEquals(200, response.getStatus());
         assertEquals(1, entries.getEntryCount());
 
-        // then advance time, try to access change list
-        timeMaster.advanceCurrentTimeMillis(30000L);
+        SyncListResponse<?> syncList;
 
-        FakeHttpRequest syncReq = new FakeHttpRequest();
-        final KeyRange localRange = resource.getKeyRange();
-        syncReq.addQueryParam(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, ""+localRange.getStart());
-        syncReq.addQueryParam(ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH, ""+localRange.getLength());
-        // JSON or Smile? Either should be fine...
-        syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ContentType.SMILE.toString());
-        
-        response = new FakeHttpResponse();
+        // then verify that that entry is NOT visible:
         OperationDiagnostics diag = new OperationDiagnostics();        
-        
-        final long callTime = timeMaster.currentTimeMillis();
-        
-        syncH.listEntries(syncReq, response, creationTime, diag);
-        assertTrue(response.hasStreamingContent());
-        assertEquals(200, response.getStatus());
-        assertEquals(ContentType.SMILE.toString(), response.getContentType());
-        assertEquals(1, diag.getItemCount());
-        byte[] data = response.getStreamingContentAsBytes();
 
-        SyncListResponse<?> syncList = resource._stuff.smileReader(SyncListResponse.class).readValue(data);
+        diag = new OperationDiagnostics();
+        syncList = _fetchSyncList(resource, syncH, creationTime, diag);
+
+        assertEquals(0, diag.getItemCount());
+        assertNotNull(syncList);
+        assertNull(syncList.message);
+        assertNotNull(syncList.entries);
+        assertEquals(0, syncList.entries.size());
+ 
+        // Once more, by mild advance
+        timeMaster.advanceCurrentTimeMillis(SYNC_GRACE_PERIOD_MSECS / 4);
+        diag = new OperationDiagnostics();
+        syncList = _fetchSyncList(resource, syncH, creationTime, diag);
+
+        assertEquals(0, diag.getItemCount());
+        assertNotNull(syncList);
+        assertNull(syncList.message);
+        assertNotNull(syncList.entries);
+        assertEquals(0, syncList.entries.size());
+        
+        // then advance time, try to access change list
+        timeMaster.advanceCurrentTimeMillis(SYNC_GRACE_PERIOD_MSECS);
+        long callTime = timeMaster.currentTimeMillis();
+
+        diag = new OperationDiagnostics();        
+        syncList = _fetchSyncList(resource, syncH, creationTime, diag);
+
+        assertEquals(1, diag.getItemCount());
         assertNotNull(syncList);
         assertNull(syncList.message);
         assertNotNull(syncList.entries);
@@ -85,10 +96,33 @@ public class SyncListTest extends JaxrsStoreTestBase
 
         // Last actual timestamp would be 1234L; but we should get "currentTime - gracePeriod" here
         // NOTE: will break if config defaults change. Should be improved somehow.
-        assertEquals(callTime - GRACE_PERIOD , syncList.lastSeen());
+        assertEquals(callTime - SYNC_GRACE_PERIOD_MSECS , syncList.lastSeen());
 
         // clean up:
         resource.getStores().stop();
+    }
+
+    private SyncListResponse<?> _fetchSyncList(StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource,
+            SyncHandler<TestKey, StoredEntry<TestKey>> syncH,
+            long creationTime,
+            OperationDiagnostics diag) throws Exception
+    {
+        final KeyRange localRange = resource.getKeyRange();
+        FakeHttpRequest syncReq = new FakeHttpRequest();
+        syncReq.addQueryParam(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, ""+localRange.getStart());
+        syncReq.addQueryParam(ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH, ""+localRange.getLength());
+        // JSON or Smile? Either should be fine...
+        syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ContentType.SMILE.toString());
+        
+        FakeHttpResponse response = new FakeHttpResponse();
+        
+        syncH.listEntries(syncReq, response, creationTime, diag);
+        assertTrue(response.hasStreamingContent());
+        assertEquals(200, response.getStatus());
+        assertEquals(ContentType.SMILE.toString(), response.getContentType());
+        byte[] data = response.getStreamingContentAsBytes();
+
+        return resource._stuff.smileReader(SyncListResponse.class).readValue(data);
     }
 
     /**

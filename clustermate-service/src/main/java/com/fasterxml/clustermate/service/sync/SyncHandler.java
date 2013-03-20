@@ -145,6 +145,10 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
     public ClusterViewByServer getCluster() {
         return _cluster;
     }
+
+    public long getSyncGracePeriodMsecs() {
+        return _cfgSyncGracePeriodMsecs;
+    }
     
     /*
     /**********************************************************************
