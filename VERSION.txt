@@ -2,7 +2,8 @@ Project: ClusterMate
 
 0.9.3
 
-- Update to AHC 1.7.12
+- Update to AHC 1.7.12, DropWizard 0.6.2
+
 
 0.9.1 (18-Mar-2013)
 
