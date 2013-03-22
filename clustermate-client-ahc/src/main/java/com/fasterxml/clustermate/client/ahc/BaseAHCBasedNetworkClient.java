@@ -23,28 +23,30 @@ public abstract class BaseAHCBasedNetworkClient<
     protected final ObjectMapper _mapper;
 
     protected final CONFIG _config;
-
+    
     /**
      * The usual constructor to call; configures AHC using standard
      * settings.
      */
     protected BaseAHCBasedNetworkClient(CONFIG config)
     {
+        // not entirely kosher to call member methods from ctor but...
+        this(config, (AsyncHttpClientConfig) null);
+    }
+
+    protected BaseAHCBasedNetworkClient(CONFIG config, AsyncHttpClientConfig ahcConfig)
+    {
+        if (ahcConfig == null) {
+            ahcConfig = buildAHCConfig(config);
+        }
+        
         _config = config;
         _mapper = config.getJsonMapper();
-        AsyncHttpClientConfig ahcConfig = new AsyncHttpClientConfig.Builder()
-            .setCompressionEnabled(false)
-            .setFollowRedirects(false)
-            .setAllowPoolingConnection(true)
-            .setConnectionTimeoutInMs((int)config.getCallConfig().getConnectTimeoutMsecs())
-            .setMaximumConnectionsPerHost(5) // default of 2 is too low
-            .setMaximumConnectionsTotal(30) // and 10 is bit skimpy too
-            .build();
 
         AsyncHttpProvider prov;
     
         /* 12-Oct-2012, tatu: After numerous attempts to use Grizzly provider,
-         *   I give up. That PoS just does not work. So even though Netty code
+         *   I give up. It just does not work for me. So even though Netty code
          *   is ugly as hell at least it does work well enough to... work
          *   (there is that 40msec overhead for PUTs, still)
          */
@@ -69,6 +71,34 @@ public abstract class BaseAHCBasedNetworkClient<
         _ahc = ahc;
     }
 
+    /**
+     * Method called to build the default configuration settings for AHC,
+     * if explicit settings are not passed to constructor.
+     */
+    public AsyncHttpClientConfig buildAHCConfig(CONFIG config)
+    {
+        return buildAHCConfig(config,
+                new AsyncHttpClientConfig.Builder()
+            .setCompressionEnabled(false)
+            .setFollowRedirects(false)
+            .setAllowPoolingConnection(true)
+            .setConnectionTimeoutInMs((int)config.getCallConfig().getConnectTimeoutMsecs())
+            .setMaximumConnectionsPerHost(5) // default of 2 is too low
+            .setMaximumConnectionsTotal(30) // and 10 is bit skimpy too
+            );
+    }
+    
+    /**
+     * Overriable method called with default AHC configuration settings (as defined
+     * by builder initialized with defaults), to build actual configuration
+     * object.
+     */
+    protected AsyncHttpClientConfig buildAHCConfig(CONFIG config,
+            AsyncHttpClientConfig.Builder ahcConfigBuilder)
+    {
+        return ahcConfigBuilder.build();
+    }
+    
     // For Apache HC, following might be useful:
     /*
     protected HttpClientImpl<VKey> _buildHttpClient(StoreClientConfig config)

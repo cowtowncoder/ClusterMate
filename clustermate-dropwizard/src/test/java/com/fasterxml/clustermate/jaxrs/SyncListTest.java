@@ -102,7 +102,7 @@ public class SyncListTest extends JaxrsStoreTestBase
         resource.getStores().stop();
     }
 
-    private SyncListResponse<?> _fetchSyncList(StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource,
+    private SyncListResponse<StoredEntry<?>> _fetchSyncList(StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource,
             SyncHandler<TestKey, StoredEntry<TestKey>> syncH,
             long creationTime,
             OperationDiagnostics diag) throws Exception
@@ -175,15 +175,8 @@ public class SyncListTest extends JaxrsStoreTestBase
         syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ContentType.SMILE.toString());
         
         final long callTime = timeMaster.currentTimeMillis();
-        response = new FakeHttpResponse();
         OperationDiagnostics diag = new OperationDiagnostics();        
-        syncH.listEntries(syncReq, response, creationTime, diag);
-        assertTrue(response.hasStreamingContent());
-        assertEquals(200, response.getStatus());
-        assertEquals(ContentType.SMILE.toString(), response.getContentType());
-        byte[] data = response.getStreamingContentAsBytes();
-
-        SyncListResponse<StoredEntry<?>> syncList = resource._stuff.smileReader(SyncListResponse.class).readValue(data);
+        SyncListResponse<StoredEntry<?>> syncList = _fetchSyncList(resource, syncH, creationTime, diag);
         assertNotNull(syncList);
         assertNull(syncList.message);
         assertNotNull(syncList.entries);
