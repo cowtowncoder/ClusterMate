@@ -102,6 +102,11 @@
       <artifactId>storemate-backend-bdb-je</artifactId>
       <version>${version.storemate}</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-backend-leveldb</artifactId>
+      <version>${version.storemate}</version>
+    </dependency>
 
     <!-- HTTP access may use AHC -->
     <dependency>
