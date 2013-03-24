@@ -8,10 +8,10 @@ public class HealthCheckForStore extends HealthCheck
 {
     protected final Stores<?,?> _stores;
     
-    public HealthCheckForStore(ServiceConfig config, Stores<?,?> bdb)
+    public HealthCheckForStore(ServiceConfig config, Stores<?,?> stores)
     {
         super("StorableStore");
-        _stores = bdb;
+        _stores = stores;
     }
 
     @Override

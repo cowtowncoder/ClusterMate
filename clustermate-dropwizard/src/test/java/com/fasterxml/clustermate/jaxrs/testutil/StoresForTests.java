@@ -26,9 +26,9 @@ public class StoresForTests extends StoresImpl<TestKey, StoredEntry<TestKey>>
 
     public StoresForTests(ServiceConfig config, TimeMaster timeMaster, ObjectMapper jsonMapper,
             StoredEntryConverter<TestKey, StoredEntry<TestKey>,FakeFullListItem> entryConverter,
-            StorableStore entryStore, File bdbEnvRoot)
+            StorableStore entryStore, File dataStoreRoot)
     {
-        super(config, timeMaster, jsonMapper, entryConverter, entryStore, bdbEnvRoot);
+        super(config, timeMaster, jsonMapper, entryConverter, entryStore, dataStoreRoot);
     }
 
     @Override
