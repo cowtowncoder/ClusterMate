@@ -161,16 +161,16 @@ public abstract class DWBasedService<
             _serviceStuff.markAsTest();
         }
         
-        /* Let's try opening up BDB-JE: must have been created,
+        /* Let's try opening up StorableStore: must have been created,
          * and have tables we expect; otherwise we'll fail right away.
          */
         LOG.info("Trying open Stores (StorableStore, node store, last-access store)");
          _stores = _constructStores(_serviceStuff);
          _managed.add(_stores);
-        LOG.info("Opened Stores successfully");
+        LOG.info("Opened StorableStore successfully");
         _stores.initAndOpen(false);
 
-        // Then: read in cluster information (config file, BDB):
+        // Then: read in cluster information (config file, backend store settings):
         final int port = dwConfig.getHttpConfiguration().getPort();
         LOG.info("Initializing cluster configuration (port {})...", port);
         final long startTime = _timeMaster.currentTimeMillis();
@@ -214,7 +214,7 @@ public abstract class DWBasedService<
     /**
      * Overridable method that is used for getting helper object used for
      * constructing {@link StoredEntry} instances to store in the
-     * entry metadata store (currently BDB).
+     * entry metadata store.
      */
     protected abstract StoredEntryConverter<K,E,L> constructEntryConverter(SCONFIG config,
             Environment environment);
