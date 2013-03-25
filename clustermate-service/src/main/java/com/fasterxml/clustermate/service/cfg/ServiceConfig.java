@@ -23,6 +23,20 @@ public abstract class ServiceConfig
 {
     /*
     /**********************************************************************
+    /* General settings
+    /**********************************************************************
+     */
+
+    /**
+     * Setting that determines whether Yammer metrics information will be
+     * updated or not.
+     * 
+     * @since 0.9.3
+     */
+    public boolean metricsEnabled = true;
+    
+    /*
+    /**********************************************************************
     /* Service end point registration
     /**********************************************************************
      */

@@ -1,18 +1,27 @@
 package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.storemate.shared.TimeMaster;
+import com.fasterxml.storemate.store.Storable;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
+import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Counter;
+import com.yammer.metrics.core.Histogram;
+import com.yammer.metrics.core.Meter;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
 
 /**
  * Servlet that handles basic CRUD operations for individual entries.
@@ -27,6 +36,8 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
+    protected final ServiceConfig _serviceConfig;
+    
     protected final StoreHandler<K,E,?> _storeHandler;
 
     protected final TimeMaster _timeMaster;
@@ -34,6 +45,24 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     protected final ObjectWriter _jsonWriter;
 
     protected final EntryKeyConverter<K> _keyConverter;
+
+    /*
+    /**********************************************************************
+    /* Metrics info
+    /**********************************************************************
+     */
+
+    private final static Counter _metricGetReqCurrent = Metrics.newCounter(
+            StoreEntryServlet.class, "getReqInFlight");
+
+    private final static Histogram _metricGetReqSizes = Metrics.newHistogram(
+            StoreEntryServlet.class, "getReqSizes", true);
+
+    private final static Meter _metricGetReqRate = Metrics.newMeter(
+            StoreEntryServlet.class, "getReqRate", "requests", TimeUnit.SECONDS);
+
+    private final static Timer _metricGetReqTimes = Metrics.newTimer(
+            StoreEntryServlet.class, "getReqTimes");
     
     /*
     /**********************************************************************
@@ -56,6 +85,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         _timeMaster = stuff.getTimeMaster();
         _jsonWriter = stuff.jsonWriter();
         _keyConverter = stuff.getKeyConverter();
+        _serviceConfig = stuff.getServiceConfig();
     }
 
     protected StoreEntryServlet(StoreEntryServlet<K,E> base)
@@ -65,6 +95,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         _timeMaster = base._timeMaster;
         _jsonWriter = base._jsonWriter;
         _keyConverter = base._keyConverter;
+        _serviceConfig = base._serviceConfig;
     }
     
     /**
@@ -91,16 +122,47 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     /* Main Verb handlers
     /**********************************************************************
      */
-    
+/*
+ *     (non-Javadoc)
+ * @see com.fasterxml.clustermate.service.servlet.ServletBase#handleGet(com.fasterxml.clustermate.service.servlet.ServletServiceRequest, com.fasterxml.clustermate.service.servlet.ServletServiceResponse, com.fasterxml.clustermate.service.OperationDiagnostics)
+ */
     @Override
     public final void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
-        K key = _findKey(request, response);
-        if (key != null) { // null means trouble; response has all we need
-            _handleGet(request, response, stats, key);
+        final boolean updateMetrics = _serviceConfig.metricsEnabled;
+        final TimerContext timer;
+
+        if (updateMetrics) {
+            _metricGetReqCurrent.inc();
+            _metricGetReqRate.mark();            
+            timer = _metricGetReqTimes.time();
+        } else {
+            timer = null;
         }
-        response.writeOut(_jsonWriter);
+
+        try {
+            K key = _findKey(request, response);
+            if (key != null) { // null means trouble; response has all we need
+                _handleGet(request, response, stats, key);
+            }
+            response.writeOut(_jsonWriter);
+        } finally {
+            if (updateMetrics) {
+                timer.stop();
+                _metricGetReqCurrent.dec();
+                if (stats != null) {
+                    Storable entity = stats.getEntry();
+                    if (entity != null) {
+                        _metricGetReqSizes.update(entity.getActualUncompressedLength());
+                        /*
+                    } else {
+                        _metricGetReqSizes.update(333);
+                        */
+                    }
+                }
+            }
+        }
     }
 
     @Override
