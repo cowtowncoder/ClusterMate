@@ -23,20 +23,6 @@ public abstract class ServiceConfig
 {
     /*
     /**********************************************************************
-    /* General settings
-    /**********************************************************************
-     */
-
-    /**
-     * Setting that determines whether Yammer metrics information will be
-     * updated or not.
-     * 
-     * @since 0.9.3
-     */
-    public boolean metricsEnabled = true;
-    
-    /*
-    /**********************************************************************
     /* Service end point registration
     /**********************************************************************
      */
@@ -54,6 +40,25 @@ public abstract class ServiceConfig
      */
     public abstract RequestPathStrategy getServicePathStrategy();
 
+    /*
+    /**********************************************************************
+    /* Metrics settings
+    /**********************************************************************
+     */
+
+    /**
+     * Setting that determines whether Yammer metrics information will be
+     * updated or not.
+     * 
+     * @since 0.9.3
+     */
+    public boolean metricsEnabled = true;
+
+    /**
+     * Root name for metrics properties when reported via JMX.
+     */
+    public String metricsJmxRoot = "com.fasterxml.clustermate.metrics";
+    
     /*
     /**********************************************************************
     /* Cluster configuration

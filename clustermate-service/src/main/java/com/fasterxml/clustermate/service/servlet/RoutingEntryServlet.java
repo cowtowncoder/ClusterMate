@@ -19,7 +19,8 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
 {
     public RoutingEntryServlet(StoreEntryServlet<K,E> base)
     {
-        super(base);
+        // true -> share metrics with the "real" servlet. Can separate in future if need be
+        super(base, true);
     }
     
     /*
@@ -31,6 +32,7 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     protected boolean _isStoredLocally(K key) {
         return _clusterView.containsLocally(key);
     }
+
     protected int _findRetryCount(ServletServiceRequest request)
     {
         String str = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_RETRY_COUNT);
