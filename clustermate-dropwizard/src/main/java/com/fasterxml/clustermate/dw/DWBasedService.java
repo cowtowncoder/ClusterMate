@@ -137,11 +137,33 @@ public abstract class DWBasedService<
             LOG.info("Starting up: {}", managed.getClass().getName());
             managed.start();
         }
-        // TODO Auto-generated method stub
         LOG.info("VManaged object startup complete");
-        
+
+        /* 27-Mar-2013, tatu: Also: need to register shutdown hook to be
+         *    able to do 'prepareForStop()'
+         */
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                prepareForStop();
+            }
+        });
     }
 
+    public void prepareForStop()
+    {
+        LOG.info("Calling prepareForStop on {} VManaged objects", _managed.size());
+        for (StartAndStoppable managed : _managed) {
+            try {
+                managed.prepareForStop();
+            } catch (Exception e) {
+                LOG.warn("Problems with prepareForStop on {}: {}", managed.getClass().getName(),
+                        e.getMessage());
+            }
+        }
+        LOG.info("prepareForStop() for managed objects complete");
+    }
+    
     @Override
     public void stop() throws Exception
     {
