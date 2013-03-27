@@ -53,7 +53,10 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
     public void start() { }
     
     public void prepareForStop() {
-        _store.sync();
+        /* 27-Mar-2013, tatu: Unless we use deferred writes, we can't sync.
+         *    So, need to make conditional if deferred writes are ok.
+         */
+//        _store.sync();
     }
     
     public void stop() {

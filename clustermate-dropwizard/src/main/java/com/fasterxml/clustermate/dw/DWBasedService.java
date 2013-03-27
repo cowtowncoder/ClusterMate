@@ -1,11 +1,7 @@
 package com.fasterxml.clustermate.dw;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,14 +43,13 @@ public abstract class DWBasedService<
     CONF extends DWConfigBase<SCONFIG, CONF>
 >
     extends Service<CONF>
-    implements Managed
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     /**
      * List of {@link StartAndStoppable} objects we will dispatch start/stop calls to.
      */
-    protected List<StartAndStoppable> _managed = Collections.emptyList();
+    protected List<StartAndStoppable> _managed = null;
     
     /**
      * Marker flag used to indicate cases when service is run in test
@@ -129,8 +124,7 @@ public abstract class DWBasedService<
         bootstrap.addBundle(new AssetsBundle("/html"));
     }
 
-    @Override
-    public void start() throws Exception
+    public void _start() throws Exception
     {
         LOG.info("Starting up {} VManaged objects", _managed.size());
         for (StartAndStoppable managed : _managed) {
@@ -145,12 +139,12 @@ public abstract class DWBasedService<
         Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
-                prepareForStop();
+                _prepareForStop();
             }
         });
     }
 
-    public void prepareForStop()
+    public void _prepareForStop()
     {
         LOG.info("Calling prepareForStop on {} VManaged objects", _managed.size());
         for (StartAndStoppable managed : _managed) {
@@ -164,11 +158,10 @@ public abstract class DWBasedService<
         LOG.info("prepareForStop() for managed objects complete");
     }
     
-    @Override
-    public void stop() throws Exception
+    public void _stop() throws Exception
     {
         int count = _managed.size();
-        LOG.info("Stopping {} VManaged objects", _managed.size());
+        LOG.info("Stopping {} VManaged objects", count);
         while (--count >= 0) {
             StartAndStoppable managed = _managed.remove(count);
             String desc = managed.getClass().getName();
@@ -188,7 +181,17 @@ public abstract class DWBasedService<
     public void run(CONF dwConfig, Environment environment) throws IOException
     {
         // first things first: we need to get start()/stop() calls, so:
-        environment.manage(this);
+        environment.manage(new Managed() {
+            @Override
+            public void start() throws Exception {
+                _start();
+            }
+
+            @Override
+            public void stop() throws Exception {
+                _stop();
+            }
+        });
 
         final SCONFIG config = dwConfig.getServiceConfig();
         
