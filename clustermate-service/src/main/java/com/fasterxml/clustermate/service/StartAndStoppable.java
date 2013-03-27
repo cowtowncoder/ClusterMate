@@ -12,5 +12,13 @@ public interface StartAndStoppable
 {
     public void start() throws java.lang.Exception;
 
+    /**
+     * Method called before {@link #stop}, and is meant to start graceful
+     * shutdown.
+     * 
+     * @since 0.9.3
+     */
+    public void prepareForStop() throws Exception;
+    
     public void stop() throws java.lang.Exception;
 }

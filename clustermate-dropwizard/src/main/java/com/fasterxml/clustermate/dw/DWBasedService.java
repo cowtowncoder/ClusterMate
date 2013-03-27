@@ -33,22 +33,9 @@ import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cleanup.CleanerUpper;
-import com.fasterxml.clustermate.service.cluster.ClusterBootstrapper;
-import com.fasterxml.clustermate.service.cluster.ClusterInfoHandler;
-import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
-import com.fasterxml.clustermate.service.cluster.ClusterViewByServerImpl;
-import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
-import com.fasterxml.clustermate.service.servlet.NodeStatusServlet;
-import com.fasterxml.clustermate.service.servlet.ServiceDispatchServlet;
-import com.fasterxml.clustermate.service.servlet.ServletBase;
-import com.fasterxml.clustermate.service.servlet.StoreEntryServlet;
-import com.fasterxml.clustermate.service.servlet.StoreListServlet;
-import com.fasterxml.clustermate.service.servlet.SyncListServlet;
-import com.fasterxml.clustermate.service.servlet.SyncPullServlet;
-import com.fasterxml.clustermate.service.store.StoreHandler;
-import com.fasterxml.clustermate.service.store.StoredEntry;
-import com.fasterxml.clustermate.service.store.StoredEntryConverter;
-import com.fasterxml.clustermate.service.store.StoresImpl;
+import com.fasterxml.clustermate.service.cluster.*;
+import com.fasterxml.clustermate.service.servlet.*;
+import com.fasterxml.clustermate.service.store.*;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
@@ -141,7 +128,40 @@ public abstract class DWBasedService<
         // like /index.html that need special handling)
         bootstrap.addBundle(new AssetsBundle("/html"));
     }
-    
+
+    @Override
+    public void start() throws Exception
+    {
+        LOG.info("Starting up {} VManaged objects", _managed.size());
+        for (StartAndStoppable managed : _managed) {
+            LOG.info("Starting up: {}", managed.getClass().getName());
+            managed.start();
+        }
+        // TODO Auto-generated method stub
+        LOG.info("VManaged object startup complete");
+        
+    }
+
+    @Override
+    public void stop() throws Exception
+    {
+        int count = _managed.size();
+        LOG.info("Stopping {} VManaged objects", _managed.size());
+        while (--count >= 0) {
+            StartAndStoppable managed = _managed.remove(count);
+            String desc = managed.getClass().getName();
+            try {
+                LOG.info("Stopping: {}", desc);
+                managed.stop();
+            } catch (Exception e) {
+                LOG.warn(String.format("Problems trying to stop VManaged of type %s: (%s) %s",
+                        desc, e.getClass().getName(), e.getMessage()),
+                        e);
+            }
+        }
+        LOG.info("VManaged object shutdown complete");
+    }
+
     @Override
     public void run(CONF dwConfig, Environment environment) throws IOException
     {
@@ -391,39 +411,6 @@ public abstract class DWBasedService<
         StorableStore store = new StorableStoreImpl(v.storeConfig, backend, _timeMaster,
                stuff.getFileManager());
         return constructStores(stuff, v, store);
-    }
-
-    @Override
-    public void start() throws Exception
-    {
-        LOG.info("Starting up {} VManaged objects", _managed.size());
-        for (StartAndStoppable managed : _managed) {
-            LOG.info("Starting up: {}", managed.getClass().getName());
-            managed.start();
-        }
-        // TODO Auto-generated method stub
-        LOG.info("VManaged object startup complete");
-        
-    }
-
-    @Override
-    public void stop() throws Exception
-    {
-        int count = _managed.size();
-        LOG.info("Stopping {} VManaged objects", _managed.size());
-        while (--count >= 0) {
-            StartAndStoppable managed = _managed.remove(count);
-            String desc = managed.getClass().getName();
-            try {
-                LOG.info("Stopping: {}", desc);
-                managed.stop();
-            } catch (Exception e) {
-                LOG.warn(String.format("Problems trying to stop VManaged of type %s: (%s) %s",
-                        desc, e.getClass().getName(), e.getMessage()),
-                        e);
-            }
-        }
-        LOG.info("VManaged object shutdown complete");
     }
 
     /*

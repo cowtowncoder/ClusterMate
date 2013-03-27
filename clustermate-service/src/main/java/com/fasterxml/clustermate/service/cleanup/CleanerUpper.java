@@ -109,9 +109,15 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     }
 
     @Override
+    public void prepareForStop() {
+        // Let's mark the fact we are shutting down, but not yet terminate
+        // on-going processes.
+        _shutdown.set(true);
+    }
+    
+    @Override
     public void stop()
     {
-        _shutdown.set(true);
         if (_thread != null) {
             _thread.interrupt();
         }

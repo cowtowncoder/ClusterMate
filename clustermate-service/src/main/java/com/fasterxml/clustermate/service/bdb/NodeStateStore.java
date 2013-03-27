@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.clustermate.api.KeySpace;
+import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
 
 import com.fasterxml.storemate.shared.IpAndPort;
@@ -25,7 +26,7 @@ import com.fasterxml.storemate.shared.util.UTF8Encoder;
  * peer-to-peer operations to reduce amount of re-synchronization
  * needed when node instances are restarted.
  */
-public class NodeStateStore
+public class NodeStateStore implements StartAndStoppable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     
@@ -52,8 +53,13 @@ public class NodeStateStore
                 "Nodes", dbConfig(env));
     }
 
-    public void stop()
-    {
+    public void start() { }
+    
+    public void prepareForStop() {
+        _store.sync();
+    }
+    
+    public void stop() {
         _store.close();
     }
 

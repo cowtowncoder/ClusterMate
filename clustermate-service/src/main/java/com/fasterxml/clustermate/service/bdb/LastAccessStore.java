@@ -4,6 +4,7 @@ import com.sleepycat.je.*;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
+import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
@@ -20,6 +21,7 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
  * of actual key being used.
  */
 public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<K>>
+    implements StartAndStoppable
 {
     /*
     /**********************************************************************
@@ -48,8 +50,13 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
         _entryConverter = conv;
     }
 
-    public void stop()
-    {
+    public void start() { }
+    
+    public void prepareForStop() {
+        _store.sync();
+    }
+    
+    public void stop() {
         _store.close();
     }
 

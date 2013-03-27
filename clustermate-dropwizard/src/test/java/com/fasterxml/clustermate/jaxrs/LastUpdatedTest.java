@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.jaxrs;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 import com.fasterxml.storemate.store.StorableStore;
 
@@ -26,7 +25,7 @@ public class LastUpdatedTest extends JaxrsStoreTestBase
 
     // Simple test that creates 3 entries: two under same group, third
     // one as it's "own group"
-    public void testLargerFile() throws IOException
+    public void testLargerFile() throws Exception
     {
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(1000L);
         

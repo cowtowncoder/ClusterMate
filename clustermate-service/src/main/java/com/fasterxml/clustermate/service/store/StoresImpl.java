@@ -19,6 +19,7 @@ import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
 
 import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.bdb.LastAccessStore;
 import com.fasterxml.clustermate.service.bdb.NodeStateStore;
@@ -26,6 +27,7 @@ import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 
 public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
 	extends Stores<K, E>
+     implements StartAndStoppable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
@@ -143,6 +145,37 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         // nothing much to do here; we actually force init on construction
     }
 
+    @Override
+    public void prepareForStop()
+    {
+        /* Nothing urgent we have to do, but let's let
+         * stores know in case they want to do some flushing
+         * ahead of time
+         * 
+         */
+        if (_nodeStore != null) {
+            try {
+                _nodeStore.prepareForStop();
+            } catch (Exception e) {
+                LOG.warn("Problems with prepareForStop() on nodeStore", e);
+            }
+        }
+        if (_entryStore != null) {
+            try {
+                _entryStore.prepareForStop();
+            } catch (Exception e) {
+                LOG.warn("Problems with prepareForStop() on entryStore", e);
+            }
+        }
+        if (_lastAccessStore != null) {
+            try {
+                _lastAccessStore.prepareForStop();
+            } catch (Exception e) {
+                LOG.warn("Problems with prepareForStop() on lastAccessStore", e);
+            }
+        }
+    }
+    
     @Override
     public void stop() throws IOException
     {

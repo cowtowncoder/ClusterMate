@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.jaxrs;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 
 import org.junit.Assert;
 
@@ -11,7 +10,6 @@ import com.fasterxml.clustermate.service.msg.PutResponse;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.store.StorableStore;
-
 
 public class MediumFileTest extends JaxrsStoreTestBase
 {
@@ -23,7 +21,7 @@ public class MediumFileTest extends JaxrsStoreTestBase
     }
 
     // Test to use GZIP
-    public void testMediumFile() throws IOException
+    public void testMediumFile() throws Exception
     {
         final long startTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);

@@ -4,6 +4,7 @@ Project: ClusterMate
 
 #18: Add basic endpoint statistics using Yammer metrics package
 - Update to AHC 1.7.12, DropWizard 0.6.2
+- (from StoreMate 0.9.7) Add experimental LevelDB-based backend
 
 0.9.2
 

@@ -213,10 +213,24 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     }
 
     /**
+     * If we get notified about a shutdown in future, we can take some
+     * preparatory steps, to make eventual shutdown simpler, safer
+     * and quicker.
+     */
+    @Override
+    public void prepareForStop() {
+        _stop(false);
+    }
+    
+    /**
      * Method called when the system is shutting down.
      */
     @Override
-    public void stop()
+    public void stop() {
+        _stop(true);
+    }
+
+    protected void _stop(boolean forced)
     {
         // stopSyncing():
         Thread t;

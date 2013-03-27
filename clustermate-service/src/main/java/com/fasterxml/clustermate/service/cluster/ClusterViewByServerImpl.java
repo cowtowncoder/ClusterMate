@@ -119,10 +119,18 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     }
 
     @Override
+    public synchronized void prepareForStop() {
+        LOG.info("Pre-shutdown notice to stop active synchronization requests");
+        for (ClusterPeerImpl<?,?> peer : _peers.values()) {
+            peer.prepareForStop();
+        }
+        LOG.info("Completed pre-shutdown notices for synchronization");
+    }
+    
+    @Override
     public synchronized void stop()
     {
         LOG.info("Shutting down sync threads to peers...");
-        
         for (ClusterPeerImpl<?,?> peer : _peers.values()) {
             peer.stop();
         }

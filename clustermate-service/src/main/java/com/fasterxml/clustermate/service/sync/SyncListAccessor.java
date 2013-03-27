@@ -60,7 +60,12 @@ public class SyncListAccessor implements StartAndStoppable
     }
 
     @Override public void start() { }
-    
+
+    @Override
+    public void prepareForStop() {
+        // nothing to do here...
+    }
+
     @Override
     public void stop()
     {
