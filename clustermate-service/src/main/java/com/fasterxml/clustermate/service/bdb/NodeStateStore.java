@@ -56,7 +56,10 @@ public class NodeStateStore implements StartAndStoppable
     public void start() { }
     
     public void prepareForStop() {
-        _store.sync();
+        /* 27-Mar-2013, tatu: Not much we can do; sync() only needed when
+         *   using deferred writes.
+         */
+//        _store.sync();
     }
     
     public void stop() {
