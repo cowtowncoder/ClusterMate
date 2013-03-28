@@ -8,9 +8,12 @@ import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
+import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.metrics.OperationMetrics;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
+import com.yammer.metrics.core.TimerContext;
 
 @SuppressWarnings("serial")
 public class StoreListServlet<K extends EntryKey,
@@ -34,6 +37,14 @@ public class StoreListServlet<K extends EntryKey,
 
     /*
     /**********************************************************************
+    /* Metrics info
+    /**********************************************************************
+     */
+
+    protected final OperationMetrics _listMetrics;
+    
+    /*
+    /**********************************************************************
     /* Life-cycle
     /**********************************************************************
      */
@@ -46,6 +57,13 @@ public class StoreListServlet<K extends EntryKey,
         _storeHandler = storeHandler;
         _timeMaster = stuff.getTimeMaster();
         _keyConverter = stuff.getKeyConverter();
+
+        final ServiceConfig serviceConfig = stuff.getServiceConfig();
+        if (serviceConfig.metricsEnabled) {
+            _listMetrics = OperationMetrics.forListingOperation(serviceConfig, "entryList");
+        } else {
+            _listMetrics = null;
+        }
     }
 
     /*
@@ -69,13 +87,21 @@ public class StoreListServlet<K extends EntryKey,
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
-        K prefix = _findKey(request, response);
-        if (prefix == null) {
-            super.handleGet(request, response, stats);
-            return;
+        final OperationMetrics metrics = _listMetrics;
+        TimerContext timer = (metrics == null) ? null : metrics.start();
+        try {
+            K prefix = _findKey(request, response);
+            if (prefix == null) {
+                super.handleGet(request, response, stats);
+                return;
+            }
+            _storeHandler.listEntries(request, response, prefix, stats);
+            _addStdHeaders(response);
+            response.writeOut(null);
+        } finally {
+            if (metrics != null) {
+                 metrics.finish(timer, stats);
+            }
         }
-        _storeHandler.listEntries(request, response, prefix, stats);
-        _addStdHeaders(response);
-        response.writeOut(null);
     }
 }

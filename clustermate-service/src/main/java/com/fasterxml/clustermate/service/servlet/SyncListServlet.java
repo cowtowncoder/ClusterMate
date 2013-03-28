@@ -10,9 +10,12 @@ import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
+import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.metrics.OperationMetrics;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
+import com.yammer.metrics.core.TimerContext;
 
 @SuppressWarnings("serial")
 public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
@@ -24,6 +27,8 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
     protected final ObjectWriter _jsonWriter;
 
     protected final AtomicBoolean _terminated = new AtomicBoolean(false);
+
+    protected final OperationMetrics _listMetrics;
     
     public SyncListServlet(SharedServiceStuff stuff, ClusterViewByServer clusterView,
             SyncHandler<K,E> h)
@@ -32,6 +37,12 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
         super(clusterView, null);
         _syncHandler = h;
         _jsonWriter = stuff.jsonWriter();
+        final ServiceConfig serviceConfig = stuff.getServiceConfig();
+        if (serviceConfig.metricsEnabled) {
+            _listMetrics = OperationMetrics.forListingOperation(serviceConfig, "syncList");
+        } else {
+            _listMetrics = null;
+        }
     }
 
     @Override
@@ -44,36 +55,44 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
+        final OperationMetrics metrics = _listMetrics;
+        TimerContext timer = (metrics == null) ? null : metrics.start();
         String str = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_SINCE);
-        if (str == null) {
-            response = _syncHandler.missingArgument(response, ClusterMateConstants.QUERY_PARAM_SINCE);
-        } else {
-            long since = -1;
-            try {
-                since = Long.parseLong(str);
-            } catch (NumberFormatException e) { }
-            if (since < 0L) {
-                response = _syncHandler.invalidArgument(response, ClusterMateConstants.QUERY_PARAM_SINCE, str);
+        try {
+            if (str == null) {
+                response = _syncHandler.missingArgument(response, ClusterMateConstants.QUERY_PARAM_SINCE);
             } else {
+                long since = -1;
                 try {
-                    response = _syncHandler.listEntries(request, response, since, stats);
-                } catch (IllegalStateException e) {
-                    // Swallow during shutdown
-                    if (!_terminated.get()) {
-                        LOG.error("Failed syncHandler.listEntries(): "+e.getMessage(), e);
+                    since = Long.parseLong(str);
+                } catch (NumberFormatException e) { }
+                if (since < 0L) {
+                    response = _syncHandler.invalidArgument(response, ClusterMateConstants.QUERY_PARAM_SINCE, str);
+                } else {
+                    try {
+                        response = _syncHandler.listEntries(request, response, since, stats);
+                    } catch (IllegalStateException e) {
+                        // Swallow during shutdown
+                        if (!_terminated.get()) {
+                            LOG.error("Failed syncHandler.listEntries(): "+e.getMessage(), e);
+                        }
+                        response.internalError("Failed syncHandler.listEntries(): "+e.getMessage());
+                    } catch (InterruptedException e) {
+                        // Swallow during shutdown (mostly during tests)
+                        if (!_terminated.get()) {
+                            throw new IOException(e);
+                        }
+                        LOG.info("SyncListServlet interupted due to termination, ignoring");
+                        return;
                     }
-                    response.internalError("Failed syncHandler.listEntries(): "+e.getMessage());
-                } catch (InterruptedException e) {
-                    // Swallow during shutdown (mostly during tests)
-                    if (!_terminated.get()) {
-                        throw new IOException(e);
-                    }
-                    LOG.info("SyncListServlet interupted due to termination, ignoring");
-                    return;
+                    _addStdHeaders(response);
                 }
-                _addStdHeaders(response);
             }
+            response.writeOut(_jsonWriter);
+        } finally {
+            if (metrics != null) {
+                metrics.finish(timer, stats);
+           }
         }
-        response.writeOut(_jsonWriter);
     }
 }

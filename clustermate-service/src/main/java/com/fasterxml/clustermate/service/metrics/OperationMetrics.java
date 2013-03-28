@@ -41,8 +41,8 @@ public class OperationMetrics
     /* Life-cycle
     /**********************************************************************
      */
-    
-    public OperationMetrics(ServiceConfig serviceConfig, String operationName,
+
+    private OperationMetrics(ServiceConfig serviceConfig, String operationName,
             boolean includeSizes, boolean includeEntryCounts)
     {
         _serviceConfig = serviceConfig;
@@ -65,6 +65,21 @@ public class OperationMetrics
                 : null;
     }
 
+    public static OperationMetrics forEntityOperation(ServiceConfig serviceConfig, String operationName)
+    {
+        return new OperationMetrics(serviceConfig, operationName, true, false);
+    }
+
+    public static OperationMetrics forListingOperation(ServiceConfig serviceConfig, String operationName)
+    {
+        return new OperationMetrics(serviceConfig, operationName, false, true);
+    }
+
+    public static OperationMetrics forNonPayloadOperation(ServiceConfig serviceConfig, String operationName)
+    {
+        return new OperationMetrics(serviceConfig, operationName, false, false);
+    }
+    
     public TimerContext start()
     {
         if (!_serviceConfig.metricsEnabled) {

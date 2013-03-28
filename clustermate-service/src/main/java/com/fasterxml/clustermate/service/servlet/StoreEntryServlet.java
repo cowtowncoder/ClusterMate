@@ -76,9 +76,9 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         _keyConverter = stuff.getKeyConverter();
         ServiceConfig serviceConfig = stuff.getServiceConfig();
         if (serviceConfig.metricsEnabled) {
-            _getMetrics = new OperationMetrics(serviceConfig, "entryGet", true, false);
-            _putMetrics = new OperationMetrics(serviceConfig, "entryPut", true, false);
-            _deleteMetrics = new OperationMetrics(serviceConfig, "entryDelete", false, false);
+            _getMetrics = OperationMetrics.forEntityOperation(serviceConfig, "entryGet");
+            _putMetrics = OperationMetrics.forEntityOperation(serviceConfig, "entryPut");
+            _deleteMetrics = OperationMetrics.forNonPayloadOperation(serviceConfig, "entryDelete");
         } else {
             _getMetrics = null;
             _putMetrics = null;
