@@ -92,8 +92,10 @@ public class OperationMetrics
 
     public void finish(TimerContext timer, OperationDiagnostics opStats)
     {
-        timer.stop();
         _metricInFlight.dec();
+        if (timer != null) {
+            timer.stop();
+        }
         if (opStats != null) {
             if (_metricSizes != null) {
                 Storable entity = opStats.getEntry();
@@ -104,9 +106,6 @@ public class OperationMetrics
             if (_metricEntryCounts != null) {
                 _metricEntryCounts.update(opStats.getItemCount());
             }
-        }
-        if (timer != null) {
-            timer.stop();
         }
     }
 
