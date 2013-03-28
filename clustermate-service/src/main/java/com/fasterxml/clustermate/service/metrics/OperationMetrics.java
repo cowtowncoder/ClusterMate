@@ -95,9 +95,14 @@ public class OperationMetrics
         timer.stop();
         _metricInFlight.dec();
         if (opStats != null) {
-            Storable entity = opStats.getEntry();
-            if (entity != null) {
-                _metricSizes.update(entity.getActualUncompressedLength());
+            if (_metricSizes != null) {
+                Storable entity = opStats.getEntry();
+                if (entity != null) {
+                    _metricSizes.update(entity.getActualUncompressedLength());
+                }
+            }
+            if (_metricEntryCounts != null) {
+                _metricEntryCounts.update(opStats.getItemCount());
             }
         }
         if (timer != null) {
