@@ -61,7 +61,7 @@ public class OperationMetrics
                 Metrics.newHistogram(new MetricName(metricGroup, operationName, "sizes"), true)
                 : null;
         _metricEntryCounts = includeEntryCounts ?
-                Metrics.newHistogram(new MetricName(metricGroup, operationName, "entryCount"), true)
+                Metrics.newHistogram(new MetricName(metricGroup, operationName, "counts"), true)
                 : null;
     }
 
