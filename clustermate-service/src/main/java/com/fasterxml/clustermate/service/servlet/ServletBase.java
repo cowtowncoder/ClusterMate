@@ -143,7 +143,10 @@ public class ServletBase extends HttpServlet
      * statistics.
      */
     protected OperationDiagnostics constructMetadata() {
-        return null;
+        /* 28-Mar-2013, tsaloranta: Let's construct this by default, since
+         *   it will be needed to collect metrics.
+         */
+        return new OperationDiagnostics();
     }
     
     protected ServletServiceResponse constructResponse(HttpServletResponse orig) {
