@@ -1,5 +1,10 @@
 Project: ClusterMate
 
+0.9.4 (xx-Apr-2013)
+
+- Add more stuff in OperationDiagnostics, for DB read/write, last-access update
+  breakdowns
+
 0.9.3 (28-Mar-2013)
 
 #18: Add basic endpoint statistics using Yammer metrics package

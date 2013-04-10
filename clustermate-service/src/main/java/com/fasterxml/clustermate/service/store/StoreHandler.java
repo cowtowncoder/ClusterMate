@@ -157,16 +157,18 @@ public abstract class StoreHandler<
             return invalidRange(response, key, rangeStr, e.getMessage());
         }
         String acceptableEnc = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
-        Storable rawEntry;
+        Storable rawEntry = null;
 
+        long nanoStart = System.nanoTime();
         try {
             rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
         } catch (StoreException e) {
             return _storeError(response, key, e);
-        } 
-        
-        if (metadata != null) {
-            metadata.setEntry(rawEntry);
+        } finally {
+            if (metadata != null) {
+                metadata.addDbRead(System.nanoTime() - nanoStart);
+                metadata.setEntry(rawEntry);
+            }
         }
         if (rawEntry == null) {
             return handleGetForMissing(request, response, key);
@@ -186,7 +188,11 @@ public abstract class StoreHandler<
         final long accessTime = _timeMaster.currentTimeMillis();
         final E entry = _entryConverter.entryFromStorable(rawEntry);
 
+        nanoStart = System.nanoTime();
         updateLastAccessedForGet(request, response, entry, accessTime);
+        if (metadata != null) {
+            metadata.addLastAccessRead(System.nanoTime() - nanoStart);
+        }
         
         Compression comp = entry.getCompression();
         boolean skipCompression;
@@ -290,12 +296,14 @@ public abstract class StoreHandler<
         // Do we need special handling for Range requests? (GET only?)
     	// Should this update last-accessed as well? (for now, won't)
         Storable rawEntry;
+        long nanoStart = System.nanoTime();
         try {
             rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
         } catch (StoreException e) {
             return _storeError(response, key, e);
         } 
         if (metadata != null) {
+            metadata.addDbRead(System.nanoTime() - nanoStart);
             metadata.setEntry(rawEntry);
         }
         if (rawEntry == null) {
@@ -308,6 +316,7 @@ public abstract class StoreHandler<
 
         final long accessTime = _timeMaster.currentTimeMillis();
         final E entry = _entryConverter.entryFromStorable(rawEntry);
+        // should this be recorded in OpStats?
         updateLastAccessedForHead(request, response, entry, accessTime);
         
         // Other than this: let's only check out length of data there would be...
@@ -347,8 +356,6 @@ public abstract class StoreHandler<
         return putEntry(request, response, key, checksum, dataIn,
                 minTTL, maxTTL, metadata);
     }
-
-    
     
     // Public due to unit tests
     public ServiceResponse putEntry(ServiceRequest request, ServiceResponse response,
@@ -383,6 +390,7 @@ public abstract class StoreHandler<
                 ((lastAcc == null) ? 0 : lastAcc.asByte()),
                 minTTLSecs, maxTTLSecs);
         StorableCreationResult result;
+        long nanoStart = System.nanoTime();
         try {
             /* This gets quite convoluted but that's how it goes: if undelete is
              * allowed, we must use different method:
@@ -412,7 +420,12 @@ public abstract class StoreHandler<
         } catch (IOException e) {
             return internalPutError(response, key,
             		e, "Failed to PUT an entry: "+e.getMessage());
+        } finally {
+            if (stats != null) {
+                stats.addDbWrite(System.nanoTime() - nanoStart);
+            }
         }
+
         // And then check whether it was a dup put; and if so, that checksums match
         Storable prev = result.getPreviousEntry();
         if (prev != null) {
@@ -472,17 +485,22 @@ public abstract class StoreHandler<
     {
         return removeEntry(request, response, key, null);
     }
-    
+
     public ServiceResponse removeEntry(ServiceRequest request, ServiceResponse response, K key,
             OperationDiagnostics metadata)
         throws IOException, StoreException
     {
         StorableDeletionResult result;
+        long nanoStart = System.nanoTime();
         try {
             result = _stores.getEntryStore().softDelete(key.asStorableKey(), true, true);
         } catch (StoreException e) {
             return _storeError(response, key, e);
-        } 
+        } finally {
+            if (metadata != null) {
+                metadata.addDbWrite(System.nanoTime() - nanoStart);
+            }
+        }
             
         /* Even without match, we can claim it is ok... should we?
          * From idempotency perspective, result is that there is no such
@@ -574,6 +592,7 @@ public abstract class StoreHandler<
         // !!! TODO: allow listing of tombstones?
         
         ListResponse<?> listResponse = null;
+        long nanoStart = System.nanoTime();
         
         switch (listType) {
         case ids:
@@ -609,8 +628,9 @@ public abstract class StoreHandler<
         default:
             throw new IllegalStateException();
         }
-        
+
         if (metadata != null) {
+            metadata.addDbRead(System.nanoTime() - nanoStart);
             metadata.setItemCount(listResponse.size());
         }
         
