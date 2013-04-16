@@ -3,7 +3,7 @@
   <parent>
     <groupId>com.fasterxml.clustermate</groupId>
     <artifactId>clustermate-parent</artifactId>
-    <version>0.9.4</version>
+    <version>0.9.5-SNAPSHOT</version>
   </parent>
   <artifactId>clustermate-client-ahc</artifactId>
   <name>ClusterMate-client-AHC</name>
