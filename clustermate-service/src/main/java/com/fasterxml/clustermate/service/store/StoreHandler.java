@@ -191,7 +191,9 @@ public abstract class StoreHandler<
         nanoStart = System.nanoTime();
         updateLastAccessedForGet(request, response, entry, accessTime);
         if (metadata != null) {
-            metadata.addLastAccessRead(System.nanoTime() - nanoStart);
+            final long contentStart = System.nanoTime();
+            metadata.addLastAccessRead(contentStart - nanoStart);
+            metadata.startContentCopy(contentStart);
         }
         
         Compression comp = entry.getCompression();

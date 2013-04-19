@@ -9,7 +9,20 @@ import com.fasterxml.storemate.store.Storable;
  */
 public class OperationDiagnostics
 {
+    /**
+     * Timestamp when diagnostics entry was created
+     */
     protected final long _nanoStart;
+
+    /**
+     * Timestamp when content copy operation started (if any)
+     */
+    protected long _contentCopyStart;
+
+    /**
+     * Timestamp when content copy operation ended (if it did)
+     */
+    protected long _contentCopyEnd;
     
     protected Storable _entry;
 
@@ -72,6 +85,26 @@ public class OperationDiagnostics
     public void addLastAccessWrite(long nanos) {
         _lastAccessWrites = TotalTime.createOrAdd(_lastAccessWrites, nanos);
     }
+
+    /**
+     * Method called when content copy (between request and storage, or
+     * storage and response) is being started.
+     */
+    public void startContentCopy(long startNanos) {
+        _contentCopyStart = startNanos;
+    }
+
+    /**
+     * Method called when content copy (between request and storage, or
+     * storage and response) is being started.
+     */
+    public void startContentCopy() {
+        startContentCopy(System.nanoTime());
+    }
+    
+    public void finishContentCopy() {
+        _contentCopyEnd = System.nanoTime();
+    }
     
     /*
     /**********************************************************************
@@ -90,10 +123,26 @@ public class OperationDiagnostics
         return System.nanoTime() - _nanoStart;
     }
 
+    public long getContentCopyNanos()
+    {
+        final long start = _contentCopyStart;
+        if (start == 0L) {
+            return 0L;
+        }
+        long end = _contentCopyEnd;
+        if (end == 0L) {
+            end = System.nanoTime();
+        }
+        return (end - start);
+    }
+    
     public boolean hasDbReads() { return _dbReads != null; }
     public boolean hasDbWrites() { return _dbWrites != null; }
     public boolean hasLastAccessReads() { return _lastAccessReads != null; }
     public boolean hasLastAccessWrites() { return _lastAccessWrites != null; }
+    public boolean hasContentCopyNanos() {
+        return (_contentCopyStart != 0L);
+    }
 
     public TotalTime getDbReads() { return _dbReads; }
     public TotalTime getDbWrites() { return _dbReads; }
