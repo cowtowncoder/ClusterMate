@@ -22,11 +22,12 @@ public class StreamingResponseContentImpl
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
+    // NOTE: changed from 8k to 16k in 
     /**
      * We can reuse read buffers as they are somewhat costly to
      * allocate, reallocate all the time.
      */
-    final protected static BufferRecycler _bufferRecycler = new BufferRecycler(8000);
+    final protected static BufferRecycler _bufferRecycler = new BufferRecycler(16000);
 
     private final File _file;
 
@@ -105,9 +106,7 @@ public class StreamingResponseContentImpl
     	        try {
     	            lzfIn.readAndWrite(out);
     	        } finally {
-    	            try {
-    	                lzfIn.close();
-    	            } catch (IOException e) { }
+    	            _close(lzfIn);
     	        }
     	        return;
         }
@@ -124,13 +123,13 @@ public class StreamingResponseContentImpl
             long toSkip = _dataOffset;
 
             while (toSkip > 0) {
-    	        long count = in.skip(toSkip);
-    	        if (count <= 0L) { // should not occur really...
-    	            throw new IOException("Failed to skip more than "+skipped+" bytes (needed to skip "+_dataOffset+")");
-    	        }
-    	        skipped += count;
+                long count = in.skip(toSkip);
+                if (count <= 0L) { // should not occur really...
+                    throw new IOException("Failed to skip more than "+skipped+" bytes (needed to skip "+_dataOffset+")");
+                }
+                skipped += count;
                 toSkip -= count;
-    	    }
+            }
         }
         // Second: output the whole thing, or just subset?
         try {
@@ -160,12 +159,19 @@ public class StreamingResponseContentImpl
             }
         } finally {
             bufferHolder.returnBuffer(copyBuffer);
-            try {
-                in.close();
-            } catch (IOException e) { }
+            _close(in);
         }
     }
 
+    private final void _close(InputStream in)
+    {
+        try {
+            in.close();
+        } catch (IOException e) {
+            LOG.warn("Failed to close file '{}': {}", _file, e.getMessage());
+        }
+    }
+    
     /*
     /**********************************************************************
     /* Methods for helping testing

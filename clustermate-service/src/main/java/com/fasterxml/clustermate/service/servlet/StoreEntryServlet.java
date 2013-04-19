@@ -203,7 +203,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             response.writeOut(_jsonWriter);
         } finally {
             if (metrics != null) {
-                 metrics.finish(timer, stats);
+                metrics.finish(timer, stats);
             }
         }
     }
