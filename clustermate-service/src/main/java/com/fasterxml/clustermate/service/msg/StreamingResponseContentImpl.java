@@ -29,44 +29,73 @@ public class StreamingResponseContentImpl
      */
     final protected static BufferRecycler _bufferRecycler = new BufferRecycler(16000);
 
+    /*
+    /**********************************************************************
+    /* Data to stream out
+    /**********************************************************************
+     */
+    
     private final File _file;
 
-    private final Compression _compression;
-	
     private final ByteContainer _data;
 	
     private final long _dataOffset;
 	
     private final long _dataLength;
+
+    /*
+    /**********************************************************************
+    /* Metadata...
+    /**********************************************************************
+     */
+
+    private final Compression _compression;
+
+    /**
+     * Content length as reported when caller asks for it; -1 if not known.
+     */
+    private final long _contentLength;
     
-    public StreamingResponseContentImpl(ByteContainer data, ByteRange range)
+    /*
+    /**********************************************************************
+    /* Construction
+    /**********************************************************************
+     */
+    
+    public StreamingResponseContentImpl(ByteContainer data, ByteRange range,
+            long contentLength)
     {
         if (data == null) {
             throw new IllegalArgumentException();
         }
         _data = data;
         // Range request? let's tweak offsets if so...
-        if (range != null) {
+        if (range == null) {
+            _dataOffset = -1L;
+            _dataLength = -1L;
+            _contentLength = contentLength;
+        } else {
             _dataOffset = range.getStart();
             _dataLength = range.calculateLength();
-        } else {
-        	_dataOffset = -1L;
-        	_dataLength = -1L;
+            _contentLength = _dataLength;
         }
         _file = null;
         _compression = null;
     }
 
-    public StreamingResponseContentImpl(File f, Compression comp, ByteRange range)
+    public StreamingResponseContentImpl(File f, Compression comp, ByteRange range,
+            long contentLength)
     {
         _data = null;
         if (range == null) {
             _dataOffset = -1L;
             _dataLength = -1L;
+            _contentLength = contentLength;
         } else {
             // Range can be stored in offset..
             _dataOffset = range.getStart();
             _dataLength = range.calculateLength();
+            _contentLength = _dataLength;
         }
         _file = f;
         _compression = comp;
@@ -75,13 +104,7 @@ public class StreamingResponseContentImpl
     @Override
     public long getLength()
     {
-        // we may or may not know the length: for pre-loaded data we do know:
-        if (_data != null) {
-            return _dataLength;
-        }
-        // otherwise... ah, let's not worry about figuring it out, whatwith compression,
-        // Ranges and such complications:
-        return -1L;
+        return _contentLength;
     }
 
     @SuppressWarnings("resource")
