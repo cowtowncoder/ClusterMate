@@ -47,8 +47,8 @@
 
     <version.storemate>0.9.7</version.storemate>
 
-    <version.jackson.annotations>2.2.0-rc1</version.jackson.annotations>
-    <version.jackson.core>2.2.0-rc1</version.jackson.core>
+    <version.jackson.annotations>2.2.0</version.jackson.annotations>
+    <version.jackson.core>2.2.0</version.jackson.core>
     <version.jackson.smile>${version.jackson.core}</version.jackson.smile>
 
   </properties>
