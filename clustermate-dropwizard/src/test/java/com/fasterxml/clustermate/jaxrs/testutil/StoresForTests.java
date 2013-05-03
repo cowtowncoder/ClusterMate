@@ -10,6 +10,7 @@ import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
 
 import com.fasterxml.clustermate.service.bdb.LastAccessStore;
+import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
@@ -32,7 +33,8 @@ public class StoresForTests extends StoresImpl<TestKey, StoredEntry<TestKey>>
     }
 
     @Override
-    protected LastAccessStore<TestKey, StoredEntry<TestKey>> buildAccessStore(Environment env) {
-        return new LastAccessStoreForTests(env, _entryConverter);
+    protected LastAccessStore<TestKey, StoredEntry<TestKey>> buildAccessStore(Environment env,
+            LastAccessConfig config) {
+        return new LastAccessStoreForTests(env, _entryConverter, config);
     }
 }

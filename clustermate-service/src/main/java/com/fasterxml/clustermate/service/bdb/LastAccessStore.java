@@ -5,6 +5,7 @@ import com.sleepycat.je.*;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.StartAndStoppable;
+import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
@@ -42,21 +43,24 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
     /**********************************************************************
      */
 
-    public LastAccessStore(Environment env, StoredEntryConverter<K,E,?> conv)
+    public LastAccessStore(Environment env, StoredEntryConverter<K,E,?> conv,
+            LastAccessConfig config)
         throws DatabaseException
     {
         _store = env.openDatabase(null, // no TX
-                "LastAccessed", dbConfig(env));
+                "LastAccessed", dbConfig(env, config));
         _entryConverter = conv;
     }
 
     public void start() { }
-    
-    public void prepareForStop() {
-        /* 27-Mar-2013, tatu: Unless we use deferred writes, we can't sync.
-         *    So, need to make conditional if deferred writes are ok.
-         */
-//        _store.sync();
+
+    public void prepareForStop()
+    {
+        // 02-May-2013, tsaloranta: Better sync() if we use deferred writes
+        //   (otherwise not allowed to)
+        if (_store.getConfig().getDeferredWrite()) {
+            _store.sync();
+        }
     }
     
     public void stop() {
@@ -143,13 +147,14 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
     /**********************************************************************
      */
 
-    protected DatabaseConfig dbConfig(Environment env)
+    protected DatabaseConfig dbConfig(Environment env, LastAccessConfig config)
     {
         DatabaseConfig dbConfig = new DatabaseConfig();
         EnvironmentConfig econfig = env.getConfig();
         dbConfig.setReadOnly(econfig.getReadOnly());
         dbConfig.setAllowCreate(econfig.getAllowCreate());
         dbConfig.setSortedDuplicates(false);
+        dbConfig.setDeferredWrite(config.useDeferredWrites());
         return dbConfig;
     }
 

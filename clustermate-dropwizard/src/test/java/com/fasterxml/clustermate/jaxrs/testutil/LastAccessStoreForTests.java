@@ -6,14 +6,17 @@ import com.sleepycat.je.Environment;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.bdb.BDBConverters;
 import com.fasterxml.clustermate.service.bdb.LastAccessStore;
+import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 
 public class LastAccessStoreForTests
     extends LastAccessStore<TestKey, StoredEntry<TestKey>>
 {
-    public LastAccessStoreForTests(Environment env, StoredEntryConverter<TestKey,StoredEntry<TestKey>,?> conv) {
-        super(env, conv);
+    public LastAccessStoreForTests(Environment env,
+            StoredEntryConverter<TestKey,StoredEntry<TestKey>,?> conv, LastAccessConfig config)
+    {
+        super(env, conv, config);
     }
 
     @Override

@@ -23,6 +23,7 @@ import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.bdb.LastAccessStore;
 import com.fasterxml.clustermate.service.bdb.NodeStateStore;
+import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 
 public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
@@ -36,11 +37,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      * give half a meg just to keep branch nodes in memory.
      */
     private final static long NODE_BDB_CACHE_SIZE = 512L * 1024L;
-
-    /**
-     * Last-accessed can benefit more from cache, give it 20 megs for now
-     */
-    private final static long LAST_ACCESS_BDB_CACHE_SIZE = 20L * 1024L * 1024L;
 
     /**
      * Last-access table may get rather high concurrency as it may be
@@ -58,6 +54,8 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     protected final TimeMaster _timeMaster;
 
     protected final ObjectMapper _jsonMapper;
+
+    protected final LastAccessConfig _lastAccessConfig;
     
     /**
      * Directory that contains environment used for storing state
@@ -136,6 +134,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (bdbEnvRoot == null) {
             bdbEnvRoot = config.metadataDirectory;
         }
+        _lastAccessConfig = config.lastAccess;
         _bdbRootForNodes = new File(bdbEnvRoot, "nodes");
         _bdbRootForLastAccess = new File(bdbEnvRoot, "lastAccess");        
     }
@@ -295,9 +294,10 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (log) {
             LOG.info(logPrefix+" Last-access store...");
         }
-        _lastAccessEnv = new Environment(_bdbRootForLastAccess, lastAccessEnvConfig(allowCreate, writeAccess));
+        _lastAccessEnv = new Environment(_bdbRootForLastAccess,
+                lastAccessEnvConfig(allowCreate, writeAccess));
         try {
-            _lastAccessStore = buildAccessStore(_lastAccessEnv);
+            _lastAccessStore = buildAccessStore(_lastAccessEnv, _lastAccessConfig);
         } catch (DatabaseException e) {
             _initProblem = "Failed to open Last-access store: "+e.getMessage();
             throw new IllegalStateException(_initProblem, e);
@@ -307,7 +307,8 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         }
     }
 
-    protected abstract LastAccessStore<K,E> buildAccessStore(Environment env);
+    protected abstract LastAccessStore<K,E> buildAccessStore(Environment env,
+            LastAccessConfig config);
     
     /*
     /**********************************************************************
@@ -391,7 +392,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         config.setAllowCreate(allowCreate);
         config.setReadOnly(!writeAccess);
         config.setSharedCache(false);
-        config.setCacheSize(LAST_ACCESS_BDB_CACHE_SIZE);
+        config.setCacheSize(_lastAccessConfig.cacheSize.getNumberOfBytes());
         // default of 500 msec too low:
         config.setLockTimeout(5000L, TimeUnit.MILLISECONDS);
         // and to get decent concurrency, default of 1 won't do:

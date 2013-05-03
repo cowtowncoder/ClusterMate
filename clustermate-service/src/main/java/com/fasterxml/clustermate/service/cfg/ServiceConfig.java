@@ -39,25 +39,6 @@ public abstract class ServiceConfig
      * request paths to resources.
      */
     public abstract RequestPathStrategy getServicePathStrategy();
-
-    /*
-    /**********************************************************************
-    /* Metrics settings
-    /**********************************************************************
-     */
-
-    /**
-     * Setting that determines whether Yammer metrics information will be
-     * updated or not.
-     * 
-     * @since 0.9.3
-     */
-    public boolean metricsEnabled = true;
-
-    /**
-     * Root name for metrics properties when reported via JMX.
-     */
-    public String metricsJmxRoot = "com.fasterxml.clustermate.metrics";
     
     /*
     /**********************************************************************
@@ -68,30 +49,6 @@ public abstract class ServiceConfig
     @NotNull
     @Valid
     public ClusterConfig cluster = new ClusterConfig();
-
-    /*
-    /**********************************************************************
-    /* Store behavior
-    /**********************************************************************
-     */
-    
-    /**
-     * Configuration setting that determines whether it is legal to
-     * re-create a formerly deleted entry that still has a tombstone.
-     * If allowed (true), entries can be recreated if (and only if)
-     * content hashes match; if not allowed (false), 410 Gone
-     * response will be returned if PUT is attempted on tombstone
-     * entry (something DELETEd recently, not yet cleaned up).
-     */
-    public boolean cfgAllowUndelete = false;
-
-    /**
-     * Configuration setting that determines whether deleted entries
-     * with tombstone are reported as empty entries (204, No Content)
-     * or as missing (404, Not Found): if false, 404 returned,
-     * if true, 204.
-     */
-    public boolean cfgReportDeletedAsEmpty = true;
 
     /*
     /**********************************************************************
@@ -135,6 +92,42 @@ public abstract class ServiceConfig
     @NotNull
     public File metadataDirectory;
 
+    /*
+    /**********************************************************************
+    /* Storage config: last-access store
+    /**********************************************************************
+     */
+
+    /**
+     * Configuration of the last-accessed store, where optional
+     * last-accessed information is stored (if used).
+     */
+    public LastAccessConfig lastAccess = new LastAccessConfig();
+
+    /*
+    /**********************************************************************
+    /* Store behavior
+    /**********************************************************************
+     */
+    
+    /**
+     * Configuration setting that determines whether it is legal to
+     * re-create a formerly deleted entry that still has a tombstone.
+     * If allowed (true), entries can be recreated if (and only if)
+     * content hashes match; if not allowed (false), 410 Gone
+     * response will be returned if PUT is attempted on tombstone
+     * entry (something DELETEd recently, not yet cleaned up).
+     */
+    public boolean cfgAllowUndelete = false;
+
+    /**
+     * Configuration setting that determines whether deleted entries
+     * with tombstone are reported as empty entries (204, No Content)
+     * or as missing (404, Not Found): if false, 404 returned,
+     * if true, 204.
+     */
+    public boolean cfgReportDeletedAsEmpty = true;
+    
     /*
     /**********************************************************************
     /* Storage config: data expiration, deletion, cleanup
@@ -233,6 +226,23 @@ public abstract class ServiceConfig
      */
     public TimeSpan cfgSyncMaxLongPollTime = new TimeSpan("3s");
 
+    /*
+    /**********************************************************************
+    /* Metrics settings
+    /**********************************************************************
+     */
+
+    /**
+     * Setting that determines whether Yammer metrics information will be
+     * updated or not.
+     */
+    public boolean metricsEnabled = true;
+
+    /**
+     * Root name for metrics properties when reported via JMX.
+     */
+    public String metricsJmxRoot = "com.fasterxml.clustermate.metrics";
+    
     /*
     /**********************************************************************
     /* Construction
