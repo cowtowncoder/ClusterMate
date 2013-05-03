@@ -381,7 +381,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         config.setSharedCache(false);
         config.setCacheSize(NODE_BDB_CACHE_SIZE);
         config.setDurability(Durability.COMMIT_SYNC);
-        // default of 500 msec too low:
+        // default of 500 msec too low; although for node settings should not really matter:
         config.setLockTimeout(5000L, TimeUnit.MILLISECONDS);
         return config;
     }
@@ -394,7 +394,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         config.setSharedCache(false);
         config.setCacheSize(_lastAccessConfig.cacheSize.getNumberOfBytes());
         // default of 500 msec too low:
-        config.setLockTimeout(5000L, TimeUnit.MILLISECONDS);
+        config.setLockTimeout(_lastAccessConfig.lockTimeoutMsecs, TimeUnit.MILLISECONDS);
         // and to get decent concurrency, default of 1 won't do:
         config.setConfigParam(EnvironmentConfig.LOCK_N_LOCK_TABLES, String.valueOf(DEFAULT_LAST_ACCESS_LOCK_TABLES));
         return config;
