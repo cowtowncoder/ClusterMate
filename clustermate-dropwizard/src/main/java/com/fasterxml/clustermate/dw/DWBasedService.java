@@ -243,9 +243,10 @@ public abstract class DWBasedService<
         addHealthChecks(_serviceStuff, environment);
 
         LOG.info("Initializing background cleaner tasks");
-        _cleanerUpper = new CleanerUpper<K,E>(_serviceStuff, _stores, _cluster);
-        _managed.add(_cleanerUpper);
-        
+        _cleanerUpper = constructCleanerUpper(_serviceStuff, _stores, _cluster);
+        if (_cleanerUpper != null) {
+            _managed.add(_cleanerUpper);
+        }
         LOG.info("Initialization complete: HTTP service now running on port {}",
                 dwConfig.getHttpConfiguration().getPort());
     }
@@ -294,6 +295,13 @@ public abstract class DWBasedService<
         return new ClusterInfoHandler(stuff, cluster);
     }
 
+    // since 0.9.6
+    protected CleanerUpper<K,E> constructCleanerUpper(SharedServiceStuff stuff,
+            Stores<K,E> stores, ClusterViewByServer cluster)
+    {
+        return new CleanerUpper<K,E>(_serviceStuff, _stores, _cluster);
+    }
+    
     /*
     /**********************************************************************
     /* Factory methods: servlets

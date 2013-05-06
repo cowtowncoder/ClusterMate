@@ -3,6 +3,7 @@ Project: ClusterMate
 0.9.6 (xx-May-2013)
 - Add configuration for last-accessed store, to allow use of deferred writes and
   overriding default settings like cache size.
+- Allow customization of `CleanerUpper` (via DWBasedService)
 
 0.9.5 (30-Apr-2013)
 
