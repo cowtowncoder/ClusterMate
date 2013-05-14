@@ -127,6 +127,16 @@ public abstract class ServiceConfig
      * if true, 204.
      */
     public boolean cfgReportDeletedAsEmpty = true;
+
+    /**
+     * DELETE operations may be deferred, and are by default.
+     */
+    public DeferredOperationConfig deletes = new DeferredOperationConfig();
+
+    /**
+     * Updates of last-accessed information may be deferred (and are by default)
+     */
+    public DeferredOperationConfig lastAccessUpdates = new DeferredOperationConfig();
     
     /*
     /**********************************************************************
