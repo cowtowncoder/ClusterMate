@@ -3,6 +3,7 @@ package com.fasterxml.clustermate.service.bdb;
 import com.sleepycat.je.*;
 
 import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.service.LastAccessStore;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;

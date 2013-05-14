@@ -4,6 +4,7 @@ Project: ClusterMate
 - Add configuration for last-accessed store, to allow use of deferred writes and
   overriding default settings like cache size.
 - Allow customization of `CleanerUpper` (via DWBasedService)
+- Relocate and refactor `LastAccessStore`, `NodeStateStore`, to allow for non-BDB-JE impls
 
 0.9.5 (30-Apr-2013)
 

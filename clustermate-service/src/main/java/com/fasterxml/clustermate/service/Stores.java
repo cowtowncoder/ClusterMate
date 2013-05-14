@@ -5,8 +5,6 @@ import java.io.File;
 import com.fasterxml.storemate.store.StorableStore;
 
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.service.bdb.LastAccessStore;
-import com.fasterxml.clustermate.service.bdb.NodeStateStore;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 

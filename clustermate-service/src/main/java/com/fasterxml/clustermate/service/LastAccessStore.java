@@ -1,23 +1,19 @@
-package com.fasterxml.clustermate.service.bdb;
+package com.fasterxml.clustermate.service;
 
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
-import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 
 /**
- * Class that encapsulates BDB-JE backed storage of last-accessed
- * information.
+ * Class that encapsulates optional storage of last-accessed
+ * information, which implementations may choose to use for
+ * things like dynamic expiration of not-recently-accessed entries.
  *<p>
  * Keys are derived from entry keys, so that grouped entries typically
  * map to a single entry, whereas individual entries just use
  * key as is or do not use last-accessed information at all.
- *<p>
- * Note that a concrete implementation is required due to details
- * of actual key being used.
  */
 public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<K>>
     implements StartAndStoppable
@@ -36,9 +32,19 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
         _entryConverter = conv;
     }
 
+    /*
+    /**********************************************************************
+    /* StartAndStoppable dummy implementation
+    /**********************************************************************
+     */
+
+    @Override
     public void start() { }
 
+    @Override
     public abstract void prepareForStop();
+
+    @Override
     public abstract void stop();
 
     /*

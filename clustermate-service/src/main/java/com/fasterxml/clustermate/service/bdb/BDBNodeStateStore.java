@@ -1,7 +1,8 @@
 package com.fasterxml.clustermate.service.bdb;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,22 +12,18 @@ import com.sleepycat.je.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
-
-import com.fasterxml.clustermate.api.KeySpace;
-import com.fasterxml.clustermate.service.StartAndStoppable;
-import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
-
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.UTF8Encoder;
 
+import com.fasterxml.clustermate.api.KeySpace;
+import com.fasterxml.clustermate.service.NodeStateStore;
+import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
+
 /**
- * Class that handles operations on the BDB-backed Node state
- * table (BDB database) and related indexes.
- * This store is used for persisting enough state regarding
- * peer-to-peer operations to reduce amount of re-synchronization
- * needed when node instances are restarted.
+ * Concrete {@link NodeStateStore} implementation that uses BDB-JE
+ * as the backing storage.
  */
-public class NodeStateStore implements StartAndStoppable
+public class BDBNodeStateStore extends NodeStateStore
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     
@@ -45,7 +42,7 @@ public class NodeStateStore implements StartAndStoppable
     /**********************************************************************
      */
         
-    public NodeStateStore(Environment env, ObjectMapper jsonMapper) throws DatabaseException
+    public BDBNodeStateStore(Environment env, ObjectMapper jsonMapper) throws DatabaseException
     {
         _jsonReader = jsonMapper.reader(ActiveNodeState.class);
         _jsonWriter = jsonMapper.writerWithType(ActiveNodeState.class);
@@ -53,8 +50,15 @@ public class NodeStateStore implements StartAndStoppable
                 "Nodes", dbConfig(env));
     }
 
+    /*
+    /**********************************************************************
+    /* StartAndStoppable dummy implementation
+    /**********************************************************************
+     */
+
+    @Override
     public void start() { }
-    
+    @Override
     public void prepareForStop() {
         /* 27-Mar-2013, tatu: Not much we can do; sync() only needed when
          *   using deferred writes.
@@ -62,20 +66,18 @@ public class NodeStateStore implements StartAndStoppable
 //        _store.sync();
     }
     
+    @Override
     public void stop() {
         _store.close();
     }
 
     /*
     /**********************************************************************
-    /* Content lookups
+    /* Public API: Content lookups
     /**********************************************************************
      */
 
-    /**
-     * Method that can be used to find specified entry, without updating
-     * its last-accessed timestamp.
-     */
+    @Override
     public ActiveNodeState findEntry(IpAndPort key) throws IOException
     {
         DatabaseEntry dbKey = _key(key);
@@ -95,10 +97,7 @@ public class NodeStateStore implements StartAndStoppable
         return null;
     }
 
-    /**
-     * Method for simply reading all node entries store has; called usually
-     * only during bootstrapping.
-     */
+    @Override
     public List<ActiveNodeState> readAll(KeySpace keyspace)
     {
         List<ActiveNodeState> all = new ArrayList<ActiveNodeState>(30);
@@ -136,20 +135,19 @@ public class NodeStateStore implements StartAndStoppable
     
     /*
     /**********************************************************************
-    /* Content modification
+    /* Public API: Content modification
     /**********************************************************************
      */
-    
+
+    @Override
     public void upsertEntry(ActiveNodeState entry) throws IOException
     {
         _store.put(null, _key(entry.getAddress()), _toDB(entry));
     }
 
-    public boolean deleteEntry(IpAndPort key) {
-        return deleteEntry(key.toString());
-    }
-
-    public boolean deleteEntry(String keyStr) {
+    @Override
+    public boolean deleteEntry(String keyStr)
+    {
         DatabaseEntry lastAccessKey = _key(keyStr);
         if (lastAccessKey != null) {
             OperationStatus status = _store.delete(null, lastAccessKey);
