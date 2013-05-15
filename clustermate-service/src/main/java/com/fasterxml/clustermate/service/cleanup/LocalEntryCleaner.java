@@ -9,6 +9,7 @@ import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.LastAccessStore;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 import com.fasterxml.storemate.shared.StorableKey;
@@ -30,24 +31,30 @@ public class LocalEntryCleaner<K extends EntryKey, E extends StoredEntry<K>>
     /**
      * Time-to-live for tomb stones
      */
-    protected final long _tombstoneTTLMsecs;
+    protected long _tombstoneTTLMsecs;
 
-    protected final StorableStore _entryStore;
+    protected StorableStore _entryStore;
 
-    protected final LastAccessStore<K, E> _lastAccessStore;
+    protected LastAccessStore<K, E> _lastAccessStore;
 
-    protected final StoredEntryConverter<K,E,?> _entryFactory;
+    protected StoredEntryConverter<K,E,?> _entryFactory;
     
-    protected final boolean _isTesting;
+    protected boolean _isTesting;
     
-    public LocalEntryCleaner(SharedServiceStuff stuff, Stores<K, E> stores,
+    public LocalEntryCleaner() { }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    protected void init(SharedServiceStuff stuff,
+            Stores<?,?> stores,
+            ClusterViewByServer cluster,
             AtomicBoolean shutdown)
     {
-        super(stuff, shutdown);
+        super.init(stuff, stores, cluster, shutdown);
         _tombstoneTTLMsecs = stuff.getServiceConfig().cfgTombstoneTTL.getMillis();
         _entryFactory = stuff.getEntryConverter();
         _entryStore = stores.getEntryStore();
-        _lastAccessStore = stores.getLastAccessStore();
+        _lastAccessStore = (LastAccessStore<K, E>) stores.getLastAccessStore();
         _isTesting = stuff.isRunningTests();
     }
     

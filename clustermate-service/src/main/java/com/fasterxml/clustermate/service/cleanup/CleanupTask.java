@@ -3,17 +3,23 @@ package com.fasterxml.clustermate.service.cleanup;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.clustermate.service.SharedServiceStuff;
+import com.fasterxml.clustermate.service.Stores;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.storemate.shared.TimeMaster;
 
 public abstract class CleanupTask<T>
 {
-    protected final TimeMaster _timeMaster;
+    protected TimeMaster _timeMaster;
     
-    protected final AtomicBoolean _shutdown;
+    protected AtomicBoolean _shutdown;
 
     protected long _startupTime;
-    
-    protected CleanupTask(SharedServiceStuff stuff,
+
+    protected CleanupTask() { }
+
+    protected void init(SharedServiceStuff stuff,
+            Stores<?,?> stores,
+            ClusterViewByServer cluster,
             AtomicBoolean shutdown)
     {
         _timeMaster = stuff.getTimeMaster();

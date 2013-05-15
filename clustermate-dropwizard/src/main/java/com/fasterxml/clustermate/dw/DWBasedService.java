@@ -29,6 +29,9 @@ import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cleanup.CleanerUpper;
+import com.fasterxml.clustermate.service.cleanup.CleanupTask;
+import com.fasterxml.clustermate.service.cleanup.FileCleaner;
+import com.fasterxml.clustermate.service.cleanup.LocalEntryCleaner;
 import com.fasterxml.clustermate.service.cluster.*;
 import com.fasterxml.clustermate.service.servlet.*;
 import com.fasterxml.clustermate.service.store.*;
@@ -299,7 +302,17 @@ public abstract class DWBasedService<
     protected CleanerUpper<K,E> constructCleanerUpper(SharedServiceStuff stuff,
             Stores<K,E> stores, ClusterViewByServer cluster)
     {
-        return new CleanerUpper<K,E>(_serviceStuff, _stores, _cluster);
+        return new CleanerUpper<K,E>(_serviceStuff, _stores, _cluster,
+                constructCleanupTasks());
+    }
+
+    // since 0.9.6
+    protected List<CleanupTask<?>> constructCleanupTasks()
+    {
+        ArrayList<CleanupTask<?>> tasks = new ArrayList<CleanupTask<?>>();
+        tasks.add(new LocalEntryCleaner<K,E>());
+        tasks.add(new FileCleaner());
+        return tasks;
     }
     
     /*

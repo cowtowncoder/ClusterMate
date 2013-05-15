@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.service.cleanup;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,7 +31,8 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     /* Configuration
     /**********************************************************************
      */
-    
+
+    protected final SharedServiceStuff _stuff;
     protected final TimeSpan _delayBetweenCleanups;
     
     /*
@@ -40,6 +42,8 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
      */
 
     protected final TimeMaster _timeMaster;
+
+    protected final Stores<K,E> _stores;
     
     /**
      * Object that keeps track of observed cluster state.
@@ -80,21 +84,21 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     /* Life-cycle
     /**********************************************************************
      */
-    
+
     public CleanerUpper(SharedServiceStuff stuff, Stores<K,E> stores,
-            ClusterViewByServer cluster)
+            ClusterViewByServer cluster,
+            List<CleanupTask<?>> tasks)
     {
-        _cluster = cluster;
+        _stuff = stuff;
         _timeMaster = stuff.getTimeMaster();
+        _stores = stores;
+        _cluster = cluster;
         _delayBetweenCleanups = stuff.getServiceConfig().cfgDelayBetweenCleanup;
         // Important: start with LocalEntryCleaner (to try to avoid dangling files),
         // then do FileCleaner
-        _tasks = new CleanupTask[] {
-                new LocalEntryCleaner<K,E>(stuff, stores, _shutdown),
-                new FileCleaner(stuff, _shutdown)
-        };
+        _tasks = tasks.toArray(new CleanupTask[tasks.size()]);
     }
-
+    
     @Override
     public void start()
     {
@@ -150,6 +154,7 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
             for (CleanupTask<?> task : _tasks) {
                 _currentTask.set(task);
                 try {
+                    task.init(_stuff, _stores, _cluster, _shutdown);
                     Object result = task.cleanUp();
                     long took = _timeMaster.currentTimeMillis() - startTime;
                     LOG.info("Clean up task {} complete in {}, result: {}",

@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.clustermate.service.SharedServiceStuff;
+import com.fasterxml.clustermate.service.Stores;
+import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.file.*;
 
@@ -21,7 +23,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
 {
     private final static Logger LOG = LoggerFactory.getLogger(FileCleaner.class);
     
-    protected final FileManager _fileManager;
+    protected FileManager _fileManager;
 
     /**
      * Age used for checking if a directory is safe to completely nuke,
@@ -30,11 +32,17 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
      * to allow for things like clock skew, wrongly configured timezones
      * and alike.
      */
-    protected final long _maxTimeToLiveMsecs;
+    protected long _maxTimeToLiveMsecs;
     
-    public FileCleaner(SharedServiceStuff stuff, AtomicBoolean shutdown)
+    public FileCleaner() { }
+
+    @Override
+    protected void init(SharedServiceStuff stuff,
+            Stores<?,?> stores,
+            ClusterViewByServer cluster,
+            AtomicBoolean shutdown)
     {
-        super(stuff, shutdown);
+        super.init(stuff, stores, cluster, shutdown);
         _fileManager = stuff.getFileManager();
         // let's use max-TTL-plus-one-day 
         _maxTimeToLiveMsecs = stuff.getServiceConfig().cfgMaxMaxTTL.getMillis()
