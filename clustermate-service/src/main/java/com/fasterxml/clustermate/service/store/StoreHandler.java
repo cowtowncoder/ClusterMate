@@ -813,8 +813,10 @@ public abstract class StoreHandler<
      */
 
     /**
-     * Method called for GET operations, to figure out which method of updating 
-     * "last-access" information should be used, if any.
+     * Method called for PUT operations, to figure out which method of updating 
+     * "last-access" information should be used, if any. When entries are successfully
+     * PUT, information will be stored as part of entry metadata and does NOT
+     * come from request.
      */
     protected abstract LastAccessUpdateMethod _findLastAccessUpdateMethod(ServiceRequest request, K key);
     

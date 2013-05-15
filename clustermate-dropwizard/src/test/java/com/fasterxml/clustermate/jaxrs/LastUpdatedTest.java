@@ -25,7 +25,7 @@ public class LastUpdatedTest extends JaxrsStoreTestBase
 
     // Simple test that creates 3 entries: two under same group, third
     // one as it's "own group"
-    public void testLargerFile() throws Exception
+    public void testGroupedLastAccess() throws Exception
     {
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(1000L);
         
