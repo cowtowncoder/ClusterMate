@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.service.store;
 
-import com.fasterxml.clustermate.service.bdb.BDBConverters;
+import com.fasterxml.clustermate.service.util.ByteUtil;
 
 /**
  * Default value container for simple last-accessed information, associated with
@@ -45,12 +45,26 @@ public class EntryLastAccessed
         this.type = type;
     }
 
+    /**
+     * Simple conversion method for serializing values.
+     * Needs to be overridden by custom implementations.
+     */
     public byte[] asBytes()
     {
         byte[] result = new byte[17];
-        BDBConverters.putLongBE(result, 0, lastAccessTime);
-        BDBConverters.putLongBE(result, 8, expirationTime);
+        ByteUtil.putLongBE(result, 0, lastAccessTime);
+        ByteUtil.putLongBE(result, 8, expirationTime);
         result[16] = type;
         return result;
+    }
+
+    /**
+     * Overridable method called to determine if entry
+     * is definitely expired; should return 'false' if expiration
+     * status can not be reliably known. 
+     */
+    public boolean isExpired(long currentTime)
+    {
+        return (currentTime >= expirationTime);
     }
 }

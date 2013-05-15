@@ -7,10 +7,10 @@ import com.fasterxml.storemate.store.Storable;
 
 import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
-import com.fasterxml.clustermate.service.bdb.BDBConverters;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
+import com.fasterxml.clustermate.service.util.ByteUtil;
 
 public class StoredEntryConverterForTests
     extends StoredEntryConverter<TestKey, StoredEntry<TestKey>,FakeFullListItem>
@@ -146,8 +146,8 @@ public class StoredEntryConverterForTests
         if (length != 17) {
             throw new IllegalArgumentException("LastAccessed entry length must be 16 bytes, was: "+length);
         }
-        long accessTime = BDBConverters.getLongBE(raw, offset);
-        long creationTime = BDBConverters.getLongBE(raw, offset+8);
+        long accessTime = ByteUtil.getLongBE(raw, offset);
+        long creationTime = ByteUtil.getLongBE(raw, offset+8);
         byte type = raw[16];
         return new EntryLastAccessed(accessTime, creationTime, type);
     }

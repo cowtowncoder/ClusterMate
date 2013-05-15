@@ -4,7 +4,6 @@ import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.Environment;
 
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
-import com.fasterxml.clustermate.service.bdb.BDBConverters;
 import com.fasterxml.clustermate.service.bdb.BDBLastAccessStore;
 import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;
