@@ -129,6 +129,7 @@ public class LocalEntryCleaner<K extends EntryKey, E extends StoredEntry<K>>
 
             private void delete(StorableKey key) throws StoreException
             {
+                // TODO: should we add a wait or yield every N deletes?
                 try {
                     _entryStore.hardDelete(key, true);
                 } catch (StoreException e) {

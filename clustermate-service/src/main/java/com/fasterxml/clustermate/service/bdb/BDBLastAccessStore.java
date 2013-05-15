@@ -9,6 +9,7 @@ import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
+import com.fasterxml.storemate.store.backend.BackendStatsConfig;
 
 /**
  * Intermediate base class for BDB-JE - backed {@link LastAccessStore}
@@ -56,6 +57,33 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
     @Override
     public void stop() {
         _store.close();
+    }
+
+    /*
+    /**********************************************************************
+    /* Public API, metadata
+    /**********************************************************************
+     */
+
+    @Override
+    public boolean hasEfficientEntryCount() {
+        // yes, BDB-JE does have this info
+        return true;
+    }
+
+    @Override
+    public long getEntryCount() {
+        return _store.count();
+    }
+
+    @Override
+    public Object getEntryStatistics(BackendStatsConfig config)
+    {
+        StatsConfig statsConfig = new StatsConfig()
+            .setFast(config.onlyCollectFast())
+            .setClear(config.resetStatsAfterCollection())
+            ;
+        return _store.getStats(statsConfig);
     }
 
     /*
