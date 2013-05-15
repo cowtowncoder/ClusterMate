@@ -70,6 +70,11 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
     
     public abstract EntryLastAccessed findLastAccessEntry(K key, LastAccessUpdateMethod method);
 
+    /**
+     * Method called to update last-accessed information for given entry.
+     * 
+     * @param timestamp Actual last-accessed value
+     */
     public abstract void updateLastAccess(E entry, long timestamp);
 
     /**

@@ -3,13 +3,15 @@ package com.fasterxml.clustermate.service.store;
 import com.fasterxml.clustermate.service.bdb.BDBConverters;
 
 /**
- * POJO for storing simple last-accessed timestamp, associated with
- * one or more entries.
+ * Default value container for simple last-accessed information, associated with
+ * one or more entries. Entries are usually used for implementing dynamic time-to-live
+ * based on when an entry (or one of entries of a group) is last-accessed.
  *<p>
  * Internal structure is:
  *<ol>
- * <li>#0: long lastAccessTime
- * <li>#8: long entryCreationTime
+ * <li>#0: long lastAccessTime -- value used for TTL checks
+ * <li>#8: long expirationTime -- timestamp when this entry is known to expire;
+ *    meaning that it may be deleted if not collected earlier.
  * <li>#16: long type
  *</ol>
  * giving fixed length of 17 bytes for entries.
@@ -30,43 +32,24 @@ public class EntryLastAccessed
      * creation times, so care has to be taken to consider if and how to use
      * it.
      */
-    public long entryCreationTime;
+    public long expirationTime;
 
     /**
      * Type of entry.
      */
     public byte type;
 
-    public EntryLastAccessed(long accessTime, long createTime, byte type) {
+    public EntryLastAccessed(long accessTime, long expires, byte type) {
         lastAccessTime = accessTime;
-        entryCreationTime = createTime;
+        expirationTime = expires;
         this.type = type;
     }
-    
-    /*
-    public EntryLastAccessed(StoredEntry<VKey> entry, long accessTime)
-    {
-        lastAccessTime = accessTime;
-        entryCreationTime = entry.getCreationTime();
-        type = entry.getLastAccessUpdateMethod().asByte();
-    }
-
-    public EntryLastAccessed(byte[] raw)
-    {
-        if (raw.length != 17) {
-            throw new IllegalArgumentException("LastAccessed entry length must be 16 bytes, was: "+raw.length);
-        }
-        lastAccessTime = BDBConverters.getLongBE(raw, 0);
-        entryCreationTime = BDBConverters.getLongBE(raw, 8);
-        type = raw[16];
-    }
-    */
 
     public byte[] asBytes()
     {
         byte[] result = new byte[17];
         BDBConverters.putLongBE(result, 0, lastAccessTime);
-        BDBConverters.putLongBE(result, 8, entryCreationTime);
+        BDBConverters.putLongBE(result, 8, expirationTime);
         result[16] = type;
         return result;
     }

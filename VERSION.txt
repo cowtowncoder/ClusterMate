@@ -5,6 +5,8 @@ Project: ClusterMate
   overriding default settings like cache size.
 - Allow customization of `CleanerUpper` (via DWBasedService)
 - Relocate and refactor `LastAccessStore`, `NodeStateStore`, to allow for non-BDB-JE impls
+- Redefine field in `EntryLastAccessed` to mean expiration, not create time: needed
+  to support clean up of orphan timestamps (including ones for groups, parent info)
 
 0.9.5 (30-Apr-2013)
 
