@@ -76,8 +76,11 @@ public class NodeMetricsServlet extends ServletBase
 
         if (ser == null || now >= ser.cacheUntil) {
             ExternalMetrics metrics = _gatherMetrics(now);
-            ser = new SerializedMetrics(now + UPDATE_PERIOD_MSECS,
-                    _jsonWriter.writeValueAsBytes(metrics));
+            byte[] raw = _jsonWriter
+                    // for diagnostics:
+                    .withDefaultPrettyPrinter()
+                    .writeValueAsBytes(metrics);
+            ser = new SerializedMetrics(now + UPDATE_PERIOD_MSECS, raw);
             _cachedMetrics.set(ser);
         }
         response = (ServletServiceResponse) response.ok()
