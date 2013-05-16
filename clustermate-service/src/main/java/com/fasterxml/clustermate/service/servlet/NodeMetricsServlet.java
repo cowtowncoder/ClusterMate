@@ -25,6 +25,17 @@ import com.fasterxml.clustermate.service.metrics.ExternalMetrics;
 @SuppressWarnings("serial")
 public class NodeMetricsServlet extends ServletBase
 {
+    /**
+     * Query parameter to request server to refresh its stats
+     */
+    protected final static String QUERY_PARAM_REFRESH = "refresh";
+
+    /**
+     * Query parameter to further request server to obtain full
+     * statistics, not just cheap ones.
+     */
+    protected final static String QUERY_PARAM_FULL = "full";
+
     // Only probe for metrics once every 5 minutes
     protected final static long UPDATE_PERIOD_MSECS = 5L * 60 * 1000;
     
@@ -65,10 +76,10 @@ public class NodeMetricsServlet extends ServletBase
          *   our default inclusion mechanism may differ...
          */
         ObjectMapper mapper = new ObjectMapper();
-        /* NON_EMPTY would be good for empty arrays; but NON_DEFAULT
-         * for zero ints... Would need combination, I guess?
+        /* Looks like NON_DEFAULT can not be used, just because not all
+         * classes can be instantiated. So for now need to use NON_EMPTY...
          */
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         _jsonWriter = mapper.writerWithType(ExternalMetrics.class)
                 .without(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         _entryStore = stores.getEntryStore();
@@ -81,7 +92,7 @@ public class NodeMetricsServlet extends ServletBase
     /* End points: for now just GET
     /**********************************************************************
      */
-
+    
     /**
      * GET is used for simple access of cluster status
      */
@@ -90,11 +101,15 @@ public class NodeMetricsServlet extends ServletBase
             OperationDiagnostics metadata) throws IOException
     {
         try {
+            // One more thing: is caller trying to force refresh?
+            boolean forceRefresh = "true".equals(request.getQueryParameter(QUERY_PARAM_REFRESH));
+            boolean full = "true".equals(request.getQueryParameter(QUERY_PARAM_FULL));
+
             SerializedMetrics ser = _cachedMetrics.get();
             long now = _timeMaster.currentTimeMillis();
     
-            if (ser == null || now >= ser.cacheUntil) {
-                ExternalMetrics metrics = _gatherMetrics(now);
+            if (ser == null || forceRefresh || now >= ser.cacheUntil) {
+                ExternalMetrics metrics = _gatherMetrics(now, full);
                 byte[] raw;
                     raw = _jsonWriter
                             // for diagnostics:
@@ -123,10 +138,15 @@ public class NodeMetricsServlet extends ServletBase
     /**********************************************************************
      */
 
-    protected ExternalMetrics _gatherMetrics(long creationTime)
+    protected ExternalMetrics _gatherMetrics(long creationTime, boolean fullStats)
     {
         ExternalMetrics metrics = new ExternalMetrics(creationTime);
         StoreBackend entries = _entryStore.getBackend();
+        BackendStatsConfig conf = BACKEND_STATS_CONFIG;
+        if (fullStats) {
+            conf = conf.onlyCollectFast(false);
+        }
+        
         metrics.stores.entries = new BackendMetrics(creationTime,
                 entries.getEntryCount(),
                 entries.getEntryStatistics(BACKEND_STATS_CONFIG));

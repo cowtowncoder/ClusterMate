@@ -9,8 +9,10 @@ public class ExternalMetrics
 
     public AllOperationMetrics operations;
 
-    public final long lastUpdated;
+    public long lastUpdated;
     
+    // for (de)serialization
+    protected ExternalMetrics() { }
     public ExternalMetrics(long created) {
         lastUpdated = created;
     }

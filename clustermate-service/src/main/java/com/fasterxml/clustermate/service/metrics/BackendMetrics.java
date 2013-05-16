@@ -1,5 +1,7 @@
 package com.fasterxml.clustermate.service.metrics;
 
+import com.fasterxml.storemate.store.backend.BackendStats;
+
 /**
  * POJO for simple backend metrics
  */
@@ -18,9 +20,12 @@ public class BackendMetrics
     /**
      * Backend-dependant "raw" statistics
      */
-    public Object stats;
+    public BackendStats stats;
 
-    public BackendMetrics(long updateTime, long c, Object rawStats)
+    // for (de)serializer
+    protected BackendMetrics() { }
+
+    public BackendMetrics(long updateTime, long c, BackendStats rawStats)
     {
         lastUpdated = updateTime;
         count = c;

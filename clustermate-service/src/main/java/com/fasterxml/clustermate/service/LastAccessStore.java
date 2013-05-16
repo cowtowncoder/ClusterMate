@@ -8,6 +8,7 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StoreException;
+import com.fasterxml.storemate.store.backend.BackendStats;
 import com.fasterxml.storemate.store.backend.BackendStatsConfig;
 import com.fasterxml.storemate.store.backend.IterationAction;
 
@@ -81,7 +82,7 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
      * 
      * @param config Settings to use for collecting statistics
      */
-    public abstract Object getEntryStatistics(BackendStatsConfig config);
+    public abstract BackendStats getEntryStatistics(BackendStatsConfig config);
 
     /*
     /**********************************************************************

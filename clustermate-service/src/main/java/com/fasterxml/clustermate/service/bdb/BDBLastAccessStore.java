@@ -2,6 +2,10 @@ package com.fasterxml.clustermate.service.bdb;
 
 import com.sleepycat.je.*;
 
+import com.fasterxml.storemate.store.backend.BackendStats;
+import com.fasterxml.storemate.store.backend.BackendStatsConfig;
+import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
+
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.LastAccessStore;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
@@ -9,7 +13,6 @@ import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
-import com.fasterxml.storemate.store.backend.BackendStatsConfig;
 
 /**
  * Intermediate base class for BDB-JE - backed {@link LastAccessStore}
@@ -77,13 +80,16 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
     }
 
     @Override
-    public Object getEntryStatistics(BackendStatsConfig config)
+    public BackendStats getEntryStatistics(BackendStatsConfig config)
     {
         StatsConfig statsConfig = new StatsConfig()
             .setFast(config.onlyCollectFast())
             .setClear(config.resetStatsAfterCollection())
             ;
-        return _store.getStats(statsConfig);
+        BDBBackendStats stats = new BDBBackendStats();
+        stats.db = _store.getStats(statsConfig);
+        stats.env = _store.getEnvironment().getStats(statsConfig);
+        return stats;
     }
 
     /*
