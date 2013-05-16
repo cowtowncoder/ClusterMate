@@ -3,6 +3,8 @@ package com.fasterxml.clustermate.service.servlet;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -58,7 +60,16 @@ public class NodeMetricsServlet extends ServletBase
         super(null, null);
         _timeMaster = stuff.getTimeMaster();
         // for robustness, allow empty beans...
-        _jsonWriter = stuff.jsonWriter(ExternalMetrics.class)
+
+        /* 16-May-2013, tatu: Need to use separate mapper just because
+         *   our default inclusion mechanism may differ...
+         */
+        ObjectMapper mapper = new ObjectMapper();
+        /* NON_EMPTY would be good for empty arrays; but NON_DEFAULT
+         * for zero ints... Would need combination, I guess?
+         */
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_DEFAULT);
+        _jsonWriter = mapper.writerWithType(ExternalMetrics.class)
                 .without(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         _entryStore = stores.getEntryStore();
         _lastAccessStore = stores.getLastAccessStore();
@@ -116,13 +127,13 @@ public class NodeMetricsServlet extends ServletBase
     {
         ExternalMetrics metrics = new ExternalMetrics(creationTime);
         StoreBackend entries = _entryStore.getBackend();
-        metrics.entryStore = new BackendMetrics(creationTime,
+        metrics.stores.entries = new BackendMetrics(creationTime,
                 entries.getEntryCount(),
                 entries.getEntryStatistics(BACKEND_STATS_CONFIG));
-        metrics.entryIndex = new BackendMetrics(creationTime,
+        metrics.stores.entryIndex = new BackendMetrics(creationTime,
                 entries.getIndexedCount(),
                 entries.getIndexStatistics(BACKEND_STATS_CONFIG));
-        metrics.lastAccessStore = new BackendMetrics(creationTime,
+        metrics.stores.lastAccessStore = new BackendMetrics(creationTime,
                 _lastAccessStore.getEntryCount(),
                 _lastAccessStore.getEntryStatistics(BACKEND_STATS_CONFIG));
 

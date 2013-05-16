@@ -5,19 +5,15 @@ package com.fasterxml.clustermate.service.metrics;
  */
 public class ExternalMetrics
 {
-    protected final long _creationTime;
-    
-    public BackendMetrics entryStore;
-
-    public BackendMetrics entryIndex;
-
-    public BackendMetrics lastAccessStore;
+    public StoreMetrics stores = new StoreMetrics();
 
     public AllOperationMetrics operations;
+
+    public final long lastUpdated;
     
     public ExternalMetrics(long created) {
-        _creationTime = created;
+        lastUpdated = created;
     }
 
-    public long creationTime() { return _creationTime; }
+    public long creationTime() { return lastUpdated; }
 }
