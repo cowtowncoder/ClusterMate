@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
@@ -11,7 +12,7 @@ import com.fasterxml.storemate.store.backend.BackendStatsConfig;
 import com.fasterxml.storemate.store.backend.StoreBackend;
 
 import com.fasterxml.clustermate.service.*;
-import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
+import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.BackendMetrics;
 import com.fasterxml.clustermate.service.metrics.ExternalMetrics;
 
@@ -35,8 +36,10 @@ public class NodeMetricsServlet extends ServletBase
 
     protected final StorableStore _entryStore;
 
-    protected final LastAccessStore<?,?> _lastAccessStore;
+    protected final AllOperationMetrics.Provider _operationMetrics;
 
+    protected final LastAccessStore<?,?> _lastAccessStore;
+    
     protected final TimeMaster _timeMaster;
     
     protected final AtomicReference<SerializedMetrics> _cachedMetrics
@@ -48,14 +51,18 @@ public class NodeMetricsServlet extends ServletBase
     /**********************************************************************
      */
 
-    public NodeMetricsServlet(SharedServiceStuff stuff, Stores<?,?> stores)
+    public NodeMetricsServlet(SharedServiceStuff stuff, Stores<?,?> stores,
+            AllOperationMetrics.Provider opMetrics)
     {
         // null -> use servlet path base as-is
         super(null, null);
         _timeMaster = stuff.getTimeMaster();
-        _jsonWriter = stuff.jsonWriter(ExternalMetrics.class);
+        // for robustness, allow empty beans...
+        _jsonWriter = stuff.jsonWriter(ExternalMetrics.class)
+                .without(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         _entryStore = stores.getEntryStore();
         _lastAccessStore = stores.getLastAccessStore();
+        _operationMetrics = opMetrics;
     }
 
     /*
@@ -71,21 +78,32 @@ public class NodeMetricsServlet extends ServletBase
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics metadata) throws IOException
     {
-        SerializedMetrics ser = _cachedMetrics.get();
-        long now = _timeMaster.currentTimeMillis();
-
-        if (ser == null || now >= ser.cacheUntil) {
-            ExternalMetrics metrics = _gatherMetrics(now);
-            byte[] raw = _jsonWriter
-                    // for diagnostics:
-                    .withDefaultPrettyPrinter()
-                    .writeValueAsBytes(metrics);
-            ser = new SerializedMetrics(now + UPDATE_PERIOD_MSECS, raw);
-            _cachedMetrics.set(ser);
+        try {
+            SerializedMetrics ser = _cachedMetrics.get();
+            long now = _timeMaster.currentTimeMillis();
+    
+            if (ser == null || now >= ser.cacheUntil) {
+                ExternalMetrics metrics = _gatherMetrics(now);
+                byte[] raw;
+                    raw = _jsonWriter
+                            // for diagnostics:
+                            .withDefaultPrettyPrinter()
+                            .writeValueAsBytes(metrics);
+                ser = new SerializedMetrics(now + UPDATE_PERIOD_MSECS, raw);
+                _cachedMetrics.set(ser);
+            }
+            response = (ServletServiceResponse) response.ok()
+                    .setContentTypeJson();
+            response.writeRaw(ser.serialized);
+        } catch (Exception e) {
+            String msg = "Failed to serialize Metrics: "+e;
+            LOG.warn(msg, e);
+            response = (ServletServiceResponse) response
+                .internalError(msg)
+                .setContentTypeText()
+                ;
+            response.writeOut(_jsonWriter);
         }
-        response = (ServletServiceResponse) response.ok()
-                .setContentTypeJson();
-        response.writeRaw(ser.serialized);
     }
 
     /*
@@ -107,6 +125,8 @@ public class NodeMetricsServlet extends ServletBase
         metrics.lastAccessStore = new BackendMetrics(creationTime,
                 _lastAccessStore.getEntryCount(),
                 _lastAccessStore.getEntryStatistics(BACKEND_STATS_CONFIG));
+
+        metrics.operations = _operationMetrics.getOperationMetrics();
         
         return metrics;
     }

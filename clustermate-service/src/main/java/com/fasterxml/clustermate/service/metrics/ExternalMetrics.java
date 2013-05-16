@@ -13,6 +13,8 @@ public class ExternalMetrics
 
     public BackendMetrics lastAccessStore;
 
+    public AllOperationMetrics operations;
+    
     public ExternalMetrics(long created) {
         _creationTime = created;
     }

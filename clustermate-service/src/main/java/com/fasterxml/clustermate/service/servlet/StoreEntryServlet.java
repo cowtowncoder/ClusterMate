@@ -14,6 +14,7 @@ import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.OperationMetrics;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -24,6 +25,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
 @SuppressWarnings("serial")
 public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     extends ServletBase
+    implements AllOperationMetrics.Provider
 {
     /*
     /**********************************************************************
@@ -113,6 +115,22 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         return new RoutingEntryServlet<K,E>(this);
     }
 
+    /*
+    /**********************************************************************
+    /* Access to metrics (AllOperationMetrics.Provider impl)
+    /**********************************************************************
+     */
+
+    @Override
+    public AllOperationMetrics getOperationMetrics()
+    {
+        AllOperationMetrics metrics = new AllOperationMetrics();
+        metrics.GET = _getMetrics;
+        metrics.PUT = _putMetrics;
+        metrics.DELETE = _deleteMetrics;
+        return metrics;
+    }
+    
     /*
     /**********************************************************************
     /* Default implementations for key handling

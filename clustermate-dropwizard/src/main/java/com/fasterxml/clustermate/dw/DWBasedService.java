@@ -33,6 +33,7 @@ import com.fasterxml.clustermate.service.cleanup.CleanupTask;
 import com.fasterxml.clustermate.service.cleanup.FileCleaner;
 import com.fasterxml.clustermate.service.cleanup.LocalEntryCleaner;
 import com.fasterxml.clustermate.service.cluster.*;
+import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.servlet.*;
 import com.fasterxml.clustermate.service.store.*;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
@@ -330,8 +331,9 @@ public abstract class DWBasedService<
     }
 
     protected ServletBase constructNodeMetricsServlet(SharedServiceStuff stuff,
-            ClusterViewByServer cluster, Stores<K,E> stores) {
-        return new NodeMetricsServlet(stuff, stores);
+            ClusterViewByServer cluster, Stores<K,E> stores,
+            AllOperationMetrics.Provider opMetrics) {
+        return new NodeMetricsServlet(stuff, stores, opMetrics);
     }
         
     protected SyncListServlet<K,E> constructSyncListServlet(SharedServiceStuff stuff,
@@ -366,8 +368,6 @@ public abstract class DWBasedService<
     {
         final ClusterViewByServer cluster = syncHandler.getCluster();
         ServletBase nodeStatusServlet = constructNodeStatusServlet(stuff, nodeHandler);
-        ServletBase nodeMetricsServlet = constructNodeMetricsServlet(stuff, cluster,
-                storeHandler.getStores());
         ServletBase syncListServlet = constructSyncListServlet(
                 stuff, cluster, syncHandler);
         ServletBase syncPullServlet = constructSyncPullServlet(
@@ -376,6 +376,11 @@ public abstract class DWBasedService<
                 cluster, storeHandler);
         ServletBase storeListServlet = constructStoreListServlet(stuff,
                 cluster, storeHandler);
+
+        ServletBase nodeMetricsServlet = constructNodeMetricsServlet(stuff, cluster,
+                storeHandler.getStores(),
+                /*(AllOperationMetrics.Provider)*/ storeEntryServlet
+                );
         
         ServiceDispatchServlet<K,E> dispatcher = new ServiceDispatchServlet<K,E>(cluster, stuff,
                 nodeStatusServlet, nodeMetricsServlet,

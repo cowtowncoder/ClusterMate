@@ -12,8 +12,14 @@ import com.yammer.metrics.core.TimerContext;
 
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.storemate.store.Storable;
 
+/**
+ * Helper class for aggregating sets of CRUD endpoint
+ * metrics.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OperationMetrics
 {
     protected final ServiceConfig _serviceConfig;
@@ -31,11 +37,37 @@ public class OperationMetrics
     protected final Timer _metricTimes;
 
     // // Size metrics (optional)
-    
+
     protected final Histogram _metricSizes;
 
     protected final Histogram _metricEntryCounts;
 
+    /*
+    /**********************************************************************
+    /* Public API for JSON serialization
+    /**********************************************************************
+     */
+
+    public Counter getInFlight() {
+        return _metricInFlight;
+    }
+
+    public Meter getRate() {
+        return _metricRate;
+    }
+
+    public Timer getTimes() {
+        return _metricTimes;
+    }
+
+    public Histogram getSizes() {
+        return _metricSizes;
+    }
+
+    public Histogram getEntryCounts() {
+        return _metricEntryCounts;
+    }
+    
     /*
     /**********************************************************************
     /* Life-cycle
