@@ -324,13 +324,14 @@ public abstract class DWBasedService<
     protected abstract StoreEntryServlet<K,E> constructStoreEntryServlet(SharedServiceStuff stuff,
             ClusterViewByServer cluster, StoreHandler<K,E,L> storeHandler);
 
-    protected NodeStatusServlet constructNodeStatusServlet(SharedServiceStuff stuff, ClusterInfoHandler nodeHandler) {
+    protected ServletBase constructNodeStatusServlet(SharedServiceStuff stuff,
+            ClusterInfoHandler nodeHandler) {
         return new NodeStatusServlet(stuff, nodeHandler);
     }
 
-    protected NodeStatusServlet constructNodeMetricsServlet(SharedServiceStuff stuff, ClusterInfoHandler nodeHandler) {
-        // !!! TODO !!!
-        return null;
+    protected ServletBase constructNodeMetricsServlet(SharedServiceStuff stuff,
+            ClusterViewByServer cluster, Stores<K,E> stores) {
+        return new NodeMetricsServlet(stuff, stores);
     }
         
     protected SyncListServlet<K,E> constructSyncListServlet(SharedServiceStuff stuff,
@@ -365,7 +366,8 @@ public abstract class DWBasedService<
     {
         final ClusterViewByServer cluster = syncHandler.getCluster();
         ServletBase nodeStatusServlet = constructNodeStatusServlet(stuff, nodeHandler);
-        ServletBase nodeMetricsServlet = constructNodeMetricsServlet(stuff, nodeHandler);
+        ServletBase nodeMetricsServlet = constructNodeMetricsServlet(stuff, cluster,
+                storeHandler.getStores());
         ServletBase syncListServlet = constructSyncListServlet(
                 stuff, cluster, syncHandler);
         ServletBase syncPullServlet = constructSyncPullServlet(
