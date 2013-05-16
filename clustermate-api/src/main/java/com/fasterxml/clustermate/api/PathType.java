@@ -16,6 +16,8 @@ public enum PathType
     
     // access to node status: GET for status, PUT for update, POST for hello/bye
     NODE_STATUS,
+    // and various metrics: just GET (for now?)
+    NODE_METRICS,
 
     // access to sync information
     SYNC_LIST, // request for change list (ids)

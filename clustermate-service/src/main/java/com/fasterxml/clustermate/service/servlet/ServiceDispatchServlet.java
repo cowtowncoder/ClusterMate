@@ -24,7 +24,9 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
     protected final RequestPathStrategy _pathStrategy;
 
     // Delegatees:
+
     protected final ServletBase _nodeStatusServlet;
+    protected final ServletBase _nodeMetricsServlet;
 
     protected final ServletBase _storeEntryServlet;
 
@@ -49,19 +51,19 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
      */
     public ServiceDispatchServlet(ClusterViewByServer clusterView,
             SharedServiceStuff stuff,
-            ServletBase nodeStatusServlet,
+            ServletBase nodeStatusServlet, ServletBase nodeMetricsServlet,
             ServletBase storeEntryServlet, ServletBase storeListServlet,
             ServletBase syncListServlet, ServletBase syncPullServlet)
     {
         this(clusterView, null, stuff,
-                nodeStatusServlet,
+                nodeStatusServlet, nodeMetricsServlet,
                 syncListServlet, syncPullServlet,
                 storeEntryServlet, storeListServlet);
     }
     
     public ServiceDispatchServlet(ClusterViewByServer clusterView, String servletPathBase,
             SharedServiceStuff stuff,
-            ServletBase nodeStatusServlet,
+            ServletBase nodeStatusServlet, ServletBase nodeMetricsServlet,
             ServletBase syncListServlet, ServletBase syncPullServlet,
             ServletBase storeEntryServlet, ServletBase storeListServlet)
     {
@@ -71,6 +73,7 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
         _pathStrategy = stuff.getPathStrategy();
 
         _nodeStatusServlet = nodeStatusServlet;
+        _nodeMetricsServlet = nodeMetricsServlet;
 
         _syncListServlet = syncListServlet;
         _syncPullServlet = syncPullServlet;
@@ -190,6 +193,8 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
             switch (type) {
             case NODE_STATUS:
                 return _nodeStatusServlet;
+            case NODE_METRICS:
+                return _nodeMetricsServlet;
 
             case STORE_ENTRY:
                 return _storeEntryServlet;

@@ -328,6 +328,11 @@ public abstract class DWBasedService<
         return new NodeStatusServlet(stuff, nodeHandler);
     }
 
+    protected NodeStatusServlet constructNodeMetricsServlet(SharedServiceStuff stuff, ClusterInfoHandler nodeHandler) {
+        // !!! TODO !!!
+        return null;
+    }
+        
     protected SyncListServlet<K,E> constructSyncListServlet(SharedServiceStuff stuff,
             ClusterViewByServer cluster, SyncHandler<K,E> syncHandler) {
         return new SyncListServlet<K,E>(stuff, cluster, syncHandler);
@@ -360,6 +365,7 @@ public abstract class DWBasedService<
     {
         final ClusterViewByServer cluster = syncHandler.getCluster();
         ServletBase nodeStatusServlet = constructNodeStatusServlet(stuff, nodeHandler);
+        ServletBase nodeMetricsServlet = constructNodeMetricsServlet(stuff, nodeHandler);
         ServletBase syncListServlet = constructSyncListServlet(
                 stuff, cluster, syncHandler);
         ServletBase syncPullServlet = constructSyncPullServlet(
@@ -370,7 +376,8 @@ public abstract class DWBasedService<
                 cluster, storeHandler);
         
         ServiceDispatchServlet<K,E> dispatcher = new ServiceDispatchServlet<K,E>(cluster, stuff,
-                nodeStatusServlet, storeEntryServlet, storeListServlet,
+                nodeStatusServlet, nodeMetricsServlet,
+                storeEntryServlet, storeListServlet,
                 syncListServlet, syncPullServlet);
 
         RequestPathBuilder rootBuilder = rootPath(stuff.getServiceConfig());

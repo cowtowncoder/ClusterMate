@@ -35,6 +35,8 @@ public abstract class RequestPathStrategy
     // // Node status, related:
     
     public abstract <B extends RequestPathBuilder> B appendNodeStatusPath(B nodeRoot);
+
+    public abstract <B extends RequestPathBuilder> B appendNodeMetricsPath(B nodeRoot);
     
     // // Sync handling:
     
