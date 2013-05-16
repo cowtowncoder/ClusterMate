@@ -39,8 +39,8 @@ public class NodeMetricsServlet extends ServletBase
 
     protected final TimeMaster _timeMaster;
     
-    protected final AtomicReference<ExternalMetrics> _cachedMetrics
-        = new AtomicReference<ExternalMetrics>();
+    protected final AtomicReference<SerializedMetrics> _cachedMetrics
+        = new AtomicReference<SerializedMetrics>();
     
     /*
     /**********************************************************************
@@ -71,16 +71,18 @@ public class NodeMetricsServlet extends ServletBase
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics metadata) throws IOException
     {
-        ExternalMetrics metrics = _cachedMetrics.get();
+        SerializedMetrics ser = _cachedMetrics.get();
         long now = _timeMaster.currentTimeMillis();
 
-        if (metrics == null || now >= (metrics.creationTime() + UPDATE_PERIOD_MSECS)) {
-            metrics = _gatherMetrics(now);
-            _cachedMetrics.set(metrics);
+        if (ser == null || now >= ser.cacheUntil) {
+            ExternalMetrics metrics = _gatherMetrics(now);
+            ser = new SerializedMetrics(now + UPDATE_PERIOD_MSECS,
+                    _jsonWriter.writeValueAsBytes(metrics));
+            _cachedMetrics.set(ser);
         }
-        response = (ServletServiceResponse) response.ok(new StreamingEntityImpl(_jsonWriter, metrics))
+        response = (ServletServiceResponse) response.ok()
                 .setContentTypeJson();
-        response.writeOut(null);
+        response.writeRaw(ser.serialized);
     }
 
     /*
@@ -104,5 +106,22 @@ public class NodeMetricsServlet extends ServletBase
                 _lastAccessStore.getEntryStatistics(BACKEND_STATS_CONFIG));
         
         return metrics;
+    }
+
+    /*
+    /**********************************************************************
+    /* Helper class(es)
+    /**********************************************************************
+     */
+
+    private final static class SerializedMetrics
+    {
+        public final long cacheUntil;
+        public final byte[] serialized;
+
+        public SerializedMetrics(long expiration, byte[] data) {
+            cacheUntil = expiration;
+            serialized = data;
+        }
     }
 }

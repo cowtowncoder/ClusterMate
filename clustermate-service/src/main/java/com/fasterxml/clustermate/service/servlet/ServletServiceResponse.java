@@ -56,6 +56,15 @@ public class ServletServiceResponse extends ServiceResponse
             writer.writeValue(_output, _entity);
         }
     }
+
+    public void writeRaw(byte[] raw) throws IOException
+    {
+        setContentLength(raw.length);
+        if (_output == null) {
+            _output = _response.getOutputStream();
+        }
+        _output.write(raw);
+    }
     
     /*
     /**********************************************************************
