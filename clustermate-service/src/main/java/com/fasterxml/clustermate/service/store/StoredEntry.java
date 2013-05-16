@@ -75,9 +75,20 @@ public abstract class StoredEntry<K extends EntryKey>
     public abstract boolean insertedBefore(long timestamp);
 
     public abstract boolean createdBefore(long timestamp);
-    
+
     public abstract int routingHashUsing(EntryKeyConverter<K> hasher);
 
+    /**
+     * Method that calculates conservative estimation on when this entry will
+     * be expired for sure. Typically used for expiration time for last-accessed
+     * entries (if used)
+     * 
+     * @since 0.9.6
+     */
+    public long calculateMaxExpirationTime() {
+        return getCreationTime() + (1000 * getMaxTTLSecs());
+    }
+    
     /*
     /**********************************************************************
     /* Public API, pass-through methods

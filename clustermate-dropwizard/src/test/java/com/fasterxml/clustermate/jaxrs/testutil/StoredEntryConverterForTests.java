@@ -131,7 +131,7 @@ public class StoredEntryConverterForTests
     @Override
     public EntryLastAccessed createLastAccessed(StoredEntry<TestKey> entry, long accessTime)
     {
-        return new EntryLastAccessed(accessTime, entry.getCreationTime(), 
+        return new EntryLastAccessed(accessTime, entry.calculateMaxExpirationTime(),
                  entry.getLastAccessUpdateMethod().asByte());
     }
 
@@ -144,12 +144,12 @@ public class StoredEntryConverterForTests
     public EntryLastAccessed createLastAccessed(byte[] raw, int offset, int length)
     {
         if (length != 17) {
-            throw new IllegalArgumentException("LastAccessed entry length must be 16 bytes, was: "+length);
+            throw new IllegalArgumentException("LastAccessed entry length must be 17 bytes, was: "+length);
         }
         long accessTime = ByteUtil.getLongBE(raw, offset);
-        long creationTime = ByteUtil.getLongBE(raw, offset+8);
+        long expirationTime = ByteUtil.getLongBE(raw, offset+8);
         byte type = raw[16];
-        return new EntryLastAccessed(accessTime, creationTime, type);
+        return new EntryLastAccessed(accessTime, expirationTime, type);
     }
     
     /*
@@ -186,24 +186,23 @@ public class StoredEntryConverterForTests
 
     private final static void _putLongBE(byte[] buffer, int offset, long value)
     {
-     _putIntBE(buffer, offset, (int) (value >> 32));
-     _putIntBE(buffer, offset+4, (int) value);
+        _putIntBE(buffer, offset, (int) (value >> 32));
+        _putIntBE(buffer, offset+4, (int) value);
     }
     
     private final static void _putIntBE(byte[] buffer, int offset, int value)
     {
-     buffer[offset] = (byte) (value >> 24);
-     buffer[++offset] = (byte) (value >> 16);
-     buffer[++offset] = (byte) (value >> 8);
-     buffer[++offset] = (byte) value;
+        buffer[offset] = (byte) (value >> 24);
+        buffer[++offset] = (byte) (value >> 16);
+        buffer[++offset] = (byte) (value >> 8);
+        buffer[++offset] = (byte) value;
     }
 
     private final static long _getLongBE(byte[] buffer, int offset)
     {
-     long l1 = _getIntBE(buffer, offset);
-     long l2 = _getIntBE(buffer, offset+4);
-     
-     return (l1 << 32) | ((l2 << 32) >>> 32);
+        long l1 = _getIntBE(buffer, offset);
+        long l2 = _getIntBE(buffer, offset+4);
+        return (l1 << 32) | ((l2 << 32) >>> 32);
     }
     
     private final static int _getIntBE(byte[] buffer, int offset)

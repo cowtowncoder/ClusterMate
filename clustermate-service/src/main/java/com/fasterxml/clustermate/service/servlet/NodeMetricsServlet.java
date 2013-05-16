@@ -20,7 +20,6 @@ import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.BackendMetrics;
 import com.fasterxml.clustermate.service.metrics.ExternalMetrics;
-import com.sleepycat.je.DatabaseStats;
 import com.sleepycat.je.EnvironmentStats;
 
 /**

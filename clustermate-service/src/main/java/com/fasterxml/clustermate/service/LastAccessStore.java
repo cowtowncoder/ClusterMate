@@ -1,16 +1,14 @@
 package com.fasterxml.clustermate.service;
 
+import com.fasterxml.storemate.shared.StorableKey;
+import com.fasterxml.storemate.store.StoreException;
+import com.fasterxml.storemate.store.backend.*;
+
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
-import com.fasterxml.storemate.shared.StorableKey;
-import com.fasterxml.storemate.store.Storable;
-import com.fasterxml.storemate.store.StoreException;
-import com.fasterxml.storemate.store.backend.BackendStats;
-import com.fasterxml.storemate.store.backend.BackendStatsConfig;
-import com.fasterxml.storemate.store.backend.IterationAction;
 
 /**
  * Class that encapsulates optional storage of last-accessed
@@ -86,7 +84,7 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
 
     /*
     /**********************************************************************
-    /* Public API
+    /* Public API, basic lookups
     /**********************************************************************
      */
 
@@ -107,6 +105,12 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
     
     public abstract EntryLastAccessed findLastAccessEntry(K key, LastAccessUpdateMethod method);
 
+    /*
+    /**********************************************************************
+    /* Public API, updates
+    /**********************************************************************
+     */
+    
     /**
      * Method called to update last-accessed information for given entry.
      * 
@@ -122,31 +126,40 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
 
     /*
     /**********************************************************************
+    /* Public API, traversal
+    /**********************************************************************
+     */
+
+    /**
+     * Method for iterating over last-accessed entries, in an arbitrary order
+     * (whatever is the most efficient way underlying store can expose
+     * entries).
+     */
+    public abstract IterationResult scanEntries(LastAccessIterationCallback cb)
+        throws StoreException;
+
+    /*
+    /**********************************************************************
     /* Helper classes for iteration (mostly to support cleanup)
     /**********************************************************************
      */
 
     /**
-     * Callback for safe traversal over last-accessed entries
+     * Callback for safe traversal over last-accessed entries; mostly needed
+     * for clean up or statistics gathering operations.
      */
-    public abstract class StorableIterationCallback
+    public abstract static class LastAccessIterationCallback
     {
         /**
-         * Method called for each entry, to check whether entry with the key
-         * is to be processed.
+         * Method called for all entries.
          * 
-         * @return Action to take for the entry with specified key
-         */
-        public abstract IterationAction verifyKey(StorableKey key);
-
-        /**
-         * Method called for each "accepted" entry (entry for which
-         * {@link #verifyKey} returned {@link IterationAction#PROCESS_ENTRY}).
+         * @param key Raw key for last-accessed entry (which may be an actual entry key,
+         *   or some transformation thereof)
          * 
          * @return Action to take; specifically, whether to continue processing
          *   or not (semantics for other values depend on context)
          */
-        public abstract IterationAction processEntry(Storable entry)
+        public abstract IterationAction processEntry(StorableKey key, EntryLastAccessed entry)
             throws StoreException;
     }
 }

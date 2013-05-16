@@ -2,8 +2,12 @@ package com.fasterxml.clustermate.service.bdb;
 
 import com.sleepycat.je.*;
 
+import com.fasterxml.storemate.shared.StorableKey;
+import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.backend.BackendStats;
 import com.fasterxml.storemate.store.backend.BackendStatsConfig;
+import com.fasterxml.storemate.store.backend.IterationAction;
+import com.fasterxml.storemate.store.backend.IterationResult;
 import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
 
 import com.fasterxml.clustermate.api.EntryKey;
@@ -94,7 +98,7 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
 
     /*
     /**********************************************************************
-    /* Public API
+    /* Public API, lookups
     /**********************************************************************
      */
 
@@ -117,6 +121,12 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
         }
         return null;
     }
+
+    /*
+    /**********************************************************************
+    /* Public API, modifications
+    /**********************************************************************
+     */
 
     @Override
     public void updateLastAccess(E entry, long timestamp)
@@ -152,10 +162,61 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
 
     /*
     /**********************************************************************
+    /* Public API, iteration
+    /**********************************************************************
+     */
+
+    public IterationResult scanEntries(LastAccessIterationCallback cb)
+        throws StoreException
+    {
+        try {
+            DiskOrderedCursorConfig config = new DiskOrderedCursorConfig();
+            DiskOrderedCursor crsr = _store.openCursor(config);
+    
+            final DatabaseEntry keyEntry = new DatabaseEntry();
+            final DatabaseEntry data = new DatabaseEntry();
+            
+            try {
+                while (crsr.getNext(keyEntry, data, null) == OperationStatus.SUCCESS) {
+                    StorableKey key = _storableKey(keyEntry);
+                    EntryLastAccessed entry = _entryConverter.createLastAccessed(data.getData(),
+                            data.getOffset(), data.getSize());
+
+                    if (cb.processEntry(key, entry) == IterationAction.TERMINATE_ITERATION) {
+                        return IterationResult.TERMINATED_FOR_ENTRY;
+                    }
+                }
+                return IterationResult.FULLY_ITERATED;
+            } finally {
+                crsr.close();
+            }
+        } catch (DatabaseException de) {
+            return _convertDBE(null, de);
+        }
+    }
+    
+    /*
+    /**********************************************************************
     /* Internal methods
     /**********************************************************************
      */
 
+    protected StorableKey _storableKey(DatabaseEntry entry) {
+        return new StorableKey(entry.getData(), entry.getOffset(), entry.getSize());
+    }
+
+    /**
+     * Helper method used for creating more useful exceptions for given BDB exception
+     */
+    protected <T> T _convertDBE(StorableKey key, DatabaseException bdbException)
+        throws StoreException
+    {
+        if (bdbException instanceof LockTimeoutException) {
+            throw new StoreException.ServerTimeout(key, bdbException);
+        }
+        throw new StoreException.Internal(key, bdbException);
+    }
+    
     protected DatabaseConfig dbConfig(Environment env, LastAccessConfig config)
     {
         DatabaseConfig dbConfig = new DatabaseConfig();

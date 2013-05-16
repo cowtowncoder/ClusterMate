@@ -1,12 +1,19 @@
 package com.fasterxml.clustermate.jaxrs;
 
 import java.io.ByteArrayInputStream;
+import java.util.*;
 
+import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.store.StorableStore;
+import com.fasterxml.storemate.store.StoreException;
+import com.fasterxml.storemate.store.backend.IterationAction;
 
 import com.fasterxml.clustermate.jaxrs.StoreResource;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
+import com.fasterxml.clustermate.service.LastAccessStore;
+import com.fasterxml.clustermate.service.LastAccessStore.LastAccessIterationCallback;
 import com.fasterxml.clustermate.service.ServiceResponse;
+import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**
@@ -28,9 +35,9 @@ public class LastUpdatedTest extends JaxrsStoreTestBase
     public void testGroupedLastAccess() throws Exception
     {
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(1000L);
-        
+
         final TestKey KEY1A = contentKey(StoreHandlerForTests.CUSTOMER_WITH_GROUPING, "grouped/key1");
-        final TestKey KEY1B = contentKey(StoreHandlerForTests.CUSTOMER_WITH_GROUPING,"grouped/key2");
+        final TestKey KEY1B = contentKey(StoreHandlerForTests.CUSTOMER_WITH_GROUPING, "grouped/key2");
         final TestKey KEY2 = contentKey(UNGROUPED, "stuff/ungrouped.txt");
         
         // what data we use does not really matter; use diff styles for different compression
@@ -41,6 +48,8 @@ public class LastUpdatedTest extends JaxrsStoreTestBase
         final byte[] DATA1B_BYTES = DATA1B.getBytes("UTF-8");
         final String DATA2 = biggerSomewhatCompressibleData(16000);
         final byte[] DATA2_BYTES = DATA2.getBytes("UTF-8");
+
+        final LastAccessStore<TestKey, StoredEntry<TestKey>> accessStore = resource.getStores().getLastAccessStore();
 
         // verify that first one doesn't exist initially (sanity check)
         FakeHttpResponse response = new FakeHttpResponse();
@@ -70,13 +79,13 @@ public class LastUpdatedTest extends JaxrsStoreTestBase
 
         StoredEntry<TestKey> entry2 = rawToEntry(entries.findEntry(KEY2.asStorableKey()));
         assertNotNull(entry2);
-        assertEquals(0L, resource.getStores().getLastAccessStore().findLastAccessTime(entry2));
+        assertEquals(0L, accessStore.findLastAccessTime(entry2));
         StoredEntry<TestKey> entry1b = rawToEntry(entries.findEntry(KEY1B.asStorableKey()));
         assertNotNull(entry1b);
-        assertEquals(0L, resource.getStores().getLastAccessStore().findLastAccessTime(entry1b));
+        assertEquals(0L, accessStore.findLastAccessTime(entry1b));
         StoredEntry<TestKey> entry1a = rawToEntry(entries.findEntry(KEY1A.asStorableKey()));
         assertNotNull(entry1a);
-        assertEquals(0L, resource.getStores().getLastAccessStore().findLastAccessTime(entry1a));
+        assertEquals(0L, accessStore.findLastAccessTime(entry1a));
 
         final long UPDATE_TIME1 = 2000L;
         final long UPDATE_TIME2 = 3000L;
@@ -88,25 +97,53 @@ public class LastUpdatedTest extends JaxrsStoreTestBase
                 new FakeHttpResponse(), KEY2);
         assertNotNull(resp);
         assertFalse(resp.isError());
-        assertEquals(UPDATE_TIME1, resource.getStores().getLastAccessStore().findLastAccessTime(entry2));
+        assertEquals(UPDATE_TIME1, accessStore.findLastAccessTime(entry2));
         
         timeMaster.setCurrentTimeMillis(UPDATE_TIME2);
         resp = resource.getHandler().getEntry(new FakeHttpRequest(), new FakeHttpResponse(), KEY1A);
         assertNotNull(resp);
         assertFalse(resp.isError());
-        assertEquals(UPDATE_TIME1, resource.getStores().getLastAccessStore().findLastAccessTime(entry2));
-        assertEquals(UPDATE_TIME2, resource.getStores().getLastAccessStore().findLastAccessTime(entry1a));
+        assertEquals(UPDATE_TIME1, accessStore.findLastAccessTime(entry2));
+        assertEquals(UPDATE_TIME2, accessStore.findLastAccessTime(entry1a));
 
         // note: second entry should see the last-accessed from the first update!
         entry1b = rawToEntry(entries.findEntry(KEY1B.asStorableKey()));
         assertEquals(FakeLastAccess.GROUPED, entry1b.getLastAccessUpdateMethod());
-        assertEquals(UPDATE_TIME2, resource.getStores().getLastAccessStore().findLastAccessTime(entry1b));
+        assertEquals(UPDATE_TIME2, accessStore.findLastAccessTime(entry1b));
 
         // as well as vice-versa
         timeMaster.setCurrentTimeMillis(UPDATE_TIME3);
         resp = resource.getHandler().getEntry(new FakeHttpRequest(), new FakeHttpResponse(), KEY1B);
-        assertEquals(UPDATE_TIME3, resource.getStores().getLastAccessStore().findLastAccessTime(entry1b));
-        assertEquals(UPDATE_TIME3, resource.getStores().getLastAccessStore().findLastAccessTime(entry1a));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1b));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1a));
         entries.stop();
+
+        assertEquals(2L, accessStore.getEntryCount());
+
+        // Finally: we should be able to iterate over last-access entry...
+        final Map<TestKey,EntryLastAccessed> map = new HashMap<TestKey,EntryLastAccessed>();
+        accessStore.scanEntries(new LastAccessIterationCallback() {
+            @Override
+            public IterationAction processEntry(StorableKey key,
+                    EntryLastAccessed entry) throws StoreException {
+                map.put(contentKey(key), entry);
+                return IterationAction.PROCESS_ENTRY;
+            }
+        });
+        assertEquals(2, map.size());
+
+        // and they need to match, too; KEY2 fine as is, but need group key:
+        final TestKey GROUP_KEY = contentKey(StoreHandlerForTests.CUSTOMER_WITH_GROUPING, "");
+
+        EntryLastAccessed grouped = map.get(GROUP_KEY);
+        assertNotNull(grouped);
+        assertEquals(UPDATE_TIME3, grouped.lastAccessTime);
+        // use explicit formula instead of StoredEntry.calculateMaxExpirationTime()
+        assertEquals(entry1a.getCreationTime() + 1000 * entry1a.getMaxTTLSecs(), grouped.expirationTime);
+        
+        EntryLastAccessed ungrouped = map.get(KEY2);
+        assertNotNull(ungrouped);
+        assertEquals(UPDATE_TIME1, ungrouped.lastAccessTime);
+        assertEquals(entry2.getCreationTime() + 1000 * entry2.getMaxTTLSecs(), ungrouped.expirationTime);
     }
 }
