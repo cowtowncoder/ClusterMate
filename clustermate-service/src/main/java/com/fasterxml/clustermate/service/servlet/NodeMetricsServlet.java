@@ -3,13 +3,16 @@ package com.fasterxml.clustermate.service.servlet;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
+import com.fasterxml.storemate.store.backend.BackendStats;
 import com.fasterxml.storemate.store.backend.BackendStatsConfig;
 import com.fasterxml.storemate.store.backend.StoreBackend;
 
@@ -17,6 +20,8 @@ import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.BackendMetrics;
 import com.fasterxml.clustermate.service.metrics.ExternalMetrics;
+import com.sleepycat.je.DatabaseStats;
+import com.sleepycat.je.EnvironmentStats;
 
 /**
  * Stand-alone servlet that may be used for serving metrics information
@@ -146,20 +151,28 @@ public class NodeMetricsServlet extends ServletBase
         if (fullStats) {
             conf = conf.onlyCollectFast(false);
         }
-        
         metrics.stores.entries = new BackendMetrics(creationTime,
                 entries.getEntryCount(),
-                entries.getEntryStatistics(BACKEND_STATS_CONFIG));
+                _clean(entries.getEntryStatistics(BACKEND_STATS_CONFIG)));
         metrics.stores.entryIndex = new BackendMetrics(creationTime,
                 entries.getIndexedCount(),
-                entries.getIndexStatistics(BACKEND_STATS_CONFIG));
+                _clean(entries.getIndexStatistics(BACKEND_STATS_CONFIG)));
         metrics.stores.lastAccessStore = new BackendMetrics(creationTime,
                 _lastAccessStore.getEntryCount(),
-                _lastAccessStore.getEntryStatistics(BACKEND_STATS_CONFIG));
+                _clean(_lastAccessStore.getEntryStatistics(BACKEND_STATS_CONFIG)));
 
         metrics.operations = _operationMetrics.getOperationMetrics();
         
         return metrics;
+    }
+
+    protected BackendStats _clean(BackendStats stats)
+    {
+        // Nasty back-dep, but has to do for now...
+        if (stats instanceof BDBBackendStats) {
+            return new CleanBDBStats((BDBBackendStats) stats);
+        }
+        return stats;
     }
 
     /*
@@ -167,6 +180,27 @@ public class NodeMetricsServlet extends ServletBase
     /* Helper class(es)
     /**********************************************************************
      */
+
+    /**
+     * Helper class we only need for filtering out some unwanted
+     * properties.
+     */
+    static class CleanBDBStats
+        extends BDBBackendStats
+    {
+        // this is an alternative to mix-ins, which would also work
+        @JsonIgnoreProperties({ "tips", "statGroups" })
+        public EnvironmentStats getEnv() {
+            return env;
+        }
+
+        public CleanBDBStats(BDBBackendStats raw)
+        {
+            super();
+            db = raw.db;
+            env = raw.env;
+        }
+    }
 
     private final static class SerializedMetrics
     {
