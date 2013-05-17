@@ -152,6 +152,12 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
             LOG.info("Starting cleanup tasks ({})", _tasks.length);
             _nextStartTime.set(startTime + _delayBetweenCleanups.getMillis());
             for (CleanupTask<?> task : _tasks) {
+                if (_shutdown.get()) {
+                    if (!_stuff.isRunningTests()) {
+                        LOG.info("Interrupting cleanup tasks, due to shutdown");
+                    }
+                    break;
+                }
                 _currentTask.set(task);
                 try {
                     task.init(_stuff, _stores, _cluster, _shutdown);
