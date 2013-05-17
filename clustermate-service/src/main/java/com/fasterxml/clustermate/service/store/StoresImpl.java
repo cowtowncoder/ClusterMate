@@ -34,17 +34,18 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     /**
-     * For Node stores we do not really need much any caching; but
-     * give half a meg just to keep branch nodes in memory.
+     * For Node stores we do not really need much any caching;
+     * but throw dog a bone of, say, nice round 200k.
      */
-    private final static long NODE_BDB_CACHE_SIZE = 512L * 1024L;
+    private final static long NODE_BDB_CACHE_SIZE = 200L * 1024L;
 
     /**
      * Last-access table may get rather high concurrency as it may be
-     * updated for every GET request, so let's boost from 1 to reasonably
-     * high prime number.
+     * updated for every GET request, so let's boost from 1 to bit higher
+     * prime number. Note, though, that we will usually try to throttle
+     * updates a bit, so nothing extraordinary needed.
      */
-    protected final static int DEFAULT_LAST_ACCESS_LOCK_TABLES = 17;
+    protected final static int DEFAULT_LAST_ACCESS_LOCK_TABLES = 13;
 
     /*
     /**********************************************************************
