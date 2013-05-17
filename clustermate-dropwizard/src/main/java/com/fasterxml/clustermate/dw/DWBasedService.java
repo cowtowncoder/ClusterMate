@@ -308,13 +308,16 @@ public abstract class DWBasedService<
     }
 
     // since 0.9.6
-    protected List<CleanupTask<?>> constructCleanupTasks()
+    protected abstract List<CleanupTask<?>> constructCleanupTasks();
+
+    /*
     {
         ArrayList<CleanupTask<?>> tasks = new ArrayList<CleanupTask<?>>();
         tasks.add(new LocalEntryCleaner<K,E>());
         tasks.add(new FileCleaner());
         return tasks;
     }
+    */
     
     /*
     /**********************************************************************
