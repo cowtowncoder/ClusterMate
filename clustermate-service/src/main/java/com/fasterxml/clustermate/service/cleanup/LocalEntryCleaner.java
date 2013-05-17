@@ -22,7 +22,11 @@ import com.fasterxml.storemate.store.backend.StorableLastModIterationCallback;
 /**
  * Helper class used to keep track of clean up progress
  * for local BDB cleanup.
+ * 
+ * @deprecated To be moved up to implementations since last-accesss
+ *    checks tend to differ
  */
+@Deprecated
 public class LocalEntryCleaner<K extends EntryKey, E extends StoredEntry<K>>
     extends CleanupTask<LocalCleanupStats>
 {
@@ -105,24 +109,24 @@ public class LocalEntryCleaner<K extends EntryKey, E extends StoredEntry<K>>
                 // for other entries bit more complex; basically checking following possibilities:
                 // (a) Entry is older than its maxTTL (which varies entry by entry), can be removed
                 // (b) Entry is younger than its minTTL since creation, can be skipped
-                // (c) Entry does not use access-time: remove
-                // (d) Entry needs to be retained based on local last-access time: skip
-                // (e) Must check global last-access to determine whether to keep or skip
+                // (c) Entry needs to be retained based on local last-access time: skip
+                // (d) Must check global last-access to determine whether to keep or skip
                 final long currentTime = _timeMaster.currentTimeMillis();
                 if (entry.hasExceededMaxTTL(currentTime)) { // (a) remove
                     stats.addExpiredMaxTTLEntry();
                     delete(raw.getKey());
                 } else if (!entry.hasExceededMinTTL(currentTime)) { // (b) skip
                     stats.addRemainingEntry();
-                } else if (!entry.usesLastAccessTime()) { // (c) remove
-                    stats.addExpiredLastAccessEntry();
-                    delete(raw.getKey());
-                } else if (!entry.hasExceededLastAccessTTL(currentTime,
-                        _lastAccessStore.findLastAccessTime(entry.getKey(), entry.getLastAccessUpdateMethod()))) {
-                    stats.addRemainingEntry(); // (d) keep
-                } else { // (e): add to list of things to check...
-                    // !!! TODO
+                } else if (!entry.usesLastAccessTime()) { // no last-access time check; retain
                     stats.addRemainingEntry();
+                } else { // do need to verify last-access info...
+                    if (!entry.hasExceededLastAccessTTL(currentTime,
+                            _lastAccessStore.findLastAccessTime(entry.getKey(), entry.getLastAccessUpdateMethod()))) {
+                        stats.addRemainingEntry(); // (c) keep
+                    } else { // (d): add to list of things to check...
+                        // !!! TODO
+                        stats.addRemainingEntry();
+                    }
                 }
                 return IterationAction.PROCESS_ENTRY;
             }
