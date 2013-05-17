@@ -33,7 +33,7 @@ public class ExternalOperationMetrics
 
     public Histogram requestEntryCounts;
 
-    public ExternalOperationMetrics(OperationMetrics raw)
+    protected ExternalOperationMetrics(OperationMetrics raw)
     {
         inFlight = raw._metricInFlight.count();
 
@@ -46,6 +46,13 @@ public class ExternalOperationMetrics
         requestTimes = _histogram(raw._metricTimes);
         requestSizes = _histogram(raw._metricSizes);
         requestEntryCounts = _histogram(raw._metricEntryCounts);
+    }
+    
+    public static ExternalOperationMetrics create(OperationMetrics raw) {
+        if (raw == null) {
+            return null;
+        }
+        return new ExternalOperationMetrics(raw);
     }
 
     private static Histogram _histogram(Sampling src)

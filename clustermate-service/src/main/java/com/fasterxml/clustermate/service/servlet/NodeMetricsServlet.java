@@ -53,7 +53,7 @@ public class NodeMetricsServlet extends ServletBase
 
     protected final StorableStore _entryStore;
 
-    protected final AllOperationMetrics.Provider _operationMetrics;
+    protected final AllOperationMetrics.Provider[] _metricsProviders;
 
     protected final LastAccessStore<?,?> _lastAccessStore;
     
@@ -69,7 +69,7 @@ public class NodeMetricsServlet extends ServletBase
      */
 
     public NodeMetricsServlet(SharedServiceStuff stuff, Stores<?,?> stores,
-            AllOperationMetrics.Provider opMetrics)
+            AllOperationMetrics.Provider[] metricsProviders)
     {
         // null -> use servlet path base as-is
         super(null, null);
@@ -88,7 +88,7 @@ public class NodeMetricsServlet extends ServletBase
                 .without(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         _entryStore = stores.getEntryStore();
         _lastAccessStore = stores.getLastAccessStore();
-        _operationMetrics = opMetrics;
+        _metricsProviders = metricsProviders;
     }
 
     /*
@@ -160,8 +160,11 @@ public class NodeMetricsServlet extends ServletBase
                 _lastAccessStore.getEntryCount(),
                 _clean(_lastAccessStore.getEntryStatistics(BACKEND_STATS_CONFIG)));
 
-        metrics.operations = _operationMetrics.getOperationMetrics();
-        
+        AllOperationMetrics opMetrics = new AllOperationMetrics();
+        metrics.operations = opMetrics;
+        for (AllOperationMetrics.Provider provider : _metricsProviders) {
+            provider.fillOperationMetrics(opMetrics);
+        }
         return metrics;
     }
 

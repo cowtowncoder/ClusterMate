@@ -10,6 +10,8 @@ import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
+import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.OperationMetrics;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -19,15 +21,13 @@ import com.yammer.metrics.core.TimerContext;
 public class StoreListServlet<K extends EntryKey,
     E extends StoredEntry<K>
 >
-    extends ServletBase
+    extends MetricsServletBase
 {
     /*
     /**********************************************************************
     /* Helper objects
     /**********************************************************************
      */
-        
-//        private final Log LOG = Log.forClass(getClass());
 
     protected final StoreHandler<K,E,?> _storeHandler;
 
@@ -66,6 +66,11 @@ public class StoreListServlet<K extends EntryKey,
         }
     }
 
+    @Override
+    public void fillOperationMetrics(AllOperationMetrics metrics) {
+        metrics.LIST = ExternalOperationMetrics.create(_listMetrics);
+    }
+    
     /*
     /**********************************************************************
     /* Default implementation for key handling

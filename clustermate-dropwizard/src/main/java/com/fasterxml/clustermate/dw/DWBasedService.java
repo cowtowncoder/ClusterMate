@@ -333,8 +333,8 @@ public abstract class DWBasedService<
 
     protected ServletBase constructNodeMetricsServlet(SharedServiceStuff stuff,
             ClusterViewByServer cluster, Stores<K,E> stores,
-            AllOperationMetrics.Provider opMetrics) {
-        return new NodeMetricsServlet(stuff, stores, opMetrics);
+            AllOperationMetrics.Provider[] metrics) {
+        return new NodeMetricsServlet(stuff, stores, metrics);
     }
         
     protected SyncListServlet<K,E> constructSyncListServlet(SharedServiceStuff stuff,
@@ -369,19 +369,21 @@ public abstract class DWBasedService<
     {
         final ClusterViewByServer cluster = syncHandler.getCluster();
         ServletBase nodeStatusServlet = constructNodeStatusServlet(stuff, nodeHandler);
-        ServletBase syncListServlet = constructSyncListServlet(
+        MetricsServletBase syncListServlet = constructSyncListServlet(
                 stuff, cluster, syncHandler);
         ServletBase syncPullServlet = constructSyncPullServlet(
                 stuff, cluster, syncHandler);
         StoreEntryServlet<K,E> storeEntryServlet = constructStoreEntryServlet(stuff,
                 cluster, storeHandler);
-        ServletBase storeListServlet = constructStoreListServlet(stuff,
+        MetricsServletBase storeListServlet = constructStoreListServlet(stuff,
                 cluster, storeHandler);
 
         ServletBase nodeMetricsServlet = constructNodeMetricsServlet(stuff, cluster,
                 storeHandler.getStores(),
-                /*(AllOperationMetrics.Provider)*/ storeEntryServlet
-                );
+                new AllOperationMetrics.Provider[] {
+                    storeEntryServlet, syncListServlet, storeListServlet
+                }
+        );
         
         ServiceDispatchServlet<K,E> dispatcher = new ServiceDispatchServlet<K,E>(cluster, stuff,
                 nodeStatusServlet, nodeMetricsServlet,

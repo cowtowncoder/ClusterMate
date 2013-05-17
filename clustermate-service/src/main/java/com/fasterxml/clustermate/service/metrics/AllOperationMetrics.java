@@ -1,12 +1,19 @@
 package com.fasterxml.clustermate.service.metrics;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+@JsonPropertyOrder({ "GET", "PUT", "DELETE", "LIST", "SYNCLIST" })
 public class AllOperationMetrics
 {
     public ExternalOperationMetrics GET;
     public ExternalOperationMetrics PUT;
     public ExternalOperationMetrics DELETE;
 
+    public ExternalOperationMetrics LIST;
+    
+    public ExternalOperationMetrics SYNCLIST;
+    
     public static interface Provider {
-        public AllOperationMetrics getOperationMetrics();
+        public void fillOperationMetrics(AllOperationMetrics metrics);
     }
 }

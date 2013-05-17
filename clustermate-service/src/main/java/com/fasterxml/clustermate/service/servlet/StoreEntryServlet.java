@@ -123,13 +123,11 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
      */
 
     @Override
-    public AllOperationMetrics getOperationMetrics()
+    public void fillOperationMetrics(AllOperationMetrics metrics)
     {
-        AllOperationMetrics metrics = new AllOperationMetrics();
-        metrics.GET = new ExternalOperationMetrics(_getMetrics);
-        metrics.PUT = new ExternalOperationMetrics(_putMetrics);
-        metrics.DELETE = new ExternalOperationMetrics(_deleteMetrics);
-        return metrics;
+        metrics.GET = ExternalOperationMetrics.create(_getMetrics);
+        metrics.PUT = ExternalOperationMetrics.create(_putMetrics);
+        metrics.DELETE = ExternalOperationMetrics.create(_deleteMetrics);
     }
     
     /*

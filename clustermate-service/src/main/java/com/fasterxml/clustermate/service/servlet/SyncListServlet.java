@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import com.yammer.metrics.core.TimerContext;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
@@ -12,14 +13,15 @@ import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
+import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.OperationMetrics;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
-import com.yammer.metrics.core.TimerContext;
 
 @SuppressWarnings("serial")
 public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
-    extends ServletBase
+    extends MetricsServletBase
 {
     protected final SyncHandler<K,E> _syncHandler;
 
@@ -50,7 +52,12 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
         _terminated.set(true);
         super.destroy();
     }
-    
+
+    @Override
+    public void fillOperationMetrics(AllOperationMetrics metrics) {
+        metrics.SYNCLIST = ExternalOperationMetrics.create(_listMetrics);
+    }
+
     @Override
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
