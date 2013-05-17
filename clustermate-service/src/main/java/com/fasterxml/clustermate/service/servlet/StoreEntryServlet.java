@@ -15,6 +15,7 @@ import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
+import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.OperationMetrics;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -125,9 +126,9 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     public AllOperationMetrics getOperationMetrics()
     {
         AllOperationMetrics metrics = new AllOperationMetrics();
-        metrics.GET = _getMetrics;
-        metrics.PUT = _putMetrics;
-        metrics.DELETE = _deleteMetrics;
+        metrics.GET = new ExternalOperationMetrics(_getMetrics);
+        metrics.PUT = new ExternalOperationMetrics(_putMetrics);
+        metrics.DELETE = new ExternalOperationMetrics(_deleteMetrics);
         return metrics;
     }
     
@@ -210,7 +211,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     public void handleDelete(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
-        final OperationMetrics metrics = _putMetrics;
+        final OperationMetrics metrics = _deleteMetrics;
         TimerContext timer = (metrics == null) ? null : metrics.start();
 
         try {

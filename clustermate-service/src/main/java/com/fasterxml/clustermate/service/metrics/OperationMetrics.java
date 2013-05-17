@@ -3,23 +3,16 @@ package com.fasterxml.clustermate.service.metrics;
 import java.util.concurrent.TimeUnit;
 
 import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.Counter;
-import com.yammer.metrics.core.Histogram;
-import com.yammer.metrics.core.Meter;
-import com.yammer.metrics.core.MetricName;
-import com.yammer.metrics.core.Timer;
-import com.yammer.metrics.core.TimerContext;
+import com.yammer.metrics.core.*;
 
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.storemate.store.Storable;
 
 /**
- * Helper class for aggregating sets of CRUD endpoint
+ * Helper class for aggregating sets of internal CRUD endpoint
  * metrics.
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class OperationMetrics
 {
     protected final ServiceConfig _serviceConfig;
@@ -29,10 +22,8 @@ public class OperationMetrics
     /* Actual metric aggregators
     /**********************************************************************
      */
-    
-    protected final Counter _metricInFlight;
 
-    protected final Meter _metricRate;
+    protected final Counter _metricInFlight;
 
     protected final Timer _metricTimes;
 
@@ -50,10 +41,6 @@ public class OperationMetrics
 
     public Counter getInFlight() {
         return _metricInFlight;
-    }
-
-    public Meter getRate() {
-        return _metricRate;
     }
 
     public Timer getTimes() {
@@ -84,8 +71,6 @@ public class OperationMetrics
         
         // first: in-flight counter, "active" requests
         _metricInFlight = Metrics.newCounter(new MetricName(metricGroup, operationName, "active"));
-        _metricRate = Metrics.newMeter(new MetricName(metricGroup, operationName, "rate"),
-                "requests", TimeUnit.SECONDS);
         _metricTimes = Metrics.newTimer(new MetricName(metricGroup, operationName, "times"),
                 TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
 
@@ -118,7 +103,6 @@ public class OperationMetrics
             return null;
         }
         _metricInFlight.inc();
-        _metricRate.mark();            
         return _metricTimes.time();
     }
 

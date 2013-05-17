@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.9.7 (xx-xxx-2013)
+
+- Improve rate-metrics exposure
+
 0.9.6 (16-May-2013)
 - Add configuration for last-accessed store, to allow use of deferred writes and
   overriding default settings like cache size.
