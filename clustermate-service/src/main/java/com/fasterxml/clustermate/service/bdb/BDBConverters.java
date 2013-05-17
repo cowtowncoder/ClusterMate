@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.service.bdb;
 
+import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.util.WithBytesCallback;
 import com.sleepycat.je.DatabaseEntry;
 
@@ -21,6 +22,10 @@ public class BDBConverters
             }
             return new DatabaseEntry(buffer, offset, length);
         }
+    }
+
+    public static DatabaseEntry dbKey(StorableKey rawKey) {
+        return rawKey.with(simpleConverter);
     }
 
     @Deprecated

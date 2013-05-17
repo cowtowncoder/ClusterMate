@@ -88,10 +88,10 @@ public class StoredEntryConverterForTests
     public final StoredEntry<TestKey> entryFromStorable(final TestKey key, final Storable raw)
     {
         return raw.withMetadata(new WithBytesCallback<StoredEntry<TestKey>>() {
-         @Override
-         public StoredEntry<TestKey> withBytes(byte[] buffer, int offset, int length) {
-             return entryFromStorable(key, raw, buffer, offset, length);
-         }
+            @Override
+            public StoredEntry<TestKey> withBytes(byte[] buffer, int offset, int length) {
+                return entryFromStorable(key, raw, buffer, offset, length);
+            }
         });
     }
 

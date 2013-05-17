@@ -1,13 +1,12 @@
 package com.fasterxml.clustermate.service.bdb;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import com.sleepycat.je.*;
 
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.store.StoreException;
-import com.fasterxml.storemate.store.backend.BackendStats;
-import com.fasterxml.storemate.store.backend.BackendStatsConfig;
-import com.fasterxml.storemate.store.backend.IterationAction;
-import com.fasterxml.storemate.store.backend.IterationResult;
+import com.fasterxml.storemate.store.backend.*;
 import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
 
 import com.fasterxml.clustermate.api.EntryKey;
@@ -36,6 +35,8 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
      */
     protected final Database _store;
 
+    protected final AtomicBoolean _closed = new AtomicBoolean(true);
+    
     /*
     /**********************************************************************
     /* Life cycle
@@ -52,8 +53,16 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
     }
 
     @Override
+    public void start() {
+        _closed.set(false);
+    }
+    
+    @Override
     public void prepareForStop()
     {
+        // mark this as closed already...  to help avoid cleanup task start
+        _closed.set(true);
+        
         // 02-May-2013, tsaloranta: Better sync() if we use deferred writes
         //   (otherwise not allowed to)
         if (_store.getConfig().getDeferredWrite()) {
@@ -72,6 +81,11 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
     /**********************************************************************
      */
 
+    @Override
+    public boolean isClosed() {
+        return _closed.get();
+    }
+    
     @Override
     public boolean hasEfficientEntryCount() {
         // yes, BDB-JE does have this info
@@ -131,7 +145,7 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
     @Override
     public void updateLastAccess(E entry, long timestamp)
     {
-        DatabaseEntry lastAccessKey = lastAccessKey(entry);
+        DatabaseEntry lastAccessKey = _lastAccessKey(entry);
         if (lastAccessKey != null) {
             /* 18-Sep-2012, tatu: Should we try to enforce constraint on monotonically
              *   increasing timestamps? Since this is not used for peer-to-peer syncing,
@@ -145,11 +159,19 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
     }
 
     @Override
-    public boolean removeLastAccess(K key, LastAccessUpdateMethod method, long timestamp)
+    public boolean removeLastAccess(K key, LastAccessUpdateMethod method, long timestamp) {
+        return _remove(lastAccessKey(key, method));
+    }
+
+    @Override
+    public boolean removeLastAccess(StorableKey rawKey) {
+        return _remove(BDBConverters.dbKey(rawKey));
+    }
+    
+    protected boolean _remove(DatabaseEntry rawKey)
     {
-        DatabaseEntry lastAccessKey = lastAccessKey(key, method);
-        if (lastAccessKey != null) {
-            OperationStatus status = _store.delete(null, lastAccessKey);
+        if (rawKey != null) {
+            OperationStatus status = _store.delete(null, rawKey);
             switch (status) {
             case SUCCESS:
             case KEYEXIST:
@@ -200,7 +222,7 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
     /* Internal methods
     /**********************************************************************
      */
-
+    
     protected StorableKey _storableKey(DatabaseEntry entry) {
         return new StorableKey(entry.getData(), entry.getOffset(), entry.getSize());
     }
@@ -216,7 +238,7 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
         }
         throw new StoreException.Internal(key, bdbException);
     }
-    
+
     protected DatabaseConfig dbConfig(Environment env, LastAccessConfig config)
     {
         DatabaseConfig dbConfig = new DatabaseConfig();
@@ -227,9 +249,10 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
         dbConfig.setDeferredWrite(config.useDeferredWrites());
         return dbConfig;
     }
-    private DatabaseEntry lastAccessKey(E entry) {
+
+    protected DatabaseEntry _lastAccessKey(E entry) {
         return lastAccessKey(entry.getKey(), entry.getLastAccessUpdateMethod());
     }
-    
+
     protected abstract DatabaseEntry lastAccessKey(K key, LastAccessUpdateMethod acc);
 }

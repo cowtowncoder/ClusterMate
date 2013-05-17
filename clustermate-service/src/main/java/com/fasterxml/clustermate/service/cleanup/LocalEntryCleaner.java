@@ -37,7 +37,7 @@ public class LocalEntryCleaner<K extends EntryKey, E extends StoredEntry<K>>
 
     protected LastAccessStore<K, E> _lastAccessStore;
 
-    protected StoredEntryConverter<K,E,?> _entryFactory;
+    protected StoredEntryConverter<K,E,?> _entryConverter;
     
     protected boolean _isTesting;
     
@@ -52,7 +52,7 @@ public class LocalEntryCleaner<K extends EntryKey, E extends StoredEntry<K>>
     {
         super.init(stuff, stores, cluster, shutdown);
         _tombstoneTTLMsecs = stuff.getServiceConfig().cfgTombstoneTTL.getMillis();
-        _entryFactory = stuff.getEntryConverter();
+        _entryConverter = stuff.getEntryConverter();
         _entryStore = stores.getEntryStore();
         _lastAccessStore = (LastAccessStore<K, E>) stores.getLastAccessStore();
         _isTesting = stuff.isRunningTests();
@@ -92,7 +92,7 @@ public class LocalEntryCleaner<K extends EntryKey, E extends StoredEntry<K>>
             public IterationAction processEntry(Storable raw) throws StoreException
             {
                 // for tombstones easy, common max-TTL:
-                final StoredEntry<K> entry = _entryFactory.entryFromStorable(raw);
+                final StoredEntry<K> entry = _entryConverter.entryFromStorable(raw);
                 if (raw.isDeleted()) {
                     if (entry.insertedBefore(tombstoneThreshold)) {
                         delete(raw.getKey());

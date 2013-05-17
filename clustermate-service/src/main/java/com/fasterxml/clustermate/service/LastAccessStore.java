@@ -57,6 +57,8 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
     /**********************************************************************
      */
 
+    public abstract boolean isClosed();
+    
     /**
      * Method for checking whether link {@link #getEntryCount} has a method
      * to produce entry count using a method that is more efficient than
@@ -124,6 +126,12 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
      */
     public abstract boolean removeLastAccess(K key, LastAccessUpdateMethod method, long timestamp);
 
+    /**
+     * Alternate "raw" delete method, used when have a physical key; most commonly
+     * during cleanup process.
+     */
+    public abstract boolean removeLastAccess(StorableKey rawKey);
+    
     /*
     /**********************************************************************
     /* Public API, traversal

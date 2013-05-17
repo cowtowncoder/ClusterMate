@@ -12,6 +12,8 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  * Specialized sub-type of Entry servlet that will either serve request
  * locally (if data available), or return redirect code to indicate
  * client who to call instead.
+ *<p>
+ * TODO: complete -- not yet ready
  */
 @SuppressWarnings("serial")
 public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
