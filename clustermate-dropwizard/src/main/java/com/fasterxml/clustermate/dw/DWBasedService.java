@@ -30,8 +30,6 @@ import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cleanup.CleanerUpper;
 import com.fasterxml.clustermate.service.cleanup.CleanupTask;
-import com.fasterxml.clustermate.service.cleanup.FileCleaner;
-import com.fasterxml.clustermate.service.cleanup.LocalEntryCleaner;
 import com.fasterxml.clustermate.service.cluster.*;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.servlet.*;
