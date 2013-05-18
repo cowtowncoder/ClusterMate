@@ -369,13 +369,13 @@ public abstract class DWBasedService<
     {
         final ClusterViewByServer cluster = syncHandler.getCluster();
         ServletBase nodeStatusServlet = constructNodeStatusServlet(stuff, nodeHandler);
-        MetricsServletBase syncListServlet = constructSyncListServlet(
+        ServletWithMetricsBase syncListServlet = constructSyncListServlet(
                 stuff, cluster, syncHandler);
         ServletBase syncPullServlet = constructSyncPullServlet(
                 stuff, cluster, syncHandler);
         StoreEntryServlet<K,E> storeEntryServlet = constructStoreEntryServlet(stuff,
                 cluster, storeHandler);
-        MetricsServletBase storeListServlet = constructStoreListServlet(stuff,
+        ServletWithMetricsBase storeListServlet = constructStoreListServlet(stuff,
                 cluster, storeHandler);
 
         ServletBase nodeMetricsServlet = constructNodeMetricsServlet(stuff, cluster,

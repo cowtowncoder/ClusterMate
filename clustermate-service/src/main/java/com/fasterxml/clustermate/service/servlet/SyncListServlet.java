@@ -21,7 +21,7 @@ import com.fasterxml.clustermate.service.sync.SyncHandler;
 
 @SuppressWarnings("serial")
 public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
-    extends MetricsServletBase
+    extends ServletWithMetricsBase
 {
     protected final SyncHandler<K,E> _syncHandler;
 

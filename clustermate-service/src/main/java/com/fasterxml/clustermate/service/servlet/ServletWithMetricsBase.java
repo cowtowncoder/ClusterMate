@@ -8,11 +8,11 @@ import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
  * metrics information.
  */
 @SuppressWarnings("serial")
-public abstract class MetricsServletBase
+public abstract class ServletWithMetricsBase
     extends ServletBase
     implements AllOperationMetrics.Provider
 {
-    protected MetricsServletBase(ClusterViewByServer clusterView,
+    protected ServletWithMetricsBase(ClusterViewByServer clusterView,
             String servletPathBase)
     {
         super(clusterView, servletPathBase);

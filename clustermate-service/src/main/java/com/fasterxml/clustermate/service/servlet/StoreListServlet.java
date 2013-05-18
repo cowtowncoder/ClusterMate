@@ -21,7 +21,7 @@ import com.yammer.metrics.core.TimerContext;
 public class StoreListServlet<K extends EntryKey,
     E extends StoredEntry<K>
 >
-    extends MetricsServletBase
+    extends ServletWithMetricsBase
 {
     /*
     /**********************************************************************

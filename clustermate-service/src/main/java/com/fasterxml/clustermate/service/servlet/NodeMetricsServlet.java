@@ -40,8 +40,11 @@ public class NodeMetricsServlet extends ServletBase
      */
     protected final static String QUERY_PARAM_FULL = "full";
 
-    // Only probe for metrics once every 5 minutes
-    protected final static long UPDATE_PERIOD_MSECS = 5L * 60 * 1000;
+    // Only probe for metrics once per minute (unless forced)
+    protected final static long UPDATE_PERIOD_MSECS = 1L * 60 * 1000;
+
+    // And even with forcing, do not query more often than once per second
+    protected final static long MINIMUM_MSECS_BETWEEN_RECALC = 1000L;
     
     // let's only collect what can be gathered fast; not reset stats
     protected final static BackendStatsConfig BACKEND_STATS_CONFIG
@@ -112,14 +115,14 @@ public class NodeMetricsServlet extends ServletBase
             SerializedMetrics ser = _cachedMetrics.get();
             long now = _timeMaster.currentTimeMillis();
     
-            if (ser == null || forceRefresh || now >= ser.cacheUntil) {
+            if (_shouldRefresh(forceRefresh, now, ser)) {
                 ExternalMetrics metrics = _gatherMetrics(now, full);
                 byte[] raw;
                     raw = _jsonWriter
                             // for diagnostics:
                             .withDefaultPrettyPrinter()
                             .writeValueAsBytes(metrics);
-                ser = new SerializedMetrics(now + UPDATE_PERIOD_MSECS, raw);
+                ser = new SerializedMetrics(now, raw);
                 _cachedMetrics.set(ser);
             }
             response = (ServletServiceResponse) response.ok()
@@ -136,6 +139,15 @@ public class NodeMetricsServlet extends ServletBase
         }
     }
 
+    private static boolean _shouldRefresh(boolean forced, long now, SerializedMetrics metrics)
+    {
+        if (metrics == null) {
+            return true;
+        }
+        long wait = forced ? MINIMUM_MSECS_BETWEEN_RECALC : UPDATE_PERIOD_MSECS;
+        return now >= (metrics.created + wait);
+    }
+    
     /*
     /**********************************************************************
     /* Internal methods
@@ -206,11 +218,11 @@ public class NodeMetricsServlet extends ServletBase
 
     private final static class SerializedMetrics
     {
-        public final long cacheUntil;
+        public final long created;
         public final byte[] serialized;
 
-        public SerializedMetrics(long expiration, byte[] data) {
-            cacheUntil = expiration;
+        public SerializedMetrics(long cr, byte[] data) {
+            created = cr;
             serialized = data;
         }
     }
