@@ -188,6 +188,7 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
     /**********************************************************************
      */
 
+    @Override
     public IterationResult scanEntries(LastAccessIterationCallback cb)
         throws StoreException
     {

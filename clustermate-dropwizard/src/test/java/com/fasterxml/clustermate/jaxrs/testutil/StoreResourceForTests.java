@@ -14,13 +14,10 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
 public class StoreResourceForTests<K extends EntryKey, E extends StoredEntry<K>>
     extends StoreResource<K, E>
 {
-    public SharedServiceStuff _stuff;
-    
     public StoreResourceForTests(ClusterViewByServer clusterView,
             StoreHandler<K,E,?> storeHandler, SharedServiceStuff stuff)
     {
         super(stuff, clusterView, storeHandler);
-        _stuff = stuff;
     }
 
     public KeyRange getKeyRange() {

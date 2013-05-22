@@ -21,6 +21,7 @@ import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.impl.StorableStoreImpl;
 
 import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.jaxrs.IndexResource;
@@ -368,27 +369,34 @@ public abstract class DWBasedService<
             StoreHandler<K,E,L> storeHandler)
     {
         final ClusterViewByServer cluster = syncHandler.getCluster();
-        ServletBase nodeStatusServlet = constructNodeStatusServlet(stuff, nodeHandler);
-        ServletWithMetricsBase syncListServlet = constructSyncListServlet(
-                stuff, cluster, syncHandler);
-        ServletBase syncPullServlet = constructSyncPullServlet(
-                stuff, cluster, syncHandler);
+
+        EnumMap<PathType, ServletBase> servlets = new EnumMap<PathType, ServletBase>(PathType.class);
+        servlets.put(PathType.NODE_STATUS, constructNodeStatusServlet(stuff, nodeHandler));
+
+        ServletWithMetricsBase syncListServlet = constructSyncListServlet(stuff, cluster, syncHandler);
+        servlets.put(PathType.SYNC_LIST, syncListServlet);
+        ServletBase syncPullServlet = constructSyncPullServlet(stuff, cluster, syncHandler);
+        servlets.put(PathType.SYNC_PULL, syncPullServlet);
         StoreEntryServlet<K,E> storeEntryServlet = constructStoreEntryServlet(stuff,
                 cluster, storeHandler);
+        servlets.put(PathType.STORE_ENTRY, storeEntryServlet);
         ServletWithMetricsBase storeListServlet = constructStoreListServlet(stuff,
                 cluster, storeHandler);
+        servlets.put(PathType.STORE_LIST, storeListServlet);
 
-        ServletBase nodeMetricsServlet = constructNodeMetricsServlet(stuff, cluster,
+        servlets.put(PathType.NODE_METRICS, constructNodeMetricsServlet(stuff, cluster,
                 storeHandler.getStores(),
                 new AllOperationMetrics.Provider[] {
-                    storeEntryServlet, syncListServlet, storeListServlet
+                    storeEntryServlet, storeListServlet, syncListServlet
                 }
-        );
+        ));
+
+
+//        servlets.put(PathType.STORE_FIND_ENTRY, );
+//        servlets.put(PathType.STORE_FIND_LIST, );
         
-        ServiceDispatchServlet<K,E> dispatcher = new ServiceDispatchServlet<K,E>(cluster, stuff,
-                nodeStatusServlet, nodeMetricsServlet,
-                storeEntryServlet, storeListServlet,
-                syncListServlet, syncPullServlet);
+        ServiceDispatchServlet<K,E> dispatcher = new ServiceDispatchServlet<K,E>(cluster,
+                null, stuff, servlets);
 
         RequestPathBuilder rootBuilder = rootPath(stuff.getServiceConfig());
         String rootPath = servletPath(rootBuilder);

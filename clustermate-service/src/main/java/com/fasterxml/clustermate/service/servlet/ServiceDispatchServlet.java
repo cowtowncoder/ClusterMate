@@ -1,6 +1,7 @@
 package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
+import java.util.EnumMap;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,20 +24,7 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
 {
     protected final RequestPathStrategy _pathStrategy;
 
-    // Delegatees:
-
-    protected final ServletBase _nodeStatusServlet;
-    protected final ServletBase _nodeMetricsServlet;
-
-    protected final ServletBase _storeEntryServlet;
-
-    protected final ServletBase _storeListServlet;
-
-    protected final ServletBase _syncListServlet;
-    protected final ServletBase _syncPullServlet;
-
-    protected final ServletBase _storeFindEntryServlet;
-    protected final ServletBase _storeFindListServlet;
+    protected final EnumMap<PathType, ServletBase> _servletsByPath;
     
     /*
     /**********************************************************************
@@ -49,6 +37,18 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
      * root for resolving references to entry points, as per
      * configured
      */
+    public ServiceDispatchServlet(ClusterViewByServer clusterView, String servletPathBase,
+            SharedServiceStuff stuff,
+            EnumMap<PathType, ServletBase> servlets)
+    {
+        // null -> use servlet path base as-is
+        super(clusterView, servletPathBase);
+
+        _pathStrategy = stuff.getPathStrategy();
+        _servletsByPath = servlets;
+    }
+
+    @Deprecated
     public ServiceDispatchServlet(ClusterViewByServer clusterView,
             SharedServiceStuff stuff,
             ServletBase nodeStatusServlet, ServletBase nodeMetricsServlet,
@@ -60,7 +60,8 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
                 syncListServlet, syncPullServlet,
                 storeEntryServlet, storeListServlet);
     }
-    
+
+    @Deprecated
     public ServiceDispatchServlet(ClusterViewByServer clusterView, String servletPathBase,
             SharedServiceStuff stuff,
             ServletBase nodeStatusServlet, ServletBase nodeMetricsServlet,
@@ -71,19 +72,17 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
         super(clusterView, servletPathBase);
 
         _pathStrategy = stuff.getPathStrategy();
+        
+        EnumMap<PathType, ServletBase> servlets = new EnumMap<PathType, ServletBase>(PathType.class);
 
-        _nodeStatusServlet = nodeStatusServlet;
-        _nodeMetricsServlet = nodeMetricsServlet;
+        servlets.put(PathType.NODE_STATUS, nodeStatusServlet);
+        servlets.put(PathType.NODE_METRICS, nodeMetricsServlet);
+        servlets.put(PathType.SYNC_LIST, syncListServlet);
+        servlets.put(PathType.SYNC_PULL, syncPullServlet);
+        servlets.put(PathType.STORE_ENTRY, storeEntryServlet);
+        servlets.put(PathType.STORE_LIST, storeListServlet);
 
-        _syncListServlet = syncListServlet;
-        _syncPullServlet = syncPullServlet;
-
-        _storeEntryServlet = storeEntryServlet;
-        _storeListServlet = storeListServlet;
-
-        // !!! TODO:
-        _storeFindEntryServlet = null;
-        _storeFindListServlet = null;
+        _servletsByPath = servlets;
     }
 
     /*
@@ -190,28 +189,7 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
     {
         PathType type = _pathStrategy.matchPath(request);
         if (type != null) {
-            switch (type) {
-            case NODE_STATUS:
-                return _nodeStatusServlet;
-            case NODE_METRICS:
-                return _nodeMetricsServlet;
-
-            case STORE_ENTRY:
-                return _storeEntryServlet;
-            case STORE_LIST:
-                return _storeListServlet;
-            case STORE_FIND_ENTRY:
-                return _storeFindEntryServlet;
-            case STORE_FIND_LIST:
-                return _storeFindListServlet;
-            case STORE_STATUS: // is this needed?
-                return null;
-
-            case SYNC_LIST:
-                return _syncListServlet;
-            case SYNC_PULL:
-                return _syncPullServlet;
-            }
+            return _servletsByPath.get(type);
         }
         return null;
     }
