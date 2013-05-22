@@ -2,16 +2,18 @@ Project: ClusterMate
 
 0.9.7 (xx-xxx-2013)
 
+#24: Add extension point(s) for cleanup task for last-accessed entries
 - Improve rate-metrics exposure
 - Refactor handling of paths (PathType) to simplify adding of endpoints
 
 0.9.6 (16-May-2013)
+
+#22: Redefine field in `EntryLastAccessed` to mean expiration, not create time: needed
+  to support clean up of orphan timestamps (including ones for groups, parent info)
 - Add configuration for last-accessed store, to allow use of deferred writes and
   overriding default settings like cache size.
 - Allow customization of `CleanerUpper` (via DWBasedService)
 - Relocate and refactor `LastAccessStore`, `NodeStateStore`, to allow for non-BDB-JE impls
-- Redefine field in `EntryLastAccessed` to mean expiration, not create time: needed
-  to support clean up of orphan timestamps (including ones for groups, parent info)
 
 0.9.5 (30-Apr-2013)
 

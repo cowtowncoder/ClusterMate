@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
 import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
@@ -64,7 +65,7 @@ public class JdkHttpContentPutter<K extends EntryKey>
         throws IOException, ExecutionException, InterruptedException
     {
         JdkHttpClientPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendStoreEntryPath(path);
+        path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
         path = _keyConverter.appendToPath(path, contentId);       
         // Ok; and then figure out most optimal way for getting content:
 

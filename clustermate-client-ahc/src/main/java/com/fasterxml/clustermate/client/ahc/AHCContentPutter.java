@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
@@ -133,7 +134,7 @@ public class AHCContentPutter<K extends EntryKey>
         throws IOException, ExecutionException, InterruptedException
     {
         AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendStoreEntryPath(path);
+        path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
         path = _keyConverter.appendToPath(path, contentId);       
         BoundRequestBuilder reqBuilder = path.putRequest(_httpClient);
         Generator<K> gen = new Generator<K>(content, _keyConverter);

@@ -6,6 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import com.fasterxml.clustermate.api.ClusterStatusAccessor;
+import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
@@ -39,7 +40,7 @@ public class JdkClusterStatusAccessor extends ClusterStatusAccessor
     {
         RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(ip)
             .addPathSegments(_basePath);
-        pathBuilder = _paths.appendNodeStatusPath(pathBuilder);
+        pathBuilder = _paths.appendPath(pathBuilder,  PathType.NODE_STATUS);
         return getClusterStatus(pathBuilder.toString(), timeoutMsecs);
     }
 
