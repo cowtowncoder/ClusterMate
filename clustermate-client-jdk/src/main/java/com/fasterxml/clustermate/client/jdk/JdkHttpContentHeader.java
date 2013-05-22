@@ -5,6 +5,7 @@ import java.net.URL;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.CallConfig;
 import com.fasterxml.clustermate.client.call.ContentHeader;
@@ -44,7 +45,7 @@ public class JdkHttpContentHeader<K extends EntryKey>
         }
         try {
             JdkHttpClientPathBuilder path = _server.rootPath();
-            path = _pathFinder.appendStoreEntryPath(path);
+            path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
             path = _keyConverter.appendToPath(path, contentId);
             URL url = path.asURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();

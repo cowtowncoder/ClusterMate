@@ -11,6 +11,7 @@ import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.ListItemType;
+import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
@@ -52,7 +53,7 @@ public class AHCEntryLister<K extends EntryKey>
             return failed(CallFailure.timeout(_server, startTime, startTime));
         }
         AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendStoreListPath(path);
+        path = _pathFinder.appendPath(path, PathType.STORE_LIST);
         path = _keyConverter.appendToPath(path, prefix);
         BoundRequestBuilder reqBuilder = path
                 .listRequest(_httpClient)

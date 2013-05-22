@@ -54,33 +54,51 @@ public abstract class RequestPathStrategy
      *    entry id.
      */
     @Deprecated
-    public <B extends RequestPathBuilder> B appendStoreEntryPath(B nodeRoot) { return null; }
+    public <B extends RequestPathBuilder> B appendStoreEntryPath(B nodeRoot) {
+        return appendPath(nodeRoot, PathType.STORE_ENTRY);
+    }
 
     @Deprecated
-    public <B extends RequestPathBuilder> B appendStoreListPath(B nodeRoot) { return null; }
+    public <B extends RequestPathBuilder> B appendStoreListPath(B nodeRoot) {
+        return appendPath(nodeRoot, PathType.STORE_LIST);
+    }
 
     @Deprecated
-    public <B extends RequestPathBuilder> B appendStoreStatusPath(B nodeRoot) { return null; }
+    public <B extends RequestPathBuilder> B appendStoreStatusPath(B nodeRoot) {
+        return appendPath(nodeRoot, PathType.STORE_STATUS);
+    }
     
     @Deprecated
-    public <B extends RequestPathBuilder> B appendStoreFindEntryPath(B nodeRoot) { return null; }
+    public <B extends RequestPathBuilder> B appendStoreFindEntryPath(B nodeRoot) {
+        return appendPath(nodeRoot, PathType.STORE_FIND_ENTRY);
+    }
 
     @Deprecated
-    public <B extends RequestPathBuilder> B appendStoreFindListPath(B nodeRoot) { return null; }
+    public <B extends RequestPathBuilder> B appendStoreFindListPath(B nodeRoot) {
+        return appendPath(nodeRoot, PathType.STORE_FIND_LIST);
+    }
     
     // // Node status, related:
     
     @Deprecated
-    public <B extends RequestPathBuilder> B appendNodeStatusPath(B nodeRoot) { return null; }
+    public <B extends RequestPathBuilder> B appendNodeStatusPath(B nodeRoot) {
+        return appendPath(nodeRoot, PathType.NODE_STATUS);
+    }
 
     @Deprecated
-    public <B extends RequestPathBuilder> B appendNodeMetricsPath(B nodeRoot) { return null; }
-    
+    public <B extends RequestPathBuilder> B appendNodeMetricsPath(B nodeRoot) {
+        return appendPath(nodeRoot, PathType.NODE_METRICS);
+    }
+
     // // Sync handling:
     
     @Deprecated
-    public <B extends RequestPathBuilder> B appendSyncListPath(B nodeRoot) { return null; }
+    public <B extends RequestPathBuilder> B appendSyncListPath(B nodeRoot) {
+        return appendPath(nodeRoot, PathType.SYNC_LIST);
+    }
 
     @Deprecated
-    public <B extends RequestPathBuilder> B appendSyncPullPath(B nodeRoot) { return null; }
+    public <B extends RequestPathBuilder> B appendSyncPullPath(B nodeRoot) {
+        return appendPath(nodeRoot, PathType.SYNC_PULL);
+    }
 }

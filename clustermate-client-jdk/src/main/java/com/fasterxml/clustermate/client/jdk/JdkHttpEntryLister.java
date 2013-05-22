@@ -43,7 +43,7 @@ public class JdkHttpEntryLister<K extends EntryKey>
         }
         
         JdkHttpClientPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendStoreListPath(path);
+        path = _pathFinder.appendPath(path, PathType.STORE_LIST);
         path = _keyConverter.appendToPath(path, prefix);
         path.addParameter(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES, String.valueOf(maxResults))
                 .addParameter(ClusterMateConstants.QUERY_PARAM_TYPE, type.toString())

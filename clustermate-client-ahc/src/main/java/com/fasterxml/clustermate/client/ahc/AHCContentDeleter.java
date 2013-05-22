@@ -7,6 +7,7 @@ import java.util.concurrent.TimeoutException;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
 import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
@@ -41,7 +42,7 @@ public class AHCContentDeleter<K extends EntryKey>
             return CallFailure.timeout(_server, startTime, startTime);
         }
         AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendStoreEntryPath(path);
+        path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
         path = _keyConverter.appendToPath(path, contentId);    	
         BoundRequestBuilder reqBuilder = path.deleteRequest(_httpClient);
 

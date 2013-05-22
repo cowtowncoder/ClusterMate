@@ -16,6 +16,7 @@ import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.StartAndStoppable;
@@ -364,7 +365,7 @@ public class SyncListAccessor implements StartAndStoppable
         final ServiceConfig config = _stuff.getServiceConfig();
         RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote.getAddress())
             .addPathSegments(config.servicePathRoot);
-        pathBuilder = _stuff.getPathStrategy().appendSyncListPath(pathBuilder);
+        pathBuilder = _stuff.getPathStrategy().appendPath(pathBuilder, PathType.SYNC_LIST);
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_SINCE,
                 String.valueOf(syncedUpTo));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
@@ -382,7 +383,7 @@ public class SyncListAccessor implements StartAndStoppable
         final KeyRange syncRange = cluster.getLocalState().totalRange();
         RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote)
             .addPathSegments(_stuff.getServiceConfig().servicePathRoot);
-        pathBuilder = _stuff.getPathStrategy().appendNodeStatusPath(pathBuilder);
+        pathBuilder = _stuff.getPathStrategy().appendPath(pathBuilder, PathType.NODE_STATUS);
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_TIMESTAMP,
@@ -398,7 +399,7 @@ public class SyncListAccessor implements StartAndStoppable
         final ServiceConfig config = _stuff.getServiceConfig();
         RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(endpoint)
             .addPathSegments(config.servicePathRoot);
-        pathBuilder = _stuff.getPathStrategy().appendSyncPullPath(pathBuilder);
+        pathBuilder = _stuff.getPathStrategy().appendPath(pathBuilder, PathType.SYNC_PULL);
         return pathBuilder.toString();
     }
 }

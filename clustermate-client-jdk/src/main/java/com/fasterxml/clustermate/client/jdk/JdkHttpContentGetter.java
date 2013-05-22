@@ -11,6 +11,7 @@ import com.fasterxml.storemate.shared.util.IOUtil;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.client.call.GetContentProcessor.Handler;
@@ -48,7 +49,7 @@ public class JdkHttpContentGetter<K extends EntryKey>
         }
         try {
             JdkHttpClientPathBuilder path = _server.rootPath();
-            path = _pathFinder.appendStoreEntryPath(path);
+            path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
             path = _keyConverter.appendToPath(path, contentId);
             URL url = path.asURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
