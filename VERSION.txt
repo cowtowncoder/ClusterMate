@@ -1,7 +1,10 @@
 Project: ClusterMate
 
+0.9.8 (not yet released)
+
 0.9.7 (23-May-2013)
 
+#23: Add calls to explicit cleaning of last-accessed entries when entries are deleted
 #24: Add extension point(s) for cleanup task for last-accessed entries
 - Add hooks for deletion of last-accessed entries
 - Improve rate-metrics exposure
