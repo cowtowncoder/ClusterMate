@@ -116,11 +116,10 @@ public class LastAccessedTest extends JaxrsStoreTestBase
         resp = resource.getHandler().getEntry(new FakeHttpRequest(), new FakeHttpResponse(), KEY1B);
         assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1b));
         assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1a));
-        entries.stop();
 
         assertEquals(2L, accessStore.getEntryCount());
 
-        // Finally: we should be able to iterate over last-access entry...
+        // Also: we should be able to iterate over last-access entry...
         final Map<TestKey,EntryLastAccessed> map = new HashMap<TestKey,EntryLastAccessed>();
         accessStore.scanEntries(new LastAccessIterationCallback() {
             @Override
@@ -145,5 +144,28 @@ public class LastAccessedTest extends JaxrsStoreTestBase
         assertNotNull(ungrouped);
         assertEquals(UPDATE_TIME1, ungrouped.lastAccessTime);
         assertEquals(entry2.getCreationTime() + 1000 * entry2.getMaxTTLSecs(), ungrouped.expirationTime);
+
+        // One more thing: deletions. Individual entries -> last-access should disappear
+        response = new FakeHttpResponse();
+        resource.getHandler().removeEntry(new FakeHttpRequest(), response, KEY2);
+        assertEquals(200, response.getStatus());
+
+        assertEquals(0L, accessStore.findLastAccessTime(entry2));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1b));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1a));
+
+        // and grouped; no deletion.
+
+        response = new FakeHttpResponse();
+        resource.getHandler().removeEntry(new FakeHttpRequest(), response, KEY1A);
+        assertEquals(200, response.getStatus());
+
+        assertEquals(0L, accessStore.findLastAccessTime(entry2));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1b));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1a));
+
+        // Close'em
+        entries.stop();
+        accessStore.stop();
     }
 }

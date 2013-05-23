@@ -3,6 +3,7 @@ Project: ClusterMate
 0.9.7 (xx-xxx-2013)
 
 #24: Add extension point(s) for cleanup task for last-accessed entries
+- Add hooks for deletion of last-accessed entries
 - Improve rate-metrics exposure
 - Refactor handling of paths (PathType) to simplify adding of endpoints
 

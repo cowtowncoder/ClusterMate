@@ -524,6 +524,11 @@ public abstract class StoreHandler<
             E entry = _entryConverter.entryFromStorable(key, rawEntry);
             creationTime = entry.getCreationTime();
         }
+
+        // and finally, possibly remove matching last-accessed entry
+        final long deleteTime = _timeMaster.currentTimeMillis();
+        updateLastAccessedForDelete(request, response, key, deleteTime);
+        
         return response.ok(new DeleteResponse<K>(key, creationTime));
     }
 
@@ -834,8 +839,8 @@ public abstract class StoreHandler<
      * specified entry has been (soft-)deleted. This may mean deletion of
      * the last-accessed entry.
      */
-    protected abstract void updateLastAccessedForDelete(ServiceRequest request, ServiceResponse response,
-            E entry, long accessTime);
+    protected void updateLastAccessedForDelete(ServiceRequest request, ServiceResponse response,
+            K key, long accessTime) { }
     
     /*
     /**********************************************************************

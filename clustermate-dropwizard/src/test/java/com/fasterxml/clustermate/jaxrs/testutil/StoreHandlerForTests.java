@@ -40,9 +40,8 @@ public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<Test
 
     @Override
     protected void updateLastAccessedForDelete(ServiceRequest request, ServiceResponse response,
-            StoredEntry<TestKey> entry, long accessTime)
+            TestKey key, long accessTime)
     {
-        TestKey key = entry.getKey();
         FakeLastAccess acc = _findLastAccessUpdateMethod(request, key);
         // TODO: if there was grouped method, might not want to delete...
         if (acc == FakeLastAccess.INDIVIDUAL) {

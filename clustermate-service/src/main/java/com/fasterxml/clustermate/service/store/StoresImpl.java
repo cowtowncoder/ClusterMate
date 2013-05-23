@@ -305,7 +305,9 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
             _initProblem = "Failed to open Last-access store: "+e.getMessage();
             throw new IllegalStateException(_initProblem, e);
         }
-        _lastAccessStore.start();
+        if (_lastAccessStore != null) {
+            _lastAccessStore.start();
+        }
         if (log) {
             LOG.info("Last-access store succesfully opened");
         }
