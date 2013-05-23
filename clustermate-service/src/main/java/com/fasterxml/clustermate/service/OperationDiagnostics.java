@@ -41,10 +41,6 @@ public class OperationDiagnostics
      * Accumulated information on primary database write calls.
      */
     protected TotalTime _dbWrites;
-
-    protected TotalTime _lastAccessReads;
-
-    protected TotalTime _lastAccessWrites;
     
     /*
     /**********************************************************************
@@ -78,12 +74,12 @@ public class OperationDiagnostics
         _dbWrites = TotalTime.createOrAdd(_dbWrites, nanos);
     }
 
+    @Deprecated
     public void addLastAccessRead(long nanos) {
-        _lastAccessReads = TotalTime.createOrAdd(_lastAccessReads, nanos);
     }
 
+    @Deprecated
     public void addLastAccessWrite(long nanos) {
-        _lastAccessWrites = TotalTime.createOrAdd(_lastAccessWrites, nanos);
     }
 
     /**
@@ -138,14 +134,21 @@ public class OperationDiagnostics
     
     public boolean hasDbReads() { return _dbReads != null; }
     public boolean hasDbWrites() { return _dbWrites != null; }
-    public boolean hasLastAccessReads() { return _lastAccessReads != null; }
-    public boolean hasLastAccessWrites() { return _lastAccessWrites != null; }
+
+    @Deprecated
+    public boolean hasLastAccessReads() { return false; }
+    @Deprecated
+    public boolean hasLastAccessWrites() { return false; }
+
     public boolean hasContentCopyNanos() {
         return (_contentCopyStart != 0L);
     }
 
     public TotalTime getDbReads() { return _dbReads; }
     public TotalTime getDbWrites() { return _dbReads; }
-    public TotalTime getLastAccessReads() { return _lastAccessReads; }
-    public TotalTime getLastAccessWrites() { return _lastAccessWrites; }
+
+    @Deprecated
+    public TotalTime getLastAccessReads() { return null; }
+    @Deprecated
+    public TotalTime getLastAccessWrites() { return null; }
 }

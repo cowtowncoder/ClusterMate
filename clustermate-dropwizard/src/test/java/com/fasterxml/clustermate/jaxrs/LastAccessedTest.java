@@ -20,7 +20,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  * Tests to verify correct handling of 'last updated' timestamps
  * for GETs.
  */
-public class LastUpdatedTest extends JaxrsStoreTestBase
+public class LastAccessedTest extends JaxrsStoreTestBase
 {
     // exact id is arbitrary, but use per-test ids for debuggability
     final static CustomerId UNGROUPED = CustomerId.valueOf("OTHR");

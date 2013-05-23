@@ -191,9 +191,7 @@ public abstract class StoreHandler<
         nanoStart = System.nanoTime();
         updateLastAccessedForGet(request, response, entry, accessTime);
         if (metadata != null) {
-            final long contentStart = System.nanoTime();
-            metadata.addLastAccessRead(contentStart - nanoStart);
-            metadata.startContentCopy(contentStart);
+            metadata.startContentCopy(System.nanoTime());
         }
         
         Compression comp = entry.getCompression();
@@ -825,10 +823,18 @@ public abstract class StoreHandler<
      * when a piece of content is succesfully fetched with GET (exists and either is
      * not soft-deleted, or passes check for deletion)
      */
-    protected abstract void updateLastAccessedForGet(ServiceRequest request, ServiceResponse response,
-            E entry, long accessTime);
+    protected void updateLastAccessedForGet(ServiceRequest request, ServiceResponse response,
+            E entry, long accessTime) { }
 
-    protected abstract void updateLastAccessedForHead(ServiceRequest request, ServiceResponse response,
+    protected void updateLastAccessedForHead(ServiceRequest request, ServiceResponse response,
+            E entry, long accessTime) { }
+
+    /**
+     * Method called to let implementation do whatever updates are needed when
+     * specified entry has been (soft-)deleted. This may mean deletion of
+     * the last-accessed entry.
+     */
+    protected abstract void updateLastAccessedForDelete(ServiceRequest request, ServiceResponse response,
             E entry, long accessTime);
     
     /*

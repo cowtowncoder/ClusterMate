@@ -18,7 +18,7 @@ public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<Test
     }
     
     @Override
-    protected LastAccessUpdateMethod _findLastAccessUpdateMethod(ServiceRequest request, TestKey key)
+    protected FakeLastAccess _findLastAccessUpdateMethod(ServiceRequest request, TestKey key)
     {
         return (key.getCustomerId() == CUSTOMER_WITH_GROUPING)
                 ? FakeLastAccess.GROUPED : FakeLastAccess.INDIVIDUAL;
@@ -37,7 +37,19 @@ public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<Test
     {
         _updateLastAccessed(entry.getKey(), entry, accessTime);
     }
-    
+
+    @Override
+    protected void updateLastAccessedForDelete(ServiceRequest request, ServiceResponse response,
+            StoredEntry<TestKey> entry, long accessTime)
+    {
+        TestKey key = entry.getKey();
+        FakeLastAccess acc = _findLastAccessUpdateMethod(request, key);
+        // TODO: if there was grouped method, might not want to delete...
+        if (acc == FakeLastAccess.INDIVIDUAL) {
+            _stores.getLastAccessStore().removeLastAccess(key, acc, accessTime);
+        }
+    }
+
     /*
     /**********************************************************************
     /* Internal methods
