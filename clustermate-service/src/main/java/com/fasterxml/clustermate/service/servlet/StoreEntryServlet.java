@@ -25,8 +25,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  */
 @SuppressWarnings("serial")
 public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
-    extends ServletBase
-    implements AllOperationMetrics.Provider
+    extends ServletWithMetricsBase
 {
     /*
     /**********************************************************************
