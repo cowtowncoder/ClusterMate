@@ -96,6 +96,13 @@ public abstract class StoreHandler<
 
     protected final int _cfgDefaultMinTTLSecs;
     protected final int _cfgDefaultMaxTTLSecs;
+
+    /**
+     * Does store use deferred (queued) deletions?
+     *
+     * @since 0.9.8
+     */
+    protected final boolean _allowDeferredDeletes;
     
     /*
     /**********************************************************************
@@ -123,6 +130,8 @@ public abstract class StoreHandler<
         // seconds used (over millis) to fit in 32-bit int when stored
         _cfgDefaultMinTTLSecs = (int) (_serviceConfig.cfgDefaultSinceAccessTTL.getMillis() / 1000L);
         _cfgDefaultMaxTTLSecs = (int) (_serviceConfig.cfgDefaultMaxTTL.getMillis() / 1000L);
+
+        _allowDeferredDeletes = _serviceConfig.deletes.allowDeferred(false);    
     }
 
     /*
@@ -497,6 +506,10 @@ public abstract class StoreHandler<
             OperationDiagnostics metadata)
         throws IOException, StoreException
     {
+        // First things first: deferred deletes?
+        if (_allowDeferredDeletes) {
+            return _deferredRemoveEntry(request, response, key, metadata);
+        }
         StorableDeletionResult result;
         long nanoStart = System.nanoTime();
         try {
@@ -508,14 +521,11 @@ public abstract class StoreHandler<
                 metadata.addDbWrite(System.nanoTime() - nanoStart);
             }
         }
-            
         /* Even without match, we can claim it is ok... should we?
          * From idempotency perspective, result is that there is no such
-         * entry; so let's allow that and just give the usual 204.
+         * entry; so let's allow that and just report ok.
          */
         long creationTime = 0L;
-        
-        // also: if deletion succeeded, may need to delete actual physical file:
         if (result != null && result.hadEntry()) {
             Storable rawEntry = result.getEntry();
             if (metadata != null) {
@@ -532,6 +542,32 @@ public abstract class StoreHandler<
         return response.ok(new DeleteResponse<K>(key, creationTime));
     }
 
+    /**
+     * Method that gets called if removal of an entry should be deferred,
+     * that is, handled later on from another thread (and possibly throttled).
+     */
+    protected ServiceResponse _deferredRemoveEntry(ServiceRequest request, ServiceResponse response, K key,
+            OperationDiagnostics metadata)
+        throws IOException, StoreException
+    {
+        // !!! TODO: actually queue things up etc
+        long nanoStart = System.nanoTime();
+        try {
+            /*StorableDeletionResult result =*/ _stores.getEntryStore().softDelete(key.asStorableKey(), true, true);
+        } catch (StoreException e) {
+            return _storeError(response, key, e);
+        } finally {
+            if (metadata != null) {
+                metadata.addDbWrite(System.nanoTime() - nanoStart);
+            }
+        }
+        final long deleteTime = _timeMaster.currentTimeMillis();
+        updateLastAccessedForDelete(request, response, key, deleteTime);
+        // In theory, we merely accepted (202) deletion and might not have done it yet;
+        // even though in practice we did just delete it.
+        return response.accepted(new DeleteResponse<K>(key, 0L));
+    }
+    
     /*
     /**********************************************************************
     /* Listing entries

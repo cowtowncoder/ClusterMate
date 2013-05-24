@@ -8,9 +8,10 @@ package com.fasterxml.clustermate.service.cfg;
 public class DeferredOperationConfig
 {
     /**
-     * Is deferral of this operation allowed?
+     * Is deferral of this operation allowed? Default value of null
+     * means "use store default", meaning of which is implementation-dependant.
      */
-    public boolean allowDeferred;
+    public Boolean allowDeferred = null;
 
     /**
      * After what size should we be concerned about queuing, and
@@ -39,5 +40,13 @@ public class DeferredOperationConfig
         allowDeferred = allow;
         deferredQueueWarnSize = warnSize;
         
+    }
+
+    public boolean allowDeferred(boolean defaultState)
+    {
+        if (allowDeferred == null) {
+            return defaultState;
+        }
+        return allowDeferred.booleanValue();
     }
 }

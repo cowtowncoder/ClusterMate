@@ -106,7 +106,7 @@ public abstract class ServiceConfig
 
     /*
     /**********************************************************************
-    /* Store behavior
+    /* Entry Store behavior
     /**********************************************************************
      */
     
@@ -129,15 +129,10 @@ public abstract class ServiceConfig
     public boolean cfgReportDeletedAsEmpty = true;
 
     /**
-     * DELETE operations may be deferred, and are by default.
+     * DELETE operations may be deferred. But by default they are not, yet.
      */
-    public DeferredOperationConfig deletes = new DeferredOperationConfig();
-
-    /**
-     * @deprecated To be deleted in 0.9.8
-     */
-    @Deprecated
-    public DeferredOperationConfig lastAccessUpdates = new DeferredOperationConfig();
+    public DeferredOperationConfig deletes = new DeferredOperationConfig(false,
+            200, 2.0);
     
     /*
     /**********************************************************************

@@ -130,9 +130,13 @@ public abstract class ServiceResponse
     public final ServiceResponse ok(String contentType, Object entity) {
         return ok().setContentType(contentType).setEntity(entity);
     }
-    
+
     public final ServiceResponse noContent() {
         return setStatus(204);
+    }
+
+    public final ServiceResponse accepted(Object entity) {
+        return set(202, entity);
     }
 
     public final ServiceResponse partialContent(Object entity, String rangeDesc) {
