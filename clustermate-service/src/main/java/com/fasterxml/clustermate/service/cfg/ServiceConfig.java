@@ -134,8 +134,9 @@ public abstract class ServiceConfig
     public DeferredOperationConfig deletes = new DeferredOperationConfig();
 
     /**
-     * Updates of last-accessed information may be deferred (and are by default)
+     * @deprecated To be deleted in 0.9.8
      */
+    @Deprecated
     public DeferredOperationConfig lastAccessUpdates = new DeferredOperationConfig();
     
     /*
