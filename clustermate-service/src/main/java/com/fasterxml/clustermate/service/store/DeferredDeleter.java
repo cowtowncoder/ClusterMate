@@ -105,14 +105,11 @@ public class DeferredDeleter<K extends EntryKey>
             } catch (InterruptedException e) {
                 continue; // most likely we are done
             }
-LOG.warn("About to DEFERRED DELETE: {}", key);            
             try {
                 _entryStore.softDelete(key.asStorableKey(), true, true);
             } catch (Throwable t) {
                 _throttledLogger.logError("Failed to process deferred delete for entry with key {}: {}", key, t);
             }
-LOG.warn("Done DEFERRED DELETE of: {}", key);            
-
         }
         int left = _deletes.size();
         if (left > 0) {
