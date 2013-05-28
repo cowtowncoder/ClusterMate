@@ -129,10 +129,16 @@ public abstract class ServiceConfig
     public boolean cfgReportDeletedAsEmpty = true;
 
     /**
-     * DELETE operations may be deferred. But by default they are not, yet.
+     * DELETE operations may be deferred; and if so, here's configuration
+     * for details.
+     *<p>
+     * Other configuration uses queue thresholds of 1000, 2000 and 4000
+     * pending operations (for "safe", "delay" and "max"); and allows
+     * induction of 10 to 100 milliseconds of delay when first threshold
+     * is exceeded.
      */
-    public DeferredOperationConfig deletes = new DeferredOperationConfig(false,
-            200, 2.0);
+    public DeferredOperationConfig deletes = new DeferredOperationConfig(null,
+            1000, 2000, 4000, 10L, 100L);
     
     /*
     /**********************************************************************

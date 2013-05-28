@@ -37,6 +37,7 @@ public abstract class StoreHandler<
     L extends ListItem
 >
     extends HandlerBase
+    implements StartAndStoppable
 {
     // Do we want these output? Not for production, at least...
     // TODO: Externalize
@@ -59,7 +60,23 @@ public abstract class StoreHandler<
 
     /*
     /**********************************************************************
-    /* Helper objects
+    /* Configuration
+    /**********************************************************************
+     */
+
+    protected final ServiceConfig _serviceConfig;
+    
+    /**
+     * Whether server-side (auto-)compression is enabled or not.
+     */
+    protected final boolean _cfgCompressionEnabled;
+
+    protected final int _cfgDefaultMinTTLSecs;
+    protected final int _cfgDefaultMaxTTLSecs;
+
+    /*
+    /**********************************************************************
+    /* Helper objects, general
     /**********************************************************************
      */
 
@@ -80,29 +97,19 @@ public abstract class StoreHandler<
     protected final ObjectWriter _listJsonWriter;
     
     protected final ObjectWriter _listSmileWriter;
-    
+
     /*
     /**********************************************************************
-    /* Configuration
+    /* Helper objects, deferred delete support
     /**********************************************************************
      */
-
-    protected final ServiceConfig _serviceConfig;
     
-    /**
-     * Whether server-side (auto-)compression is enabled or not.
-     */
-    protected final boolean _cfgCompressionEnabled;
-
-    protected final int _cfgDefaultMinTTLSecs;
-    protected final int _cfgDefaultMaxTTLSecs;
-
     /**
      * Does store use deferred (queued) deletions?
      *
      * @since 0.9.8
      */
-    protected final boolean _allowDeferredDeletes;
+    protected final DeferredDeleter<K> _deferredDeleter;
     
     /*
     /**********************************************************************
@@ -131,7 +138,44 @@ public abstract class StoreHandler<
         _cfgDefaultMinTTLSecs = (int) (_serviceConfig.cfgDefaultSinceAccessTTL.getMillis() / 1000L);
         _cfgDefaultMaxTTLSecs = (int) (_serviceConfig.cfgDefaultMaxTTL.getMillis() / 1000L);
 
-        _allowDeferredDeletes = _serviceConfig.deletes.allowDeferred(false);    
+        // Are we to do deferred deletions?
+        DeferredOperationQueue<K> delQ = constructDeletionQueue(stuff);
+        if (delQ == null) {
+            _deferredDeleter = null;
+        } else {
+            _deferredDeleter = constructDeleter(stuff, stores, delQ);
+        }
+        
+    }
+
+    /*
+    /**********************************************************************
+    /* Minimal service life-cycle to inform deferred deleter if necessary
+    /**********************************************************************
+     */
+    
+    @Override
+    public void start() throws Exception
+    {
+        if (_deferredDeleter != null) {
+            _deferredDeleter.start();
+        }
+    }
+
+    @Override
+    public void prepareForStop() throws Exception
+    {
+        if (_deferredDeleter != null) {
+            _deferredDeleter.prepareForStop();
+        }
+    }
+
+    @Override
+    public void stop() throws Exception
+    {
+        if (_deferredDeleter != null) {
+            _deferredDeleter.stop();
+        }
     }
 
     /*
@@ -141,6 +185,53 @@ public abstract class StoreHandler<
      */
 
     public Stores<K,E> getStores() { return _stores; }
+
+    /*
+    /**********************************************************************
+    /* Abstract and overridable methods for sub-classes
+    /**********************************************************************
+     */
+
+    /**
+     * Method called for PUT operations, to figure out which method of updating 
+     * "last-access" information should be used, if any. When entries are successfully
+     * PUT, information will be stored as part of entry metadata and does NOT
+     * come from request.
+     */
+    protected abstract LastAccessUpdateMethod _findLastAccessUpdateMethod(ServiceRequest request, K key);
+    
+    /**
+     * Method called to let implementation update last-accessed timestamp if necessary
+     * when a piece of content is succesfully fetched with GET (exists and either is
+     * not soft-deleted, or passes check for deletion)
+     */
+    protected void updateLastAccessedForGet(ServiceRequest request, ServiceResponse response,
+            E entry, long accessTime) { }
+
+    protected void updateLastAccessedForHead(ServiceRequest request, ServiceResponse response,
+            E entry, long accessTime) { }
+
+    /**
+     * Method called to let implementation do whatever updates are needed when
+     * specified entry has been (soft-)deleted. This may mean deletion of
+     * the last-accessed entry.
+     */
+    protected void updateLastAccessedForDelete(ServiceRequest request, ServiceResponse response,
+            K key, long accessTime) { }
+
+    /**
+     * Method called to construct and initialize optional handler for deferred deletes.
+     * If no deferred deletes are to be used, may return nuill.
+     * 
+     * @since 0.9.8
+     */
+    protected abstract DeferredOperationQueue<K> constructDeletionQueue(SharedServiceStuff stuff);
+
+    protected DeferredDeleter<K> constructDeleter(SharedServiceStuff stuff,
+            Stores<K,E> stores, DeferredOperationQueue<K> deletionQ)
+    {
+        return new DeferredDeleter<K>(deletionQ, stores.getEntryStore());
+    }
     
     /*
     /**********************************************************************
@@ -506,21 +597,25 @@ public abstract class StoreHandler<
             OperationDiagnostics metadata)
         throws IOException, StoreException
     {
-        // First things first: deferred deletes?
-        if (_allowDeferredDeletes) {
-            return _deferredRemoveEntry(request, response, key, metadata);
-        }
         StorableDeletionResult result;
-        long nanoStart = System.nanoTime();
+
         try {
-            result = _stores.getEntryStore().softDelete(key.asStorableKey(), true, true);
+            // First things first: deferred deletes?
+            if (_deferredDeleter != null) {
+                return _deferredRemoveEntry(request, response, key, metadata);
+            }
+            long nanoStart = System.nanoTime();
+            try {
+                result = _stores.getEntryStore().softDelete(key.asStorableKey(), true, true);
+            } finally {
+                if (metadata != null) {
+                    metadata.addDbWrite(System.nanoTime() - nanoStart);
+                }
+            }
         } catch (StoreException e) {
             return _storeError(response, key, e);
-        } finally {
-            if (metadata != null) {
-                metadata.addDbWrite(System.nanoTime() - nanoStart);
-            }
         }
+
         /* Even without match, we can claim it is ok... should we?
          * From idempotency perspective, result is that there is no such
          * entry; so let's allow that and just report ok.
@@ -550,22 +645,27 @@ public abstract class StoreHandler<
             OperationDiagnostics metadata)
         throws IOException, StoreException
     {
-        // !!! TODO: actually queue things up etc
-        long nanoStart = System.nanoTime();
+        DeferredOperationQueue.Action action;
         try {
-            /*StorableDeletionResult result =*/ _stores.getEntryStore().softDelete(key.asStorableKey(), true, true);
-        } catch (StoreException e) {
-            return _storeError(response, key, e);
-        } finally {
-            if (metadata != null) {
-                metadata.addDbWrite(System.nanoTime() - nanoStart);
-            }
+            action = _deferredDeleter.queueDeletion(key);
+        } catch (InterruptedException e) { // unlikely but possible...
+            LOG.warn("Attempt to defer DELETE for {} interrupted; will report 500 failure", key);
+            return response.internalServerError();
         }
-        final long deleteTime = _timeMaster.currentTimeMillis();
-        updateLastAccessedForDelete(request, response, key, deleteTime);
-        // In theory, we merely accepted (202) deletion and might not have done it yet;
-        // even though in practice we did just delete it.
-        return response.accepted(new DeleteResponse<K>(key, 0L));
+        switch (action) {
+        case PROCEED: // regardless of whether delay was induced, we merely accepted the thing...
+            // (we COULD add a flag if we wanted to check etc, but no point bothering yet)
+        case DELAY:
+            /* Oh. One more thing: queue deletion of last-accessed at this point;
+             * reason being that deleter does not necessarily have enough contextual
+             * info as we have here.
+             */
+            updateLastAccessedForDelete(request, response, key, _timeMaster.currentTimeMillis());
+            return response.accepted(new DeleteResponse<K>(key, 0L));
+        case DROP: // overloaded
+            return response.serverOverload();
+        }
+        throw new IllegalStateException("Unrecognized action "+action);
     }
     
     /*
@@ -844,39 +944,6 @@ public abstract class StoreHandler<
     {
         return response.notFound(new GetErrorResponse<K>(key, "No entry found for key '"+key+"'"));
     }
-
-    /*
-    /**********************************************************************
-    /* Abstract methods for sub-classes
-    /**********************************************************************
-     */
-
-    /**
-     * Method called for PUT operations, to figure out which method of updating 
-     * "last-access" information should be used, if any. When entries are successfully
-     * PUT, information will be stored as part of entry metadata and does NOT
-     * come from request.
-     */
-    protected abstract LastAccessUpdateMethod _findLastAccessUpdateMethod(ServiceRequest request, K key);
-    
-    /**
-     * Method called to let implementation update last-accessed timestamp if necessary
-     * when a piece of content is succesfully fetched with GET (exists and either is
-     * not soft-deleted, or passes check for deletion)
-     */
-    protected void updateLastAccessedForGet(ServiceRequest request, ServiceResponse response,
-            E entry, long accessTime) { }
-
-    protected void updateLastAccessedForHead(ServiceRequest request, ServiceResponse response,
-            E entry, long accessTime) { }
-
-    /**
-     * Method called to let implementation do whatever updates are needed when
-     * specified entry has been (soft-)deleted. This may mean deletion of
-     * the last-accessed entry.
-     */
-    protected void updateLastAccessedForDelete(ServiceRequest request, ServiceResponse response,
-            K key, long accessTime) { }
     
     /*
     /**********************************************************************

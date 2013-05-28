@@ -237,7 +237,8 @@ public abstract class DWBasedService<
         ClusterInfoHandler nodeH = constructClusterInfoHandler(_serviceStuff, _cluster);
         SyncHandler<K,E> syncH = constructSyncHandler(_serviceStuff, _stores, _cluster);
         _storeHandler = constructStoreHandler(_serviceStuff, _stores, _cluster);
-        
+        _managed.add(_storeHandler);
+
         LOG.info("Adding service end points");
         addServiceEndpoints(_serviceStuff, environment,
                 nodeH, syncH, _storeHandler);
