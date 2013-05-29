@@ -112,11 +112,11 @@ public class DeferredOperationQueue<E>
 
         // possibly drop?
         if (_shouldDrop(size+1)) {
-            return Action.DROP;
+            return _handleDrop();
         }
         // otherwise try adding
         if (!_queuedOperations.offer(operation)) { // nope, full
-            return Action.DROP;
+            return _handleDrop();
         }
         // let's see if we are to induce some delay to caller...
         int resultSize = Math.max(_queuedOperations.size(), (size+1));
@@ -128,7 +128,7 @@ public class DeferredOperationQueue<E>
         Thread.sleep((long) delay);
         return Action.DELAY;
     }
-
+    
     public E unqueueOperationNoBlock() throws InterruptedException {
         return _queuedOperations.poll();
     }
@@ -188,5 +188,13 @@ public class DeferredOperationQueue<E>
         // no, calculate linearly (or would bit of randomness help?)
         double delayRatio =  ((double) above) / (double) (_dropThreshold - _delayThreshold);
         return _minDelayMsecs + (int) (delayRatio * (_maxDelayMsecs - _minDelayMsecs));
+    }
+
+    protected Action _handleDrop() throws InterruptedException
+    {
+        // First: add delay, to slow down sender
+        Thread.sleep(_maxDelayMsecs);
+        // and then indicate that operation was dropped
+        return Action.DROP;
     }
 }

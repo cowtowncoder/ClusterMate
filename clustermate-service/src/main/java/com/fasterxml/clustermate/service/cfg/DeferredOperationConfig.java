@@ -49,18 +49,30 @@ public class DeferredOperationConfig
     public long callerMaxDelayMsecs;
     
     /**
-     * Default constructor that allows use of deferral, and uses queue lengths of
-     * 1000, 2000 and 4000 (for ok, retain and
-     * max sizes); and delay between 10 and 100 milliseconds.
+     * Default constructor; uses queue sizes of 500/2000/5000,
+     * min/max delays of 10/200 msecs.
      */
-    public DeferredOperationConfig() {
-        this(true, 1000, 2000, 4000, 10L, 100L);
+    protected DeferredOperationConfig() {
+        this(null,
+                500, 2000, 5000,
+                10L, 200L);
     }
 
     public DeferredOperationConfig(Boolean allow,
             int okSize, int retainSize, int maxSize,
             long minDelayMsecs, long maxDelayMsecs)
     {
+        if (okSize <= 0) {
+            throw new IllegalArgumentException("okSize ("+okSize+") has to exceed 0");
+        }
+        if (okSize > retainSize) {
+            throw new IllegalArgumentException("okSize ("+okSize+") can not exceed retainSize ("+retainSize+")");
+        }
+        if (retainSize > maxSize) {
+            throw new IllegalArgumentException("retainSize ("+retainSize+") can not exceed maxSize ("+maxSize+")");
+        }
+
+        
         allowDeferred = allow;
         queueOkSize = okSize;
         queueRetainSize = retainSize;
