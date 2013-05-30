@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.service.store;
 
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +13,7 @@ import com.fasterxml.clustermate.service.cfg.DeferredOperationConfig;
  * Helper class we use for determining actions to take with respect
  * to deferred deletions.
  */
-public class DeferredDeletionQueue<E>
+public class DeferredDeletionQueue
 {
     /**
      * Action that as taken by queue
@@ -59,7 +60,7 @@ public class DeferredDeletionQueue<E>
      * When operations are deferred, we just use a simple synchronized queue
      * for passing them through
      */
-    private final ArrayBlockingQueue<E> _queuedOperations;
+    private final ArrayBlockingQueue<DeferredDeletion> _queuedOperations;
     
     public DeferredDeletionQueue(int optimalSize, int delaySize, int maxSize,
             TimeSpan minDelay, TimeSpan maxDelay)
@@ -75,7 +76,7 @@ public class DeferredDeletionQueue<E>
         _delayThreshold = optimalSize;
         _dropThreshold = delaySize;
         _maxLength = maxSize;
-        _queuedOperations = new ArrayBlockingQueue<E>(maxSize);
+        _queuedOperations = new ArrayBlockingQueue<DeferredDeletion>(maxSize);
         // let's keep things more repeatable by feeding simple sum of sizes
         _random = new Random(optimalSize + delaySize + maxSize);
 
@@ -87,13 +88,13 @@ public class DeferredDeletionQueue<E>
         }
     }
 
-    public static <E> DeferredDeletionQueue<E> forConfig(DeferredOperationConfig config,
+    public static DeferredDeletionQueue forConfig(DeferredOperationConfig config,
             boolean enabledByDefault)
     {
         if (!config.allowDeferred(enabledByDefault)) {
             return null;
         }
-        return new DeferredDeletionQueue<E>(
+        return new DeferredDeletionQueue(
                 config.queueOkSize, config.queueRetainSize, config.queueMaxSize,
                 new TimeSpan(config.callerMinDelayMsecs, TimeUnit.MILLISECONDS),
                 new TimeSpan(config.callerMaxDelayMsecs, TimeUnit.MILLISECONDS)
@@ -106,7 +107,7 @@ public class DeferredDeletionQueue<E>
     /**********************************************************************
      */
 
-    public Action queueOperation(E operation) throws InterruptedException
+    public Action queueOperation(DeferredDeletion operation) throws InterruptedException
     {
         int size = _queuedOperations.size();
 
@@ -129,14 +130,18 @@ public class DeferredDeletionQueue<E>
         return Action.DELAY;
     }
     
-    public E unqueueOperationNoBlock() throws InterruptedException {
+    public DeferredDeletion unqueueOperationNoBlock() throws InterruptedException {
         return _queuedOperations.poll();
     }
 
-    public E unqueueOperationBlock() throws InterruptedException {
+    public DeferredDeletion unqueueOperationBlock() throws InterruptedException {
         return _queuedOperations.take();
     }
 
+    public int drain(List<DeferredDeletion> results, int max) throws InterruptedException {
+        return _queuedOperations.drainTo(results, max);
+    }
+    
     public int size() {
         return _queuedOperations.size();
     }
@@ -184,9 +189,14 @@ System.out.printf("DELETE-drop at %d: likelihood %.4f; rnd=%.4f\n", estimatedSiz
         if (above <= 0) {
             return 0;
         }
+
+        DeferredDeletion oldest = _queuedOperations.peek();
+        int currMax = (oldest == null) ? 0 :
+            (int) (System.currentTimeMillis() - oldest.insertTime);
+        
         // or above variability?
         if (estimatedSize >= _dropThreshold) { // at "maybe drop" zone; add max delay
-System.out.printf("DELETE-delay at %d: full %d\n", estimatedSize, _maxDelayMsecs);
+System.out.printf("DELETE-delay at %d: full %d (vs max %d)\n", estimatedSize, _maxDelayMsecs, currMax);
             return _maxDelayMsecs;
         }
         
@@ -194,8 +204,8 @@ System.out.printf("DELETE-delay at %d: full %d\n", estimatedSize, _maxDelayMsecs
         double delayRatio =  ((double) above) / (double) (_dropThreshold - _delayThreshold);
         int delay = _minDelayMsecs + (int) (delayRatio * (_maxDelayMsecs - _minDelayMsecs));
 
-System.out.printf("DELETE-delay at %d: ratio %.4f -> %d\n", estimatedSize, delayRatio, delay);
-        
+System.out.printf("DELETE-delay at %d: ratio %.4f -> %d (max %d)\n", estimatedSize, delayRatio, delay, currMax);
+
         return delay;
     }
 

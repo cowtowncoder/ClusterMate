@@ -49,13 +49,13 @@ public class DeferredOperationConfig
     public long callerMaxDelayMsecs;
     
     /**
-     * Default constructor; uses queue sizes of 500/2000/5000,
+     * Default constructor; uses queue sizes of 200/2000/5000,
      * min/max delays of 10/200 msecs.
      */
     protected DeferredOperationConfig() {
         this(null,
                 500, 2000, 5000,
-                10L, 200L);
+                10L, 250L);
     }
 
     public DeferredOperationConfig(Boolean allow,

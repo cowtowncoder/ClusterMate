@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.service.store;
 
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -25,7 +26,7 @@ public class DeferredDeleter
      */
     protected final SimpleLogThrottler _throttledLogger = new SimpleLogThrottler(LOG, 500);
     
-    protected final DeferredDeletionQueue<DeferredDeletion> _deletes;
+    protected final DeferredDeletionQueue _deletes;
 
     protected final StorableStore _entryStore;
     
@@ -39,7 +40,7 @@ public class DeferredDeleter
     /**********************************************************************
      */
 
-    public DeferredDeleter(DeferredDeletionQueue<DeferredDeletion> deletes, StorableStore entryStore)
+    public DeferredDeleter(DeferredDeletionQueue deletes, StorableStore entryStore)
     {
         _deletes = deletes;
         _entryStore = entryStore;
@@ -96,24 +97,47 @@ public class DeferredDeleter
     /**********************************************************************
      */
 
+    /* Batch operations are more efficient than individual ones, and this
+     * even extends to this seemingly trivial case -- based on measurements,
+     * doing this does speed things up (probably since sync'ed access to
+     * blokcing queue may trigger context switch?)
+     */
+    private final static int CHUNK_SIZE = 20;
+    
     protected void processQueue()
     {
+        final ArrayList<DeferredDeletion> buffer = new ArrayList<DeferredDeletion>(CHUNK_SIZE);
+        
         while (_active.get()) {
-            DeferredDeletion entry;
+            // Start by bit of draining action, to catch up with backlog
+            int count;
             try {
-                entry = _deletes.unqueueOperationBlock();
-            } catch (InterruptedException e) {
-                continue; // most likely we are done
+                count = _deletes.drain(buffer, CHUNK_SIZE);
+                if (count == 0) { // but if none found, revert to blocking...
+                    _delete(_deletes.unqueueOperationBlock());
+                    continue;
+                }
+            } catch (InterruptedException e) { // most likely means we are done...
+                continue;
             }
-            try {
-                _entryStore.softDelete(entry.key, true, true);
-            } catch (Throwable t) {
-                _throttledLogger.logError("Failed to process deferred delete for entry with key {}: {}", entry.key, t);
+            for (int i = 0; i < count; ++i) {
+                _delete(buffer.get(i));
             }
+            buffer.clear();
         }
         int left = _deletes.size();
         if (left > 0) {
             LOG.warn("Deferred-deletes queue NOT empty when ending", left);
+        }
+    }
+
+    private final void _delete(DeferredDeletion deletion)
+    {
+        try {
+            _entryStore.softDelete(deletion.key, true, true);
+        } catch (Throwable t) {
+            _throttledLogger.logError("Failed to process deferred delete for entry with key {}: {}",
+                    deletion, t);
         }
     }
 }

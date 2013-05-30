@@ -219,11 +219,11 @@ public abstract class StoreHandler<
      * 
      * @since 0.9.8
      */
-    protected abstract DeferredDeletionQueue<DeferredDeletion> constructDeletionQueue(SharedServiceStuff stuff);
+    protected abstract DeferredDeletionQueue constructDeletionQueue(SharedServiceStuff stuff);
 
     protected DeferredDeleter constructDeleter(SharedServiceStuff stuff, Stores<K,E> stores)
     {
-        DeferredDeletionQueue<DeferredDeletion> q = constructDeletionQueue(stuff);
+        DeferredDeletionQueue q = constructDeletionQueue(stuff);
         if (q != null) {
             return new DeferredDeleter(q, stores.getEntryStore());
         }

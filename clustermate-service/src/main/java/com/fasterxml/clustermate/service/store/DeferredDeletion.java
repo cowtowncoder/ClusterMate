@@ -12,4 +12,8 @@ public class DeferredDeletion
         this.insertTime = insertTime;
         this.key = key;
     }
+
+    @Override public String toString() {
+        return key.toString();
+    }
 }
