@@ -12,7 +12,7 @@ import com.fasterxml.clustermate.service.cfg.DeferredOperationConfig;
  * Helper class we use for determining actions to take with respect
  * to deferred deletions.
  */
-public class DeferredOperationQueue<E>
+public class DeferredDeletionQueue<E>
 {
     /**
      * Action that as taken by queue
@@ -61,7 +61,7 @@ public class DeferredOperationQueue<E>
      */
     private final ArrayBlockingQueue<E> _queuedOperations;
     
-    public DeferredOperationQueue(int optimalSize, int delaySize, int maxSize,
+    public DeferredDeletionQueue(int optimalSize, int delaySize, int maxSize,
             TimeSpan minDelay, TimeSpan maxDelay)
     {
         // bit of sanity checks for fun
@@ -87,13 +87,13 @@ public class DeferredOperationQueue<E>
         }
     }
 
-    public static <E> DeferredOperationQueue<E> forConfig(DeferredOperationConfig config,
+    public static <E> DeferredDeletionQueue<E> forConfig(DeferredOperationConfig config,
             boolean enabledByDefault)
     {
         if (!config.allowDeferred(enabledByDefault)) {
             return null;
         }
-        return new DeferredOperationQueue<E>(
+        return new DeferredDeletionQueue<E>(
                 config.queueOkSize, config.queueRetainSize, config.queueMaxSize,
                 new TimeSpan(config.callerMinDelayMsecs, TimeUnit.MILLISECONDS),
                 new TimeSpan(config.callerMaxDelayMsecs, TimeUnit.MILLISECONDS)
@@ -171,6 +171,9 @@ public class DeferredOperationQueue<E>
         synchronized (_random) {
             rnd = _random.nextDouble();
         }
+        
+System.out.printf("DELETE-drop at %d: likelihood %.4f; rnd=%.4f\n", estimatedSize, dropLikelihood, rnd);
+
         return (rnd <= dropLikelihood);
     }
 
@@ -183,11 +186,17 @@ public class DeferredOperationQueue<E>
         }
         // or above variability?
         if (estimatedSize >= _dropThreshold) { // at "maybe drop" zone; add max delay
+System.out.printf("DELETE-delay at %d: full %d\n", estimatedSize, _maxDelayMsecs);
             return _maxDelayMsecs;
         }
+        
         // no, calculate linearly (or would bit of randomness help?)
         double delayRatio =  ((double) above) / (double) (_dropThreshold - _delayThreshold);
-        return _minDelayMsecs + (int) (delayRatio * (_maxDelayMsecs - _minDelayMsecs));
+        int delay = _minDelayMsecs + (int) (delayRatio * (_maxDelayMsecs - _minDelayMsecs));
+
+System.out.printf("DELETE-delay at %d: ratio %.4f -> %d\n", estimatedSize, delayRatio, delay);
+        
+        return delay;
     }
 
     protected Action _handleDrop() throws InterruptedException

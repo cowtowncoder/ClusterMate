@@ -5,16 +5,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.StartAndStoppable;
-import com.fasterxml.clustermate.service.store.DeferredOperationQueue.Action;
+import com.fasterxml.clustermate.service.store.DeferredDeletionQueue.Action;
 import com.fasterxml.clustermate.service.util.SimpleLogThrottler;
+import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.store.StorableStore;
 
 /**
  * Helper class used for handling deletions asynchronously.
  */
-public class DeferredDeleter<K extends EntryKey>
+public class DeferredDeleter
     implements StartAndStoppable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
@@ -25,7 +25,7 @@ public class DeferredDeleter<K extends EntryKey>
      */
     protected final SimpleLogThrottler _throttledLogger = new SimpleLogThrottler(LOG, 500);
     
-    protected final DeferredOperationQueue<K> _deletes;
+    protected final DeferredDeletionQueue<DeferredDeletion> _deletes;
 
     protected final StorableStore _entryStore;
     
@@ -39,7 +39,7 @@ public class DeferredDeleter<K extends EntryKey>
     /**********************************************************************
      */
 
-    public DeferredDeleter(DeferredOperationQueue<K> deletes, StorableStore entryStore)
+    public DeferredDeleter(DeferredDeletionQueue<DeferredDeletion> deletes, StorableStore entryStore)
     {
         _deletes = deletes;
         _entryStore = entryStore;
@@ -85,9 +85,9 @@ public class DeferredDeleter<K extends EntryKey>
     /**********************************************************************
      */
     
-    public Action queueDeletion(K deletion) throws InterruptedException
+    public Action queueDeletion(long currentTime, StorableKey id) throws InterruptedException
     {
-        return _deletes.queueOperation(deletion);
+        return _deletes.queueOperation(new DeferredDeletion(currentTime, id));
     }
     
     /*
@@ -99,16 +99,16 @@ public class DeferredDeleter<K extends EntryKey>
     protected void processQueue()
     {
         while (_active.get()) {
-            K key;
+            DeferredDeletion entry;
             try {
-                key = _deletes.unqueueOperationBlock();
+                entry = _deletes.unqueueOperationBlock();
             } catch (InterruptedException e) {
                 continue; // most likely we are done
             }
             try {
-                _entryStore.softDelete(key.asStorableKey(), true, true);
+                _entryStore.softDelete(entry.key, true, true);
             } catch (Throwable t) {
-                _throttledLogger.logError("Failed to process deferred delete for entry with key {}: {}", key, t);
+                _throttledLogger.logError("Failed to process deferred delete for entry with key {}: {}", entry.key, t);
             }
         }
         int left = _deletes.size();

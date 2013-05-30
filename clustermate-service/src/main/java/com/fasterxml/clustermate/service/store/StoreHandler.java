@@ -109,7 +109,7 @@ public abstract class StoreHandler<
      *
      * @since 0.9.8
      */
-    protected final DeferredDeleter<K> _deferredDeleter;
+    protected final DeferredDeleter _deferredDeleter;
     
     /*
     /**********************************************************************
@@ -139,13 +139,7 @@ public abstract class StoreHandler<
         _cfgDefaultMaxTTLSecs = (int) (_serviceConfig.cfgDefaultMaxTTL.getMillis() / 1000L);
 
         // Are we to do deferred deletions?
-        DeferredOperationQueue<K> delQ = constructDeletionQueue(stuff);
-        if (delQ == null) {
-            _deferredDeleter = null;
-        } else {
-            _deferredDeleter = constructDeleter(stuff, stores, delQ);
-        }
-        
+        _deferredDeleter = constructDeleter(stuff, stores);
     }
 
     /*
@@ -225,12 +219,15 @@ public abstract class StoreHandler<
      * 
      * @since 0.9.8
      */
-    protected abstract DeferredOperationQueue<K> constructDeletionQueue(SharedServiceStuff stuff);
+    protected abstract DeferredDeletionQueue<DeferredDeletion> constructDeletionQueue(SharedServiceStuff stuff);
 
-    protected DeferredDeleter<K> constructDeleter(SharedServiceStuff stuff,
-            Stores<K,E> stores, DeferredOperationQueue<K> deletionQ)
+    protected DeferredDeleter constructDeleter(SharedServiceStuff stuff, Stores<K,E> stores)
     {
-        return new DeferredDeleter<K>(deletionQ, stores.getEntryStore());
+        DeferredDeletionQueue<DeferredDeletion> q = constructDeletionQueue(stuff);
+        if (q != null) {
+            return new DeferredDeleter(q, stores.getEntryStore());
+        }
+        return null;
     }
     
     /*
@@ -645,9 +642,10 @@ public abstract class StoreHandler<
             OperationDiagnostics metadata)
         throws IOException, StoreException
     {
-        DeferredOperationQueue.Action action;
+        DeferredDeletionQueue.Action action;
+        final long insertTime = _timeMaster.currentTimeMillis();
         try {
-            action = _deferredDeleter.queueDeletion(key);
+            action = _deferredDeleter.queueDeletion(insertTime, key.asStorableKey());
         } catch (InterruptedException e) { // unlikely but possible...
             LOG.warn("Attempt to defer DELETE for {} interrupted; will report 500 failure", key);
             return response.internalServerError();
