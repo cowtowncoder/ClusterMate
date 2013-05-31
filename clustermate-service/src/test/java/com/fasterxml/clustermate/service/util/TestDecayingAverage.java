@@ -40,4 +40,14 @@ public class TestDecayingAverage extends TestCase
         calc.addSample(10); // -> (0.75 * 12.5) + (0.25 * 10) -> 11.87
         assertEquals(12, calc.getCurrentAverage());
     }
+
+    public void testReps()
+    {
+        DecayingAverageCalculator calc = new DecayingAverageCalculator(2, 10, 10.0);
+        assertEquals(10, calc.getCurrentAverage());
+        calc.addRepeatedSample(6, 2); // First to 8, then to 7
+        assertEquals(7, calc.getCurrentAverage());
+        calc.addRepeatedSample(10, 3); // 8.5 -> 9.25 -> 9.625
+        assertEquals(10, calc.getCurrentAverage());
+    }
 }

@@ -1,7 +1,5 @@
 package com.fasterxml.clustermate.service.util;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 /**
  * Helper class used for calculating approximate moving averages
  * that emphasize most recent samples and use exponential decay.
@@ -24,8 +22,6 @@ public class DecayingAverageCalculator
     protected final double _maxSampleMultiplier;
 
     protected double _currentAverage;
-
-    protected final AtomicInteger _roundedAverage;
     
     /**
      * Lock we use to guard updates of the current average
@@ -55,23 +51,40 @@ public class DecayingAverageCalculator
         _oldAvgMultiplier = 1.0 - _newSampleMultiplier;
         _maxSampleMultiplier = maxMultiplier;
 
-        _roundedAverage = new AtomicInteger(initialEstimate);
         _currentAverage = initialEstimate;
     }
 
-    public void addSample(int sample)
+    public int addSample(int sample)
+    {
+        double newAvg;
+        synchronized (_lock) {
+            final double old = _currentAverage;
+            final double truncatedSample = Math.min(old * _maxSampleMultiplier, (double) sample);
+            newAvg = (_newSampleMultiplier * truncatedSample) + (_oldAvgMultiplier * old);
+            _currentAverage = newAvg;
+        }
+        return (int) Math.round(newAvg);
+    }
+
+    public int addRepeatedSample(int sample, int reps)
     {
         synchronized (_lock) {
             final double old = _currentAverage;
-            double truncatedSample = Math.min(old * _maxSampleMultiplier, (double) sample);
-            double newAvg = (_newSampleMultiplier * truncatedSample) + (_oldAvgMultiplier * old);
-            
+            final double truncatedSample = Math.min(old * _maxSampleMultiplier, (double) sample);
+            double newAvg = old;
+            while (--reps >= 0) {
+                newAvg = (_newSampleMultiplier * truncatedSample) + (_oldAvgMultiplier * newAvg);
+            }
             _currentAverage = newAvg;
-            _roundedAverage.set((int) Math.round(newAvg));
+            return (int) Math.round(newAvg);
         }
     }
-
+    
+    // NOTE: assumption is this is NOT called often -- this is why we take
+    // regular sync overhead here
     public int getCurrentAverage() {
-        return _roundedAverage.get();
+        synchronized (_lock) {
+            return (int) Math.round(_currentAverage);
+        }
     }
 }

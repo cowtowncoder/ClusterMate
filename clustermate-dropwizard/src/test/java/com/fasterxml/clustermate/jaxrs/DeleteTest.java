@@ -81,7 +81,6 @@ public class DeleteTest extends JaxrsStoreTestBase
         assertSame(DeleteResponse.class, response.getEntity().getClass());
         DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(deleteKey.toString(), dr.key);
-        assertEquals(startTime, dr.creationTime);
 
         // count won't change, since there's tombstone:
         assertEquals(2, entries.getEntryCount());
@@ -131,7 +130,6 @@ public class DeleteTest extends JaxrsStoreTestBase
         assertSame(DeleteResponse.class, response.getEntity().getClass());
         dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(deleteKey.toString(), dr.key);
-        assertEquals(startTime, dr.creationTime);
 
         assertEquals(2, entries.getEntryCount());
         response = new FakeHttpResponse();
@@ -174,7 +172,6 @@ public class DeleteTest extends JaxrsStoreTestBase
         assertSame(DeleteResponse.class, response.getEntity().getClass());
         DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(INTERNAL_KEY1.toString(), dr.key);
-        assertEquals(startTime, dr.creationTime);
         // count won't change, since there's tombstone:
         assertEquals(1, entries.getEntryCount());
 
@@ -227,7 +224,6 @@ public class DeleteTest extends JaxrsStoreTestBase
         assertSame(DeleteResponse.class, response.getEntity().getClass());
         DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(INTERNAL_KEY1.toString(), dr.key);
-        assertEquals(startTime, dr.creationTime);
         // count won't change, since there's tombstone:
         assertEquals(1, entries.getEntryCount());
 

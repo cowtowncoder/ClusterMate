@@ -213,23 +213,9 @@ public abstract class StoreHandler<
     protected void updateLastAccessedForDelete(ServiceRequest request, ServiceResponse response,
             K key, long accessTime) { }
 
-    /**
-     * Method called to construct and initialize optional handler for deferred deletes.
-     * If no deferred deletes are to be used, may return nuill.
-     * 
-     * @since 0.9.8
-     */
-    protected abstract DeferredDeletionQueue constructDeletionQueue(SharedServiceStuff stuff);
+    protected abstract DeferredDeleter constructDeleter(SharedServiceStuff stuff,
+            Stores<K,?> stores);
 
-    protected DeferredDeleter constructDeleter(SharedServiceStuff stuff, Stores<K,E> stores)
-    {
-        DeferredDeletionQueue q = constructDeletionQueue(stuff);
-        if (q != null) {
-            return new DeferredDeleter(q, stores.getEntryStore());
-        }
-        return null;
-    }
-    
     /*
     /**********************************************************************
     /* Content access (GET)
@@ -594,78 +580,54 @@ public abstract class StoreHandler<
             OperationDiagnostics metadata)
         throws IOException, StoreException
     {
-        StorableDeletionResult result;
+        // this may or may not result in deferred:
+        long startTime = _timeMaster.currentTimeMillis();
+        DeletionResult result;
 
         try {
-            // First things first: deferred deletes?
-            if (_deferredDeleter != null) {
-                return _deferredRemoveEntry(request, response, key, metadata);
-            }
-            long nanoStart = System.nanoTime();
-            try {
-                result = _stores.getEntryStore().softDelete(key.asStorableKey(), true, true);
-            } finally {
-                if (metadata != null) {
-                    metadata.addDbWrite(System.nanoTime() - nanoStart);
-                }
-            }
-        } catch (StoreException e) {
-            return _storeError(response, key, e);
+            result = _deferredDeleter.addDeferredDeletion(key.asStorableKey(), startTime);
+        } catch (Exception e) {
+            LOG.error("Problem during DELETE scheduling: {}", e);
+            return response.internalError("Failure due to: "+e);
         }
+
+        switch (result.getStatus()) {
+        case COMPLETED:
+            response = response.ok(new DeleteResponse<K>(key));
+            break;
+        case DEFERRED:
+            response = response.accepted(new DeleteResponse<K>(key));
+            break;
+        case QUEUE_FULL:
+            return response.internalServerError();
+        case TIMED_OUT:
+            return response.serverOverload();
+        case FAILED:
+            {
+                Throwable t = result.getRootCause();
+                if (t instanceof StoreException) {
+                    return _storeError(response, key, (StoreException) t);
+                }
+                return response.internalError("Failure due to: "+t);
+            }
+        default:
+            LOG.error("Unrecognized status: "+result.getStatus());
+            return response.internalServerError();
+        }
+
+        // If we got this far, can queue last-access deletion as well
 
         /* Even without match, we can claim it is ok... should we?
          * From idempotency perspective, result is that there is no such
          * entry; so let's allow that and just report ok.
          */
-        long creationTime = 0L;
-        if (result != null && result.hadEntry()) {
-            Storable rawEntry = result.getEntry();
-            if (metadata != null) {
-                metadata.setEntry(rawEntry);
-            }
-            E entry = _entryConverter.entryFromStorable(key, rawEntry);
-            creationTime = entry.getCreationTime();
-        }
-
         // and finally, possibly remove matching last-accessed entry
         final long deleteTime = _timeMaster.currentTimeMillis();
         updateLastAccessedForDelete(request, response, key, deleteTime);
         
-        return response.ok(new DeleteResponse<K>(key, creationTime));
+        return response;
     }
 
-    /**
-     * Method that gets called if removal of an entry should be deferred,
-     * that is, handled later on from another thread (and possibly throttled).
-     */
-    protected ServiceResponse _deferredRemoveEntry(ServiceRequest request, ServiceResponse response, K key,
-            OperationDiagnostics metadata)
-        throws IOException, StoreException
-    {
-        DeferredDeletionQueue.Action action;
-        final long insertTime = _timeMaster.currentTimeMillis();
-        try {
-            action = _deferredDeleter.queueDeletion(insertTime, key.asStorableKey());
-        } catch (InterruptedException e) { // unlikely but possible...
-            LOG.warn("Attempt to defer DELETE for {} interrupted; will report 500 failure", key);
-            return response.internalServerError();
-        }
-        switch (action) {
-        case PROCEED: // regardless of whether delay was induced, we merely accepted the thing...
-            // (we COULD add a flag if we wanted to check etc, but no point bothering yet)
-        case DELAY:
-            /* Oh. One more thing: queue deletion of last-accessed at this point;
-             * reason being that deleter does not necessarily have enough contextual
-             * info as we have here.
-             */
-            updateLastAccessedForDelete(request, response, key, _timeMaster.currentTimeMillis());
-            return response.accepted(new DeleteResponse<K>(key, 0L));
-        case DROP: // overloaded
-            return response.serverOverload();
-        }
-        throw new IllegalStateException("Unrecognized action "+action);
-    }
-    
     /*
     /**********************************************************************
     /* Listing entries

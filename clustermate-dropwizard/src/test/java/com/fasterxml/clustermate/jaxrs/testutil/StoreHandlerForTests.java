@@ -3,9 +3,7 @@ package com.fasterxml.clustermate.jaxrs.testutil;
 import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
-import com.fasterxml.clustermate.service.store.DeferredDeletionQueue;
-import com.fasterxml.clustermate.service.store.StoreHandler;
-import com.fasterxml.clustermate.service.store.StoredEntry;
+import com.fasterxml.clustermate.service.store.*;
 
 public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<TestKey>, ListItem>
 {
@@ -19,9 +17,9 @@ public class StoreHandlerForTests extends StoreHandler<TestKey, StoredEntry<Test
     }
 
     @Override
-    protected DeferredDeletionQueue constructDeletionQueue(SharedServiceStuff stuff) {
-        // No deferred deletes yet?
-        return null;
+    protected DeferredDeleter constructDeleter(SharedServiceStuff stuff, Stores<TestKey,?> stores)
+    {
+        return DeferredDeleter.nonDeferring(stores.getEntryStore());
     }
     
     @Override
