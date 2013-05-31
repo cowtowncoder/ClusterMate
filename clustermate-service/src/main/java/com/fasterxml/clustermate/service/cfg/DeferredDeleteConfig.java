@@ -50,7 +50,10 @@ public class DeferredDeleteConfig
 
     public DeferredDeleteConfig() {
         this(5, 100, new TimeSpan(60, TimeUnit.MILLISECONDS),
-                new TimeSpan(2500, TimeUnit.MILLISECONDS));
+                new TimeSpan(2500, TimeUnit.MILLISECONDS)
+                // !!! TEST
+//        new TimeSpan(1000, TimeUnit.MILLISECONDS)
+            );
     }
 
     public DeferredDeleteConfig(int minQueueLength, int maxQueueLength,

@@ -229,16 +229,18 @@ public class DeferredDeleter
                     ++okCount;
                 }
             }
-            long micros = ((System.nanoTime() - nanoStart) / okCount) >> 10;
-            
-            // if we get full chunk, add more weight
-            int newAvg;
-            if (count == CHUNK_SIZE) {
-                newAvg = _averages.addRepeatedSample((int) micros, 2);
-            } else {
-                newAvg = _averages.addSample((int) micros);
+            if (okCount > 0) {
+                long micros = ((System.nanoTime() - nanoStart) / okCount) >> 10;
+                
+                // if we get full chunk, add more weight
+                int newAvg;
+                if (count == CHUNK_SIZE) {
+                    newAvg = _averages.addRepeatedSample((int) micros, 2);
+                } else {
+                    newAvg = _averages.addSample((int) micros);
+                }
+                _updateMaxQueue(newAvg);
             }
-            _updateMaxQueue(newAvg);
             for (int i = 0; i < count; ++i) {
                 buffer.get(i).wakeUpCaller();
             }
