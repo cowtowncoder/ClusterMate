@@ -6,16 +6,32 @@ import java.util.concurrent.locks.LockSupport;
 import com.fasterxml.storemate.shared.StorableKey;
 
 /**
- * Container for queued instance of delete operation.
+ * Container for queued instance of delete operation. Operation may
+ * be "deferred" (async, caller does not wait for completion" or
+ * blocked (calling thread blocks to wait for completion).
  */
 class QueuedDeletion
 {
+    /**
+     * Raw key of the entry to delete.
+     */
     protected final StorableKey _key;
 
+    /**
+     * Timestamp of when deletion is to be considered expired, if it has
+     * not yet taken place.
+     */
     protected final long _expirationTime;
 
+    /**
+     * Calling thread for blocking operation; null for deferred deletions.
+     */
     protected final Thread _callerThread;
-    
+
+    /**
+     * Atomically accessible result object; set by thread that executes
+     * (or times out) deletion, read by blocked calling thread.
+     */
     protected final AtomicReference<DeletionResult> _statusRef;
     
     public QueuedDeletion(StorableKey key, long expirationTime,

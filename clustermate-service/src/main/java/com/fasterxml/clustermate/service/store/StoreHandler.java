@@ -23,6 +23,7 @@ import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
 import com.fasterxml.clustermate.service.msg.*;
+import com.fasterxml.clustermate.service.util.SimpleLogThrottler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -39,10 +40,6 @@ public abstract class StoreHandler<
     extends HandlerBase
     implements StartAndStoppable
 {
-    // Do we want these output? Not for production, at least...
-    // TODO: Externalize
-    private final static boolean LOG_DUP_PUTS = false;
-
     /**
      * Let's not allow unlimited number of entries to traverse, no matter what.
      */
@@ -98,6 +95,14 @@ public abstract class StoreHandler<
     
     protected final ObjectWriter _listSmileWriter;
 
+    // Do we want these output? Not for production, at least...
+    // TODO: Externalize
+    private final static boolean LOG_DUP_PUTS = false;
+    
+    // log dup puts at max rate of 1 per second
+    protected final SimpleLogThrottler _dupPutsLogger = LOG_DUP_PUTS ?
+            new SimpleLogThrottler(LOG, 1000) : null;
+    
     /*
     /**********************************************************************
     /* Helper objects, deferred delete support
@@ -971,8 +976,8 @@ public abstract class StoreHandler<
 
     protected void _logDuplicatePut(K key)
     {
-        if (LOG_DUP_PUTS) {
-            LOG.info("Duplicate PUT for key '{}'; success, same checksum", key);
+        if (_dupPutsLogger != null) {
+            _dupPutsLogger.logWarn("Duplicate PUT for key '{}'; success, same checksum", key);
         }
     }
     
