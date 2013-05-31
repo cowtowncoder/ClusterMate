@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cfg.DeferredDeleteConfig;
+import com.fasterxml.clustermate.service.metrics.DeferQueueMetrics;
+import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.util.DecayingAverageCalculator;
 import com.fasterxml.clustermate.service.util.SimpleLogThrottler;
 import com.fasterxml.storemate.shared.StorableKey;
@@ -183,7 +185,26 @@ public class DeferredDeleter
         }
         return (_deletions.size() < _currentMaxQueueLength.get());
     }
+
+    /*
+    /**********************************************************************
+    /* Method(s) to expose metrics
+    /**********************************************************************
+     */
     
+    protected void augmentMetrics(ExternalOperationMetrics deleteMetrics)
+    {
+        DeferQueueMetrics q = new DeferQueueMetrics();
+        q.minLength = _minDeferQLength;
+        q.maxLength = _maxDeferQLength;
+        q.currentLength = _deletions.size();
+        q.maxLengthForDefer = _currentMaxQueueLength.get();
+        q.delayTargetMsecs = _targetMaxQueueDelayMicros / 1000;
+        // and then get estimated average per-operation delay (note: is in usecs)
+        q.estimatedDelayMsecs = (_averages.getCurrentAverage() / 1000.0);
+        deleteMetrics.queue = q;
+    }
+
     /*
     /**********************************************************************
     /* Main processing loop

@@ -127,6 +127,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         metrics.GET = ExternalOperationMetrics.create(_getMetrics);
         metrics.PUT = ExternalOperationMetrics.create(_putMetrics);
         metrics.DELETE = ExternalOperationMetrics.create(_deleteMetrics);
+        _storeHandler.augmentOperationMetrics(metrics);
     }
     
     /*

@@ -33,6 +33,12 @@ public class ExternalOperationMetrics
 
     public Histogram requestEntryCounts;
 
+    /**
+     * Optional extra information about queuing; currently only used with
+     * DELETE operations.
+     */
+    public DeferQueueMetrics queue;
+
     protected ExternalOperationMetrics(OperationMetrics raw)
     {
         inFlight = raw._metricInFlight.count();

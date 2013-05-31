@@ -40,8 +40,8 @@ public class NodeMetricsServlet extends ServletBase
      */
     protected final static String QUERY_PARAM_FULL = "full";
 
-    // Only probe for metrics once per minute (unless forced)
-    protected final static long UPDATE_PERIOD_MSECS = 1L * 60 * 1000;
+    // Only probe for metrics once every 10 seconds (unless forced)
+    protected final static long UPDATE_PERIOD_MSECS = 1L * 10 * 1000;
 
     // And even with forcing, do not query more often than once per second
     protected final static long MINIMUM_MSECS_BETWEEN_RECALC = 1000L;

@@ -22,6 +22,9 @@ import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
+import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
+import com.fasterxml.clustermate.service.metrics.DeferQueueMetrics;
+import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.msg.*;
 import com.fasterxml.clustermate.service.util.SimpleLogThrottler;
 
@@ -221,6 +224,20 @@ public abstract class StoreHandler<
     protected abstract DeferredDeleter constructDeleter(SharedServiceStuff stuff,
             Stores<K,?> stores);
 
+    /*
+    /**********************************************************************
+    /* Additional metrics access
+    /**********************************************************************
+     */
+
+    public void augmentOperationMetrics(AllOperationMetrics metrics)
+    {
+        ExternalOperationMetrics deleteMetrics = metrics.DELETE;
+        if (deleteMetrics != null) { // just for sanity...
+            _deferredDeleter.augmentMetrics(deleteMetrics);
+        }
+    }
+    
     /*
     /**********************************************************************
     /* Content access (GET)
