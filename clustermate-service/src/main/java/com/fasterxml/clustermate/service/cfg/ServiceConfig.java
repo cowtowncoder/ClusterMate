@@ -132,7 +132,7 @@ public abstract class ServiceConfig
      * DELETE operations may be deferred; and if so, here's configuration
      * for details.
      */
-    public DeferredOperationConfig deletes = new DeferredOperationConfig();
+    public DeferredDeleteConfig deletes = new DeferredDeleteConfig();
     
     /*
     /**********************************************************************

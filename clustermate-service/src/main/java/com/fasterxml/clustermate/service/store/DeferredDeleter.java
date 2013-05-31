@@ -10,9 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.clustermate.service.StartAndStoppable;
+import com.fasterxml.clustermate.service.cfg.DeferredDeleteConfig;
 import com.fasterxml.clustermate.service.util.DecayingAverageCalculator;
 import com.fasterxml.clustermate.service.util.SimpleLogThrottler;
 import com.fasterxml.storemate.shared.StorableKey;
+import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
 
 /**
@@ -22,28 +24,27 @@ public class DeferredDeleter
     implements StartAndStoppable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-
-    /**
-     * TODO: externalize
-     */
-    protected final static long EXPIRATION_MSECS = 2500L;
     
     /**
      * We may get shit storms of failures, so let's throttle output for possibly
      * voluminous errors to 2 per second...
      */
     protected final SimpleLogThrottler _throttledLogger = new SimpleLogThrottler(LOG, 500);
-    
+
     protected final StorableStore _entryStore;
 
     protected final ArrayBlockingQueue<QueuedDeletion> _deletions;
 
     protected final DecayingAverageCalculator _averages;
     
+    protected final TimeMaster _timeMaster;
+
     protected final int _minDeferQLength;
     protected final int _maxDeferQLength;
 
     protected final int _targetMaxQueueDelayMicros;
+
+    protected final int _maxQueueDelayMsecs;
     
     protected final Thread _deleteThread;
 
@@ -62,23 +63,24 @@ public class DeferredDeleter
      */
 
     public DeferredDeleter(StorableStore entryStore,
-            int minDefQLength, int maxDefQLength,
-            long targetMaxDelayMsecs)
+            DeferredDeleteConfig config)
     {
-        _minDeferQLength = minDefQLength;
-        _maxDeferQLength = maxDefQLength;
+        _timeMaster = entryStore.getTimeMaster();
+        
+        _minDeferQLength = config.minQueueLength;
+        _maxDeferQLength = config.maxQueueLength;
 
-        _targetMaxQueueDelayMicros = 1000 * Math.max(1, (int) targetMaxDelayMsecs);
+        _targetMaxQueueDelayMicros = 1000 * Math.max(1, (int) config.queueTargetDelayMsecs.getMillis());
         // Start with minimum length...
         _currentMaxQueueLength = new AtomicInteger(_minDeferQLength);  
-        
+        _maxQueueDelayMsecs = (int) config.queueMaxDelayMsecs.getMillis();
         
         /* We need at least 'maxDefQLength' entries for deferred (unblocking)
          * entries; but also up to N extras for blocking. Since we do not
          * know for sure N, let's use conservative upper bound of 1000; it's
          * much higher than any thread count allocated for deletions.
          */
-        _deletions = new ArrayBlockingQueue<QueuedDeletion>(Math.max(0, maxDefQLength) + 1000);
+        _deletions = new ArrayBlockingQueue<QueuedDeletion>(Math.max(0, _maxDeferQLength) + 1000);
         _entryStore = entryStore;
         
         /* We will also try to estimate how long it would take to complete
@@ -110,7 +112,10 @@ public class DeferredDeleter
  
     public static DeferredDeleter nonDeferring(StorableStore entryStore)
     {
-        return new DeferredDeleter(entryStore, -1, -1, 10L);
+        DeferredDeleteConfig config = new DeferredDeleteConfig();
+        config.minQueueLength = 0;
+        config.maxQueueLength = 0;
+        return new DeferredDeleter(entryStore, config);
     }
     
     @Override
@@ -157,7 +162,8 @@ public class DeferredDeleter
     public DeletionResult addNonDeferredDeletion(StorableKey key, long currentTime)
     {
         Thread currThread = Thread.currentThread();
-        final QueuedDeletion del = new QueuedDeletion(key, currentTime+EXPIRATION_MSECS, currThread);
+        final QueuedDeletion del = new QueuedDeletion(key,
+                currentTime+_maxQueueDelayMsecs, currThread);
         
         if (!_deletions.offer(del)) { // should never occur either...
             return DeletionResult.forQueueFull();
@@ -202,22 +208,28 @@ public class DeferredDeleter
                 count = _deletions.drainTo(buffer, CHUNK_SIZE);
                 if (count == 0) { // but if none found, revert to blocking...
                     QueuedDeletion del = _deletions.take();
-                    final long startTime = System.nanoTime();
-                    _delete(del);
-                    long micros = (System.nanoTime() - startTime) >> 10;
-                    int newAvg = _averages.addSample((int) micros);
+                    final long nanoStart = System.nanoTime();
+                    if (_delete(del, _timeMaster.currentTimeMillis())) {
+                        long micros = (System.nanoTime() - nanoStart) >> 10;
+                        int newAvg = _averages.addSample((int) micros);
+                        _updateMaxQueue(newAvg);
+                    }
                     del.wakeUpCaller();
-                    _updateMaxQueue(newAvg);
                     continue;
                 }
             } catch (InterruptedException e) { // most likely means we are done...
                 continue;
             }
-            final long startTime = System.nanoTime();
+            final long nanoStart = System.nanoTime();
+            final long systemTime = _timeMaster.currentTimeMillis();
+            int okCount = 0;
             for (int i = 0; i < count; ++i) {
-                _delete(buffer.get(i));
+                // only consider actual deletions to count for time estimation purposes
+                if (_delete(buffer.get(i), systemTime)) {
+                    ++okCount;
+                }
             }
-            long micros = ((System.nanoTime() - startTime) / count) >> 10;
+            long micros = ((System.nanoTime() - nanoStart) / okCount) >> 10;
             
             // if we get full chunk, add more weight
             int newAvg;
@@ -257,15 +269,26 @@ public class DeferredDeleter
         _currentMaxQueueLength.set(len);
         return len;
     }
-    
-    private final void _delete(QueuedDeletion deletion)
+
+    /**
+     * @return True if deletion succeeded; used to only include valid timings
+     *   for estimation
+     */
+    private final boolean _delete(QueuedDeletion deletion, long currentTime)
     {
+        // First things first: are we timed out already?
+        if (deletion.isExpired(currentTime)) {
+            deletion.setStatus(DeletionResult.forTimeOut());
+            return false;
+        }
+        
         try {
             _entryStore.softDelete(deletion.getKey(), true, true);
             deletion.setStatus(DeletionResult.forCompleted());
         } catch (Throwable t) {
             deletion.setFail(t);
-            return;
+            return false;
         }
+        return true;
     }
 }

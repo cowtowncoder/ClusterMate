@@ -22,7 +22,7 @@ class QueuedDeletion
             Thread callerThread)
     {
         _key = key;
-        _expirationTime = expirationTime;
+        _expirationTime = (expirationTime == 0L) ? Long.MAX_VALUE : expirationTime;
         _callerThread = callerThread;
         _statusRef = new AtomicReference<DeletionResult>(null);
     }
@@ -34,6 +34,12 @@ class QueuedDeletion
         }
         LockSupport.unpark(_callerThread);
         return true;
+    }
+
+    public boolean isExpired(long currentTime) {
+        // can't expire without blocked Thread to take care of it...
+        return (_callerThread != null)
+                && (currentTime > _expirationTime);
     }
     
     public void setFail(Throwable t) {
