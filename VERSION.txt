@@ -1,8 +1,10 @@
 Project: ClusterMate
 
-0.9.8 (not yet released)
+0.9.9 (not yet released)
 
-#26: Add basic support for deferred DELETEs.
+0.9.8 (31-May-2013)
+
+#26: Add support for deferred (async) DELETEs.
 
 0.9.7 (23-May-2013)
 
