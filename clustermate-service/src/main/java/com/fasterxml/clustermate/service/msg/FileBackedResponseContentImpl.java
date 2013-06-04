@@ -7,18 +7,22 @@ import org.slf4j.LoggerFactory;
 
 import com.ning.compress.lzf.LZFInputStream;
 
-import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.shared.util.BufferRecycler;
+import com.fasterxml.storemate.store.FileOperationCallback;
+import com.fasterxml.storemate.store.Storable;
+import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
+
+import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**
  * Simple (but not naive) {@link StreamingResponseContent} implementation used
  * for returning content for inlined entries.
  */
-public class StreamingResponseContentImpl
+public class FileBackedResponseContentImpl
     implements StreamingResponseContent
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
@@ -43,9 +47,9 @@ public class StreamingResponseContentImpl
     /**********************************************************************
      */
 
-    private final File _file;
+    private final StoredEntry<?> _entry;
 
-    private final ByteContainer _data;
+    private final File _file;
 	
     private final long _dataOffset;
 	
@@ -57,6 +61,8 @@ public class StreamingResponseContentImpl
     /**********************************************************************
      */
 
+    private final long _operationTime;
+    
     private final Compression _compression;
 
     /**
@@ -75,39 +81,21 @@ public class StreamingResponseContentImpl
     /* Construction
     /**********************************************************************
      */
-    
-    public StreamingResponseContentImpl(ByteContainer data, ByteRange range,long contentLength)
-    {
-        _throttler = null;
-        if (data == null) {
-            throw new IllegalArgumentException();
-        }
-        _data = data;
-        // Range request? let's tweak offsets if so...
-        if (range == null) {
-            _dataOffset = -1L;
-            _dataLength = -1L;
-            _contentLength = contentLength;
-        } else {
-            _dataOffset = range.getStart();
-            _dataLength = range.calculateLength();
-            _contentLength = _dataLength;
-        }
-        _file = null;
-        _compression = null;
-        _fileLength = 0L;
-    }
 
-    public StreamingResponseContentImpl(StoreOperationThrottler throttler,
+    public FileBackedResponseContentImpl(StoreOperationThrottler throttler, long operationTime,
             File f, Compression comp, ByteRange range,
-            long contentLength, long rawFileLength)
+            StoredEntry<?> entry)
     {
         _throttler = throttler;
-        _data = null;
+        _operationTime = operationTime;
+        _entry = entry;
+        _fileLength = entry.getStorageLength();
+        long contentLen = (comp == null) ? _fileLength : entry.getActualUncompressedLength();
+
         if (range == null) {
             _dataOffset = -1L;
             _dataLength = -1L;
-            _contentLength = contentLength;
+            _contentLength = contentLen;
         } else {
             // Range can be stored in offset..
             _dataOffset = range.getStart();
@@ -116,30 +104,41 @@ public class StreamingResponseContentImpl
         }
         _file = f;
         _compression = comp;
-        _fileLength = rawFileLength;
     }
 
+    /*
+    /**********************************************************************
+    /* Metadata
+    /**********************************************************************
+     */
+
     @Override
-    public long getLength()
-    {
+    public boolean hasFile() { return true; }
+    @Override
+    public boolean inline() { return false; }
+    
+    @Override
+    public long getLength() {
         return _contentLength;
     }
 
+    /*
+    /**********************************************************************
+    /* Actual streaming
+    /**********************************************************************
+     */
+    
     @Override
-    public void writeContent(OutputStream out) throws IOException
+    public void writeContent(final OutputStream out) throws IOException
     {
-        /* Inline data is simple, because we have already decompressed it
-         * if and as necessary; so all we do is just write is out.
-         */
-        if (_data != null) {
-            if (_dataOffset <= 0L) {
-                _data.writeBytes(out);
-            } else { // casts are safe; inlined data relatively small
-                _data.writeBytes(out, (int) _dataOffset, (int) _dataLength);
+        _throttler.performFileRead(new FileOperationCallback() {
+            @Override
+            public void perform(long operationTime, Storable value, File externalFile)
+                    throws IOException, StoreException
+            {
+                _writeContentFromFile(out);
             }
-            return;
-        }
-        _writeContentFromFile(out);
+        }, _operationTime, _entry.getRaw(), _file);
     }
     
     @SuppressWarnings("resource")
@@ -218,13 +217,4 @@ public class StreamingResponseContentImpl
             LOG.warn("Failed to close file '{}': {}", _file, e.getMessage());
         }
     }
-    
-    /*
-    /**********************************************************************
-    /* Methods for helping testing
-    /**********************************************************************
-     */
-
-    public boolean hasFile() { return _file != null; }
-    public boolean inline() { return _data != null; }
 }

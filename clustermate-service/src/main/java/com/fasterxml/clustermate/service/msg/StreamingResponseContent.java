@@ -16,4 +16,9 @@ public interface StreamingResponseContent
      * non-negative length.
      */
     public long getLength();
+
+    // // // Methods for helping testing
+    
+    public boolean hasFile();
+    public boolean inline();
 }

@@ -316,14 +316,12 @@ public abstract class StoreHandler<
             skipCompression = (comp != Compression.NONE) && comp.isAcceptable(acceptableEnc);
         }
         
-        StreamingResponseContentImpl output;
+        StreamingResponseContent output;
 
         if (entry.hasExternalData()) { // need to stream from File
             File f = entry.getRaw().getExternalFile(_fileManager);
-            final long rawLen = entry.getStorageLength();
-            long contentLen = skipCompression ? rawLen : entry.getActualUncompressedLength();
-            output = new StreamingResponseContentImpl(entryStore.getThrottler(),
-                    f, skipCompression ? null : comp, range, contentLen, rawLen);
+            output = new FileBackedResponseContentImpl(entryStore.getThrottler(), accessTime,
+                    f, skipCompression ? null : comp, range, entry);
         } else { // inline
             ByteContainer inlined = entry.getRaw().getInlinedData();
             if (!skipCompression) {
@@ -333,7 +331,7 @@ public abstract class StoreHandler<
                     return internalGetError(response, e, key, "Failed to decompress inline data");
                 }
             }
-            output = new StreamingResponseContentImpl(inlined, range, inlined.byteLength());
+            output = new SimpleStreamingResponseContent(inlined, range, inlined.byteLength());
         }
         // #21: provide content length header
         long cl = output.getLength();

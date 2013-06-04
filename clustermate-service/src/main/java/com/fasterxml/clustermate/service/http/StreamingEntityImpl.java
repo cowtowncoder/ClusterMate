@@ -33,4 +33,10 @@ public class StreamingEntityImpl
     {
         _objectWriter.writeValue(out, _entity);
     }
+
+    @Override
+    public boolean hasFile() { return false; }
+
+    @Override
+    public boolean inline() { return true; }
 }

@@ -37,7 +37,7 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
 
     /**
      * When it rains it pours: errors love company. So to reduce noise during
-     * shitstorms let's only print up to N errors per round.
+     * shit storms let's only print up to N errors per round.
      */
     protected final static int MAX_ERRORS_PER_PULL = 3;
     
@@ -66,10 +66,17 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
         _entries = entries;
     }
 
+    // kinda, since we copy contents from files
+    @Override
+    public boolean hasFile() { return true; }
+
+    @Override
+    public boolean inline() { return false; }
+    
     @Override
     public long getLength() {
-    	// no, we do not really know the length
-    	return -1L;
+        // no, we do not really know the length
+        return -1L;
     }
     
     @Override
