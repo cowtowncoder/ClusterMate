@@ -6,7 +6,6 @@ import java.util.*;
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
-import com.fasterxml.clustermate.service.msg.FileBackedResponseContentImpl;
 
 @SuppressWarnings("unchecked")
 public class FakeHttpResponse extends ServiceResponse
