@@ -5,7 +5,11 @@ import java.io.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ning.compress.DataHandler;
+import com.ning.compress.Uncompressor;
+import com.ning.compress.gzip.GZIPUncompressor;
 import com.ning.compress.lzf.LZFInputStream;
+import com.ning.compress.lzf.LZFUncompressor;
 
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.compress.Compression;
@@ -152,23 +156,25 @@ public class FileBackedResponseContentImpl
                 return;
             }
             
-            // And then compressed variants
+            // And then compressed variants. First, maybe we can read all data in memory before uncomp?
+            if (_fileLength <= READ_BUFFER_LENGTH) {
+                _readAllWriteAllCompressed(out, copyBuffer, _dataOffset, _dataLength);
+                return;
+            }
+            // If not, use (for now) the old slow read-uncompress-copy loop:
             
+            _throttler.performFileRead(new FileOperationCallback<Void>() {
+                @Override
+                public Void perform(long operationTime, Storable value, File externalFile)
+                        throws IOException, StoreException
+                {
+                    _writeContentFromFile(out, copyBuffer);
+                    return null;
+                }
+            }, _operationTime, _entry.getRaw(), _file);
         } finally {
             bufferHolder.returnBuffer(copyBuffer);
         }
-
-        // If not, use (for now) the old slow read-uncompress-copy loop:
-        
-        _throttler.performFileRead(new FileOperationCallback<Void>() {
-            @Override
-            public Void perform(long operationTime, Storable value, File externalFile)
-                    throws IOException, StoreException
-            {
-                _writeContentFromFile(out);
-                return null;
-            }
-        }, _operationTime, _entry.getRaw(), _file);
     }
 
     /*
@@ -186,16 +192,9 @@ public class FileBackedResponseContentImpl
             final long offset, final int dataLength)
         throws IOException
     {
-        int length = _throttler.performFileRead(new FileOperationCallback<Integer>() {
-            @Override
-            public Integer perform(long operationTime, Storable value, File externalFile)
-                throws IOException
-            {
-                return _readFromFile(externalFile, copyBuffer, offset, dataLength);
-            }
-        }, _operationTime, _entry.getRaw(), _file);
+        _readAll(out, copyBuffer, offset, dataLength);
         // and write out like so
-        out.write(copyBuffer, 0, length);
+        out.write(copyBuffer, 0, dataLength);
     }
 
     /**
@@ -235,9 +234,68 @@ public class FileBackedResponseContentImpl
     /* Second level copy methods; compressed data
     /**********************************************************************
      */
+
+    /**
+     * Method called in cases where the compressed file can be fully read
+     * in a single buffer, to be uncompressed and written.
+     */
+    protected void _readAllWriteAllCompressed(final OutputStream out, final byte[] copyBuffer,
+            final long offset, final long dataLength)
+        throws IOException
+    {
+        // important: specify no offset, file length; data offset/length is for _uncompressed_
+        int inputLength = (int) _fileLength;
+        _readAll(out, copyBuffer, 0L, inputLength);
+
+        // Compress-Ning package allows "push" style uncompression (yay!)
+        Uncompressor uncomp;
+        DataHandler h = new DataHandler() {
+            long toSkip = offset;
+            long toWrite = dataLength;
+
+            @Override
+            public void handleData(byte[] buffer, int offset, int len) throws IOException
+            {
+                if (toSkip > 0L) {
+                    if (len <= toSkip) {
+                        toSkip -= len;
+                        return;
+                    }
+                    offset += (int) toSkip;
+                    len -= (int) toSkip;
+                    toSkip = 0L;
+                }
+                if (toWrite > 0L) {
+                    if (len > toWrite) {
+                        len = (int) toWrite;
+                    }
+                    out.write(buffer, offset, len);
+                    toWrite -= len;
+                }
+            }
+
+            @Override
+            public void allDataHandled() throws IOException {
+                if (toWrite > 0L) {
+                    throw new IOException("Could not uncompress all data ("+dataLength+" bytes): missing last "+toWrite);
+                }
+            }
+        };
+
+        if (_compression == Compression.LZF) {
+            uncomp = new LZFUncompressor(h);
+        } else if (_compression == Compression.GZIP) {
+            uncomp = new GZIPUncompressor(h);
+        } else { // otherwise, must use bulk operations?
+            // TODO: currently we do not have other codecs
+            throw new UnsupportedOperationException("No Uncompressor for compression type: "+_compression);
+        }
+        uncomp.feedCompressedData(copyBuffer, 0, inputLength);
+        uncomp.complete();
+    }
     
     @SuppressWarnings("resource")
-    protected void _writeContentFromFile(OutputStream out) throws IOException
+    protected void _writeContentFromFile(OutputStream out, byte[] copyBuffer) throws IOException
     {
         InputStream in = new FileInputStream(_file);
         
@@ -253,10 +311,6 @@ public class FileBackedResponseContentImpl
         }
 
         // and for now, compressed variants are handle
-        
-        // otherwise default handling via explicit copying
-        final BufferRecycler.Holder bufferHolder = _bufferRecycler.getHolder();        
-        final byte[] copyBuffer = bufferHolder.borrowBuffer();
 
         in = Compressors.uncompressingStream(in, _compression);
 
@@ -301,9 +355,33 @@ public class FileBackedResponseContentImpl
     	                _dataLength-left });
             }
         } finally {
-            bufferHolder.returnBuffer(copyBuffer);
             _close(in);
         }
+    }
+
+    /*
+    /**********************************************************************
+    /* Shared file access methods
+    /**********************************************************************
+     */
+
+    protected void _readAll(OutputStream out, final byte[] copyBuffer,
+            final long offset, final int dataLength)
+        throws IOException
+    {
+        _throttler.performFileRead(new FileOperationCallback<Void>() {
+            @Override
+            public Void perform(long operationTime, Storable value, File externalFile)
+                throws IOException
+            {
+                int count = _readFromFile(externalFile, copyBuffer, offset, dataLength);
+                if (count < dataLength) {
+                    throw new IOException("Failed to read all "+dataLength+" bytes from '"
+                            +externalFile.getAbsolutePath()+"'; only got: "+count);
+                }
+                return null;
+            }
+        }, _operationTime, _entry.getRaw(), _file);
     }
 
     /*
@@ -311,7 +389,7 @@ public class FileBackedResponseContentImpl
     /* Simple helper methods
     /**********************************************************************
      */
-
+    
     /**
      * Helper method for reading all the content from specified file
      * into given buffer. Caller must ensure that amount to read fits
