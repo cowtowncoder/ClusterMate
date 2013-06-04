@@ -14,6 +14,7 @@ import com.yammer.dropwizard.lifecycle.Managed;
 
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.store.StorableStore;
+import com.fasterxml.storemate.store.StoreOperationThrottler;
 import com.fasterxml.storemate.store.backend.StoreBackend;
 import com.fasterxml.storemate.store.backend.StoreBackendBuilder;
 import com.fasterxml.storemate.store.backend.StoreBackendConfig;
@@ -481,10 +482,27 @@ public abstract class DWBasedService<
                 .with(backendConfig)
                 .build();
         StorableStore store = new StorableStoreImpl(v.storeConfig, backend, _timeMaster,
-               stuff.getFileManager());
+               stuff.getFileManager(), _constructThrottler(stuff));
         return constructStores(stuff, v, store);
     }
 
+    /**
+     * Factory method called to instantiate {@link StoreOperationThrottler}
+     * to use for throttling underlying local database operations.
+     * If null is returned, store is free to use whatever default throttling
+     * mechanism it needs to for ensuring consistency, but nothing more.
+     *<p>
+     * Default implementation simply returns null to let the default throttler
+     * be used.
+     * 
+     * @since 0.9.9
+     */
+    protected StoreOperationThrottler _constructThrottler(SharedServiceStuff stuff)
+    {
+        // null -> use the default implementation
+        return null;
+    }
+    
     /*
     /**********************************************************************
     /* Accessors for tests
