@@ -197,6 +197,12 @@ public abstract class DWBasedService<
             }
         });
 
+        /* 04-Jun-2013, tatu: Goddammit, disabling gzip filter is tricky due to
+         *   data-binding... Object-values get re-created. So, need to patch after
+         *   the fact
+         */
+        dwConfig.overrideGZIPEnabled(false);
+
         final SCONFIG config = dwConfig.getServiceConfig();
         
         _managed = new ArrayList<StartAndStoppable>();

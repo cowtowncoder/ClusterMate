@@ -14,7 +14,11 @@ public abstract class DWConfigBase<
     extends Configuration
     implements Cloneable
 {
-    public DWConfigBase() { }
+    public DWConfigBase() {
+        // Let's try forcing GZIP to be disabled: may not work wrt
+        // data-binding (since that'll recreate objects but...)
+        overrideGZIPEnabled(false);
+    }
 
     /*
     /**********************************************************************
