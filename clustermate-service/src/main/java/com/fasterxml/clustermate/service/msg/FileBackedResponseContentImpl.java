@@ -12,6 +12,7 @@ import com.ning.compress.lzf.LZFInputStream;
 import com.ning.compress.lzf.LZFUncompressor;
 
 import com.fasterxml.storemate.shared.ByteRange;
+import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.shared.util.BufferRecycler;
@@ -163,7 +164,7 @@ public class FileBackedResponseContentImpl
                 // If not, use (for now) the old slow read-uncompress-copy loop:
                 _throttler.performFileRead(new FileOperationCallback<Void>() {
                     @Override
-                    public Void perform(long operationTime, Storable value, File externalFile)
+                    public Void perform(long operationTime, StorableKey key, Storable value, File externalFile)
                             throws IOException, StoreException
                     {
                         _readAllWriteStreamingCompressed(out, copyBuffer);
@@ -206,7 +207,7 @@ public class FileBackedResponseContentImpl
     {
         _throttler.performFileRead(new FileOperationCallback<Void>() {
             @Override
-            public Void perform(long operationTime, Storable value, File externalFile)
+            public Void perform(long operationTime, StorableKey key, Storable value, File externalFile)
                 throws IOException
             {
                 InputStream in = new FileInputStream(_file);
@@ -344,7 +345,7 @@ public class FileBackedResponseContentImpl
     {
         _throttler.performFileRead(new FileOperationCallback<Void>() {
             @Override
-            public Void perform(long operationTime, Storable value, File externalFile)
+            public Void perform(long operationTime,  StorableKey key, Storable value, File externalFile)
                 throws IOException
             {
                 int count = _readFromFile(externalFile, copyBuffer, offset, dataLength);
