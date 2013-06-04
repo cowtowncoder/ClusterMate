@@ -12,6 +12,7 @@ import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.shared.util.BufferRecycler;
+import com.fasterxml.storemate.store.StoreOperationThrottler;
 
 /**
  * Simple (but not naive) {@link StreamingResponseContent} implementation used
@@ -22,19 +23,26 @@ public class StreamingResponseContentImpl
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    // NOTE: changed from 8k to 16k in 
+    /*
+    /**********************************************************************
+    /* Helper objects
+    /**********************************************************************
+     */
+    
     /**
      * We can reuse read buffers as they are somewhat costly to
      * allocate, reallocate all the time.
      */
-    final protected static BufferRecycler _bufferRecycler = new BufferRecycler(16000);
+    final protected static BufferRecycler _bufferRecycler = new BufferRecycler(32000);
 
+    final protected StoreOperationThrottler _throttler;
+    
     /*
     /**********************************************************************
     /* Data to stream out
     /**********************************************************************
      */
-    
+
     private final File _file;
 
     private final ByteContainer _data;
@@ -45,7 +53,7 @@ public class StreamingResponseContentImpl
 
     /*
     /**********************************************************************
-    /* Metadata...
+    /* Metadata
     /**********************************************************************
      */
 
@@ -55,16 +63,22 @@ public class StreamingResponseContentImpl
      * Content length as reported when caller asks for it; -1 if not known.
      */
     private final long _contentLength;
-    
+
+    /**
+     * When reading from a file, this indicates length of content before
+     * processing (if any).
+     */
+    private final long _fileLength;
+
     /*
     /**********************************************************************
     /* Construction
     /**********************************************************************
      */
     
-    public StreamingResponseContentImpl(ByteContainer data, ByteRange range,
-            long contentLength)
+    public StreamingResponseContentImpl(ByteContainer data, ByteRange range,long contentLength)
     {
+        _throttler = null;
         if (data == null) {
             throw new IllegalArgumentException();
         }
@@ -81,11 +95,14 @@ public class StreamingResponseContentImpl
         }
         _file = null;
         _compression = null;
+        _fileLength = 0L;
     }
 
-    public StreamingResponseContentImpl(File f, Compression comp, ByteRange range,
-            long contentLength)
+    public StreamingResponseContentImpl(StoreOperationThrottler throttler,
+            File f, Compression comp, ByteRange range,
+            long contentLength, long rawFileLength)
     {
+        _throttler = throttler;
         _data = null;
         if (range == null) {
             _dataOffset = -1L;
@@ -99,6 +116,7 @@ public class StreamingResponseContentImpl
         }
         _file = f;
         _compression = comp;
+        _fileLength = rawFileLength;
     }
 
     @Override
@@ -107,7 +125,6 @@ public class StreamingResponseContentImpl
         return _contentLength;
     }
 
-    @SuppressWarnings("resource")
     @Override
     public void writeContent(OutputStream out) throws IOException
     {
@@ -122,7 +139,14 @@ public class StreamingResponseContentImpl
             }
             return;
         }
+        _writeContentFromFile(out);
+    }
+    
+    @SuppressWarnings("resource")
+    protected void _writeContentFromFile(OutputStream out) throws IOException
+    {
         InputStream in = new FileInputStream(_file);
+        
         // First: LZF has special optimization to use, if we are to copy the whole thing:
         if ((_compression == Compression.LZF) && (_dataLength == -1)) {
     	        LZFInputStream lzfIn = new LZFInputStream(in);

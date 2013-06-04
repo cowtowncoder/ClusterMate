@@ -262,10 +262,11 @@ public abstract class StoreHandler<
         }
         String acceptableEnc = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
         Storable rawEntry = null;
+        final StorableStore entryStore = _stores.getEntryStore();
 
         long nanoStart = System.nanoTime();
         try {
-            rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
+            rawEntry = entryStore.findEntry(key.asStorableKey());
         } catch (StoreException e) {
             return _storeError(response, key, e);
         } finally {
@@ -316,12 +317,13 @@ public abstract class StoreHandler<
         }
         
         StreamingResponseContentImpl output;
-        
+
         if (entry.hasExternalData()) { // need to stream from File
             File f = entry.getRaw().getExternalFile(_fileManager);
-            long contentLen = skipCompression ? entry.getStorageLength() : entry.getActualUncompressedLength();
-            output = new StreamingResponseContentImpl(f, skipCompression ? null : comp, range,
-                    contentLen);
+            final long rawLen = entry.getStorageLength();
+            long contentLen = skipCompression ? rawLen : entry.getActualUncompressedLength();
+            output = new StreamingResponseContentImpl(entryStore.getThrottler(),
+                    f, skipCompression ? null : comp, range, contentLen, rawLen);
         } else { // inline
             ByteContainer inlined = entry.getRaw().getInlinedData();
             if (!skipCompression) {
@@ -467,7 +469,7 @@ public abstract class StoreHandler<
         return putEntry(request, response, key, checksum, dataIn,
                 minTTL, maxTTL, metadata);
     }
-    
+
     // Public due to unit tests
     public ServiceResponse putEntry(ServiceRequest request, ServiceResponse response,
             K key, int checksum,// 32-bit hash by client
@@ -502,6 +504,7 @@ public abstract class StoreHandler<
                 minTTLSecs, maxTTLSecs);
         StorableCreationResult result;
         long nanoStart = System.nanoTime();
+
         try {
             /* This gets quite convoluted but that's how it goes: if undelete is
              * allowed, we must use different method:
