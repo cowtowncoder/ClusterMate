@@ -159,19 +159,18 @@ public class FileBackedResponseContentImpl
             // And then compressed variants. First, maybe we can read all data in memory before uncomp?
             if (_fileLength <= READ_BUFFER_LENGTH) {
                 _readAllWriteAllCompressed(out, copyBuffer, _dataOffset, _dataLength);
-                return;
+            } else {
+                // If not, use (for now) the old slow read-uncompress-copy loop:
+                _throttler.performFileRead(new FileOperationCallback<Void>() {
+                    @Override
+                    public Void perform(long operationTime, Storable value, File externalFile)
+                            throws IOException, StoreException
+                    {
+                        _readAllWriteStreamingCompressed(out, copyBuffer);
+                        return null;
+                    }
+                }, _operationTime, _entry.getRaw(), _file);
             }
-            // If not, use (for now) the old slow read-uncompress-copy loop:
-            
-            _throttler.performFileRead(new FileOperationCallback<Void>() {
-                @Override
-                public Void perform(long operationTime, Storable value, File externalFile)
-                        throws IOException, StoreException
-                {
-                    _writeContentFromFile(out, copyBuffer);
-                    return null;
-                }
-            }, _operationTime, _entry.getRaw(), _file);
         } finally {
             bufferHolder.returnBuffer(copyBuffer);
         }
@@ -249,38 +248,7 @@ public class FileBackedResponseContentImpl
 
         // Compress-Ning package allows "push" style uncompression (yay!)
         Uncompressor uncomp;
-        DataHandler h = new DataHandler() {
-            long toSkip = offset;
-            long toWrite = dataLength;
-
-            @Override
-            public void handleData(byte[] buffer, int offset, int len) throws IOException
-            {
-                if (toSkip > 0L) {
-                    if (len <= toSkip) {
-                        toSkip -= len;
-                        return;
-                    }
-                    offset += (int) toSkip;
-                    len -= (int) toSkip;
-                    toSkip = 0L;
-                }
-                if (toWrite > 0L) {
-                    if (len > toWrite) {
-                        len = (int) toWrite;
-                    }
-                    out.write(buffer, offset, len);
-                    toWrite -= len;
-                }
-            }
-
-            @Override
-            public void allDataHandled() throws IOException {
-                if (toWrite > 0L) {
-                    throw new IOException("Could not uncompress all data ("+dataLength+" bytes): missing last "+toWrite);
-                }
-            }
-        };
+        DataHandler h = new RangedDataHandler(out, offset, dataLength);
 
         if (_compression == Compression.LZF) {
             uncomp = new LZFUncompressor(h);
@@ -293,9 +261,14 @@ public class FileBackedResponseContentImpl
         uncomp.feedCompressedData(copyBuffer, 0, inputLength);
         uncomp.complete();
     }
-    
+
+    /**
+     * Method called in the complex case of having to read a large piece of
+     * content, where source does not fit in the input buffer.
+     */
     @SuppressWarnings("resource")
-    protected void _writeContentFromFile(OutputStream out, byte[] copyBuffer) throws IOException
+    protected void _readAllWriteStreamingCompressed(OutputStream out, byte[] copyBuffer)
+        throws IOException
     {
         InputStream in = new FileInputStream(_file);
         
@@ -458,4 +431,58 @@ public class FileBackedResponseContentImpl
             LOG.warn("Failed to close file '{}': {}", _file, e.getMessage());
         }
     }
+
+    /*
+    /**********************************************************************
+    /* Helper classes
+    /**********************************************************************
+     */
+    
+    /**
+     * {@link DataHandler} implementation we use to extract out optional
+     * ranges, writing out content as it becomes available
+     */
+    static class RangedDataHandler implements DataHandler
+    {
+        protected final OutputStream _out;
+        protected final long _fullDataLength;
+        protected long _leftToSkip;
+        protected long _leftToWrite;
+
+        public RangedDataHandler(OutputStream out, long offset, long dataLength)
+        {
+            _out = out;
+            _fullDataLength = dataLength;
+            _leftToSkip = offset;
+            _leftToWrite = dataLength;
+        }
+        
+        @Override
+        public void handleData(byte[] buffer, int offset, int len) throws IOException
+        {
+            if (_leftToSkip > 0L) {
+                if (len <= _leftToSkip) {
+                    _leftToSkip -= len;
+                    return;
+                }
+                offset += (int) _leftToSkip;
+                len -= (int) _leftToSkip;
+                _leftToSkip = 0L;
+            }
+            if (_leftToWrite > 0L) {
+                if (len > _leftToWrite) {
+                    len = (int) _leftToWrite;
+                }
+                _out.write(buffer, offset, len);
+                _leftToWrite -= len;
+            }
+        }
+
+        @Override
+        public void allDataHandled() throws IOException {
+            if (_leftToWrite > 0L) {
+                throw new IOException("Could not uncompress all data ("+_fullDataLength+" bytes): missing last "+_leftToWrite);
+            }
+        }
+    };
 }
