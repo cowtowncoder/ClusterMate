@@ -1,6 +1,8 @@
 Project: ClusterMate
 
-0.9.9 (not yet released)
+0.9.9 (04-Jun-2013)
+
+- Add support for database/file-system-access - based throttling.
 
 0.9.8 (31-May-2013)
 

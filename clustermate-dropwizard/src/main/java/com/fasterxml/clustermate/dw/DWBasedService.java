@@ -199,7 +199,10 @@ public abstract class DWBasedService<
 
         /* 04-Jun-2013, tatu: Goddammit, disabling gzip filter is tricky due to
          *   data-binding... Object-values get re-created. So, need to patch after
-         *   the fact
+         *   the fact. And hope it works...
+         *   
+         * NOTE: looks like this is too late, and won't have effect. If so, modifying
+         * YAML/JSON config is the only way.
          */
         dwConfig.overrideGZIPEnabled(false);
 
@@ -219,7 +222,7 @@ public abstract class DWBasedService<
         /* Let's try opening up StorableStore: must have been created,
          * and have tables we expect; otherwise we'll fail right away.
          */
-        LOG.info("Trying open Stores (StorableStore, node store, last-access store)");
+        LOG.info("Trying to open Stores (StorableStore, node store, last-access store)");
          _stores = _constructStores(_serviceStuff);
          _managed.add(_stores);
         LOG.info("Opened StorableStore successfully");
