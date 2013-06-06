@@ -30,10 +30,6 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     /* Overridable helper methods
     /**********************************************************************
      */
-    
-    protected boolean _isStoredLocally(K key) {
-        return _clusterView.containsLocally(key);
-    }
 
     protected int _findRetryCount(ServletServiceRequest request)
     {
@@ -60,8 +56,13 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics stats, K key)
         throws IOException
     {
-        _storeHandler.getEntry(request, response, key, stats);
-        _addStdHeaders(response);
+        NodeState node = _findRedirect(request, response, key);
+        if (node == null) {
+            _storeHandler.getEntry(request, response, key, stats);
+            _addStdHeaders(response);
+            return;
+        }
+        // TODO: routing!
     }
 
     @Override
@@ -69,8 +70,13 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics stats, K key)
         throws IOException
     {
-        _storeHandler.getEntryStats(request, response, key, stats);
-        _addStdHeaders(response);
+        NodeState node = _findRedirect(request, response, key);
+        if (node == null) {
+            _storeHandler.getEntryStats(request, response, key, stats);
+            _addStdHeaders(response);
+            return;
+        }
+        // TODO: routing!
     }
 
     @Override
@@ -78,10 +84,15 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics stats, K key)
         throws IOException
     {
-        _storeHandler.putEntry(request, response, key,
-                request.getNativeRequest().getInputStream(),
-                stats);
-        _addStdHeaders(response);
+        NodeState node = _findRedirect(request, response, key);
+        if (node == null) {
+            _storeHandler.putEntry(request, response, key,
+                    request.getNativeRequest().getInputStream(),
+                    stats);
+            _addStdHeaders(response);
+            return;
+        }
+        // TODO: routing!
     }
 
     @Override
@@ -89,8 +100,13 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics stats, K key)
         throws IOException
     {
-        _storeHandler.removeEntry(request, response, key, stats);
-        _addStdHeaders(response);
+        NodeState node = _findRedirect(request, response, key);
+        if (node == null) {
+            _storeHandler.removeEntry(request, response, key, stats);
+            _addStdHeaders(response);
+            return;
+        }
+        // TODO: routing!
     }
 
     /*
@@ -99,7 +115,8 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
-    protected NodeState _findRedirect(ServletServiceRequest request, ServletServiceResponse response, K key)
+    protected NodeState _findRedirect(ServletServiceRequest request, ServletServiceResponse response,
+            K key)
     {
         // First: retry count always affects things
         int retry = _findRetryCount(request);
@@ -112,5 +129,9 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         
         // !!! TODO
         return null;
+    }
+
+    protected boolean _isStoredLocally(K key) {
+        return _clusterView.containsLocally(key);
     }
 }
