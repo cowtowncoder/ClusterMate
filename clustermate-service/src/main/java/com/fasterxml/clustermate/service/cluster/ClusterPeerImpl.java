@@ -123,8 +123,6 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     protected AtomicInteger _failCount = new AtomicInteger(0);
     
-    protected final byte[] _readBuffer = new byte[8000];
-    
     /*
     /**********************************************************************
     /* Helper objects for entry handling
