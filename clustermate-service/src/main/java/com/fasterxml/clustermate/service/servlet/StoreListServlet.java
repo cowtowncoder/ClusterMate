@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
 
+import com.codahale.metrics.Timer.Context;
 import com.fasterxml.storemate.shared.TimeMaster;
 
 import com.fasterxml.clustermate.api.EntryKey;
@@ -15,7 +16,6 @@ import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.OperationMetrics;
 import com.fasterxml.clustermate.service.store.StoreHandler;
 import com.fasterxml.clustermate.service.store.StoredEntry;
-import com.yammer.metrics.core.TimerContext;
 
 @SuppressWarnings("serial")
 public class StoreListServlet<K extends EntryKey,
@@ -93,7 +93,7 @@ public class StoreListServlet<K extends EntryKey,
             OperationDiagnostics stats) throws IOException
     {
         final OperationMetrics metrics = _listMetrics;
-        TimerContext timer = (metrics == null) ? null : metrics.start();
+        Context timer = (metrics == null) ? null : metrics.start();
         try {
             K prefix = _findKey(request, response);
             if (prefix == null) {

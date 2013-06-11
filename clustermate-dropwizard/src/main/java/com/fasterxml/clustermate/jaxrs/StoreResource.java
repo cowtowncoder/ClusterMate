@@ -5,7 +5,7 @@ import java.io.*;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
-import com.yammer.metrics.annotation.Timed;
+import com.codahale.metrics.annotation.Timed;
 
 import com.fasterxml.storemate.store.StoreException;
 

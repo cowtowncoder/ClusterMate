@@ -3,9 +3,9 @@ package com.fasterxml.clustermate.service.servlet;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.codahale.metrics.Timer.Context;
 
-import com.yammer.metrics.core.TimerContext;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
@@ -63,7 +63,7 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics stats) throws IOException
     {
         final OperationMetrics metrics = _listMetrics;
-        TimerContext timer = (metrics == null) ? null : metrics.start();
+        Context timer = (metrics == null) ? null : metrics.start();
         String str = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_SINCE);
         try {
             if (str == null) {

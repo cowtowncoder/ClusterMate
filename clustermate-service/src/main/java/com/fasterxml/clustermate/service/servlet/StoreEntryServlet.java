@@ -2,7 +2,7 @@ package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
 
-import com.yammer.metrics.core.TimerContext;
+import com.codahale.metrics.Timer.Context;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 
@@ -152,7 +152,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics stats) throws IOException
     {
         final OperationMetrics metrics = _getMetrics;
-        TimerContext timer = (metrics == null) ? null : metrics.start();
+        Context timer = (metrics == null) ? null : metrics.start();
         try {
             K key = _findKey(request, response);
             if (key != null) { // null means trouble; response has all we need
@@ -190,7 +190,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics stats) throws IOException
     {
         final OperationMetrics metrics = _putMetrics;
-        TimerContext timer = (metrics == null) ? null : metrics.start();
+        Context timer = (metrics == null) ? null : metrics.start();
 
         try {
             K key = _findKey(request, response);
@@ -210,7 +210,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics stats) throws IOException
     {
         final OperationMetrics metrics = _deleteMetrics;
-        TimerContext timer = (metrics == null) ? null : metrics.start();
+        Context timer = (metrics == null) ? null : metrics.start();
 
         try {
             K key = _findKey(request, response);

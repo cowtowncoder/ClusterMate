@@ -57,18 +57,23 @@ DropWizard container.
       <version>${project.version}</version>
     </dependency>
 
-    <!-- Then DropWizard, Yammer Metrics: needed by resources -->
+    <!-- Then DropWizard, CodahaleMetrics: needed by resources -->
     <dependency>
         <groupId>com.yammer.dropwizard</groupId>
         <artifactId>dropwizard-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.yammer.metrics</groupId>
+      <groupId>com.codahale.metrics</groupId>
       <artifactId>metrics-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.yammer.metrics</groupId>
+      <groupId>com.codahale.metrics</groupId>
       <artifactId>metrics-annotation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-healthchecks</artifactId>
+      <version>${version.metrics}</version>
     </dependency>
 
     <!-- plus some additional test dependencies -->

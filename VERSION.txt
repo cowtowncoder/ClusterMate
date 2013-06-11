@@ -2,6 +2,7 @@ Project: ClusterMate
 
 0.9.9 (04-Jun-2013)
 
+#28: Upgrade metrics to 3.0.0
 - Add support for database/file-system-access - based throttling.
 
 0.9.8 (31-May-2013)

@@ -50,6 +50,7 @@
     <version.jackson.annotations>2.2.2</version.jackson.annotations>
     <version.jackson.core>2.2.2</version.jackson.core>
     <version.jackson.smile>${version.jackson.core}</version.jackson.smile>
+    <version.metrics>3.0.0</version.metrics>
 
   </properties>
 
@@ -116,7 +117,7 @@
     <dependency>
       <groupId>com.ning</groupId>
       <artifactId>async-http-client</artifactId>
-      <version>1.7.15</version>
+      <version>1.7.17</version>
     </dependency>
 
     <!-- databinding with Jackson -->
@@ -148,14 +149,14 @@
         <version>0.6.2</version>
     </dependency>
     <dependency>
-      <groupId>com.yammer.metrics</groupId>
+      <groupId>com.codahale.metrics</groupId>
       <artifactId>metrics-core</artifactId>
-      <version>2.2.0</version>
+      <version>${version.metrics}</version>
     </dependency>
     <dependency>
-      <groupId>com.yammer.metrics</groupId>
+      <groupId>com.codahale.metrics</groupId>
       <artifactId>metrics-annotation</artifactId>
-      <version>2.2.0</version>
+      <version>${version.metrics}</version>
     </dependency>
 
     <dependency> <!-- and it requires this version of logback... -->

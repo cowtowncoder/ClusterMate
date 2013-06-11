@@ -1,16 +1,21 @@
 package com.fasterxml.clustermate.dw;
 
+import com.codahale.metrics.health.HealthCheck;
+
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
-import com.yammer.metrics.core.HealthCheck;
 
+/**
+ * Metrics health check for use with DropWizard that checks health
+ * of backend store.
+ */
 public class HealthCheckForStore extends HealthCheck
 {
     protected final Stores<?,?> _stores;
     
     public HealthCheckForStore(ServiceConfig config, Stores<?,?> stores)
     {
-        super("StorableStore");
+        super();
         _stores = stores;
     }
 

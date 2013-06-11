@@ -1,9 +1,9 @@
 package com.fasterxml.clustermate.service.metrics;
 
+import com.codahale.metrics.*;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.yammer.metrics.core.*;
-import com.yammer.metrics.stats.Snapshot;
 
 /**
  * Container class for exposing {@link OperationMetrics} externally,
@@ -41,13 +41,13 @@ public class ExternalOperationMetrics
 
     protected ExternalOperationMetrics(OperationMetrics raw)
     {
-        inFlight = raw._metricInFlight.count();
+        inFlight = raw._metricInFlight.getCount();
 
-        count = raw._metricTimes.count();
-        rate1Min = (int) raw._metricTimes.oneMinuteRate();
-        rate5Min = (int) raw._metricTimes.fiveMinuteRate();
-        rate15Min = (int) raw._metricTimes.fifteenMinuteRate();
-        rateMean = (int) raw._metricTimes.meanRate();
+        count = raw._metricTimes.getCount();
+        rate1Min = (int) raw._metricTimes.getOneMinuteRate();
+        rate5Min = (int) raw._metricTimes.getFiveMinuteRate();
+        rate15Min = (int) raw._metricTimes.getFifteenMinuteRate();
+        rateMean = (int) raw._metricTimes.getMeanRate();
 
         requestTimes = _histogram(raw._metricTimes);
         requestSizes = _histogram(raw._metricSizes);

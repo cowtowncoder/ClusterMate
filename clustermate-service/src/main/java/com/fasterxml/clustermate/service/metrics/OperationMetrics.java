@@ -1,9 +1,7 @@
 package com.fasterxml.clustermate.service.metrics;
 
-import java.util.concurrent.TimeUnit;
-
-import com.yammer.metrics.Metrics;
-import com.yammer.metrics.core.*;
+import com.codahale.metrics.*;
+import com.codahale.metrics.Timer.Context;
 
 import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
@@ -66,20 +64,20 @@ public class OperationMetrics
     {
         _serviceConfig = serviceConfig;
         String metricGroup = serviceConfig.metricsJmxRoot;
-
+        if (!metricGroup.endsWith(".")) {
+            metricGroup += ".";
+        }
+        
         // and then create metrics
         
         // first: in-flight counter, "active" requests
-        _metricInFlight = Metrics.newCounter(new MetricName(metricGroup, operationName, "active"));
-        _metricTimes = Metrics.newTimer(new MetricName(metricGroup, operationName, "times"),
-                TimeUnit.MILLISECONDS, TimeUnit.SECONDS);
+        _metricInFlight = Metrics.newCounter(metricGroup + operationName + ".active");
+        _metricTimes = Metrics.newTimer(metricGroup + operationName + ".times");
 
         _metricSizes = includeSizes ?
-                Metrics.newHistogram(new MetricName(metricGroup, operationName, "sizes"), true)
-                : null;
+                Metrics.newHistogram(metricGroup + operationName + ".sizes") : null;
         _metricEntryCounts = includeEntryCounts ?
-                Metrics.newHistogram(new MetricName(metricGroup, operationName, "counts"), true)
-                : null;
+                Metrics.newHistogram(metricGroup + operationName + ".counts") : null;
     }
 
     public static OperationMetrics forEntityOperation(ServiceConfig serviceConfig, String operationName)
@@ -97,7 +95,7 @@ public class OperationMetrics
         return new OperationMetrics(serviceConfig, operationName, false, false);
     }
     
-    public TimerContext start()
+    public Context start()
     {
         if (!_serviceConfig.metricsEnabled) {
             return null;
@@ -106,7 +104,7 @@ public class OperationMetrics
         return _metricTimes.time();
     }
 
-    public void finish(TimerContext timer, OperationDiagnostics opStats)
+    public void finish(Context timer, OperationDiagnostics opStats)
     {
         _metricInFlight.dec();
         if (timer != null) {

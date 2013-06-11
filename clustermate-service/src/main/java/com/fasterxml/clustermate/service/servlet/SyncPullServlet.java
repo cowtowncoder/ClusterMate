@@ -2,8 +2,9 @@ package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
 
-import com.fasterxml.jackson.databind.ObjectWriter;
+import com.codahale.metrics.Timer.Context;
 
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.OperationDiagnostics;
@@ -13,7 +14,6 @@ import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.metrics.OperationMetrics;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
-import com.yammer.metrics.core.TimerContext;
 
 @SuppressWarnings("serial")
 public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
@@ -46,7 +46,7 @@ public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics metadata) throws IOException
     {
         final OperationMetrics metrics = _pullMetrics;
-        TimerContext timer = (metrics == null) ? null : metrics.start();
+        Context timer = (metrics == null) ? null : metrics.start();
         try {
             _syncHandler.pullEntries(request, response, request.getInputStream(), metadata);
             _addStdHeaders(response);

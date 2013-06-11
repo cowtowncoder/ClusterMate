@@ -1,16 +1,19 @@
 package com.fasterxml.clustermate.dw;
 
+import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
-import com.yammer.metrics.core.HealthCheck;
 
+/**
+ * Metrics health check for use with DropWizard that checks health
+ * of the cluster handling and state.
+ */
 public class HealthCheckForCluster extends HealthCheck
 {
     protected final ClusterViewByServer _cluster;
 
     public HealthCheckForCluster(ServiceConfig config, ClusterViewByServer cluster)
     {
-        super("Cluster");
         _cluster = cluster;
     }
 
