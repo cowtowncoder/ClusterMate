@@ -267,7 +267,7 @@ public abstract class StoreHandler<
         long nanoStart = System.nanoTime();
         try {
             rawEntry = entryStore.findEntry(key.asStorableKey());
-        } catch (StoreException e) {
+        } catch (IOException e) {
             return _storeError(response, key, e);
         } finally {
             if (metadata != null) {
@@ -410,7 +410,7 @@ public abstract class StoreHandler<
         long nanoStart = System.nanoTime();
         try {
             rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
-        } catch (StoreException e) {
+        } catch (IOException e) {
             return _storeError(response, key, e);
         } 
         if (metadata != null) {
@@ -941,7 +941,7 @@ public abstract class StoreHandler<
 
     @SuppressWarnings("unchecked")
     protected  <OUT extends ServiceResponse> OUT  _storeError(ServiceResponse response, K key,
-            StoreException e) {
+            IOException e) {
         String msg;
         if (key == null) {
             msg = "StoreException (key "+key+"): "+e.getMessage();

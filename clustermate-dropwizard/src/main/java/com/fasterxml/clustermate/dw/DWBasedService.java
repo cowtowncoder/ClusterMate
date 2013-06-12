@@ -20,6 +20,7 @@ import com.fasterxml.storemate.store.backend.StoreBackendBuilder;
 import com.fasterxml.storemate.store.backend.StoreBackendConfig;
 import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.impl.StorableStoreImpl;
+import com.fasterxml.storemate.store.util.PartitionedWriteMutex;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.PathType;
@@ -491,7 +492,8 @@ public abstract class DWBasedService<
                 .with(backendConfig)
                 .build();
         StorableStore store = new StorableStoreImpl(v.storeConfig, backend, _timeMaster,
-               stuff.getFileManager(), _constructThrottler(stuff));
+               stuff.getFileManager(),
+               _constructThrottler(stuff), _constructWriteMutex(stuff));
         return constructStores(stuff, v, store);
     }
 
@@ -507,6 +509,22 @@ public abstract class DWBasedService<
      * @since 0.9.9
      */
     protected StoreOperationThrottler _constructThrottler(SharedServiceStuff stuff)
+    {
+        // null -> use the default implementation
+        return null;
+    }
+
+    /**
+     * Factory method called to instantiate {@link PartitionedWriteMutex}
+     * to use for ensuring atomicity of read-modify-write operations.
+     * If null is returned, store is free to use its default implementation.
+     *<p>
+     * Default implementation simply returns null to let the default implementation
+     * be used.
+     * 
+     * @since 0.9.10
+     */
+    protected PartitionedWriteMutex _constructWriteMutex(SharedServiceStuff stuff)
     {
         // null -> use the default implementation
         return null;

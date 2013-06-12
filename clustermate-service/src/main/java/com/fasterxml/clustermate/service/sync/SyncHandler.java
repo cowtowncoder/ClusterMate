@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.service.sync;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
@@ -267,7 +268,8 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
     @SuppressWarnings("unchecked")
     public <OUT extends ServiceResponse> OUT pullEntries(ServiceRequest request, OUT response,
             InputStream in,
-            OperationDiagnostics metadata) throws StoreException
+            OperationDiagnostics metadata)
+        throws IOException, StoreException
     {
         SyncPullRequest requestEntity = null;
         try {

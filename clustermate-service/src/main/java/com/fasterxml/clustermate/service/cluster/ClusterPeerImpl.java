@@ -630,18 +630,19 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         return count;
     }
 
-    protected void _filterSeen(List<SyncListResponseEntry> entries) throws StoreException
+    protected void _filterSeen(List<SyncListResponseEntry> entries)
+        throws IOException, StoreException
     {
         Iterator<SyncListResponseEntry> it = entries.iterator();
         while (it.hasNext()) {
-            SyncListResponseEntry entry = it.next();
-            /* We can skip ALL entries, even if states do not match. Why?
-             * because incoming tombstones should have been already handled;
-             * and since reverse (getting non-deleted entry whereas we already
-             * have tombstone) is something we want to skip anyway.
+            SyncListResponseEntry remoteEntry = it.next();
+            /* 11-Jun-2013, tatu: Although tombstones have been handled and removed,
+             *   need to pay attention here, since conflict resolution may be
+             *   necessary.
              */
+            Storable localEntry = _entryStore.findEntry(remoteEntry.key);
             // either needs to have been seen
-            if (_entryStore.hasEntry(entry.key)) {
+            if (localEntry != null) {
                 it.remove();
             }
         }
