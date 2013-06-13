@@ -19,6 +19,7 @@ import com.fasterxml.storemate.shared.util.BufferRecycler;
 import com.fasterxml.storemate.store.FileOperationCallback;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StoreException;
+import com.fasterxml.storemate.store.StoreOperationSource;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
 
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -162,7 +163,9 @@ public class FileBackedResponseContentImpl
                 _readAllWriteAllCompressed(out, copyBuffer, _dataOffset, _dataLength);
             } else {
                 // If not, use (for now) the old slow read-uncompress-copy loop:
-                _throttler.performFileRead(new FileOperationCallback<Void>() {
+                _throttler.performFileRead(StoreOperationSource.REQUEST,
+                        _operationTime, _entry.getRaw(), _file,
+                        new FileOperationCallback<Void>() {
                     @Override
                     public Void perform(long operationTime, StorableKey key, Storable value, File externalFile)
                             throws IOException, StoreException
@@ -170,7 +173,7 @@ public class FileBackedResponseContentImpl
                         _readAllWriteStreamingCompressed(out, copyBuffer);
                         return null;
                     }
-                }, _operationTime, _entry.getRaw(), _file);
+                });
             }
         } finally {
             bufferHolder.returnBuffer(copyBuffer);
@@ -205,7 +208,9 @@ public class FileBackedResponseContentImpl
             final long offset, final long dataLength)
         throws IOException
     {
-        _throttler.performFileRead(new FileOperationCallback<Void>() {
+        _throttler.performFileRead(StoreOperationSource.REQUEST,
+                _operationTime, _entry.getRaw(), _file,
+                new FileOperationCallback<Void>() {
             @Override
             public Void perform(long operationTime, StorableKey key, Storable value, File externalFile)
                 throws IOException
@@ -226,7 +231,7 @@ public class FileBackedResponseContentImpl
                 }
                 return null;
             }
-        }, _operationTime, _entry.getRaw(), _file);
+        });
     }
     
     /*
@@ -343,7 +348,9 @@ public class FileBackedResponseContentImpl
             final long offset, final int dataLength)
         throws IOException
     {
-        _throttler.performFileRead(new FileOperationCallback<Void>() {
+        _throttler.performFileRead(StoreOperationSource.REQUEST,
+                _operationTime, _entry.getRaw(), _file,
+                new FileOperationCallback<Void>() {
             @Override
             public Void perform(long operationTime,  StorableKey key, Storable value, File externalFile)
                 throws IOException
@@ -355,7 +362,7 @@ public class FileBackedResponseContentImpl
                 }
                 return null;
             }
-        }, _operationTime, _entry.getRaw(), _file);
+        });
     }
 
     /*
