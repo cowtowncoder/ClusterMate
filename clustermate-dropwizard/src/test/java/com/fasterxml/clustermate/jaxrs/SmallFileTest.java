@@ -7,6 +7,7 @@ import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.shared.hash.HashConstants;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
+import com.fasterxml.storemate.store.StoreOperationSource;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.jaxrs.StoreResource;
@@ -92,7 +93,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         byte[] data = collectOutput(response);
         assertEquals(SMALL_STRING, new String(data, "UTF-8"));
         
-        Storable raw = entries.findEntry(INTERNAL_KEY1.asStorableKey());
+        Storable raw = entries.findEntry(StoreOperationSource.REQUEST, INTERNAL_KEY1.asStorableKey());
         assertNotNull(raw);
         // too small to be compressed, so:
         assertEquals(Compression.NONE, raw.getCompression());
@@ -112,7 +113,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         assertEquals(200, response.getStatus());
 
         // true->should update last-accessed timestamp
-        raw = entries.findEntry(INTERNAL_KEY1.asStorableKey());
+        raw = entries.findEntry(StoreOperationSource.REQUEST, INTERNAL_KEY1.asStorableKey());
         assertNotNull(entry);
         assertEquals(accessTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
 
@@ -194,7 +195,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         byte[] data = collectOutput(response);
         assertEquals(0, data.length);
         
-        Storable raw = entries.findEntry(INTERNAL_KEY1.asStorableKey());
+        Storable raw = entries.findEntry(StoreOperationSource.REQUEST, INTERNAL_KEY1.asStorableKey());
         assertNotNull(raw);
         // too small to be compressed, so:
         assertEquals(Compression.NONE, raw.getCompression());
@@ -277,7 +278,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         assertEquals(SMALL_STRING, new String(data, "UTF-8"));
 
         // and more fundamentally, verify store had it:
-        Storable raw = entries.findEntry(INTERNAL_KEY1.asStorableKey());
+        Storable raw = entries.findEntry(StoreOperationSource.REQUEST, INTERNAL_KEY1.asStorableKey());
         StoredEntry<TestKey> entry = rawToEntry(raw);
         assertNotNull(entry);
         // too small to be compressed, so:
@@ -378,7 +379,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         assertSame(PutResponse.class, response.getEntity().getClass());
         assertEquals(200, response.getStatus());
 
-        Storable entry = entries.findEntry(INTERNAL_KEY1.asStorableKey());
+        Storable entry = entries.findEntry(StoreOperationSource.REQUEST, INTERNAL_KEY1.asStorableKey());
         assertNotNull(entry);
         // too small to be compressed, so:
         assertEquals(Compression.NONE, entry.getCompression());

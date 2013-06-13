@@ -18,6 +18,7 @@ import com.fasterxml.clustermate.service.util.SimpleLogThrottler;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
+import com.fasterxml.storemate.store.StoreOperationSource;
 
 /**
  * Helper class used for handling deletions asynchronously.
@@ -306,7 +307,7 @@ public class DeferredDeleter
         }
         
         try {
-            _entryStore.softDelete(deletion.getKey(), true, true);
+            _entryStore.softDelete(StoreOperationSource.REQUEST, deletion.getKey(), true, true);
             deletion.setStatus(DeletionResult.forCompleted());
         } catch (Throwable t) {
             deletion.setFail(t);

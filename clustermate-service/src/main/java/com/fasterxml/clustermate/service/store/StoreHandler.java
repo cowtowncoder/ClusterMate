@@ -266,7 +266,7 @@ public abstract class StoreHandler<
 
         long nanoStart = System.nanoTime();
         try {
-            rawEntry = entryStore.findEntry(key.asStorableKey());
+            rawEntry = entryStore.findEntry(StoreOperationSource.REQUEST, key.asStorableKey());
         } catch (IOException e) {
             return _storeError(response, key, e);
         } finally {
@@ -409,7 +409,7 @@ public abstract class StoreHandler<
         Storable rawEntry;
         long nanoStart = System.nanoTime();
         try {
-            rawEntry = _stores.getEntryStore().findEntry(key.asStorableKey());
+            rawEntry = _stores.getEntryStore().findEntry(StoreOperationSource.REQUEST, key.asStorableKey());
         } catch (IOException e) {
             return _storeError(response, key, e);
         } 
@@ -508,12 +508,13 @@ public abstract class StoreHandler<
              * allowed, we must use different method:
              */
             if (_serviceConfig.cfgAllowUndelete) {
-                result = _stores.getEntryStore().upsertConditionally(key.asStorableKey(),
+                result = _stores.getEntryStore().upsertConditionally(StoreOperationSource.REQUEST,
+                        key.asStorableKey(),
                         dataIn, stdMetadata, customMetadata, true,
                         AllowUndeletingUpdates.instance);
             } else {
-                result = _stores.getEntryStore().insert(key.asStorableKey(),
-                        dataIn, stdMetadata, customMetadata);
+                result = _stores.getEntryStore().insert(StoreOperationSource.REQUEST,
+                        key.asStorableKey(), dataIn, stdMetadata, customMetadata);
             }
         } catch (StoreException.Input e) { // something client did wrong
             switch (e.getProblem()) {
@@ -791,10 +792,12 @@ public abstract class StoreHandler<
          */
         if (lastSeen == null) {
             // we could check if all entries were iterated (with result code); for now we won't
-            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesByKey(cb, prefix);
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesByKey(StoreOperationSource.REQUEST,
+                    prefix, cb);
         } else {
             // we could check if all entries were iterated (with result code); for now we won't
-            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(cb, lastSeen);
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(StoreOperationSource.REQUEST,
+                    lastSeen, cb);
         }
         return cb.getResult();
     }
@@ -851,10 +854,12 @@ public abstract class StoreHandler<
          */
         if (lastSeen == null) {
             // we could check if all entries were iterated (with result code); for now we won't
-            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesByKey(cb, prefix);
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesByKey(StoreOperationSource.REQUEST,
+                    prefix, cb);
         } else {
             // we could check if all entries were iterated (with result code); for now we won't
-            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(cb, lastSeen);
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(StoreOperationSource.REQUEST,
+                    lastSeen, cb);
         }
         return result;
     }

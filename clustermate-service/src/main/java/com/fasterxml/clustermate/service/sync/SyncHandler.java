@@ -11,6 +11,7 @@ import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreException;
+import com.fasterxml.storemate.store.StoreOperationSource;
 import com.fasterxml.storemate.store.backend.IterationAction;
 import com.fasterxml.storemate.store.backend.IterationResult;
 import com.fasterxml.storemate.store.backend.StorableLastModIterationCallback;
@@ -289,7 +290,7 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         long nanoStart = System.nanoTime();
         try {
             for (StorableKey key : ids) {
-                Storable raw = store.findEntry(key);
+                Storable raw = store.findEntry(StoreOperationSource.SYNC, key);
                 // note: this may give null as well; caller needs to check (converter passes null as-is)
                 E entry = (E) _entryConverter.entryFromStorable(raw);
                 entries.add(entry);
@@ -348,7 +349,8 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
     
             LastModLister<K,E> cb = new LastModLister<K,E>(_timeMaster, _entryConverter, inRange,
                     since, upTo, processUntil, maxCount, result);
-            IterationResult r = _stores.getEntryStore().iterateEntriesByModifiedTime(cb, since);
+            IterationResult r = _stores.getEntryStore().iterateEntriesByModifiedTime(StoreOperationSource.REQUEST,
+                    since, cb);
 
             // "timeout" is indicated by termination at primary key:
             if (r == IterationResult.TERMINATED_FOR_KEY) {
