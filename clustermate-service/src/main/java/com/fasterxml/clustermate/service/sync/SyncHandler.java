@@ -345,7 +345,8 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
             LastModLister<K,E> cb = new LastModLister<K,E>(_timeMaster, _entryConverter, inRange,
                     since, upTo, processUntil, maxCount, result);
             IterationResult r = _stores.getEntryStore().iterateEntriesByModifiedTime(StoreOperationSource.REQUEST,
-                    since, cb);
+                    // null -> no need for diagnostics/timing info
+                    null, since, cb);
 
             // "timeout" is indicated by termination at primary key:
             if (r == IterationResult.TERMINATED_FOR_KEY) {

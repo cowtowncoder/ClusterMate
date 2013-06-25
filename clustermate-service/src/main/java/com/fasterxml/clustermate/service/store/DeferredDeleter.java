@@ -307,7 +307,7 @@ public class DeferredDeleter
         }
         
         try {
-            _entryStore.softDelete(StoreOperationSource.REQUEST, deletion.getKey(), true, true);
+            _entryStore.softDelete(StoreOperationSource.REQUEST, null, deletion.getKey(), true, true);
             deletion.setStatus(DeletionResult.forCompleted());
         } catch (Throwable t) {
             deletion.setFail(t);

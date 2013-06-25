@@ -505,12 +505,12 @@ public abstract class StoreHandler<
              * allowed, we must use different method:
              */
             if (_serviceConfig.cfgAllowUndelete) {
-                result = _stores.getEntryStore().upsertConditionally(StoreOperationSource.REQUEST,
+                result = _stores.getEntryStore().upsertConditionally(StoreOperationSource.REQUEST, stats,
                         key.asStorableKey(),
                         dataIn, stdMetadata, customMetadata, true,
                         AllowUndeletingUpdates.instance);
             } else {
-                result = _stores.getEntryStore().insert(StoreOperationSource.REQUEST,
+                result = _stores.getEntryStore().insert(StoreOperationSource.REQUEST, stats,
                         key.asStorableKey(), dataIn, stdMetadata, customMetadata);
             }
         } catch (StoreException.Input e) { // something client did wrong
@@ -662,7 +662,7 @@ public abstract class StoreHandler<
      */
     @SuppressWarnings("unchecked")
     public <OUT extends ServiceResponse> OUT listEntries(ServiceRequest request, OUT response,
-            final K prefix, OperationDiagnostics metadata)
+            final K prefix, OperationDiagnostics stats)
         throws StoreException
     {
         // simple validation first
@@ -720,13 +720,13 @@ public abstract class StoreHandler<
         switch (listType) {
         case ids:
             {
-                List<StorableKey> ids = _listIds(rawPrefix, lastSeen, limits);
+                List<StorableKey> ids = _listIds(stats, rawPrefix, lastSeen, limits);
                 listResponse = new ListResponse.IdListResponse(ids, _last(ids));
             }
             break;
         case names:
             {
-                List<StorableKey> ids = _listIds(rawPrefix, lastSeen, limits);
+                List<StorableKey> ids = _listIds(stats, rawPrefix, lastSeen, limits);
                 ArrayList<String> names = new ArrayList<String>(ids.size());
                 for (StorableKey id : ids) {
                     names.add(_keyConverter.rawToString(id));
@@ -737,7 +737,7 @@ public abstract class StoreHandler<
         case minimalEntries:
         case fullEntries:
             {
-                List<ListItem> items = _listItems(listType, rawPrefix, lastSeen, limits);
+                List<ListItem> items = _listItems(stats, listType, rawPrefix, lastSeen, limits);
                 ListItem lastItem = _last(items);
                 if (listType == ListItemType.minimalEntries) {
                     listResponse = new ListResponse.MinimalItemListResponse(items,
@@ -752,8 +752,8 @@ public abstract class StoreHandler<
             throw new IllegalStateException();
         }
 
-        if (metadata != null) {
-            metadata.setItemCount(listResponse.size());
+        if (stats != null) {
+            stats.setItemCount(listResponse.size());
         }
         
         final ObjectWriter w = useSmile ? _listSmileWriter : _listJsonWriter;
@@ -769,7 +769,8 @@ public abstract class StoreHandler<
         return list.get(list.size() - 1);
     }
     
-    protected List<ListItem> _listItems(ListItemType itemType, StorableKey prefix,
+    protected List<ListItem> _listItems(OperationDiagnostics diag,
+            ListItemType itemType, StorableKey prefix,
             StorableKey lastSeen, ListLimits limits)
         throws StoreException
     {
@@ -783,17 +784,18 @@ public abstract class StoreHandler<
          */
         if (lastSeen == null) {
             // we could check if all entries were iterated (with result code); for now we won't
-            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesByKey(StoreOperationSource.REQUEST,
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesByKey(StoreOperationSource.REQUEST, diag,
                     prefix, cb);
         } else {
             // we could check if all entries were iterated (with result code); for now we won't
-            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(StoreOperationSource.REQUEST,
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(StoreOperationSource.REQUEST, diag,
                     lastSeen, cb);
         }
         return cb.getResult();
     }
 
-    protected List<StorableKey> _listIds(final StorableKey prefix, StorableKey lastSeen,
+    protected List<StorableKey> _listIds(final OperationDiagnostics diag,
+            final StorableKey prefix, StorableKey lastSeen,
             final ListLimits limits)
         throws StoreException
     {
@@ -845,11 +847,11 @@ public abstract class StoreHandler<
          */
         if (lastSeen == null) {
             // we could check if all entries were iterated (with result code); for now we won't
-            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesByKey(StoreOperationSource.REQUEST,
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesByKey(StoreOperationSource.REQUEST, diag,
                     prefix, cb);
         } else {
             // we could check if all entries were iterated (with result code); for now we won't
-            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(StoreOperationSource.REQUEST,
+            /*IterationResult r =*/ _stores.getEntryStore().iterateEntriesAfterKey(StoreOperationSource.REQUEST, diag,
                     lastSeen, cb);
         }
         return result;

@@ -624,7 +624,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             if (entry.deleted()) {
                 ++count;
                 it.remove();
-                _entryStore.softDelete(StoreOperationSource.SYNC, entry.key, true, true);
+                _entryStore.softDelete(StoreOperationSource.SYNC, null, entry.key, true, true);
             }
         }
         return count;
@@ -827,7 +827,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         // Sanity check: although rare, deletion could have occured after we got
         // the initial sync list, so:
         if (header.isDeleted) {
-            _entryStore.softDelete(StoreOperationSource.SYNC, key, true, true);
+            _entryStore.softDelete(StoreOperationSource.SYNC, null, key, true, true);
             return;
         }
 
@@ -853,14 +853,14 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                 }
                 data = ByteContainer.simple(bytes);
             }
-            result = _entryStore.insert(StoreOperationSource.SYNC, key, data, stdMetadata, customMetadata);
+            result = _entryStore.insert(StoreOperationSource.SYNC, null, key, data, stdMetadata, customMetadata);
         } else {
             /* 21-Sep-2012, tatu: Important -- we must ensure that store only reads
              *   bytes that belong to the entry payload. The easiest way is by adding
              *   a wrapper stream that ensures this...
              */
             BoundedInputStream bin = new BoundedInputStream(in, stdMetadata.storageSize, false);
-            result = _entryStore.insert(StoreOperationSource.SYNC, key, bin, stdMetadata, customMetadata);
+            result = _entryStore.insert(StoreOperationSource.SYNC, null, key, bin, stdMetadata, customMetadata);
             if (result.succeeded() && !bin.isCompletelyRead()) { // error or warning?
                 Storable entry = result.getNewEntry();
                 long ssize = (entry == null) ? -1L : entry.getStorageLength();
