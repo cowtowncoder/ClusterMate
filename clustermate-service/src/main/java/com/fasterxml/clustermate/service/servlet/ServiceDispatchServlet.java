@@ -8,10 +8,10 @@ import javax.servlet.http.HttpServletRequest;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.store.StoredEntry;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 /**
  * "Uber-servlet" that is usually used to route requests to handlers
@@ -42,46 +42,9 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
             EnumMap<PathType, ServletBase> servlets)
     {
         // null -> use servlet path base as-is
-        super(clusterView, servletPathBase);
+        super(stuff, clusterView, servletPathBase);
 
         _pathStrategy = stuff.getPathStrategy();
-        _servletsByPath = servlets;
-    }
-
-    @Deprecated
-    public ServiceDispatchServlet(ClusterViewByServer clusterView,
-            SharedServiceStuff stuff,
-            ServletBase nodeStatusServlet, ServletBase nodeMetricsServlet,
-            ServletBase storeEntryServlet, ServletBase storeListServlet,
-            ServletBase syncListServlet, ServletBase syncPullServlet)
-    {
-        this(clusterView, null, stuff,
-                nodeStatusServlet, nodeMetricsServlet,
-                syncListServlet, syncPullServlet,
-                storeEntryServlet, storeListServlet);
-    }
-
-    @Deprecated
-    public ServiceDispatchServlet(ClusterViewByServer clusterView, String servletPathBase,
-            SharedServiceStuff stuff,
-            ServletBase nodeStatusServlet, ServletBase nodeMetricsServlet,
-            ServletBase syncListServlet, ServletBase syncPullServlet,
-            ServletBase storeEntryServlet, ServletBase storeListServlet)
-    {
-        // null -> use servlet path base as-is
-        super(clusterView, servletPathBase);
-
-        _pathStrategy = stuff.getPathStrategy();
-        
-        EnumMap<PathType, ServletBase> servlets = new EnumMap<PathType, ServletBase>(PathType.class);
-
-        servlets.put(PathType.NODE_STATUS, nodeStatusServlet);
-        servlets.put(PathType.NODE_METRICS, nodeMetricsServlet);
-        servlets.put(PathType.SYNC_LIST, syncListServlet);
-        servlets.put(PathType.SYNC_PULL, syncPullServlet);
-        servlets.put(PathType.STORE_ENTRY, storeEntryServlet);
-        servlets.put(PathType.STORE_LIST, storeListServlet);
-
         _servletsByPath = servlets;
     }
 

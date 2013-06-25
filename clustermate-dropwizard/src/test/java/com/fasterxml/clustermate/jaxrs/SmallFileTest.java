@@ -8,11 +8,11 @@ import com.fasterxml.storemate.shared.hash.HashConstants;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreOperationSource;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.jaxrs.StoreResource;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.msg.PutResponse;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
@@ -67,7 +67,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();
         // and ensure we get diagnostics too
-        OperationDiagnostics stats = new OperationDiagnostics();
+        OperationDiagnostics stats = new OperationDiagnostics(0L);
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1, stats);
         assertNotNull(stats.getEntry());
         assertEquals(200, response.getStatus());
@@ -93,7 +93,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         byte[] data = collectOutput(response);
         assertEquals(SMALL_STRING, new String(data, "UTF-8"));
         
-        Storable raw = entries.findEntry(StoreOperationSource.REQUEST, INTERNAL_KEY1.asStorableKey());
+        Storable raw = entries.findEntry(StoreOperationSource.REQUEST, null, INTERNAL_KEY1.asStorableKey());
         assertNotNull(raw);
         // too small to be compressed, so:
         assertEquals(Compression.NONE, raw.getCompression());
@@ -113,13 +113,14 @@ public class SmallFileTest extends JaxrsStoreTestBase
         assertEquals(200, response.getStatus());
 
         // true->should update last-accessed timestamp
-        raw = entries.findEntry(StoreOperationSource.REQUEST, INTERNAL_KEY1.asStorableKey());
+        raw = entries.findEntry(StoreOperationSource.REQUEST,
+                null, INTERNAL_KEY1.asStorableKey());
         assertNotNull(entry);
         assertEquals(accessTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
 
         // and as per Issue #7: should be able to use Conditional GET too:
         response = new FakeHttpResponse();
-        stats = new OperationDiagnostics();
+        stats = new OperationDiagnostics(0L);
         FakeHttpRequest req = new FakeHttpRequest();
         req.addHeader(ClusterMateConstants.HTTP_HEADER_ETAG_NO_MATCH,  expEtag);
         resource.getHandler().getEntry(req, response, INTERNAL_KEY1, stats);
@@ -128,7 +129,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
 
         // but Etag must match so
         response = new FakeHttpResponse();
-        stats = new OperationDiagnostics();
+        stats = new OperationDiagnostics(0L);
         req = new FakeHttpRequest();
         req.addHeader(ClusterMateConstants.HTTP_HEADER_ETAG_NO_MATCH,  "\"1234\"");
         resource.getHandler().getEntry(req, response, INTERNAL_KEY1, stats);
@@ -175,7 +176,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();
         // and ensure we get diagnostics too
-        OperationDiagnostics stats = new OperationDiagnostics();
+        OperationDiagnostics stats = new OperationDiagnostics(0L);
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1, stats);
         assertNotNull(stats.getEntry());
         assertEquals(200, response.getStatus());
@@ -195,7 +196,7 @@ public class SmallFileTest extends JaxrsStoreTestBase
         byte[] data = collectOutput(response);
         assertEquals(0, data.length);
         
-        Storable raw = entries.findEntry(StoreOperationSource.REQUEST, INTERNAL_KEY1.asStorableKey());
+        Storable raw = entries.findEntry(StoreOperationSource.REQUEST, null, INTERNAL_KEY1.asStorableKey());
         assertNotNull(raw);
         // too small to be compressed, so:
         assertEquals(Compression.NONE, raw.getCompression());
@@ -278,7 +279,8 @@ public class SmallFileTest extends JaxrsStoreTestBase
         assertEquals(SMALL_STRING, new String(data, "UTF-8"));
 
         // and more fundamentally, verify store had it:
-        Storable raw = entries.findEntry(StoreOperationSource.REQUEST, INTERNAL_KEY1.asStorableKey());
+        Storable raw = entries.findEntry(StoreOperationSource.REQUEST,
+                null, INTERNAL_KEY1.asStorableKey());
         StoredEntry<TestKey> entry = rawToEntry(raw);
         assertNotNull(entry);
         // too small to be compressed, so:
@@ -379,7 +381,8 @@ public class SmallFileTest extends JaxrsStoreTestBase
         assertSame(PutResponse.class, response.getEntity().getClass());
         assertEquals(200, response.getStatus());
 
-        Storable entry = entries.findEntry(StoreOperationSource.REQUEST, INTERNAL_KEY1.asStorableKey());
+        Storable entry = entries.findEntry(StoreOperationSource.REQUEST,
+                null, INTERNAL_KEY1.asStorableKey());
         assertNotNull(entry);
         // too small to be compressed, so:
         assertEquals(Compression.NONE, entry.getCompression());

@@ -2,10 +2,10 @@ package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
 
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterInfoHandler;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 /**
  * Stand-alone servlet that may be used for serving node state information;
@@ -27,7 +27,7 @@ public class NodeStatusServlet extends ServletBase
     public NodeStatusServlet(SharedServiceStuff stuff, ClusterInfoHandler h)
     {
         // null -> use servlet path base as-is
-        super(null, null);
+        super(stuff, null, null);
         _handler = h;
         _jsonWriter = stuff.jsonWriter();
     }

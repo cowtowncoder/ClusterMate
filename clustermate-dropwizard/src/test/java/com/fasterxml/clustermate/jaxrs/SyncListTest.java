@@ -3,12 +3,12 @@ package com.fasterxml.clustermate.jaxrs;
 import java.io.ByteArrayInputStream;
 
 import com.fasterxml.storemate.store.StorableStore;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 import com.fasterxml.clustermate.service.sync.SyncListResponse;
@@ -59,9 +59,8 @@ public class SyncListTest extends JaxrsStoreTestBase
         SyncListResponse<?> syncList;
 
         // then verify that that entry is NOT visible:
-        OperationDiagnostics diag = new OperationDiagnostics();        
+        OperationDiagnostics diag = new OperationDiagnostics(0L);        
 
-        diag = new OperationDiagnostics();
         syncList = _fetchSyncList(resource, syncH, creationTime, diag);
 
         assertEquals(0, diag.getItemCount());
@@ -72,7 +71,7 @@ public class SyncListTest extends JaxrsStoreTestBase
  
         // Once more, by mild advance
         timeMaster.advanceCurrentTimeMillis(SYNC_GRACE_PERIOD_MSECS / 4);
-        diag = new OperationDiagnostics();
+        diag = new OperationDiagnostics(0L);
         syncList = _fetchSyncList(resource, syncH, creationTime, diag);
 
         assertEquals(0, diag.getItemCount());
@@ -85,7 +84,7 @@ public class SyncListTest extends JaxrsStoreTestBase
         timeMaster.advanceCurrentTimeMillis(SYNC_GRACE_PERIOD_MSECS);
         long callTime = timeMaster.currentTimeMillis();
 
-        diag = new OperationDiagnostics();        
+        diag = new OperationDiagnostics(0L);
         syncList = _fetchSyncList(resource, syncH, creationTime, diag);
 
         assertEquals(1, diag.getItemCount());
@@ -175,7 +174,7 @@ public class SyncListTest extends JaxrsStoreTestBase
         syncReq.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT, ContentType.SMILE.toString());
         
         final long callTime = timeMaster.currentTimeMillis();
-        OperationDiagnostics diag = new OperationDiagnostics();        
+        OperationDiagnostics diag = new OperationDiagnostics(0L);        
         SyncListResponse<StoredEntry<?>> syncList = _fetchSyncList(resource, syncH, creationTime, diag);
         assertNotNull(syncList);
         assertNull(syncList.message);

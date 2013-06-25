@@ -6,6 +6,9 @@ import java.util.List;
 
 import org.skife.config.TimeSpan;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
@@ -14,6 +17,7 @@ import com.fasterxml.storemate.store.*;
 import com.fasterxml.storemate.store.backend.IterationAction;
 import com.fasterxml.storemate.store.backend.StorableIterationCallback;
 import com.fasterxml.storemate.store.file.FileManager;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.api.msg.ListItem;
@@ -26,9 +30,6 @@ import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.msg.*;
 import com.fasterxml.clustermate.service.util.SimpleLogThrottler;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
  * Class that handles coordination between front-end service layer (servlet,
@@ -264,14 +265,13 @@ public abstract class StoreHandler<
         Storable rawEntry = null;
         final StorableStore entryStore = _stores.getEntryStore();
 
-        long nanoStart = System.nanoTime();
         try {
-            rawEntry = entryStore.findEntry(StoreOperationSource.REQUEST, key.asStorableKey());
+            rawEntry = entryStore.findEntry(StoreOperationSource.REQUEST,
+                    metadata, key.asStorableKey());
         } catch (IOException e) {
             return _storeError(response, key, e);
         } finally {
             if (metadata != null) {
-                metadata.addDbRead(System.nanoTime() - nanoStart);
                 metadata.setEntry(rawEntry);
             }
         }
@@ -293,7 +293,6 @@ public abstract class StoreHandler<
         final long accessTime = _timeMaster.currentTimeMillis();
         final E entry = _entryConverter.entryFromStorable(rawEntry);
 
-        nanoStart = System.nanoTime();
         updateLastAccessedForGet(request, response, entry, accessTime);
         if (metadata != null) {
             metadata.startContentCopy(System.nanoTime());
@@ -407,14 +406,13 @@ public abstract class StoreHandler<
         // Do we need special handling for Range requests? (GET only?)
     	// Should this update last-accessed as well? (for now, won't)
         Storable rawEntry;
-        long nanoStart = System.nanoTime();
         try {
-            rawEntry = _stores.getEntryStore().findEntry(StoreOperationSource.REQUEST, key.asStorableKey());
+            rawEntry = _stores.getEntryStore().findEntry(StoreOperationSource.REQUEST,
+                    metadata, key.asStorableKey());
         } catch (IOException e) {
             return _storeError(response, key, e);
         } 
         if (metadata != null) {
-            metadata.addDbRead(System.nanoTime() - nanoStart);
             metadata.setEntry(rawEntry);
         }
         if (rawEntry == null) {
@@ -501,7 +499,6 @@ public abstract class StoreHandler<
                 ((lastAcc == null) ? 0 : lastAcc.asByte()),
                 minTTLSecs, maxTTLSecs);
         StorableCreationResult result;
-        long nanoStart = System.nanoTime();
 
         try {
             /* This gets quite convoluted but that's how it goes: if undelete is
@@ -533,10 +530,6 @@ public abstract class StoreHandler<
         } catch (IOException e) {
             return internalPutError(response, key,
             		e, "Failed to PUT an entry: "+e.getMessage());
-        } finally {
-            if (stats != null) {
-                stats.addDbWrite(System.nanoTime() - nanoStart);
-            }
         }
 
         // And then check whether it was a dup put; and if so, that checksums match
@@ -723,7 +716,6 @@ public abstract class StoreHandler<
         // !!! TODO: allow listing of tombstones?
         
         ListResponse<?> listResponse = null;
-        long nanoStart = System.nanoTime();
         
         switch (listType) {
         case ids:
@@ -761,7 +753,6 @@ public abstract class StoreHandler<
         }
 
         if (metadata != null) {
-            metadata.addDbRead(System.nanoTime() - nanoStart);
             metadata.setItemCount(listResponse.size());
         }
         

@@ -16,6 +16,7 @@ import com.fasterxml.storemate.store.backend.IterationAction;
 import com.fasterxml.storemate.store.backend.IterationResult;
 import com.fasterxml.storemate.store.backend.StorableLastModIterationCallback;
 import com.fasterxml.storemate.store.file.FileManager;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
@@ -218,15 +219,10 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         final SyncListResponse<E> resp;
         KeyRange localRange = localState.totalRange();
         if (localRange.overlapsWith(range)) {
-            long nanoStart = System.nanoTime();
             try {
                 resp = _listEntries(range, since, upUntil, _maxToListPerRequest);
             } catch (StoreException e) {
                 return _storeError(response, e);
-            } finally {
-                if (metadata != null) {
-                    metadata.addDbRead(System.nanoTime() - nanoStart);
-                }
             }
 
     /*
@@ -287,10 +283,10 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         ArrayList<E> entries = new ArrayList<E>(ids.size());
         StorableStore store = _stores.getEntryStore();
 
-        long nanoStart = System.nanoTime();
         try {
             for (StorableKey key : ids) {
-                Storable raw = store.findEntry(StoreOperationSource.SYNC, key);
+                // null -> let's not pass 'metadata' yet since we don't use timings?
+                Storable raw = store.findEntry(StoreOperationSource.SYNC, null, key);
                 // note: this may give null as well; caller needs to check (converter passes null as-is)
                 E entry = (E) _entryConverter.entryFromStorable(raw);
                 entries.add(entry);
@@ -299,7 +295,6 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
             return _storeError(response, e);
         } finally {
             if (metadata != null) {
-                metadata.addDbRead(System.nanoTime() - nanoStart);
                 metadata = metadata.setItemCount(entries.size());
             }
         } 

@@ -15,6 +15,7 @@ import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.backend.BackendStats;
 import com.fasterxml.storemate.store.backend.BackendStatsConfig;
 import com.fasterxml.storemate.store.backend.StoreBackend;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
@@ -75,7 +76,7 @@ public class NodeMetricsServlet extends ServletBase
             AllOperationMetrics.Provider[] metricsProviders)
     {
         // null -> use servlet path base as-is
-        super(null, null);
+        super(stuff, null, null);
         _timeMaster = stuff.getTimeMaster();
         // for robustness, allow empty beans...
 

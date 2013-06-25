@@ -9,15 +9,19 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.ServiceResponse;
+import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.storemate.shared.TimeMaster;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 @SuppressWarnings("serial")
 public class ServletBase extends HttpServlet
 {
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
+    protected final TimeMaster _timeMaster;
+    
     protected final ClusterViewByServer _clusterView;
 
     protected final String _basePath;
@@ -29,9 +33,10 @@ public class ServletBase extends HttpServlet
      *   be ignored when matching request paths: if null, uses
      *   method <code>getServletPath</code> of <code>HttpServletRequest</code>.
      */
-    protected ServletBase(ClusterViewByServer clusterView,
+    protected ServletBase(SharedServiceStuff stuff, ClusterViewByServer clusterView,
             String servletPathBase)
     {
+        _timeMaster = stuff.getTimeMaster();
         _clusterView = clusterView;
         if (servletPathBase != null) {
             /* One tweak: ensure that base path ends with slash, to ensure
@@ -146,7 +151,7 @@ public class ServletBase extends HttpServlet
         /* 28-Mar-2013, tsaloranta: Let's construct this by default, since
          *   it will be needed to collect metrics.
          */
-        return new OperationDiagnostics();
+        return new OperationDiagnostics(_timeMaster.nanosForDiagnostics());
     }
     
     protected ServletServiceResponse constructResponse(HttpServletResponse orig) {

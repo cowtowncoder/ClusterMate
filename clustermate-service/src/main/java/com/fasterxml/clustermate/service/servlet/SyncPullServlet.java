@@ -6,8 +6,9 @@ import com.codahale.metrics.Timer.Context;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
+
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
@@ -30,7 +31,7 @@ public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
             SyncHandler<K,E> h)
     {
         // null -> use servlet path base as-is
-        super(clusterView, null);
+        super(stuff, clusterView, null);
         _syncHandler = h;
         _jsonWriter = stuff.jsonWriter();
         final ServiceConfig serviceConfig = stuff.getServiceConfig();

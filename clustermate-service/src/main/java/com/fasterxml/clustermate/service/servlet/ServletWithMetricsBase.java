@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.service.servlet;
 
+import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 
@@ -12,10 +13,10 @@ public abstract class ServletWithMetricsBase
     extends ServletBase
     implements AllOperationMetrics.Provider
 {
-    protected ServletWithMetricsBase(ClusterViewByServer clusterView,
-            String servletPathBase)
+    protected ServletWithMetricsBase(SharedServiceStuff stuff,
+            ClusterViewByServer clusterView, String servletPathBase)
     {
-        super(clusterView, servletPathBase);
+        super(stuff, clusterView, servletPathBase);
     }
     
     @Override

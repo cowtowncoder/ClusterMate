@@ -7,10 +7,10 @@ import com.codahale.metrics.Timer.Context;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import com.fasterxml.storemate.shared.TimeMaster;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
@@ -33,6 +33,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
+    protected final SharedServiceStuff _stuff;
 //    protected final ServiceConfig _serviceConfig;
     
     protected final StoreHandler<K,E,?> _storeHandler;
@@ -71,7 +72,8 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             StoreHandler<K,E,?> storeHandler, boolean handleRouting)
     {
         // null -> use servlet path base as-is
-        super(clusterView, null);
+        super(stuff, clusterView, null);
+        _stuff = stuff;
         _storeHandler = storeHandler;
         _timeMaster = stuff.getTimeMaster();
         _jsonWriter = stuff.jsonWriter();
@@ -91,7 +93,8 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     protected StoreEntryServlet(StoreEntryServlet<K,E> base,
             boolean copyMetrics)
     {
-        super(base._clusterView, null);
+        super(base._stuff, base._clusterView, null);
+        _stuff = base._stuff;
         _storeHandler = base._storeHandler;
         _timeMaster = base._timeMaster;
         _jsonWriter = base._jsonWriter;

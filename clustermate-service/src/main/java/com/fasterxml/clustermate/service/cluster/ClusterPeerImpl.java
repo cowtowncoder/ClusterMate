@@ -640,7 +640,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
              *   need to pay attention here, since conflict resolution may be
              *   necessary.
              */
-            Storable localEntry = _entryStore.findEntry(StoreOperationSource.SYNC, remoteEntry.key);
+            Storable localEntry = _entryStore.findEntry(StoreOperationSource.SYNC, null, remoteEntry.key);
             // either needs to have been seen
             if (localEntry != null) {
                 it.remove();

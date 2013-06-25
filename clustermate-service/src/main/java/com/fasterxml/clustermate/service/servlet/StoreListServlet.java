@@ -3,11 +3,12 @@ package com.fasterxml.clustermate.service.servlet;
 import java.io.IOException;
 
 import com.codahale.metrics.Timer.Context;
+
 import com.fasterxml.storemate.shared.TimeMaster;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
@@ -53,7 +54,7 @@ public class StoreListServlet<K extends EntryKey,
             StoreHandler<K,E,?> storeHandler)
     {
         // null -> use servlet path base as-is
-        super(clusterView, null);
+        super(stuff, clusterView, null);
         _storeHandler = storeHandler;
         _timeMaster = stuff.getTimeMaster();
         _keyConverter = stuff.getKeyConverter();

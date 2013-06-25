@@ -78,13 +78,16 @@ public class LastAccessedTest extends JaxrsStoreTestBase
         final StorableStore entries = resource.getStores().getEntryStore();
         assertEquals(3, entries.getEntryCount());
 
-        StoredEntry<TestKey> entry2 = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST, KEY2.asStorableKey()));
+        StoredEntry<TestKey> entry2 = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST,
+                null, KEY2.asStorableKey()));
         assertNotNull(entry2);
         assertEquals(0L, accessStore.findLastAccessTime(entry2));
-        StoredEntry<TestKey> entry1b = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST, KEY1B.asStorableKey()));
+        StoredEntry<TestKey> entry1b = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST,
+                null, KEY1B.asStorableKey()));
         assertNotNull(entry1b);
         assertEquals(0L, accessStore.findLastAccessTime(entry1b));
-        StoredEntry<TestKey> entry1a = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST, KEY1A.asStorableKey()));
+        StoredEntry<TestKey> entry1a = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST,
+                null, KEY1A.asStorableKey()));
         assertNotNull(entry1a);
         assertEquals(0L, accessStore.findLastAccessTime(entry1a));
 
@@ -108,7 +111,8 @@ public class LastAccessedTest extends JaxrsStoreTestBase
         assertEquals(UPDATE_TIME2, accessStore.findLastAccessTime(entry1a));
 
         // note: second entry should see the last-accessed from the first update!
-        entry1b = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST, KEY1B.asStorableKey()));
+        entry1b = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST,
+                null, KEY1B.asStorableKey()));
         assertEquals(FakeLastAccess.GROUPED, entry1b.getLastAccessUpdateMethod());
         assertEquals(UPDATE_TIME2, accessStore.findLastAccessTime(entry1b));
 

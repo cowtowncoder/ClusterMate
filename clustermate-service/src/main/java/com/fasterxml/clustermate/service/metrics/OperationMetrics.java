@@ -3,9 +3,9 @@ package com.fasterxml.clustermate.service.metrics;
 import com.codahale.metrics.*;
 import com.codahale.metrics.Timer.Context;
 
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.storemate.store.Storable;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 /**
  * Helper class for aggregating sets of internal CRUD endpoint

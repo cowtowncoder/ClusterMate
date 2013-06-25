@@ -5,8 +5,8 @@ import java.io.IOException;
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.NodeState;
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.store.StoredEntry;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 /**
  * Specialized sub-type of Entry servlet that will either serve request

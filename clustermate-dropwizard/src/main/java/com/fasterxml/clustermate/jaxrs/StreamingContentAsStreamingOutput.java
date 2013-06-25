@@ -5,8 +5,8 @@ import java.io.OutputStream;
 
 import javax.ws.rs.core.StreamingOutput;
 
-import com.fasterxml.clustermate.service.OperationDiagnostics;
 import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 /**
  * Glue class that turns a {@link StreamingResponseContent} into JAX-RS
