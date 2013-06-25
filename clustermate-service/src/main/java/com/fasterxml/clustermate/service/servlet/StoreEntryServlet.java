@@ -151,7 +151,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
      */
 
     @Override
-    public final void handleGet(ServletServiceRequest request, ServletServiceResponse response,
+    public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
         final OperationMetrics metrics = _getMetrics;
@@ -170,7 +170,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     }
 
     @Override
-    public final void handleHead(ServletServiceRequest request, ServletServiceResponse response,
+    public void handleHead(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
         K key = _findKey(request, response);
@@ -181,7 +181,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     }
 
     // We'll allow POST as an alias to PUT
-    @Override
+    @Override // NOTE: final since it should be aliased, not overridden
     public final void handlePost(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
@@ -189,7 +189,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     }
     
     @Override
-    public final void handlePut(ServletServiceRequest request, ServletServiceResponse response,
+    public void handlePut(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats) throws IOException
     {
         final OperationMetrics metrics = _putMetrics;
