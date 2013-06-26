@@ -152,45 +152,50 @@ public class FileBackedResponseContentImpl
         final BufferRecycler.Holder bufferHolder = _bufferRecycler.getHolder();        
         final byte[] copyBuffer = bufferHolder.borrowBuffer();
         try {
-            // 4 main combinations: compressed/not-compressed, range/no-range
-            // and then 2 variations; fits in buffer or not
-    
-            // Start with uncompressed
-            if (!Compression.needsUncompress(_compression)) {
-                // and if all we need fits in the buffer, read all, write all:
-                if (_dataLength <= READ_BUFFER_LENGTH) {
-                    _readAllWriteAllUncompressed(out, copyBuffer, _dataOffset, (int) _dataLength);
-                } else {
-                    // if not, need longer lock...
-                    _readAllWriteStreamingUncompressed(out, copyBuffer, _dataOffset, _dataLength);
-                }
-                return;
-            }
-            
-            // And then compressed variants. First, maybe we can read all data in memory before uncomp?
-            if (_fileLength <= READ_BUFFER_LENGTH) {
-                _readAllWriteAllCompressed(out, copyBuffer, _dataOffset, _dataLength);
-            } else {
-                final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-                // If not, use (for now) the old slow read-uncompress-copy loop:
-                _throttler.performFileRead(StoreOperationSource.REQUEST,
-                        _operationTime, _entry.getRaw(), _file,
-                        new FileOperationCallback<Void>() {
-                    @Override
-                    public Void perform(long operationTime, StorableKey key, Storable value, File externalFile)
-                            throws IOException, StoreException
-                    {
-                        final long fsStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-                        _readAllWriteStreamingCompressed(out, copyBuffer);
-                        if (_diagnostics != null) {
-                            _diagnostics.addFileAccess(start, fsStart, _timeMaster.nanosForDiagnostics());
-                        }
-                        return null;
-                    }
-                });
-            }
+            _writeContent(out, copyBuffer);
         } finally {
             bufferHolder.returnBuffer(copyBuffer);
+        }
+    }
+
+    protected final void _writeContent(final OutputStream out, final byte[] copyBuffer)
+        throws IOException
+    {
+        // 4 main combinations: compressed/not-compressed, range/no-range
+        // and then 2 variations; fits in buffer or not
+
+        // Start with uncompressed
+        if (!Compression.needsUncompress(_compression)) {
+            // and if all we need fits in the buffer, read all, write all:
+            if (_dataLength <= READ_BUFFER_LENGTH) {
+                _readAllWriteAllUncompressed(out, copyBuffer, _dataOffset, (int) _dataLength);
+            } else {
+                // if not, need longer lock...
+                _readAllWriteStreamingUncompressed(out, copyBuffer, _dataOffset, _dataLength);
+            }
+            return;
+        }
+        
+        // And then compressed variants. First, maybe we can read all data in memory before uncomp?
+        if (_fileLength <= READ_BUFFER_LENGTH) {
+            _readAllWriteAllCompressed(out, copyBuffer, _dataOffset, _dataLength);
+        } else {
+            final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+            // If not, use (for now) the old slow read-uncompress-copy loop:
+            _throttler.performFileRead(StoreOperationSource.REQUEST,
+                    _operationTime, _entry.getRaw(), _file,
+                    new FileOperationCallback<Void>() {
+                @Override
+                public Void perform(long operationTime, StorableKey key, Storable value, File externalFile)
+                        throws IOException, StoreException
+                {
+                    if (_diagnostics != null) {
+                        _diagnostics.addFileWait(_timeMaster.nanosForDiagnostics() - start);
+                    }
+                    _readAllWriteStreamingCompressed(out, copyBuffer);
+                    return null;
+                }
+            });
         }
     }
 
@@ -327,10 +332,11 @@ public class FileBackedResponseContentImpl
     	        } finally {
     	            _close(lzfIn);
         	        if (_diagnostics != null) {
-        	            // this is not good, doubles times but...
-        	            final long now = _timeMaster.nanosForDiagnostics();
-        	            _diagnostics.addResponseWriteTime(start, now);
-        	            _diagnostics.addFileAccess(start,  start, now);
+        	            final long totalSpent = _timeMaster.nanosForDiagnostics() - start;
+        	            // Not good, but need to try avoiding double-booking so assume 1/4 for response write
+        	            long respTime = (totalSpent >> 2);
+        	            _diagnostics.addResponseWriteTime(respTime);
+        	            _diagnostics.addFileAccess(start, start, start + totalSpent - respTime);
         	        }
     	        }
     	        return;
