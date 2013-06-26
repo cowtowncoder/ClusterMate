@@ -4,6 +4,8 @@ import java.io.*;
 
 import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.shared.ByteRange;
+import com.fasterxml.storemate.shared.TimeMaster;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 /**
  * Simple implementation of {@link StreamingResponseContent} that is used
@@ -17,7 +19,11 @@ public class SimpleStreamingResponseContent
     /* Data to stream out
     /**********************************************************************
      */
-    
+
+    private final OperationDiagnostics _diagnostics;
+
+    private final TimeMaster _timeMaster;
+
     private final ByteContainer _data;
      
     private final long _dataOffset;
@@ -41,8 +47,15 @@ public class SimpleStreamingResponseContent
     /**********************************************************************
      */
 
-    public SimpleStreamingResponseContent(ByteContainer data, ByteRange range, long contentLength)
+    /*
+        final long writeStartNanos = (diags == null) ? 0L : _timeMaster.nanosForDiagnostics();
+     */
+    
+    public SimpleStreamingResponseContent(OperationDiagnostics diag, TimeMaster timeMaster,
+            ByteContainer data, ByteRange range, long contentLength)
     {
+        _diagnostics = diag;
+        _timeMaster = timeMaster;
         if (data == null) {
             throw new IllegalArgumentException();
         }
@@ -71,10 +84,17 @@ public class SimpleStreamingResponseContent
     @Override
     public void writeContent(final OutputStream out) throws IOException
     {
-        if (_dataOffset <= 0L) {
-            _data.writeBytes(out);
-        } else { // casts are safe; inlined data relatively small
-            _data.writeBytes(out, (int) _dataOffset, (int) _dataLength);
+        final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+        try {
+            if (_dataOffset <= 0L) {
+                _data.writeBytes(out);
+            } else { // casts are safe; inlined data relatively small
+                _data.writeBytes(out, (int) _dataOffset, (int) _dataLength);
+            }
+        } finally {
+            if (_diagnostics != null) {
+                _diagnostics.addResponseWriteTime(start, _timeMaster.nanosForDiagnostics());
+            }
         }
     }
 }

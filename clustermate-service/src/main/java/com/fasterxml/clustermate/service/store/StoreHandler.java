@@ -251,7 +251,7 @@ public abstract class StoreHandler<
     }
     
     public ServiceResponse getEntry(ServiceRequest request, ServiceResponse response, K key,
-            OperationDiagnostics metadata)
+            OperationDiagnostics diag)
         throws StoreException
     {
         String rangeStr = request.getHeader(ClusterMateConstants.HTTP_HEADER_RANGE_FOR_REQUEST);
@@ -267,13 +267,9 @@ public abstract class StoreHandler<
 
         try {
             rawEntry = entryStore.findEntry(StoreOperationSource.REQUEST,
-                    metadata, key.asStorableKey());
+                    diag, key.asStorableKey());
         } catch (IOException e) {
             return _storeError(response, key, e);
-        } finally {
-            if (metadata != null) {
-                metadata.setEntry(rawEntry);
-            }
         }
         if (rawEntry == null) {
             return handleGetForMissing(request, response, key);
@@ -294,9 +290,6 @@ public abstract class StoreHandler<
         final E entry = _entryConverter.entryFromStorable(rawEntry);
 
         updateLastAccessedForGet(request, response, entry, accessTime);
-        if (metadata != null) {
-            metadata.startContentCopy(System.nanoTime());
-        }
         
         Compression comp = entry.getCompression();
         boolean skipCompression;
@@ -319,8 +312,8 @@ public abstract class StoreHandler<
 
         if (entry.hasExternalData()) { // need to stream from File
             File f = entry.getRaw().getExternalFile(_fileManager);
-            output = new FileBackedResponseContentImpl(entryStore.getThrottler(), accessTime,
-                    f, skipCompression ? null : comp, range, entry);
+            output = new FileBackedResponseContentImpl(diag, _timeMaster, entryStore.getThrottler(),
+                    accessTime, f, skipCompression ? null : comp, range, entry);
         } else { // inline
             ByteContainer inlined = entry.getRaw().getInlinedData();
             if (!skipCompression) {
@@ -330,7 +323,7 @@ public abstract class StoreHandler<
                     return internalGetError(response, e, key, "Failed to decompress inline data");
                 }
             }
-            output = new SimpleStreamingResponseContent(inlined, range, inlined.byteLength());
+            output = new SimpleStreamingResponseContent(diag, _timeMaster, inlined, range, inlined.byteLength());
         }
         // #21: provide content length header
         long cl = output.getLength();

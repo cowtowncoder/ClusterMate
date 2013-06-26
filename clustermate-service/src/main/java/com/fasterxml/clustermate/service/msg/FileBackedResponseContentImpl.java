@@ -13,6 +13,7 @@ import com.ning.compress.lzf.LZFUncompressor;
 
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.StorableKey;
+import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.shared.util.BufferRecycler;
@@ -21,6 +22,7 @@ import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.StoreOperationSource;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
+import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
@@ -54,6 +56,10 @@ public class FileBackedResponseContentImpl
      * allocate, reallocate all the time.
      */
     final protected static BufferRecycler _bufferRecycler = new BufferRecycler(READ_BUFFER_LENGTH);
+
+    final protected OperationDiagnostics _diagnostics;
+    
+    final protected TimeMaster _timeMaster;
 
     final protected StoreOperationThrottler _throttler;
     
@@ -93,10 +99,13 @@ public class FileBackedResponseContentImpl
     /**********************************************************************
      */
 
-    public FileBackedResponseContentImpl(StoreOperationThrottler throttler, long operationTime,
+    public FileBackedResponseContentImpl(OperationDiagnostics diag, TimeMaster timeMaster,
+            StoreOperationThrottler throttler, long operationTime,
             File f, Compression comp, ByteRange range,
             StoredEntry<?> entry)
     {
+        _diagnostics = diag;
+        _timeMaster = timeMaster;
         _throttler = throttler;
         _operationTime = operationTime;
         _entry = entry;
@@ -162,6 +171,7 @@ public class FileBackedResponseContentImpl
             if (_fileLength <= READ_BUFFER_LENGTH) {
                 _readAllWriteAllCompressed(out, copyBuffer, _dataOffset, _dataLength);
             } else {
+                final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                 // If not, use (for now) the old slow read-uncompress-copy loop:
                 _throttler.performFileRead(StoreOperationSource.REQUEST,
                         _operationTime, _entry.getRaw(), _file,
@@ -170,7 +180,11 @@ public class FileBackedResponseContentImpl
                     public Void perform(long operationTime, StorableKey key, Storable value, File externalFile)
                             throws IOException, StoreException
                     {
+                        final long fsStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                         _readAllWriteStreamingCompressed(out, copyBuffer);
+                        if (_diagnostics != null) {
+                            _diagnostics.addFileAccess(start, fsStart, _timeMaster.nanosForDiagnostics());
+                        }
                         return null;
                     }
                 });
@@ -197,7 +211,14 @@ public class FileBackedResponseContentImpl
     {
         _readAll(out, copyBuffer, offset, dataLength);
         // and write out like so
-        out.write(copyBuffer, 0, dataLength);
+        final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+        try {
+            out.write(copyBuffer, 0, dataLength);
+        } finally {
+            if (_diagnostics != null) {
+                _diagnostics.addResponseWriteTime(start, _timeMaster.nanosForDiagnostics());
+            }
+        }
     }
 
     /**
@@ -208,6 +229,7 @@ public class FileBackedResponseContentImpl
             final long offset, final long dataLength)
         throws IOException
     {
+        final long fsWaitStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
         _throttler.performFileRead(StoreOperationSource.REQUEST,
                 _operationTime, _entry.getRaw(), _file,
                 new FileOperationCallback<Void>() {
@@ -215,16 +237,32 @@ public class FileBackedResponseContentImpl
             public Void perform(long operationTime, StorableKey key, Storable value, File externalFile)
                 throws IOException
             {
+                // gets tricky, so process wait separately
+                if (_diagnostics != null) {
+                    _diagnostics.addFileWait( _timeMaster.nanosForDiagnostics() - fsWaitStart);
+                }
                 InputStream in = new FileInputStream(_file);
                 try {
                     if (offset > 0L) {
+                        final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                         _skip(in, offset);
+                        if (_diagnostics != null) {
+                            _diagnostics.addFileAccess(start, start, _timeMaster.nanosForDiagnostics());
+                        }
                     }
                     long left = dataLength;
                     while (left >= 0L) {
+                        final long fsStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                         int read = _read(in, copyBuffer, left);
+                        if (_diagnostics != null) {
+                            _diagnostics.addFileAccess(fsStart,  fsStart, _timeMaster.nanosForDiagnostics());
+                        }
+                        final long writeStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                         out.write(copyBuffer, 0, read);
                         left -= read;
+                        if (_diagnostics != null) {
+                            _diagnostics.addResponseWriteTime(writeStart, _timeMaster.nanosForDiagnostics());
+                        }
                     }
                 } finally {
                     _close(in);
@@ -264,8 +302,13 @@ public class FileBackedResponseContentImpl
             // TODO: currently we do not have other codecs
             throw new UnsupportedOperationException("No Uncompressor for compression type: "+_compression);
         }
+
+        final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
         uncomp.feedCompressedData(copyBuffer, 0, inputLength);
         uncomp.complete();
+        if (_diagnostics != null) {
+            _diagnostics.addResponseWriteTime(start, _timeMaster);
+        }
     }
 
     /**
@@ -280,11 +323,18 @@ public class FileBackedResponseContentImpl
         
         // First: LZF has special optimization to use, if we are to copy the whole thing:
         if ((_compression == Compression.LZF) && (_dataOffset < 0L)) {
+            final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
     	        LZFInputStream lzfIn = new LZFInputStream(in);
     	        try {
     	            lzfIn.readAndWrite(out);
     	        } finally {
     	            _close(lzfIn);
+        	        if (_diagnostics != null) {
+        	            // this is not good, doubles times but...
+        	            final long now = _timeMaster.nanosForDiagnostics();
+        	            _diagnostics.addResponseWriteTime(start, now);
+        	            _diagnostics.addFileAccess(start,  start, now);
+        	        }
     	        }
     	        return;
         }
@@ -348,6 +398,7 @@ public class FileBackedResponseContentImpl
             final long offset, final int dataLength)
         throws IOException
     {
+        final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
         _throttler.performFileRead(StoreOperationSource.REQUEST,
                 _operationTime, _entry.getRaw(), _file,
                 new FileOperationCallback<Void>() {
@@ -355,7 +406,11 @@ public class FileBackedResponseContentImpl
             public Void perform(long operationTime,  StorableKey key, Storable value, File externalFile)
                 throws IOException
             {
+                final long fsStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                 int count = _readFromFile(externalFile, copyBuffer, offset, dataLength);
+                if (_diagnostics != null) {
+                    _diagnostics.addFileAccess(start, fsStart, _timeMaster.nanosForDiagnostics());
+                }
                 if (count < dataLength) {
                     throw new IOException("Failed to read all "+dataLength+" bytes from '"
                             +externalFile.getAbsolutePath()+"'; only got: "+count);
