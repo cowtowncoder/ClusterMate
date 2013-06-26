@@ -98,7 +98,7 @@ public abstract class ServiceRequest
     /**********************************************************************
      */
 
-    public long getBytesRead() {
+    public final long getBytesRead() {
         return (_input == null) ? 0L : _input.getBytesRead();
     }
     
