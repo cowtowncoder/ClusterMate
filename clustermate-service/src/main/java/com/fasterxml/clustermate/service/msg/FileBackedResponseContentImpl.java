@@ -44,7 +44,7 @@ public class FileBackedResponseContentImpl
      * cases.
      */
     private final static int READ_BUFFER_LENGTH = 64000;
-    
+
     /*
     /**********************************************************************
     /* Helper objects
@@ -212,12 +212,9 @@ public class FileBackedResponseContentImpl
         _readAll(out, copyBuffer, offset, dataLength);
         // and write out like so
         final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-        try {
-            out.write(copyBuffer, 0, dataLength);
-        } finally {
-            if (_diagnostics != null) {
-                _diagnostics.addResponseWriteTime(start, _timeMaster.nanosForDiagnostics());
-            }
+        out.write(copyBuffer, 0, dataLength);
+        if (_diagnostics != null) {
+            _diagnostics.addResponseWriteTime(start, _timeMaster.nanosForDiagnostics());
         }
     }
 
@@ -348,6 +345,8 @@ public class FileBackedResponseContentImpl
             long skipped = 0L;
             long toSkip = _dataOffset;
 
+            final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+            
             while (toSkip > 0) {
                 long count = in.skip(toSkip);
                 if (count <= 0L) { // should not occur really...
@@ -356,13 +355,28 @@ public class FileBackedResponseContentImpl
                 skipped += count;
                 toSkip -= count;
             }
+            if (_diagnostics != null) {
+                _diagnostics.addFileAccess(start, start, _timeMaster);
+            }
         }
         // Second: output the whole thing, or just subset?
         try {
             if (_dataLength < 0) { // all of it
-                int count;
-                while ((count = in.read(copyBuffer)) > 0) {
+                while (true) {
+                    final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+                    int count = in.read(copyBuffer);
+                    if (_diagnostics != null) {
+                        _diagnostics.addFileAccess(start, start, _timeMaster);
+                    }
+                    
+                    if (count <= 0) {
+                        break;
+                    }
+                    final long outputStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                     out.write(copyBuffer, 0, count);
+                    if (_diagnostics != null) {
+                        _diagnostics.addResponseWriteTime(outputStart, _timeMaster);
+                    }
                 }
                 return;
             }
@@ -370,11 +384,19 @@ public class FileBackedResponseContentImpl
             long left = _dataLength;
     	    
             while (left > 0) {
+                final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                 int count = in.read(copyBuffer, 0, (int) Math.min(copyBuffer.length, left));
+                if (_diagnostics != null) {
+                    _diagnostics.addFileAccess(start, start, _timeMaster);
+                }
                 if (count <= 0) {
                     break;
                 }
+                final long outputStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                 out.write(copyBuffer, 0, count);
+                if (_diagnostics != null) {
+                    _diagnostics.addResponseWriteTime(outputStart, _timeMaster);
+                }
                 left -= count;
             }
             // Sanity check; can't fix or add headers as output has been written...

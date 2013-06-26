@@ -74,7 +74,7 @@ public class SimpleStreamingResponseContent
 
     public boolean hasFile() { return false; }
     public boolean inline() { return true; }
-    
+
     @Override
     public long getLength()
     {
