@@ -47,7 +47,7 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
 
     /*
     /**********************************************************************
-    /* Overriden handler methods
+    /* Overridden handler methods
     /**********************************************************************
      */
 
@@ -63,6 +63,7 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             return;
         }
         // TODO: routing!
+        throw new IllegalStateException("Not yet implemented!");
     }
 
     @Override
@@ -77,6 +78,7 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             return;
         }
         // TODO: routing!
+        throw new IllegalStateException("Not yet implemented!");
     }
 
     @Override
@@ -86,12 +88,12 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     {
         NodeState node = _findRedirect(request, response, key);
         if (node == null) {
-            _storeHandler.putEntry(request, response, key,
-                    request.getNativeRequest().getInputStream(),
+            _storeHandler.putEntry(request, response, key, request.getInputStream(),
                     stats);
             _addStdHeaders(response);
             return;
         }
+        throw new IllegalStateException("Not yet implemented!");
         // TODO: routing!
     }
 
@@ -106,6 +108,7 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             _addStdHeaders(response);
             return;
         }
+        throw new IllegalStateException("Not yet implemented!");
         // TODO: routing!
     }
 

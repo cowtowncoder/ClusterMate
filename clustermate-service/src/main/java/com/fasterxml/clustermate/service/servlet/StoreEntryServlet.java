@@ -254,9 +254,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             OperationDiagnostics stats, K key)
         throws IOException
     {
-        _storeHandler.putEntry(request, response, key,
-                request.getNativeRequest().getInputStream(),
-                stats);
+        _storeHandler.putEntry(request, response, key, request.getInputStream(), stats);
         _addStdHeaders(response);
     }
 
