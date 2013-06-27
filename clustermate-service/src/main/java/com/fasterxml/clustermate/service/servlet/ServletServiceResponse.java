@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 import javax.servlet.http.*;
 
