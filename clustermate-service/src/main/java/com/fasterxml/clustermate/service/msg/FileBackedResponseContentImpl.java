@@ -253,7 +253,7 @@ public class FileBackedResponseContentImpl
                         }
                     }
                     long left = dataLength;
-                    while (left >= 0L) {
+                    while (left > 0L) {
                         final long fsStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                         int read = _read(in, copyBuffer, left);
                         if (_diagnostics != null) {

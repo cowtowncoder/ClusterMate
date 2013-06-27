@@ -2,8 +2,6 @@ package com.fasterxml.clustermate.jaxrs;
 
 import java.io.*;
 import java.util.*;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import junit.framework.TestCase;
 
@@ -16,6 +14,7 @@ import com.fasterxml.storemate.backend.bdbje.BDBJEConfig;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;
+import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.backend.StoreBackend;
@@ -337,17 +336,18 @@ public abstract class JaxrsStoreTestBase extends TestCase
         return ChecksumUtil.calcChecksum(data);
     }
 
+    protected byte[] lzf(byte[] input) throws IOException
+    {
+        return Compressors.lzfCompress(input);
+    }
+    
     protected byte[] gzip(byte[] input) throws IOException
     {
-        ByteArrayOutputStream out = new ByteArrayOutputStream(input.length / 4);
-        GZIPOutputStream gz = new GZIPOutputStream(out);
-        gz.write(input);
-        gz.close();
-        return out.toByteArray();
+        return Compressors.gzipCompress(input);
     }
 
     protected byte[] gunzip(byte[] comp) throws IOException
     {
-        return readAll(new GZIPInputStream(new ByteArrayInputStream(comp)));
+        return Compressors.gzipUncompress(comp);
     }
 }

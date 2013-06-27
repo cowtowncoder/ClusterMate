@@ -176,6 +176,79 @@ public class LargeFileTest extends JaxrsStoreTestBase
     }
 
     /**
+     * Separate test for something that is already compressed, to avoid
+     * trying to compress again.
+     */
+    public void testLargerPrecompressed() throws Exception
+    {
+        final long startTime = 5000;
+        final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
+        
+        // Need to make big enough to use streaming, but should be compressible as well
+        int origSize = 256000;
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("largePrecomp", timeMaster, true);
+        final String BIG_STRING = biggerRandomData(origSize);
+        final byte[] BIG_DATA_ORIG = BIG_STRING.getBytes("UTF-8");
+        final byte[] BIG_DATA_PRECOMP = lzf(BIG_DATA_ORIG);
+        
+        // ok: assume empty Entity Store
+        StorableStore entries = resource.getStores().getEntryStore();
+        assertEquals(0, entries.getEntryCount());
+
+        final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, "data/bigPrecomp-1");
+
+        FakeHttpResponse response = new FakeHttpResponse();
+        resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
+        assertEquals(404, response.getStatus());
+
+        // then try adding said entry, without indicating compression
+        FakeHttpRequest request = new FakeHttpRequest();
+        response = new FakeHttpResponse();
+        resource.getHandler().putEntry(request, response,
+                INTERNAL_KEY1, calcChecksum(BIG_DATA_PRECOMP), new ByteArrayInputStream(BIG_DATA_PRECOMP),
+                null, null, null);
+
+        // verify we got a file, and that its size is the same as what we passed
+        assertSame(PutResponse.class, response.getEntity().getClass());
+        PutResponse<?> presp = (PutResponse<?>) response.getEntity();
+        if (response.getStatus() != 200) {
+            fail("Expected 200 response, got "+response.getStatus()+"; message: "+presp.message);
+        }
+
+        assertFalse(presp.inlined);
+        assertEquals(BIG_DATA_PRECOMP.length, presp.storageSize);
+        assertEquals(-1, presp.size);
+
+        // can we count on this getting updated? Seems to be, FWIW
+        assertEquals(1, entries.getEntryCount());
+
+        // Ok. Then, we should also be able to fetch it, right?
+        response = new FakeHttpResponse();
+        resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
+        assertEquals(200, response.getStatus());
+        assertTrue(response.hasStreamingContent());
+        // big enough, should be backed by a real file.
+        assertTrue(response.hasFile());
+        byte[] data = collectOutput(response);
+        // regardless of compression (or lack thereof), should get same data back
+        assertEquals(BIG_DATA_PRECOMP.length, data.length);
+        Assert.assertArrayEquals(BIG_DATA_PRECOMP, data);
+
+        StoredEntry<TestKey> entry = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST,
+                null, INTERNAL_KEY1.asStorableKey()));
+        assertNotNull(entry);
+        assertTrue(entry.hasExternalData());
+        assertFalse(entry.hasInlineData());
+        assertEquals(Compression.NONE, entry.getCompression());
+        assertEquals(BIG_DATA_PRECOMP.length, entry.getStorageLength());
+        assertEquals(-1, entry.getRaw().getOriginalLength());
+        assertEquals(startTime, entry.getCreationTime());
+        assertEquals(startTime, entry.getLastModifiedTime());
+        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
+
+        entries.stop();
+    }    
+    /**
      * Test to verify that trying to send non-GZIP content, claiming to be GZIP,
      * fails.
      */
