@@ -28,4 +28,18 @@ public class TestStatsCollectingStreams extends TestCase
         stats.close();
         assertEquals(137, stats.getBytesRead());
     }
+
+    public void testOutputStream() throws Exception
+    {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        StatsCollectingOutputStream stats = new StatsCollectingOutputStream(bytes);
+        byte[] buf = new byte[40];
+
+        stats.write(buf, 1, 20);
+        stats.write(0xFF);
+        stats.close();
+
+        assertEquals(21, bytes.size());
+        assertEquals(21, stats.getBytesWritten());
+    }
 }

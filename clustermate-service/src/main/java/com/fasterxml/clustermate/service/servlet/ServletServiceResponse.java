@@ -7,6 +7,7 @@ import javax.servlet.http.*;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.service.ServiceResponse;
+import com.fasterxml.clustermate.service.util.StatsCollectingOutputStream;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 /**
@@ -28,7 +29,7 @@ public class ServletServiceResponse extends ServiceResponse
     
     protected long _responseLength;
 
-    protected OutputStream _output;
+    protected StatsCollectingOutputStream _output;
     
     /*
     /**********************************************************************
@@ -44,7 +45,7 @@ public class ServletServiceResponse extends ServiceResponse
     public void writeOut(ObjectWriter writer) throws IOException
     {
         if (_output == null) {
-            _output = _response.getOutputStream();
+            _output = _constructOutput();
         }
         if (_streamingContent != null) {
             long len = _streamingContent.getLength();
@@ -61,19 +62,26 @@ public class ServletServiceResponse extends ServiceResponse
     {
         setContentLength(raw.length);
         if (_output == null) {
-            _output = _response.getOutputStream();
+            _output = _constructOutput();
         }
         _output.write(raw);
+    }
+
+    private StatsCollectingOutputStream _constructOutput() throws IOException {
+        return new StatsCollectingOutputStream(_response.getOutputStream());
     }
     
     /*
     /**********************************************************************
-    /* Basic VHttpResponse impl
+    /* Basic ServiceResponse impl
     /**********************************************************************
      */
 
     @Override
     public long getBytesWritten() {
+        if (_output != null) {
+            return _output.getBytesWritten();
+        }
         return _responseLength;
     }
     
