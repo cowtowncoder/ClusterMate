@@ -187,22 +187,7 @@ public class FileBackedResponseContentImpl
         if (_fileLength <= READ_BUFFER_LENGTH) {
             _readAllWriteAllCompressed(out, copyBuffer, _dataOffset, _dataLength);
         } else {
-            final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-            // If not, use (for now) the old slow read-uncompress-copy loop:
-            _throttler.performFileRead(StoreOperationSource.REQUEST,
-                    _operationTime, _entry.getRaw(), _file,
-                    new FileOperationCallback<Void>() {
-                @Override
-                public Void perform(long operationTime, StorableKey key, Storable value, File externalFile)
-                        throws IOException, StoreException
-                {
-                    if (_diagnostics != null) {
-                        _diagnostics.addFileWait(_timeMaster.nanosForDiagnostics() - start);
-                    }
-                    _readAllWriteStreamingCompressed(out, copyBuffer);
-                    return null;
-                }
-            });
+            _readAllWriteStreamingCompressed(out, copyBuffer);
         }
     }
 
@@ -362,33 +347,91 @@ public class FileBackedResponseContentImpl
      * Method called in the complex case of having to read a large piece of
      * content, where source does not fit in the input buffer.
      */
-    @SuppressWarnings("resource")
-    protected void _readAllWriteStreamingCompressed(OutputStream out, byte[] copyBuffer)
+    protected void _readAllWriteStreamingCompressed(final OutputStream out, final byte[] copyBuffer)
         throws IOException
     {
-        InputStream in = new FileInputStream(_file);
-        
-        // First: LZF has special optimization to use, if we are to copy the whole thing:
-        if ((_compression == Compression.LZF) && (_dataOffset < 0L)) {
-            final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-    	        LZFInputStream lzfIn = new LZFInputStream(in);
-    	        try {
-    	            lzfIn.readAndWrite(out);
-    	        } finally {
-    	            _close(lzfIn);
-        	        if (_diagnostics != null) {
-        	            final long totalSpent = _timeMaster.nanosForDiagnostics() - start;
-        	            // Not good, but need to try avoiding double-booking so assume 1/4 for response write
-        	            long respTime = (totalSpent >> 2);
-        	            _diagnostics.addResponseWriteTime(respTime);
-        	            _diagnostics.addFileAccess(start, start, start + totalSpent - respTime);
-        	        }
-    	        }
-    	        return;
+        IOException e = _store.leaseOffHeapBuffer(new ByteBufferCallback<IOException>() {
+            @Override
+            public IOException withBuffer(StreamyBytesMemBuffer buffer) {
+                InputStream in = null;
+                try {
+                    in = new FileInputStream(_file);
+                    // First: LZF has special optimization to use, if we are to copy the whole thing:
+                    if ((_compression == Compression.LZF) && (_dataOffset < 0L)) {
+                        _readAllWriteStreamingCompressedLZF(in, out, copyBuffer, buffer);
+                    } else {
+                        _readAllWriteStreamingCompressed2(in, out, copyBuffer, buffer);
+                    }
+                } catch (IOException e) {
+                    return e;
+                } finally {
+                    _close(in);
+                }
+                return null;
+            }
+        });
+        if (e != null) {
+            throw e;
         }
+    }
 
-        // and for now, compressed variants are handle
+    // specialized version for read-all-no-offset, lzf-compressed case
+    protected void _readAllWriteStreamingCompressedLZF(final InputStream in, final OutputStream out,
+            byte[] copyBuffer, StreamyBytesMemBuffer offHeap)
+        throws IOException
+    {
+        final long waitStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+        Boolean b =_throttler.performFileRead(StoreOperationSource.REQUEST,
+                _operationTime, _entry.getRaw(), _file,
+                new FileOperationCallback<Boolean>() {
+            @Override
+            public Boolean perform(long operationTime, StorableKey key, Storable value, File externalFile)
+                    throws IOException, StoreException
+            {
+                if (_diagnostics != null) {
+                    _diagnostics.addFileWait(_timeMaster.nanosForDiagnostics() - waitStart);
+                }
+                final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+                 LZFInputStream lzfIn = new LZFInputStream(in);
+                 try {
+                     lzfIn.readAndWrite(out);
+                 } finally {
+                     _close(lzfIn);
+                      if (_diagnostics != null) {
+                          final long totalSpent = _timeMaster.nanosForDiagnostics() - start;
+                          // Not good, but need to try avoiding double-booking so assume 1/4 for response write
+                          long respTime = (totalSpent >> 2);
+                          _diagnostics.addResponseWriteTime(respTime);
+                          _diagnostics.addFileAccess(start, start, start + totalSpent - respTime);
+                      }
+                 }
+                 return null;
+            }
+        });
+    }
 
+    protected void _readAllWriteStreamingCompressed2(final InputStream in, final OutputStream out,
+            final byte[] copyBuffer, final StreamyBytesMemBuffer offHeap)
+        throws IOException
+    {
+        _throttler.performFileRead(StoreOperationSource.REQUEST,
+                _operationTime, _entry.getRaw(), _file,
+                new FileOperationCallback<Void>() {
+            @Override
+            public Void perform(long operationTime, StorableKey key,
+                    Storable value, File externalFile) throws IOException,
+                    StoreException {
+                _readAllWriteStreamingCompressed3(in, out, copyBuffer, offHeap);
+                return null;
+            }
+        });
+    }
+        
+    protected void _readAllWriteStreamingCompressed3(InputStream in, OutputStream out,
+            byte[] copyBuffer, StreamyBytesMemBuffer offHeap)
+        throws IOException
+    {
+        
         in = Compressors.uncompressingStream(in, _compression);
 
         // First: anything to skip (only the case for range requests)?
@@ -411,35 +454,14 @@ public class FileBackedResponseContentImpl
             }
         }
         // Second: output the whole thing, or just subset?
-        try {
-            if (_dataLength < 0) { // all of it
-                while (true) {
-                    final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-                    int count = in.read(copyBuffer);
-                    if (_diagnostics != null) {
-                        _diagnostics.addFileAccess(start, start, _timeMaster);
-                    }
-                    
-                    if (count <= 0) {
-                        break;
-                    }
-                    final long outputStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-                    out.write(copyBuffer, 0, count);
-                    if (_diagnostics != null) {
-                        _diagnostics.addResponseWriteTime(outputStart, _timeMaster);
-                    }
-                }
-                return;
-            }
-            // Just some of it
-            long left = _dataLength;
-    	    
-            while (left > 0) {
+        if (_dataLength < 0) { // all of it
+            while (true) {
                 final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-                int count = in.read(copyBuffer, 0, (int) Math.min(copyBuffer.length, left));
+                int count = in.read(copyBuffer);
                 if (_diagnostics != null) {
                     _diagnostics.addFileAccess(start, start, _timeMaster);
                 }
+                
                 if (count <= 0) {
                     break;
                 }
@@ -448,16 +470,33 @@ public class FileBackedResponseContentImpl
                 if (_diagnostics != null) {
                     _diagnostics.addResponseWriteTime(outputStart, _timeMaster);
                 }
-                left -= count;
             }
-            // Sanity check; can't fix or add headers as output has been written...
-            if (left > 0) {
-                LOG.error("Failed to write request Range %d-%d (from File {}): only wrote {} bytes",
-    	                new Object[] { _dataOffset, _dataOffset+_dataLength+1, _file.getAbsolutePath(),
-    	                _dataLength-left });
+            return;
+        }
+        // Just some of it
+        long left = _dataLength;
+
+        while (left > 0) {
+            final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+            int count = in.read(copyBuffer, 0, (int) Math.min(copyBuffer.length, left));
+            if (_diagnostics != null) {
+                _diagnostics.addFileAccess(start, start, _timeMaster);
             }
-        } finally {
-            _close(in);
+            if (count <= 0) {
+                break;
+            }
+            final long outputStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+            out.write(copyBuffer, 0, count);
+            if (_diagnostics != null) {
+                _diagnostics.addResponseWriteTime(outputStart, _timeMaster);
+            }
+            left -= count;
+        }
+        // Sanity check; can't fix or add headers as output has been written...
+        if (left > 0) {
+            LOG.error("Failed to write request Range %d-%d (from File {}): only wrote {} bytes",
+	                new Object[] { _dataOffset, _dataOffset+_dataLength+1, _file.getAbsolutePath(),
+	                _dataLength-left });
         }
     }
 
@@ -631,10 +670,12 @@ public class FileBackedResponseContentImpl
     
     private final void _close(InputStream in)
     {
-        try {
-            in.close();
-        } catch (IOException e) {
-            LOG.warn("Failed to close file '{}': {}", _file, e.getMessage());
+        if (in != null) {
+            try {
+                in.close();
+            } catch (IOException e) {
+                LOG.warn("Failed to close file '{}': {}", _file, e.getMessage());
+            }
         }
     }
 
