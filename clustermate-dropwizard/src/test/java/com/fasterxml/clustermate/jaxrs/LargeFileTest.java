@@ -179,14 +179,22 @@ public class LargeFileTest extends JaxrsStoreTestBase
      * Separate test for something that is already compressed, to avoid
      * trying to compress again.
      */
-    public void testLargerPrecompressed() throws Exception
+    public void testLargerPrecompressed256k() throws Exception {
+        _testLargerPrecompressed(256000);
+    }
+
+    public void testLargerPrecompressed2megs() throws Exception {
+        _testLargerPrecompressed(2 * 1000 * 1000);
+    }
+        
+    protected void _testLargerPrecompressed(final int origSize) throws Exception
     {
         final long startTime = 5000;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
         
         // Need to make big enough to use streaming, but should be compressible as well
-        int origSize = 256000;
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("largePrecomp", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("largePrecomp"+origSize,
+                timeMaster, true);
         final String BIG_STRING = biggerRandomData(origSize);
         final byte[] BIG_DATA_ORIG = BIG_STRING.getBytes("UTF-8");
         final byte[] BIG_DATA_PRECOMP = lzf(BIG_DATA_ORIG);

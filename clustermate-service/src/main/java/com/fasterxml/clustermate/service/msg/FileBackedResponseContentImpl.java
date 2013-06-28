@@ -1,6 +1,7 @@
 package com.fasterxml.clustermate.service.msg;
 
 import java.io.*;
+import java.util.Arrays;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -288,7 +289,8 @@ public class FileBackedResponseContentImpl
                             return Boolean.TRUE;
                         }
                         // if not, read+write; much longer. But starting with buffered, if any
-                        left -= _writeBuffered(offHeap, out, copyBuffer);
+                        byte[] stuff = Arrays.copyOf(copyBuffer, leftovers);
+                        left -= _writeBuffered(offHeap, out, copyBuffer, stuff);
                     }                    
 
                     while (left > 0L) {
@@ -313,7 +315,7 @@ public class FileBackedResponseContentImpl
 
         // Optimized case: all in the buffer, written outside file-read lock (to reduce lock time)
         if (b == Boolean.TRUE) {
-            _writeBuffered(offHeap, out, copyBuffer);
+            _writeBuffered(offHeap, out, copyBuffer, null);
         }
     }
     
@@ -528,15 +530,21 @@ public class FileBackedResponseContentImpl
         }
     }
 
-    private long _writeBuffered(StreamyBytesMemBuffer offHeap, OutputStream out, byte[] copyBuffer)
+    private long _writeBuffered(StreamyBytesMemBuffer offHeap, OutputStream out,
+            byte[] copyBuffer, byte[] leftovers)
         throws IOException
     {
         final long nanoStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+        
         long total = 0L;
         int count;
         while ((count = offHeap.readIfAvailable(copyBuffer)) > 0) {
             out.write(copyBuffer, 0, count);
             total += count;
+        }
+        if (leftovers != null) {
+            out.write(leftovers);
+            total += leftovers.length;
         }
         if (_diagnostics != null) {
             _diagnostics.addResponseWriteTime(nanoStart, _timeMaster);
