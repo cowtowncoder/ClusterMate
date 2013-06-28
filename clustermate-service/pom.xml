@@ -64,6 +64,13 @@
       <artifactId>config-magic</artifactId>
     </dependency>
 
+    <!-- And bit of buffering too
+      -->
+    <dependency>
+      <groupId>com.fasterxml.util</groupId>
+      <artifactId>low-gc-membuffers</artifactId>
+    </dependency>
+
     <!-- Metrics -->
     <dependency>
         <groupId>com.codahale.metrics</groupId>
