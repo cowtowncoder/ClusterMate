@@ -19,10 +19,13 @@ import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.shared.util.BufferRecycler;
 import com.fasterxml.storemate.store.FileOperationCallback;
 import com.fasterxml.storemate.store.Storable;
+import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.StoreOperationSource;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
+import com.fasterxml.storemate.store.util.ByteBufferCallback;
 import com.fasterxml.storemate.store.util.OperationDiagnostics;
+import com.fasterxml.util.membuf.StreamyBytesMemBuffer;
 
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
@@ -61,6 +64,8 @@ public class FileBackedResponseContentImpl
     
     final protected TimeMaster _timeMaster;
 
+    final protected StorableStore _store;
+    
     final protected StoreOperationThrottler _throttler;
     
     /*
@@ -100,13 +105,14 @@ public class FileBackedResponseContentImpl
      */
 
     public FileBackedResponseContentImpl(OperationDiagnostics diag, TimeMaster timeMaster,
-            StoreOperationThrottler throttler, long operationTime,
+            StorableStore store, long operationTime,
             File f, Compression comp, ByteRange range,
             StoredEntry<?> entry)
     {
         _diagnostics = diag;
         _timeMaster = timeMaster;
-        _throttler = throttler;
+        _store = store;
+        _throttler = store.getThrottler();
         _operationTime = operationTime;
         _entry = entry;
         _fileLength = entry.getStorageLength();
@@ -231,12 +237,33 @@ public class FileBackedResponseContentImpl
             final long offset, final long dataLength)
         throws IOException
     {
-        final long fsWaitStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-        _throttler.performFileRead(StoreOperationSource.REQUEST,
-                _operationTime, _entry.getRaw(), _file,
-                new FileOperationCallback<Void>() {
+        IOException e = _store.leaseOffHeapBuffer(new ByteBufferCallback<IOException>() {
             @Override
-            public Void perform(long operationTime, StorableKey key, Storable value, File externalFile)
+            public IOException withBuffer(StreamyBytesMemBuffer buffer) {
+                try {
+                    _readAllWriteStreamingUncompressed2(out, copyBuffer, offset, dataLength, buffer);
+                } catch (IOException e) {
+                    return e;
+                }
+                return null;
+            }
+        });
+        if (e != null) {
+            throw e;
+        }
+    }
+
+    protected void _readAllWriteStreamingUncompressed2(final OutputStream out, final byte[] copyBuffer,
+            final long offset, final long dataLength,
+            final StreamyBytesMemBuffer offHeap)
+        throws IOException
+    {
+        final long fsWaitStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+        Boolean b = _throttler.performFileRead(StoreOperationSource.REQUEST,
+                _operationTime, _entry.getRaw(), _file,
+                new FileOperationCallback<Boolean>() {
+            @Override
+            public Boolean perform(long operationTime, StorableKey key, Storable value, File externalFile)
                 throws IOException
             {
                 // gets tricky, so process wait separately
@@ -253,6 +280,17 @@ public class FileBackedResponseContentImpl
                         }
                     }
                     long left = dataLength;
+                    // Can we make use of off-heap buffer?
+                    if (offHeap != null) {
+                        int leftovers = _readInBuffer(key, in, left, copyBuffer, offHeap);
+                        // easy case: all read?
+                        if (leftovers == 0) {
+                            return Boolean.TRUE;
+                        }
+                        // if not, read+write; much longer. But starting with buffered, if any
+                        left -= _writeBuffered(offHeap, out, copyBuffer);
+                    }                    
+
                     while (left > 0L) {
                         final long fsStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                         int read = _read(in, copyBuffer, left);
@@ -263,15 +301,20 @@ public class FileBackedResponseContentImpl
                         out.write(copyBuffer, 0, read);
                         left -= read;
                         if (_diagnostics != null) {
-                            _diagnostics.addResponseWriteTime(writeStart, _timeMaster.nanosForDiagnostics());
+                            _diagnostics.addResponseWriteTime(writeStart, _timeMaster);
                         }
                     }
                 } finally {
                     _close(in);
                 }
-                return null;
+                return Boolean.FALSE;
             }
         });
+
+        // Optimized case: all in the buffer, written outside file-read lock (to reduce lock time)
+        if (b == Boolean.TRUE) {
+            _writeBuffered(offHeap, out, copyBuffer);
+        }
     }
     
     /*
@@ -418,7 +461,7 @@ public class FileBackedResponseContentImpl
 
     /*
     /**********************************************************************
-    /* Shared file access methods
+    /* Shared file access, buffering methods
     /**********************************************************************
      */
 
@@ -448,6 +491,70 @@ public class FileBackedResponseContentImpl
         });
     }
 
+    protected int _readInBuffer(StorableKey key,
+            InputStream input, long toRead, byte[] readBuffer, StreamyBytesMemBuffer offHeap)
+        throws IOException
+    {
+        final long nanoStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+        try {
+            long total = 0;
+
+            while (toRead > 0L) {
+                int count;
+                try {
+                    int maxToRead = (int) Math.min(toRead, readBuffer.length);
+                    count = input.read(readBuffer, 0, maxToRead);
+                } catch (IOException e) {
+                    throw new StoreException.IO(key, "Failed to read content to store (after "+offHeap.getTotalPayloadLength()
+                            +" bytes)", e);
+                }
+                if (count <= 0) { // got it all babe
+                    throw new IOException("Failed to read all content: missing last "+toRead+" bytes");
+                }
+                // can we append it in buffer?
+                if (!offHeap.tryAppend(readBuffer, 0, count)) {
+                    _verifyBufferLength(offHeap, total);
+                    return count;
+                }
+                total += count;
+                toRead -= count;
+            }
+            _verifyBufferLength(offHeap, total);
+            return 0;
+        } finally {
+            if (_diagnostics != null) {
+                _diagnostics.addFileAccess(nanoStart, nanoStart, _timeMaster);
+            }
+        }
+    }
+
+    private long _writeBuffered(StreamyBytesMemBuffer offHeap, OutputStream out, byte[] copyBuffer)
+        throws IOException
+    {
+        final long nanoStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+        long total = 0L;
+        int count;
+        while ((count = offHeap.readIfAvailable(copyBuffer)) > 0) {
+            out.write(copyBuffer, 0, count);
+            total += count;
+        }
+        if (_diagnostics != null) {
+            _diagnostics.addResponseWriteTime(nanoStart, _timeMaster);
+        }
+        return total;
+    }
+    
+    private void _verifyBufferLength(StreamyBytesMemBuffer offHeap, long total) throws IOException
+    {
+        // if not, return to caller, indicating how much is left
+        // but first, one sanity check
+        long bufd = offHeap.getTotalPayloadLength();
+        if (bufd != total) {
+            throw new IOException("Internal buffering problem: read "+total
+                    +" bytes, buffer contains "+bufd);
+        }
+    }
+    
     /*
     /**********************************************************************
     /* Simple helper methods

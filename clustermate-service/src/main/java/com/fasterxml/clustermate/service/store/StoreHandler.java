@@ -312,7 +312,7 @@ public abstract class StoreHandler<
 
         if (entry.hasExternalData()) { // need to stream from File
             File f = entry.getRaw().getExternalFile(_fileManager);
-            output = new FileBackedResponseContentImpl(diag, _timeMaster, entryStore.getThrottler(),
+            output = new FileBackedResponseContentImpl(diag, _timeMaster, entryStore,
                     accessTime, f, skipCompression ? null : comp, range, entry);
         } else { // inline
             ByteContainer inlined = entry.getRaw().getInlinedData();
