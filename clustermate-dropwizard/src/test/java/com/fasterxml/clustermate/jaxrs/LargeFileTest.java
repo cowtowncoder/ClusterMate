@@ -26,13 +26,15 @@ public class LargeFileTest extends JaxrsStoreTestBase
     
     // Test larger content that should end up as file, with LZF encoding
     // if client sends it uncompressed.
-    public void testLargerEntry100Kilos() throws Exception
-    {
-        _testLargerEntry(MAX_PAYLOAD_IN_MEMORY + 100);
+    public void testLargerEntry100Kilos() throws Exception {
+        _testLargerEntry(75 * 1000);
+    }
+
+    public void testLargerEntry500Kilos() throws Exception {
+        _testLargerEntry(500 * 1000);
     }
     
-    public void testLargerEntry3Megs() throws Exception
-    {
+    public void testLargerEntry3Megs() throws Exception {
         _testLargerEntry(3 * 1024 * 1024);
     }
         

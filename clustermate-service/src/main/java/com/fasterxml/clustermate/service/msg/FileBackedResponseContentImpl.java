@@ -1,7 +1,9 @@
 package com.fasterxml.clustermate.service.msg;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Vector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,7 @@ import com.fasterxml.storemate.store.util.OperationDiagnostics;
 import com.fasterxml.util.membuf.StreamyBytesMemBuffer;
 
 import com.fasterxml.clustermate.service.store.StoredEntry;
+import com.fasterxml.clustermate.service.util.BufferBackedInputStream;
 
 /**
  * {@link StreamingResponseContent} implementation used
@@ -377,22 +380,44 @@ public class FileBackedResponseContentImpl
 
     // specialized version for read-all-no-offset, lzf-compressed case
     protected void _readAllWriteStreamingCompressedLZF(final InputStream in, final OutputStream out,
-            byte[] copyBuffer, StreamyBytesMemBuffer offHeap)
+            final byte[] copyBuffer, final StreamyBytesMemBuffer offHeap)
         throws IOException
     {
         final long waitStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-        Boolean b =_throttler.performFileRead(StoreOperationSource.REQUEST,
+        StreamyBytesMemBuffer rest =_throttler.performFileRead(StoreOperationSource.REQUEST,
                 _operationTime, _entry.getRaw(), _file,
-                new FileOperationCallback<Boolean>() {
+                new FileOperationCallback<StreamyBytesMemBuffer>() {
+            @SuppressWarnings("resource")
             @Override
-            public Boolean perform(long operationTime, StorableKey key, Storable value, File externalFile)
+            public StreamyBytesMemBuffer perform(long operationTime, StorableKey key, Storable value, File externalFile)
                     throws IOException, StoreException
             {
+                long left = _entry.getStorageLength();
                 if (_diagnostics != null) {
                     _diagnostics.addFileWait(_timeMaster.nanosForDiagnostics() - waitStart);
                 }
+                InputStream combined;
+
+                if (offHeap != null) {
+                    _entry.getStorageLength();
+                    int leftovers = _readInBuffer(key, in, left, copyBuffer, offHeap);
+                    // easy case: all read?
+                    if (leftovers == 0) {
+                        return offHeap;
+                    }
+                    // if not, read+write; much longer. But starting with buffered, if any
+                    Vector<InputStream> coll = new Vector<InputStream>(3);
+                    coll.add(new BufferBackedInputStream(offHeap));
+                    coll.add(new ByteArrayInputStream(copyBuffer, 0, leftovers));
+                    coll.add(in);
+                    combined = new SequenceInputStream(coll.elements());
+                } else {
+                    // otherwise, just read from input
+                    combined = in;
+                }
+
                 final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-                 LZFInputStream lzfIn = new LZFInputStream(in);
+                 LZFInputStream lzfIn = new LZFInputStream(combined);
                  try {
                      lzfIn.readAndWrite(out);
                  } finally {
@@ -408,6 +433,20 @@ public class FileBackedResponseContentImpl
                  return null;
             }
         });
+
+        // Fast case is out of file-access lock so must be handled here
+        if (rest != null) {
+            final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+            LZFInputStream lzfIn = new LZFInputStream(new BufferBackedInputStream(rest));
+            try {
+                lzfIn.readAndWrite(out);
+            } finally {
+                _close(lzfIn);
+                 if (_diagnostics != null) {
+                     _diagnostics.addResponseWriteTime(start, _timeMaster);
+                 }
+            }
+        }
     }
 
     protected void _readAllWriteStreamingCompressed2(final InputStream in, final OutputStream out,
