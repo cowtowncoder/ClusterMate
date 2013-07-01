@@ -1,5 +1,10 @@
 Project: ClusterMate
 
+0.9.10 (30-Jun-2013)
+- Major update to buffering of request/response, file access
+- Improve diagnostics, to expose more information on request/reseponse and
+  file systems reads, writes.
+
 0.9.9 (04-Jun-2013)
 
 #28: Upgrade metrics to 3.0.0
