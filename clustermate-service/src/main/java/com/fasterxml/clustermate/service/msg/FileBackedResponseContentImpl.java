@@ -1,9 +1,7 @@
 package com.fasterxml.clustermate.service.msg;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Vector;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +25,7 @@ import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.StoreOperationSource;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
 import com.fasterxml.storemate.store.util.ByteBufferCallback;
+import com.fasterxml.storemate.store.util.CountingInputStream;
 import com.fasterxml.storemate.store.util.OperationDiagnostics;
 import com.fasterxml.util.membuf.StreamyBytesMemBuffer;
 
@@ -257,15 +256,16 @@ public class FileBackedResponseContentImpl
             {
                 // gets tricky, so process wait separately
                 if (_diagnostics != null) {
-                    _diagnostics.addFileWait( _timeMaster.nanosForDiagnostics() - fsWaitStart);
+                    _diagnostics.addFileReadWait( _timeMaster.nanosForDiagnostics() - fsWaitStart);
                 }
                 InputStream in = new FileInputStream(_file);
                 try {
                     if (offset > 0L) {
                         final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                         _skip(in, offset);
+                        // assume skip is "free"?
                         if (_diagnostics != null) {
-                            _diagnostics.addFileAccess(start, start, _timeMaster.nanosForDiagnostics());
+                            _diagnostics.addFileReadAccess(start, start, _timeMaster.nanosForDiagnostics(), 0L);
                         }
                     }
                     long left = dataLength;
@@ -285,7 +285,7 @@ public class FileBackedResponseContentImpl
                         final long fsStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                         int read = _read(in, copyBuffer, left);
                         if (_diagnostics != null) {
-                            _diagnostics.addFileAccess(fsStart,  fsStart, _timeMaster.nanosForDiagnostics());
+                            _diagnostics.addFileReadAccess(fsStart,  _timeMaster, (long) read);
                         }
                         final long writeStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                         out.write(copyBuffer, 0, read);
@@ -394,10 +394,10 @@ public class FileBackedResponseContentImpl
             {
                 long left = _entry.getStorageLength();
                 if (_diagnostics != null) {
-                    _diagnostics.addFileWait(_timeMaster.nanosForDiagnostics() - waitStart);
+                    _diagnostics.addFileReadWait(_timeMaster.nanosForDiagnostics() - waitStart);
                 }
                 InputStream combined;
-
+                
                 if (offHeap != null) {
                     _entry.getStorageLength();
                     int leftovers = _readInBuffer(key, in, left, copyBuffer, offHeap);
@@ -417,20 +417,22 @@ public class FileBackedResponseContentImpl
                 }
 
                 final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-                 LZFInputStream lzfIn = new LZFInputStream(combined);
-                 try {
+                CountingInputStream counter = new CountingInputStream(combined);
+                LZFInputStream lzfIn = new LZFInputStream(counter);
+                try {
                      lzfIn.readAndWrite(out);
-                 } finally {
-                     _close(lzfIn);
-                      if (_diagnostics != null) {
-                          final long totalSpent = _timeMaster.nanosForDiagnostics() - start;
-                          // Not good, but need to try avoiding double-booking so assume 1/4 for response write
-                          long respTime = (totalSpent >> 2);
-                          _diagnostics.addResponseWriteTime(respTime);
-                          _diagnostics.addFileAccess(start, start, start + totalSpent - respTime);
-                      }
-                 }
-                 return null;
+                } finally {
+                    _close(lzfIn);
+                    if (_diagnostics != null) {
+                        final long totalSpent = _timeMaster.nanosForDiagnostics() - start;
+                        // Not good, but need to try avoiding double-booking so assume 1/4 for response write
+                        long respTime = (totalSpent >> 2);
+                        _diagnostics.addResponseWriteTime(respTime);
+                        _diagnostics.addFileReadAccess(start, start, start + totalSpent - respTime,
+                                counter.readCount());
+                    }
+                }
+                return null;
             }
         });
 
@@ -466,12 +468,13 @@ public class FileBackedResponseContentImpl
         });
     }
         
-    protected void _readAllWriteStreamingCompressed3(InputStream in, OutputStream out,
+    protected void _readAllWriteStreamingCompressed3(InputStream in0, OutputStream out,
             byte[] copyBuffer, StreamyBytesMemBuffer offHeap)
         throws IOException
     {
+        final CountingInputStream counter = new CountingInputStream(in0);
         
-        in = Compressors.uncompressingStream(in, _compression);
+        InputStream in = Compressors.uncompressingStream(counter, _compression);
 
         // First: anything to skip (only the case for range requests)?
         if (_dataOffset > 0L) {
@@ -489,22 +492,27 @@ public class FileBackedResponseContentImpl
                 toSkip -= count;
             }
             if (_diagnostics != null) {
-                _diagnostics.addFileAccess(start, start, _timeMaster);
+                // assume here skipping is "free" (i.e. no bytes read)
+                _diagnostics.addFileReadAccess(start, _timeMaster, 0L);
             }
         }
         // Second: output the whole thing, or just subset?
+        // TODO: buffer
         if (_dataLength < 0) { // all of it
+            long prevCount = 0L;
             while (true) {
-                final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+                final long start = _timeMaster.nanosForDiagnostics();
                 int count = in.read(copyBuffer);
                 if (_diagnostics != null) {
-                    _diagnostics.addFileAccess(start, start, _timeMaster);
+                    long newCount = counter.readCount();
+                    _diagnostics.addFileReadAccess(start, _timeMaster, newCount-prevCount);
+                    prevCount = newCount;
                 }
                 
                 if (count <= 0) {
                     break;
                 }
-                final long outputStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+                final long outputStart = _timeMaster.nanosForDiagnostics();
                 out.write(copyBuffer, 0, count);
                 if (_diagnostics != null) {
                     _diagnostics.addResponseWriteTime(outputStart, _timeMaster);
@@ -515,11 +523,15 @@ public class FileBackedResponseContentImpl
         // Just some of it
         long left = _dataLength;
 
+        // TODO: buffer
+        long prevCount = 0L;
         while (left > 0) {
             final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
             int count = in.read(copyBuffer, 0, (int) Math.min(copyBuffer.length, left));
             if (_diagnostics != null) {
-                _diagnostics.addFileAccess(start, start, _timeMaster);
+                long newCount = counter.readCount();
+                _diagnostics.addFileReadAccess(start, _timeMaster, newCount-prevCount);
+                prevCount = newCount;
             }
             if (count <= 0) {
                 break;
@@ -560,7 +572,8 @@ public class FileBackedResponseContentImpl
                 final long fsStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
                 int count = _readFromFile(externalFile, copyBuffer, offset, dataLength);
                 if (_diagnostics != null) {
-                    _diagnostics.addFileAccess(start, fsStart, _timeMaster.nanosForDiagnostics());
+                    _diagnostics.addFileReadAccess(start, fsStart, _timeMaster.nanosForDiagnostics(),
+                            count);
                 }
                 if (count < dataLength) {
                     throw new IOException("Failed to read all "+dataLength+" bytes from '"
@@ -576,9 +589,8 @@ public class FileBackedResponseContentImpl
         throws IOException
     {
         final long nanoStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
+        long total = 0;
         try {
-            long total = 0;
-
             while (toRead > 0L) {
                 int count;
                 try {
@@ -594,6 +606,7 @@ public class FileBackedResponseContentImpl
                 // can we append it in buffer?
                 if (!offHeap.tryAppend(readBuffer, 0, count)) {
                     _verifyBufferLength(offHeap, total);
+                    total += count; // since total is reported via diagnostics
                     return count;
                 }
                 total += count;
@@ -603,7 +616,7 @@ public class FileBackedResponseContentImpl
             return 0;
         } finally {
             if (_diagnostics != null) {
-                _diagnostics.addFileAccess(nanoStart, nanoStart, _timeMaster);
+                _diagnostics.addFileReadAccess(nanoStart, _timeMaster, total);
             }
         }
     }
@@ -632,8 +645,7 @@ public class FileBackedResponseContentImpl
     
     private void _verifyBufferLength(StreamyBytesMemBuffer offHeap, long total) throws IOException
     {
-        // if not, return to caller, indicating how much is left
-        // but first, one sanity check
+        // sanity check to verify that buffer has everything it is supposed to...
         long bufd = offHeap.getTotalPayloadLength();
         if (bufd != total) {
             throw new IOException("Internal buffering problem: read "+total
