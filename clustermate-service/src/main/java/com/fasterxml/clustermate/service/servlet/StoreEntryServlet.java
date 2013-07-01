@@ -6,7 +6,6 @@ import com.codahale.metrics.Timer.Context;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
 
-import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 import com.fasterxml.clustermate.api.EntryKey;
@@ -37,8 +36,6 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
 //    protected final ServiceConfig _serviceConfig;
     
     protected final StoreHandler<K,E,?> _storeHandler;
-
-    protected final TimeMaster _timeMaster;
 
     protected final ObjectWriter _jsonWriter;
 
@@ -75,7 +72,6 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         super(stuff, clusterView, null);
         _stuff = stuff;
         _storeHandler = storeHandler;
-        _timeMaster = stuff.getTimeMaster();
         _jsonWriter = stuff.jsonWriter();
         _keyConverter = stuff.getKeyConverter();
         ServiceConfig serviceConfig = stuff.getServiceConfig();
@@ -96,7 +92,6 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         super(base._stuff, base._clusterView, null);
         _stuff = base._stuff;
         _storeHandler = base._storeHandler;
-        _timeMaster = base._timeMaster;
         _jsonWriter = base._jsonWriter;
         _keyConverter = base._keyConverter;
         if (copyMetrics) {

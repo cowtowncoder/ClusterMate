@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
-import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.backend.BackendStats;
 import com.fasterxml.storemate.store.backend.BackendStatsConfig;
@@ -61,8 +60,6 @@ public class NodeMetricsServlet extends ServletBase
 
     protected final LastAccessStore<?,?> _lastAccessStore;
     
-    protected final TimeMaster _timeMaster;
-    
     protected final AtomicReference<SerializedMetrics> _cachedMetrics
         = new AtomicReference<SerializedMetrics>();
     
@@ -77,7 +74,6 @@ public class NodeMetricsServlet extends ServletBase
     {
         // null -> use servlet path base as-is
         super(stuff, null, null);
-        _timeMaster = stuff.getTimeMaster();
         // for robustness, allow empty beans...
 
         /* 16-May-2013, tatu: Need to use separate mapper just because
