@@ -26,14 +26,26 @@ public class LargeFileTest extends JaxrsStoreTestBase
     
     // Test larger content that should end up as file, with LZF encoding
     // if client sends it uncompressed.
-    public void testLargerEntry() throws Exception
+    public void testLargerEntry100Kilos() throws Exception {
+        _testLargerEntry(75 * 1000);
+    }
+
+    public void testLargerEntry500Kilos() throws Exception {
+        _testLargerEntry(500 * 1000);
+    }
+    
+    public void testLargerEntry3Megs() throws Exception {
+        _testLargerEntry(3 * 1024 * 1024);
+    }
+        
+    protected void _testLargerEntry(int origSize) throws Exception
     {
         final long startTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
 	
         // Need to make big enough to use streaming, too...
-        int origSize = MAX_PAYLOAD_IN_MEMORY + 100;
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("large", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("large"+origSize,
+                timeMaster, true);
         final String BIG_STRING = biggerCompressibleData(origSize);
         final byte[] BIG_DATA = BIG_STRING.getBytes("UTF-8");
 
