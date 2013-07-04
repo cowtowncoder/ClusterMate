@@ -646,10 +646,8 @@ public abstract class StoreHandler<
     /**
      * End point clients use to list entries with given name prefix, 
      * 
-     * @param request 
-     * @param response
      * @param prefix Path prefix to use for filtering out entries not to list
-     * @param metadata Diagnostic information to update, if any
+     * @param stats Diagnostic information to update, if any
      * 
      * @return Modified response object
      */

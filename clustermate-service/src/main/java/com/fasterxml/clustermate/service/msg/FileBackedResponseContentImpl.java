@@ -172,7 +172,6 @@ public class FileBackedResponseContentImpl
     {
         // 4 main combinations: compressed/not-compressed, range/no-range
         // and then 2 variations; fits in buffer or not
-
         // Start with uncompressed
         if (!Compression.needsUncompress(_compression)) {
             // and if all we need fits in the buffer, read all, write all:
@@ -247,11 +246,11 @@ public class FileBackedResponseContentImpl
         throws IOException
     {
         final long fsWaitStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-        Boolean b = _throttler.performFileRead(StoreOperationSource.REQUEST,
+        final StreamyBytesMemBuffer fullBuffer = _throttler.performFileRead(StoreOperationSource.REQUEST,
                 _operationTime, _entry.getRaw(), _file,
-                new FileOperationCallback<Boolean>() {
+                new FileOperationCallback<StreamyBytesMemBuffer>() {
             @Override
-            public Boolean perform(long operationTime, StorableKey key, Storable value, File externalFile)
+            public StreamyBytesMemBuffer perform(long operationTime, StorableKey key, Storable value, File externalFile)
                 throws IOException
             {
                 // gets tricky, so process wait separately
@@ -274,7 +273,7 @@ public class FileBackedResponseContentImpl
                         int leftovers = _readInBuffer(key, in, left, copyBuffer, offHeap);
                         // easy case: all read?
                         if (leftovers == 0) {
-                            return Boolean.TRUE;
+                            return offHeap;
                         }
                         // if not, read+write; much longer. But starting with buffered, if any
                         byte[] stuff = Arrays.copyOf(copyBuffer, leftovers);
@@ -297,13 +296,13 @@ public class FileBackedResponseContentImpl
                 } finally {
                     _close(in);
                 }
-                return Boolean.FALSE;
+                return null;
             }
         });
 
         // Optimized case: all in the buffer, written outside file-read lock (to reduce lock time)
-        if (b == Boolean.TRUE) {
-            _writeBuffered(offHeap, out, copyBuffer, null);
+        if (fullBuffer != null) {
+            _writeBuffered(fullBuffer, out, copyBuffer, null);
         }
     }
     
@@ -384,7 +383,7 @@ public class FileBackedResponseContentImpl
         throws IOException
     {
         final long waitStart = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-        StreamyBytesMemBuffer rest =_throttler.performFileRead(StoreOperationSource.REQUEST,
+        StreamyBytesMemBuffer fullBuffer =_throttler.performFileRead(StoreOperationSource.REQUEST,
                 _operationTime, _entry.getRaw(), _file,
                 new FileOperationCallback<StreamyBytesMemBuffer>() {
             @SuppressWarnings("resource")
@@ -437,9 +436,9 @@ public class FileBackedResponseContentImpl
         });
 
         // Fast case is out of file-access lock so must be handled here
-        if (rest != null) {
+        if (fullBuffer != null) {
             final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
-            LZFInputStream lzfIn = new LZFInputStream(new BufferBackedInputStream(rest));
+            LZFInputStream lzfIn = new LZFInputStream(new BufferBackedInputStream(fullBuffer));
             try {
                 lzfIn.readAndWrite(out);
             } finally {
