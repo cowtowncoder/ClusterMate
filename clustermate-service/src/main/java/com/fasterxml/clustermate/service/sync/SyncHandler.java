@@ -387,7 +387,8 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
                     break;
                 }
                 if (delay <= 0L) { // sanity check, should not occur
-                    LOG.warn("No SYNCs to list, but calculated delay is {}, which is invalid; ignoring", delay);
+                    LOG.warn("No SYNCs to list, but calculated delay is {}, which is invalid (result = {}); ignoring",
+                            delay, r);
                 } else {
 //LOG.warn("Server long-poll wait: {} msecs", delay);
                     Thread.sleep(Math.min(_cfgMaxLongPollTimeMsecs, delay));
