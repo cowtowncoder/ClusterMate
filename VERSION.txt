@@ -1,5 +1,10 @@
 Project: ClusterMate
 
+0.9.11 (xx-xxx-2013)
+
+- Fixed a problem with sync-pull, where server was not updating timestamps after
+  internal sleep
+
 0.9.10 (30-Jun-2013)
 - Major update to buffering of request/response, file access
 - Improve diagnostics, to expose more information on request/reseponse and

@@ -462,7 +462,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         int insertedEntryCount = newEntries.size();
         if (insertedEntryCount == 0) { // nothing to update
             // may still need to update timestamp?
-            _updatePersistentState(listTime, syncResp.lastSeen());
+            _updatePersistentState(listTime, lastSeenTimestamp);
 
             // Ok: maybe server instructed us as to how long to sleep?
             long sleepMsecs = syncResp.clientWait;
@@ -490,7 +490,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                     new Object[] { insertedEntryCount, syncResp.lastSeen(), String.format("%.1f", msecs/1000.0)});
             }
             */
-            _updatePersistentState(listTime, syncResp.lastSeen());
+            _updatePersistentState(listTime, lastSeenTimestamp);
         } else { // yes: need to do batch updates
             // but can at least update syncUpTo to first entry, right?
             int newCount = newEntries.size();
@@ -505,12 +505,13 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             _updatePersistentState(listTime, lastProcessed);
         }
         // And then sleep a bit, before doing next round of syncing
-        double secsBehind = (_timeMaster.currentTimeMillis() - _syncState.getSyncedUpTo()) / 1000.0;
-        long delay = _calculateSleepBetweenSync(insertedEntryCount, (int) secsBehind);
+        long msecsBehind = (_timeMaster.currentTimeMillis() - _syncState.getSyncedUpTo());
+        long delay = _calculateSleepBetweenSync(insertedEntryCount, msecsBehind);
         
         if (delay > 0L) {
             // only bother informing if above 50 msec sleep
             if (delay >= 50L) {
+                double secsBehind = delay / 1000.0;
                 LOG.info("With {} listed entries, {} seconds behind, will do {} msec sleep",
                         new Object[] { insertedEntryCount, String.format("%.2f", secsBehind), delay});
             }
@@ -800,14 +801,20 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      * @param Number of second that we are "behind" current time (note: due to grace period,
      *    will never be zero, but more like a minute or so at minimum)
      */
-    private long _calculateSleepBetweenSync(int listedCount, long secondsBehind)
+    private long _calculateSleepBetweenSync(int listedCount, long msecsBehind)
     {
         // if we are behind by more than 5 minutes, or get "full" response, no delay:
-        if ((secondsBehind >= 300)
+        if ((msecsBehind >= 300000)
                 || (listedCount >= _stuff.getServiceConfig().cfgMaxEntriesPerSyncList)) {
             return 0L;
         }
-        // otherwise nominal delay
+        // otherwise nominal delay; bit longer for trivial numbers
+        if (listedCount < 5) {
+            return 200L;
+        }
+        if (listedCount < 20) {
+            return 100L;
+        }
         return 50L;
     }
     

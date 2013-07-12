@@ -197,8 +197,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
             _cluster.checkMembership(caller, 0L, range);
         }
         boolean useSmile = _acceptSmileContentType(request);
-        long currentTime = _timeMaster.currentTimeMillis();
-        final long upUntil = currentTime - _cfgSyncGracePeriodMsecs;
+        final long currentTime = _timeMaster.currentTimeMillis();
         long since = (sinceL == null) ? 0L : sinceL.longValue();
 
         /* [Issue#8] Let's impose minimum timestamp to consider, to try to avoid
@@ -220,7 +219,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         KeyRange localRange = localState.totalRange();
         if (localRange.overlapsWith(range)) {
             try {
-                resp = _listEntries(range, since, upUntil, _maxToListPerRequest);
+                resp = _listEntries(range, since, _maxToListPerRequest);
             } catch (StoreException e) {
                 return _storeError(response, e);
             }
@@ -308,7 +307,7 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
      */
     
     protected SyncListResponse<E> _listEntries(final KeyRange inRange,
-            final long since, long upTo0, final int maxCount)
+            final long since, final int maxCount)
         throws InterruptedException, StoreException
     {
         final StorableStore store = _stores.getEntryStore();
@@ -317,7 +316,10 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         long clientWait = 0L; // we may instruct client to do bit of waiting before retry
         
         // let's only allow single wait; hence two rounds
+        long upTo0 = 0;
         for (int round = 0; round < 2; ++round) {
+            upTo0 = _timeMaster.currentTimeMillis() - _cfgSyncGracePeriodMsecs;
+
             /* 19-Sep-2012, tatu: Alas, it is difficult to make this work with virtual time,
              *   tests; so for now we will use actual real system time and not virtual time.
              *   May need to revisit in future.
@@ -398,6 +400,12 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
                 if (r == IterationResult.TERMINATED_FOR_TIMESTAMP) {
                     long targetTime = (cb.getNextTimestamp() + _cfgSyncGracePeriodMsecs);
                     clientWait = targetTime - _timeMaster.currentTimeMillis();
+
+                    /*
+LOG.error(" TERMINATED_FOR_TIMESTAMP: next stamp={}, graceMsecs={}, target={}, current={}", cb.getNextTimestamp(), _cfgSyncGracePeriodMsecs,
+targetTime, _timeMaster.currentTimeMillis());
+*/
+
                 } else if (r == IterationResult.FULLY_ITERATED) {
                     lastSeenTimestamp = upTo;
                     clientWait = _cfgSyncGracePeriodMsecs;
