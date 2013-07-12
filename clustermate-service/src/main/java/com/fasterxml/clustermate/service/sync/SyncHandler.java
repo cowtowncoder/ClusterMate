@@ -406,7 +406,8 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
 //LOG.warn("Server setting clientWait at {} msecs", clientWait);
 
                 if (clientWait < 0L) { // sanity check, should not occur
-                    LOG.warn("No SYNCs to list, but calculated client-delay is {}, which is invalid", clientWait);
+                    LOG.warn("No SYNCs to list (round {}), but calculated clientWait is {}, which is invalid (result = {}); ignoring",
+                            round, clientWait, r);
                 }
             }
         }
