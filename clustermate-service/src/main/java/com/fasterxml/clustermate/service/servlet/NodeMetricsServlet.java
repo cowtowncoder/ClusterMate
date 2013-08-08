@@ -1,6 +1,7 @@
 package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -8,14 +9,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.backend.BackendStats;
 import com.fasterxml.storemate.store.backend.BackendStatsConfig;
 import com.fasterxml.storemate.store.backend.StoreBackend;
 import com.fasterxml.storemate.store.util.OperationDiagnostics;
-
 import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.BackendMetrics;
@@ -62,6 +61,8 @@ public class NodeMetricsServlet extends ServletBase
     
     protected final AtomicReference<SerializedMetrics> _cachedMetrics
         = new AtomicReference<SerializedMetrics>();
+
+    protected final AtomicBoolean _indent = new AtomicBoolean(true);
     
     /*
     /**********************************************************************
@@ -91,6 +92,10 @@ public class NodeMetricsServlet extends ServletBase
         _metricsProviders = metricsProviders;
     }
 
+    public void setIndent(boolean state) {
+    	_indent.set(state);
+    }
+    
     /*
     /**********************************************************************
     /* End points: for now just GET
@@ -114,11 +119,11 @@ public class NodeMetricsServlet extends ServletBase
     
             if (_shouldRefresh(forceRefresh, now, ser)) {
                 ExternalMetrics metrics = _gatherMetrics(now, full);
-                byte[] raw;
-                    raw = _jsonWriter
-                            // for diagnostics:
-                            .withDefaultPrettyPrinter()
-                            .writeValueAsBytes(metrics);
+                ObjectWriter w = _jsonWriter;
+                if (_indent.get()) {
+                	w = w.withDefaultPrettyPrinter();
+                }
+                final byte[] raw = w.writeValueAsBytes(metrics);
                 ser = new SerializedMetrics(now, raw);
                 _cachedMetrics.set(ser);
             }
