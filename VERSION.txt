@@ -1,5 +1,10 @@
 Project: ClusterMate
 
+0.9.12 (08-Aug-2013)
+
+- Fix a problem with metrics; internal change from millis to nanos made tpXXX
+  values exposed as nanos
+
 0.9.11 (11-Jul-2013)
 
 - Fixed a problem with sync-pull, where server was not updating timestamps after

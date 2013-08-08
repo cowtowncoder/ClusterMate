@@ -15,6 +15,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 )
 public class ExternalOperationMetrics
 {
+	private final static double NANOS_TO_MILLIS_MULTIPLIER = 1.0 / (1000.0 * 1000.0);
+	
     /**
      * Total count from rate metrics
      */
@@ -44,10 +46,10 @@ public class ExternalOperationMetrics
         inFlight = raw._metricInFlight.getCount();
 
         count = raw._metricTimes.getCount();
-        rate1Min = (int) raw._metricTimes.getOneMinuteRate();
-        rate5Min = (int) raw._metricTimes.getFiveMinuteRate();
-        rate15Min = (int) raw._metricTimes.getFifteenMinuteRate();
-        rateMean = (int) raw._metricTimes.getMeanRate();
+        rate1Min = _timeToMillis(raw._metricTimes.getOneMinuteRate());
+        rate5Min = _timeToMillis(raw._metricTimes.getFiveMinuteRate());
+        rate15Min = _timeToMillis(raw._metricTimes.getFifteenMinuteRate());
+        rateMean = _timeToMillis(raw._metricTimes.getMeanRate());
 
         requestTimes = _histogram(raw._metricTimes);
         requestSizes = _histogram(raw._metricSizes);
@@ -61,6 +63,12 @@ public class ExternalOperationMetrics
         return new ExternalOperationMetrics(raw);
     }
 
+    private static int _timeToMillis(double rawTimeNanosecs)
+    {
+    	// Since 3.0, times are in nanoseconds; used to be in milliseconds.
+    	return (int) Math.round(rawTimeNanosecs * NANOS_TO_MILLIS_MULTIPLIER);
+    }
+    
     private static Histogram _histogram(Sampling src)
     {
         if (src == null) {
