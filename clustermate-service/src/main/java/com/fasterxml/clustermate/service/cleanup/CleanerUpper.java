@@ -24,7 +24,7 @@ import com.fasterxml.storemate.shared.TimeMaster;
 public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     implements Runnable, StartAndStoppable
 {
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private final Logger LOG;
 
     /*
     /**********************************************************************
@@ -89,6 +89,18 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
             ClusterViewByServer cluster,
             List<CleanupTask<?>> tasks)
     {
+    	this(stuff, stores, cluster, tasks, null);
+    }
+
+    public CleanerUpper(SharedServiceStuff stuff, Stores<K,E> stores,
+            ClusterViewByServer cluster,
+            List<CleanupTask<?>> tasks,
+            Logger logger)
+    {
+    	if (logger == null) {
+    		logger = LoggerFactory.getLogger(getClass());
+    	}
+    	LOG = logger;
         _stuff = stuff;
         _timeMaster = stuff.getTimeMaster();
         _stores = stores;

@@ -45,7 +45,7 @@
     <javac.target.version>1.6</javac.target.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <version.storemate>0.9.13</version.storemate>
+    <version.storemate>0.9.14</version.storemate>
 
     <version.jackson.annotations>2.2.2</version.jackson.annotations>
     <version.jackson.core>2.2.2</version.jackson.core>
@@ -117,7 +117,7 @@
     <dependency>
       <groupId>com.ning</groupId>
       <artifactId>async-http-client</artifactId>
-      <version>1.7.17</version>
+      <version>1.7.19</version>
     </dependency>
 
     <!-- databinding with Jackson -->
