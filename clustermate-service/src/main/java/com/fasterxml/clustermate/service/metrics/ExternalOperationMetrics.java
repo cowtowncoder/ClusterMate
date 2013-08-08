@@ -46,14 +46,14 @@ public class ExternalOperationMetrics
         inFlight = raw._metricInFlight.getCount();
 
         count = raw._metricTimes.getCount();
-        rate1Min = _timeToMillis(raw._metricTimes.getOneMinuteRate());
-        rate5Min = _timeToMillis(raw._metricTimes.getFiveMinuteRate());
-        rate15Min = _timeToMillis(raw._metricTimes.getFifteenMinuteRate());
-        rateMean = _timeToMillis(raw._metricTimes.getMeanRate());
+        rate1Min = _doubleToInt(raw._metricTimes.getOneMinuteRate());
+        rate5Min = _doubleToInt(raw._metricTimes.getFiveMinuteRate());
+        rate15Min = _doubleToInt(raw._metricTimes.getFifteenMinuteRate());
+        rateMean = _doubleToInt(raw._metricTimes.getMeanRate());
 
-        requestTimes = _histogram(raw._metricTimes);
-        requestSizes = _histogram(raw._metricSizes);
-        requestEntryCounts = _histogram(raw._metricEntryCounts);
+        requestTimes = _histogram(raw._metricTimes, true);
+        requestSizes = _histogram(raw._metricSizes, false);
+        requestEntryCounts = _histogram(raw._metricEntryCounts, false);
     }
     
     public static ExternalOperationMetrics create(OperationMetrics raw) {
@@ -62,22 +62,24 @@ public class ExternalOperationMetrics
         }
         return new ExternalOperationMetrics(raw);
     }
-
-    private static int _timeToMillis(double rawTimeNanosecs)
-    {
-    	// Since 3.0, times are in nanoseconds; used to be in milliseconds.
-    	return (int) Math.round(rawTimeNanosecs * NANOS_TO_MILLIS_MULTIPLIER);
-    }
     
-    private static Histogram _histogram(Sampling src)
+    private static Histogram _histogram(Sampling src, boolean nanosToMillis)
     {
         if (src == null) {
             return null;
         }
-        return new Histogram(src.getSnapshot());
-
+        return new Histogram(src.getSnapshot(), nanosToMillis);
     }
 
+    private static int _doubleToInt(double d) {
+    	return (int) (d + 0.5);
+    }
+    
+    private static int _nanosToMillis(double rawTimeNanosecs) {
+    	// Since 3.0, times are in nanoseconds; used to be in milliseconds.
+    	return (int) Math.round(rawTimeNanosecs * NANOS_TO_MILLIS_MULTIPLIER);
+    }
+    
     public static class Histogram
     {
         public int pct50;
@@ -87,13 +89,21 @@ public class ExternalOperationMetrics
         public int pct999;
 
         protected Histogram() { } // if deserializing
-        public Histogram(Snapshot snap)
+        public Histogram(Snapshot snap, boolean nanosToMillis)
         {
-            pct50 = (int) snap.getMedian();
-            pct75 = (int) snap.get75thPercentile();
-            pct95 = (int) snap.get95thPercentile();
-            pct99 = (int) snap.get99thPercentile();
-            pct999 = (int) snap.get999thPercentile();
+        	if (nanosToMillis) {
+	            pct50 = _nanosToMillis(snap.getMedian());
+	            pct75 = _nanosToMillis(snap.get75thPercentile());
+	            pct95 = _nanosToMillis(snap.get95thPercentile());
+	            pct99 = _nanosToMillis(snap.get99thPercentile());
+	            pct999 = _nanosToMillis(snap.get999thPercentile());
+        	} else {
+	            pct50 = _doubleToInt(snap.getMedian());
+	            pct75 = _doubleToInt(snap.get75thPercentile());
+	            pct95 = _doubleToInt(snap.get95thPercentile());
+	            pct99 = _doubleToInt(snap.get99thPercentile());
+	            pct999 = _doubleToInt(snap.get999thPercentile());
+        	}
         }
     }
 }
