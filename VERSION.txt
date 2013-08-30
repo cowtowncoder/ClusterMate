@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.9.13 (xx-xxx-2013)
+
+- Refactor FileCleaner to allow overriding of logging details
+
 0.9.12 (08-Aug-2013)
 
 - Fix a problem with metrics; internal change from millis to nanos made tpXXX
