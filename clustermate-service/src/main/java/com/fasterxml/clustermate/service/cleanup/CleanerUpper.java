@@ -89,7 +89,7 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
             ClusterViewByServer cluster,
             List<CleanupTask<?>> tasks)
     {
-    	this(stuff, stores, cluster, tasks, null);
+        this(stuff, stores, cluster, tasks, null);
     }
 
     public CleanerUpper(SharedServiceStuff stuff, Stores<K,E> stores,
@@ -97,10 +97,10 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
             List<CleanupTask<?>> tasks,
             Logger logger)
     {
-    	if (logger == null) {
-    		logger = LoggerFactory.getLogger(getClass());
-    	}
-    	LOG = logger;
+        if (logger == null) {
+            logger = LoggerFactory.getLogger(getClass());
+        }
+        LOG = logger;
         _stuff = stuff;
         _timeMaster = stuff.getTimeMaster();
         _stores = stores;
