@@ -8,7 +8,7 @@
   <groupId>com.fasterxml.clustermate</groupId>
   <artifactId>clustermate-parent</artifactId>
   <name>ClusterMate-parent</name>
-  <version>0.9.13-SNAPSHOT</version>
+  <version>0.9.13</version>
   <packaging>pom</packaging>
   <description>Parent pom for shared settings for project sub-modules
   </description>
