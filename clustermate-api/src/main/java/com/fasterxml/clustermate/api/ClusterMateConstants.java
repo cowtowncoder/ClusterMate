@@ -80,7 +80,12 @@ public interface ClusterMateConstants
 
     public final static String QUERY_PARAM_CHECKSUM = "checksum";
 
+    /**
+     * @deprecated Should promote this out of ClusterMate; not needed by all impls
+     */
+    @Deprecated
     public final static String QUERY_PARAM_MIN_SINCE_ACCESS_TTL = "minSinceAccessTTL";
+
     public final static String QUERY_PARAM_MAX_TTL = "maxTTL";
     
     /**

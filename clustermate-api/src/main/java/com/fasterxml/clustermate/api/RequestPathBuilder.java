@@ -53,6 +53,26 @@ public abstract class RequestPathBuilder
     public abstract RequestPathBuilder addParameter(String key, String value);
 
     /**
+     * Convenience method, functionally equivalent to:
+     *<pre>
+     *  addParameter(String.valueOf(value));
+     *</pre>
+     */
+    public RequestPathBuilder addParameter(String key, int value) {
+    	return addParameter(key, String.valueOf(value));
+    }
+
+    /**
+     * Convenience method, functionally equivalent to:
+     *<pre>
+     *  addParameter(String.valueOf(value));
+     *</pre>
+     */
+    public RequestPathBuilder addParameter(String key, long value) {
+    	return addParameter(key, String.valueOf(value));
+    }
+    
+    /**
      * Method for returning only the logical "server part", which also includes
      * the protocol (like 'http') and port number, as well as trailing
      * slash.
