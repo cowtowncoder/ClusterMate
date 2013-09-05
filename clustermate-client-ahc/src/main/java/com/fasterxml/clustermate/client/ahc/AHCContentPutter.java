@@ -53,8 +53,8 @@ public class AHCContentPutter<K extends EntryKey>
     }
 
     @Override
-    public CallFailure tryPut(CallConfig config, long endOfTime,
-            K contentId, PutContentProvider content)
+    public CallFailure tryPut(CallConfig config, PutCallParameters params,
+    		long endOfTime, K contentId, PutContentProvider content)
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
@@ -65,7 +65,7 @@ public class AHCContentPutter<K extends EntryKey>
         try {
 //          return _tryPutBlocking
             return _tryPutAsync
-                    (config, endOfTime, contentId, content, startTime, timeout);
+                    (config, params, endOfTime, contentId, content, startTime, timeout);
         } catch (Exception e) {
             return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e);
         }
@@ -79,12 +79,19 @@ public class AHCContentPutter<K extends EntryKey>
 
     /*
     // With Apache HC:
-    public CallFailure _tryPutBlocking(CallConfig config, long endOfTime,
+    public CallFailure _tryPutBlocking(CallConfig config, PutCallParameters params,
+    		long endOfTime,
             String contentId, PutContentProvider content,
             final long startTime, final long timeout)
         throws IOException, ExecutionException, InterruptedException, URISyntaxException
     {
-        final String path = resourcePath(_server.resourceEndpoint(), contentId);
+        AHCPathBuilder path = _server.rootPath();
+        path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
+        path = _keyConverter.appendToPath(path, contentId);       
+        if (params != null) {
+        	path = params.appendToPath(path, contentId);
+        }
+
         URIBuilder ub = new URIBuilder(path);
         int checksum = content.getChecksum32();
         addStandardParams(ub, checksum);
@@ -128,7 +135,8 @@ public class AHCContentPutter<K extends EntryKey>
      */
     
     // And with async-http-client:
-    public CallFailure _tryPutAsync(CallConfig config, long endOfTime,
+    public CallFailure _tryPutAsync(CallConfig config, PutCallParameters params,
+    		long endOfTime,
             K contentId, PutContentProvider content,
             final long startTime, final long timeout)
         throws IOException, ExecutionException, InterruptedException
@@ -136,6 +144,10 @@ public class AHCContentPutter<K extends EntryKey>
         AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
         path = _keyConverter.appendToPath(path, contentId);       
+        if (params != null) {
+        	path = params.appendToPath(path, contentId);
+        }
+        
         BoundRequestBuilder reqBuilder = path.putRequest(_httpClient);
         Generator<K> gen = new Generator<K>(content, _keyConverter);
         int checksum = gen.getChecksum();

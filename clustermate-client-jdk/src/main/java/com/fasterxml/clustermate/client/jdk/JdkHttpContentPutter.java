@@ -36,8 +36,8 @@ public class JdkHttpContentPutter<K extends EntryKey>
     }
 
     @Override
-    public CallFailure tryPut(CallConfig config, long endOfTime,
-            K contentId, PutContentProvider content)
+    public CallFailure tryPut(CallConfig config, PutCallParameters params,
+    		long endOfTime, K contentId, PutContentProvider content)
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
@@ -46,7 +46,7 @@ public class JdkHttpContentPutter<K extends EntryKey>
             return CallFailure.timeout(_server, startTime, startTime);
         }
         try {
-            return _tryPut(config, endOfTime, contentId, content, startTime, timeout);
+            return _tryPut(config, params, endOfTime, contentId, content, startTime, timeout);
         } catch (Exception e) {
             return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e);
         }
@@ -58,15 +58,18 @@ public class JdkHttpContentPutter<K extends EntryKey>
     /**********************************************************************
      */
 
-    @SuppressWarnings("resource")
-    public CallFailure _tryPut(CallConfig config, long endOfTime,
-            K contentId, PutContentProvider content,
+    public CallFailure _tryPut(CallConfig config, PutCallParameters params,
+    		long endOfTime,
+    		K contentId, PutContentProvider content,
             final long startTime, final long timeout)
         throws IOException, ExecutionException, InterruptedException
     {
         JdkHttpClientPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
-        path = _keyConverter.appendToPath(path, contentId);       
+        path = _keyConverter.appendToPath(path, contentId);
+        if (params != null) {
+        	path = params.appendToPath(path, contentId);
+        }
         // Ok; and then figure out most optimal way for getting content:
 
         OutputStream out = null;

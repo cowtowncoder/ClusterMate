@@ -226,7 +226,7 @@ public abstract class StoreClient<K extends EntryKey,
 
     /*
     /**********************************************************************
-    /* Actual Client API: convenience wrappers
+    /* Client API: convenience wrappers for PUTs
     /**********************************************************************
      */
 
@@ -234,57 +234,66 @@ public abstract class StoreClient<K extends EntryKey,
      * Convenience method for PUTting specified static content;
      * may be used if content need not be streamed from other sources.
      */
-    public final PutOperationResult putContent(K key, byte[] data) throws InterruptedException
+    public final PutOperationResult putContent(PutCallParameters params, K key, byte[] data)
+    		throws InterruptedException
     {
-        return putContent(_config, key, data);
+        return putContent(_config, params, key, data);
     }
 
     /**
      * Convenience method for PUTting specified static content,
      * using specified configuration overrides.
      */
-    public PutOperationResult putContent(CONFIG config, K key, byte[] data)
+    public PutOperationResult putContent(CONFIG config, PutCallParameters params, K key, byte[] data)
         throws InterruptedException {
-        return putContent(config, key, data, 0, data.length);
+        return putContent(config, params, key, data, 0, data.length);
     }
 
     /**
      * Convenience method for PUTting specified static content;
      * may be used if content need not be streamed from other sources.
      */
-    public final PutOperationResult putContent(K key, byte[] data, int dataOffset, int dataLength)
+    public final PutOperationResult putContent(PutCallParameters params, K key,
+    		byte[] data, int dataOffset, int dataLength)
             throws InterruptedException
     {
-        return putContent(_config, key, data, dataOffset, dataLength);
+        return putContent(_config, params, key, data, dataOffset, dataLength);
     }
     
     /**
      * Convenience method for PUTting specified static content;
      * may be used if content need not be streamed from other sources.
      */
-    public PutOperationResult putContent(CONFIG config, K key,
+    public PutOperationResult putContent(CONFIG config, PutCallParameters params, K key,
             byte[] data, int dataOffset, int dataLength)
         throws InterruptedException
     {
-        return putContent(config, key, PutContentProviders.forBytes(data, dataOffset, dataLength));
+        return putContent(config, params, key, PutContentProviders.forBytes(data, dataOffset, dataLength));
     }
     
     /**
      * Convenience method for PUTting contents of specified File.
      */
-    public final PutOperationResult putContent(K key, File file) throws InterruptedException {
-        return putContent(_config, key, file);
+    public final PutOperationResult putContent(PutCallParameters params, K key, File file)
+    		throws InterruptedException {
+        return putContent(_config, params, key, file);
     }
 
     /**
      * Convenience method for PUTting contents of specified File.
      */
-    public PutOperationResult putContent(CONFIG config, K key, File file)
+    public PutOperationResult putContent(CONFIG config, PutCallParameters params, K key, File file)
         throws InterruptedException
     {
-        return putContent(config, key, PutContentProviders.forFile(file, file.length()));
+        return putContent(config, params, key, PutContentProviders.forFile(file, file.length()));
     }
-    
+
+    /*
+    /**********************************************************************
+    /* Client API: convenience wrappers for GETs
+    /**********************************************************************
+     */
+
     /**
      * Convenience method for GETting specific content and aggregating it as a
      * byte array.
@@ -478,7 +487,7 @@ public abstract class StoreClient<K extends EntryKey,
     
     /*
     /**********************************************************************
-    /* Actual Client API, low-level operations: PUT
+    /* Client API, low-level operations: PUT
     /**********************************************************************
      */
 
@@ -490,20 +499,19 @@ public abstract class StoreClient<K extends EntryKey,
      *   Caller is expected to check details from this object to determine
      *   whether operation was successful or not.
      */
-    public final PutOperationResult putContent(K key, PutContentProvider content)
+    public final PutOperationResult putContent(PutCallParameters params, K key, PutContentProvider content)
         throws InterruptedException {
-        return putContent(_config, key, content);
+        return putContent(_config, params, key, content);
     }
     
-    public PutOperationResult putContent(CONFIG config, K key,
-            PutContentProvider content)
+    public PutOperationResult putContent(CONFIG config, PutCallParameters params, K key, PutContentProvider content)
         throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
         
         // First things first: find Server nodes to talk to:
         NodesForKey nodes = _clusterView.getNodesFor(key);
-        PutOperationResult result = new PutOperationResult(config.getOperationConfig());
+        PutOperationResult result = new PutOperationResult(config.getOperationConfig(), params);
 
         // One sanity check: if not enough server nodes to talk to, can't succeed...
         int nodeCount = nodes.size();
@@ -525,7 +533,7 @@ public abstract class StoreClient<K extends EntryKey,
             if (server.isDisabled() && !noRetries) { // can skip disabled, iff retries allowed
                 break;
             }
-            CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(), endOfTime, key, content);
+            CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(), params, endOfTime, key, content);
             if (fail != null) { // only add to retry-list if something retry may help with
                 if (fail.isRetriable()) {
                     retries = _add(retries, new NodeFailure(server, fail));
@@ -560,7 +568,7 @@ public abstract class StoreClient<K extends EntryKey,
             while (it.hasNext()) {
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(), endOfTime, key, content);
+                CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(), params, endOfTime, key, content);
                 if (fail != null) {
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) { // not worth retrying?
@@ -583,7 +591,8 @@ public abstract class StoreClient<K extends EntryKey,
             }
             ClusterServerNode server = nodes.node(i);
             if (server.isDisabled()) {
-                CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(), endOfTime, key, content);
+                CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(),
+                		params, endOfTime, key, content);
                 if (fail != null) {
                     if (fail.isRetriable()) {
                         retries.add(new NodeFailure(server, fail));
@@ -609,7 +618,8 @@ public abstract class StoreClient<K extends EntryKey,
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(), endOfTime, key, content);
+                CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(),
+                		params, endOfTime, key, content);
                 if (fail != null) {
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) {

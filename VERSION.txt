@@ -3,6 +3,7 @@ Project: ClusterMate
 0.9.13 (xx-xxx-2013)
 
 - Refactor FileCleaner to allow overriding of logging details
+- Add 'PutCallParams' to pass additional parameters through client (like max-TTL)
 
 0.9.12 (08-Aug-2013)
 

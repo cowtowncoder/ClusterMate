@@ -10,6 +10,6 @@ import com.fasterxml.clustermate.client.CallFailure;
  */
 public interface ContentPutter<K extends EntryKey>
 {
-    public CallFailure tryPut(CallConfig config, long endOfTime,
-    		K contentId, PutContentProvider content);
+    public CallFailure tryPut(CallConfig config, PutCallParameters params,
+    		long endOfTime, K contentId, PutContentProvider content);
 }
