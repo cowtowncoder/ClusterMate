@@ -3,12 +3,12 @@ package com.fasterxml.clustermate.service.store;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.skife.config.TimeSpan;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
@@ -18,7 +18,6 @@ import com.fasterxml.storemate.store.backend.IterationAction;
 import com.fasterxml.storemate.store.backend.StorableIterationCallback;
 import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.util.OperationDiagnostics;
-
 import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.api.msg.ListResponse;
@@ -452,11 +451,7 @@ public abstract class StoreHandler<
             K key, InputStream dataIn, OperationDiagnostics metadata)
     {
         final int checksum = _decodeInt(request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM), 0);
-        TimeSpan minTTL = findMinTTLParameter(request, key);
-        TimeSpan maxTTL = findMaxTTLParameter(request, key);
-
-        return putEntry(request, response, key, checksum, dataIn,
-                minTTL, maxTTL, metadata);
+        return putEntry(request, response, key, checksum, dataIn, null, null, metadata);
     }
 
     // Public due to unit tests
@@ -476,21 +471,12 @@ public abstract class StoreHandler<
         if (inputCompression == Compression.NONE) {
             inputCompression = null;
         }
-        LastAccessUpdateMethod lastAcc = _findLastAccessUpdateMethod(request, key);
-
         // assumption here is that we may be passed hash code of orig content, but
         // not that of compressed (latter is easy to calculate on server anyway)
-        StorableCreationMetadata stdMetadata = new StorableCreationMetadata(inputCompression,
+        final StorableCreationMetadata stdMetadata = new StorableCreationMetadata(inputCompression,
         		checksum, 0);
-
-        int minTTLSecs = (minTTLSinceAccess == null) ? findMinTTLDefaultSecs(request, key)
-                : (int) (minTTLSinceAccess.getMillis() / 1000);
-        int maxTTLSecs = (maxTTL == null) ? findMaxTTLDefaultSecs(request, key)
-                : (int) (maxTTL.getMillis() / 1000);
-
-        ByteContainer customMetadata = _entryConverter.createMetadata(creationTime,
-                ((lastAcc == null) ? 0 : lastAcc.asByte()),
-                minTTLSecs, maxTTLSecs);
+        ByteContainer customMetadata = constructPutMetadata(request, key, creationTime,
+        		minTTLSinceAccess, maxTTL);
         StorableCreationResult result;
 
         try {
@@ -854,6 +840,26 @@ public abstract class StoreHandler<
     /**********************************************************************
      */
 
+    protected ByteContainer constructPutMetadata(ServiceRequest request, K key, long creationTime,
+            TimeSpan minTTLSinceAccess, TimeSpan maxTTL)
+    {
+        if (minTTLSinceAccess == null) {
+        	minTTLSinceAccess = findMinTTLParameter(request, key);
+        }
+        if (maxTTL == null) {
+        	maxTTL = findMaxTTLParameter(request, key);
+        }
+        LastAccessUpdateMethod lastAcc = _findLastAccessUpdateMethod(request, key);
+        int minTTLSecs = (minTTLSinceAccess == null) ? findMinTTLDefaultSecs(request, key)
+        		: (int) (minTTLSinceAccess.getMillis() / 1000);
+        int maxTTLSecs = (maxTTL == null) ? findMaxTTLDefaultSecs(request, key)
+        		: (int) (maxTTL.getMillis() / 1000);
+
+        return _entryConverter.createMetadata(creationTime,
+            ((lastAcc == null) ? 0 : lastAcc.asByte()),
+            minTTLSecs, maxTTLSecs);
+    }
+    
     /**
      * Overridable helper method used for figuring out request parameter used to
      * pass "minimum time-to-live since last access" (or, if no access tracked,
@@ -862,8 +868,7 @@ public abstract class StoreHandler<
     protected TimeSpan findMinTTLParameter(ServiceRequest request, K key)
     {
         String paramKey = ClusterMateConstants.QUERY_PARAM_MIN_SINCE_ACCESS_TTL;
-        String paramValue = request.getQueryParameter(paramKey);
-        return _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
+        return _timeSpanFrom(paramKey, request.getQueryParameter(paramKey));
     }
 
     /**
@@ -873,8 +878,25 @@ public abstract class StoreHandler<
     protected TimeSpan findMaxTTLParameter(ServiceRequest request, K key)
     {
         String paramKey = ClusterMateConstants.QUERY_PARAM_MAX_TTL;
-        String paramValue = request.getQueryParameter(paramKey);
-        return _isEmpty(paramValue) ? null : new TimeSpan(paramValue);
+        return _timeSpanFrom(paramKey, request.getQueryParameter(paramKey));
+    }
+    
+    protected TimeSpan _timeSpanFrom(String key, String value)
+    {
+        if (_isEmpty(value)) {
+    		    return null;
+        }
+        // Let's use bit of heuristics; pure number == seconds; otherwise, TimeSpan
+        char c = value.charAt(value.length() - 1);
+        try {
+            if (c <= '9' && c >= '0') {
+                return new TimeSpan(Integer.parseInt(value), TimeUnit.SECONDS);
+            }
+            return new TimeSpan(value);
+        } catch (Exception e) {
+    		    throw new IllegalArgumentException("Invalid value for '"+key+"': \""+value
+    		            +"\": needs to be either number (seconds), or valid TimeSpan expression (like \"7d\")");
+        }
     }
 
     protected int findMinTTLDefaultSecs(ServiceRequest request, K key) {
