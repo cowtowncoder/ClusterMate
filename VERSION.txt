@@ -1,9 +1,14 @@
 Project: ClusterMate
 
+0.9.14 (??-???-2013)
+
+...
+
 0.9.13 (05-Sep-2013)
 
+#29: Add 'PutCallParams' to pass additional parameters through client
+   (like max-TTL)
 - Refactor FileCleaner to allow overriding of logging details
-- Add 'PutCallParams' to pass additional parameters through client (like max-TTL)
 
 0.9.12 (08-Aug-2013)
 
