@@ -35,8 +35,8 @@ public class DeletionResult
         ;
     }
 
-    private final static DeletionResult DEFERRED = new DeletionResult(Status.DEFERRED,  null);
-    private final static DeletionResult TIMED_OUT = new DeletionResult(Status.TIMED_OUT, null);
+    private final static DeletionResult RESULT_DEFERRED = new DeletionResult(Status.DEFERRED,  null);
+    private final static DeletionResult RESULT_TIMED_OUT = new DeletionResult(Status.TIMED_OUT, null);
 
     protected final Status _status;
 
@@ -52,7 +52,7 @@ public class DeletionResult
     }
 
     public static DeletionResult forDeferred() {
-        return DEFERRED;
+        return RESULT_DEFERRED;
     }
 
     public static DeletionResult forCompleted() {
@@ -68,7 +68,7 @@ public class DeletionResult
     }
     
     public static DeletionResult forTimeOut() {
-        return TIMED_OUT;
+        return RESULT_TIMED_OUT;
     }
 
     public Status getStatus() {

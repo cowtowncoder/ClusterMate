@@ -72,7 +72,9 @@ public class SimpleStreamingResponseContent
         }
     }
 
+    @Override
     public boolean hasFile() { return false; }
+    @Override
     public boolean inline() { return true; }
 
     @Override

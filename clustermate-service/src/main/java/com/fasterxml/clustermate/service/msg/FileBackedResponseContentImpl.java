@@ -224,7 +224,7 @@ public class FileBackedResponseContentImpl
             final long offset, final long dataLength)
         throws IOException
     {
-        IOException e = _store.leaseOffHeapBuffer(new ByteBufferCallback<IOException>() {
+        IOException e0 = _store.leaseOffHeapBuffer(new ByteBufferCallback<IOException>() {
             @Override
             public IOException withBuffer(StreamyBytesMemBuffer buffer) {
                 try {
@@ -235,8 +235,8 @@ public class FileBackedResponseContentImpl
                 return null;
             }
         });
-        if (e != null) {
-            throw e;
+        if (e0 != null) {
+            throw e0;
         }
     }
 
@@ -352,7 +352,7 @@ public class FileBackedResponseContentImpl
     protected void _readAllWriteStreamingCompressed(final OutputStream out, final byte[] copyBuffer)
         throws IOException
     {
-        IOException e = _store.leaseOffHeapBuffer(new ByteBufferCallback<IOException>() {
+        IOException e0 = _store.leaseOffHeapBuffer(new ByteBufferCallback<IOException>() {
             @Override
             public IOException withBuffer(StreamyBytesMemBuffer buffer) {
                 InputStream in = null;
@@ -372,8 +372,8 @@ public class FileBackedResponseContentImpl
                 return null;
             }
         });
-        if (e != null) {
-            throw e;
+        if (e0 != null) {
+            throw e0;
         }
     }
 
