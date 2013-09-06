@@ -59,7 +59,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
     public FileCleanupStats _cleanUp()
     {
         final FileCleanupStats stats = new FileCleanupStats();
-        _reportStart(_maxTimeToLiveMsecs);
+        _reportStart();
         
         // iterate over all but the last directory; last considered current
         List<DirByDate> dateDirs = _fileManager.listMainDataDirs(stats);
@@ -130,7 +130,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
     /**********************************************************************
      */
 
-    protected void _reportStart(long maxTimeToLiveMsecs)
+    protected void _reportStart()
     {
         if (LOG != null) {
             LOG.info("Starting file cleanup: will nuke any dirs older than {}",
