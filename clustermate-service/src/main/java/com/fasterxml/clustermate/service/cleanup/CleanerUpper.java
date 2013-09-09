@@ -114,6 +114,9 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
         // Important: start with LocalEntryCleaner (to try to avoid dangling files),
         // then do FileCleaner
         _tasks = tasks.toArray(new CleanupTask[tasks.size()]);
+        for (CleanupTask<?> task : _tasks) {
+            task.init(_stuff, _stores, _cluster, _shutdown);
+        }
     }
     
     @Override
@@ -217,7 +220,6 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
             }
             _currentTask.set(task);
             try {
-                task.init(_stuff, _stores, _cluster, _shutdown);
                 Object result = task.cleanUp();
                 long took = _timeMaster.currentTimeMillis() - startTime;
                 LOG.info("Clean up task {} complete in {}, result: {}",
