@@ -57,10 +57,10 @@ public abstract class DWBasedService<
     protected List<StartAndStoppable> _managed = null;
     
     /**
-     * Marker flag used to indicate cases when service is run in test
-     * mode; propagated through configuration.
+     * Running mode of this service; used to indicate whether we are running in
+     * test mode, and whether background tasks ought to be run or not.
      */
-    protected final boolean _testMode;
+    protected final RunMode _runMode;
 
     /**
      * We need to keep track of things created, to let tests access
@@ -104,16 +104,11 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
-    protected DWBasedService(TimeMaster timings)
-    {
-        this(timings, false);
-    }
-
-    protected DWBasedService(TimeMaster timings, boolean testMode)
+    protected DWBasedService(TimeMaster timings, RunMode mode)
     {
         super();
         _timeMaster = timings;
-        _testMode = testMode;
+        _runMode = mode;
     }
 
     /*
@@ -182,9 +177,21 @@ public abstract class DWBasedService<
         LOG.info("VManaged object shutdown complete");
     }
 
+    /* Ideally, shouldn't need to track this; but after having a few issues,
+     * decided better safe than sorry.
+     */
+    protected boolean _hasBeenRun = false;
+    
     @Override
     public void run(CONF dwConfig, Environment environment) throws IOException
     {
+        synchronized (this) {
+            if (_hasBeenRun) {
+                throw new IllegalStateException("Trying to run(config, env) DWBasedService more than once");
+            }
+            _hasBeenRun = true;
+        }
+        
         // first things first: we need to get start()/stop() calls, so:
         environment.manage(new Managed() {
             @Override
@@ -216,7 +223,7 @@ public abstract class DWBasedService<
 
         _serviceStuff = constructServiceStuff(config, _timeMaster,
                entryConverter, files);
-        if (_testMode) {
+        if (_runMode.isTesting()) {
             _serviceStuff.markAsTest();
         }
         
@@ -257,10 +264,14 @@ public abstract class DWBasedService<
         LOG.info("Adding health checks");
         addHealthChecks(_serviceStuff, environment);
 
-        LOG.info("Initializing background cleaner tasks");
-        _cleanerUpper = constructCleanerUpper(_serviceStuff, _stores, _cluster);
-        if (_cleanerUpper != null) {
-            _managed.add(_cleanerUpper);
+        if (_runMode.shouldRunTasks()) {
+            LOG.info("Initializing background cleaner tasks");
+            _cleanerUpper = constructCleanerUpper(_serviceStuff, _stores, _cluster);
+            if (_cleanerUpper != null) {
+                _managed.add(_cleanerUpper);
+            }
+        } else {
+            LOG.info("Skipping cleaner tasks for light-weight testing");
         }
         LOG.info("Initialization complete: HTTP service now running on port {}",
                 dwConfig.getHttpConfiguration().getPort());
@@ -271,7 +282,15 @@ public abstract class DWBasedService<
     /* Factory methods: basic config objects
     /**********************************************************************
      */
+
+    public boolean isTesting() { return _runMode.isTesting(); }
     
+    /*
+    /**********************************************************************
+    /* Factory methods: basic config objects
+    /**********************************************************************
+     */
+
     /**
      * Overridable method that is used for getting helper object used for
      * constructing {@link StoredEntry} instances to store in the

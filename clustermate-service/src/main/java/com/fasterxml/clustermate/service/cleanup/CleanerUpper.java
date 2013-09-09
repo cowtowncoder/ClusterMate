@@ -120,8 +120,12 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     }
     
     @Override
-    public void start()
+    public synchronized void start()
     {
+        if (_thread != null) {
+            throw new IllegalStateException("CleanerUpper.start() called second time");
+        }
+
         // let's wait 50% of minimum delay; typically 30 minutes
 //        long delayMsecs = (_delayBetweenCleanups.toMilliseconds() / 2);
 
@@ -197,8 +201,7 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     {
         long delayMsecs = _nextStartTime.get() - _timeMaster.currentTimeMillis();
         if (delayMsecs > 0L) {
-            LOG.info("Waiting up to {} seconds until running cleanup tasks...",
-                    (delayMsecs / 1000L));
+            LOG.info("Waiting up to {} until running cleanup tasks...", TimeMaster.timeDesc(delayMsecs));
             try {
                 _timeMaster.sleep(delayMsecs);
             } catch (InterruptedException e) {
@@ -213,9 +216,9 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
         _nextStartTime.set(startTime + _delayBetweenCleanups.getMillis());
         for (CleanupTask<?> task : _tasks) {
             if (_shutdown.get()) {
-                if (!_stuff.isRunningTests()) {
+//                if (!_stuff.isRunningTests()) {
                     LOG.info("Stopping cleanup tasks due to shutdown");
-                }
+//                }
                 break;
             }
             _currentTask.set(task);
@@ -231,7 +234,7 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
             }
         }
         long tookAll = _timeMaster.currentTimeMillis() - startTime;
-        LOG.info("Completing clean up tasks in {}", TimeMaster.timeDesc(tookAll));
+        LOG.info("Completed running of clean up tasks in {}", TimeMaster.timeDesc(tookAll));
     }
 
     /*
@@ -257,11 +260,4 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
         }
         return "Waiting for "+TimeMaster.timeDesc(msecs)+" until next cleanup round";
     }
-
-
-    /*
-    /**********************************************************************
-    /* Overridable logging
-    /**********************************************************************
-     */
 }
