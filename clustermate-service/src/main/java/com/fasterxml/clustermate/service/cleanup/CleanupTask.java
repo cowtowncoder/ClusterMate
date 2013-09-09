@@ -26,6 +26,15 @@ public abstract class CleanupTask<T>
         _shutdown = shutdown;
     }
 
+    /**
+     * Method called by {@link CleanerUpper} when its own <code>prepareForStop()</code>
+     * is called; sub-classes may react. Note that when method gets called,
+     * {@link #_shutdown} has already been set to <code>true</code>.
+     */
+    protected void prepareForStop() {
+        // Nothing generic to do here
+    }
+    
     protected boolean shouldStop()
     {
         return _shutdown.get();

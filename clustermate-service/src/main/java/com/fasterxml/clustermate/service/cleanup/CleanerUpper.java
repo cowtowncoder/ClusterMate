@@ -62,6 +62,11 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     protected final AtomicBoolean _shutdown = new AtomicBoolean(false);
 
     /**
+     * State flag used to indicate clean shutdown.
+     */
+    protected final AtomicBoolean _completed = new AtomicBoolean(false);
+
+    /**
      * Actual clean up thread we use
      */
     protected Thread _thread;
@@ -128,14 +133,42 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     public void prepareForStop() {
         // Let's mark the fact we are shutting down, but not yet terminate
         // on-going processes.
+        // NOTE! Tasks are also given this marker so that they also know when
+        // to bail out
         _shutdown.set(true);
+        CleanupTask<?> curr = _currentTask.get();
+        if (curr != null) {
+            curr.prepareForStop();
+        }
     }
-    
+
     @Override
     public void stop()
     {
-        if (_thread != null) {
-            _thread.interrupt();
+        if (!_completed.get() && (_thread != null)) {
+            CleanupTask<?> curr = _currentTask.get();
+            // with actual task running, need to be bit more careful?
+            if (curr != null) {
+                LOG.warn("CleanerUpper not complete when stop() called: will wait a bit first");
+                boolean complete = false;
+
+                // up to 1 second only
+                try {
+                    for (int i = 0; i < 20; ++i) {
+                        Thread.sleep(50L);
+                        complete = _completed.get();
+                    }
+                } catch (InterruptedException e) { }
+
+                if (!complete) {
+                    LOG.warn("CleanerUpper task '{}' not complete when stop() called: will try Thread.interrupt()",
+                            curr.toString());
+                    _thread.interrupt();
+                }
+            } else { // otherwise... should be fine
+                LOG.warn("CleanerUpper not complete when stop() called, but no task running: will try Thread.interrupt()");
+                _thread.interrupt();
+            }
         }
     }
 
@@ -148,43 +181,55 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     @Override
     public void run()
     {
-        while (!_shutdown.get()) {
-            long delayMsecs = _nextStartTime.get() - _timeMaster.currentTimeMillis();
-            if (delayMsecs > 0L) {
-                LOG.info("Waiting up to {} seconds until running cleanup tasks...",
-                        (delayMsecs / 1000L));
-                try {
-                    _timeMaster.sleep(delayMsecs);
-                } catch (InterruptedException e) {
-                    continue;
-                }
+        try {
+            while (!_shutdown.get()) {
+                _runOnce();
             }
-            final long startTime = _timeMaster.currentTimeMillis();
-            // ok, run...
-            LOG.info("Starting cleanup tasks ({})", _tasks.length);
-            _nextStartTime.set(startTime + _delayBetweenCleanups.getMillis());
-            for (CleanupTask<?> task : _tasks) {
-                if (_shutdown.get()) {
-                    if (!_stuff.isRunningTests()) {
-                        LOG.info("Interrupting cleanup tasks, due to shutdown");
-                    }
-                    break;
-                }
-                _currentTask.set(task);
-                try {
-                    task.init(_stuff, _stores, _cluster, _shutdown);
-                    Object result = task.cleanUp();
-                    long took = _timeMaster.currentTimeMillis() - startTime;
-                    LOG.info("Clean up task {} complete in {}, result: {}",
-                            task.getClass().getName(), TimeMaster.timeDesc(took), result);
-                } catch (Exception e) {
-                    LOG.warn("Problems running clean up task of type "+task.getClass().getName()+": "+e.getMessage(), e);
-                }
-            }
-            _currentTask.set(null);
-            long tookAll = _timeMaster.currentTimeMillis() - startTime;
-            LOG.info("Completing clean up tasks in {}", TimeMaster.timeDesc(tookAll));
+        } finally {
+            _completed.set(true);
         }
+    }
+    
+    protected void _runOnce()
+    {
+        long delayMsecs = _nextStartTime.get() - _timeMaster.currentTimeMillis();
+        if (delayMsecs > 0L) {
+            LOG.info("Waiting up to {} seconds until running cleanup tasks...",
+                    (delayMsecs / 1000L));
+            try {
+                _timeMaster.sleep(delayMsecs);
+            } catch (InterruptedException e) {
+                final long msecs = _nextStartTime.get() - _timeMaster.currentTimeMillis();
+                LOG.info("Interruped during wait for next runtime ({} before next run)", TimeMaster.timeDesc(msecs));
+                return;
+            }
+        }
+        final long startTime = _timeMaster.currentTimeMillis();
+        // ok, run...
+        LOG.info("Starting cleanup tasks ({})", _tasks.length);
+        _nextStartTime.set(startTime + _delayBetweenCleanups.getMillis());
+        for (CleanupTask<?> task : _tasks) {
+            if (_shutdown.get()) {
+                if (!_stuff.isRunningTests()) {
+                    LOG.info("Stopping cleanup tasks due to shutdown");
+                }
+                break;
+            }
+            _currentTask.set(task);
+            try {
+                task.init(_stuff, _stores, _cluster, _shutdown);
+                Object result = task.cleanUp();
+                long took = _timeMaster.currentTimeMillis() - startTime;
+                LOG.info("Clean up task {} complete in {}, result: {}",
+                        task.getClass().getName(), TimeMaster.timeDesc(took), result);
+            } catch (Exception e) {
+                LOG.warn("Problems running clean up task of type "+task.getClass().getName()+": "+e.getMessage(), e);
+            } finally {
+                _currentTask.set(null);
+            }
+        }
+        long tookAll = _timeMaster.currentTimeMillis() - startTime;
+        LOG.info("Completing clean up tasks in {}", TimeMaster.timeDesc(tookAll));
     }
 
     /*
@@ -210,4 +255,11 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
         }
         return "Waiting for "+TimeMaster.timeDesc(msecs)+" until next cleanup round";
     }
+
+
+    /*
+    /**********************************************************************
+    /* Overridable logging
+    /**********************************************************************
+     */
 }

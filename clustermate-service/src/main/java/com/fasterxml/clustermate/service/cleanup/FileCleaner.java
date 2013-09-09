@@ -60,7 +60,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
     {
         final FileCleanupStats stats = new FileCleanupStats();
         _reportStart();
-        
+
         // iterate over all but the last directory; last considered current
         List<DirByDate> dateDirs = _fileManager.listMainDataDirs(stats);
         final int dirCount = dateDirs.size();
@@ -91,7 +91,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
             long msecsAgo = _timeMaster.currentTimeMillis() - timeDir.getRawCreateTime();
             // ancient?
             if (msecsAgo > _maxTimeToLiveMsecs) {
-                int failedFiles = timeDir.nuke(stats);
+                int failedFiles = timeDir.nuke(stats, _shutdown);
                 if (failedFiles == 0) {
                     ++deleted;
                     continue;
@@ -100,7 +100,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
                         timeDir.toString(), failedFiles);
             } else {
                 // otherwise just weed out empty dirs
-                if (timeDir.removeEmpty(stats)) {
+                if (timeDir.removeEmpty(stats, _shutdown)) {
                     ++deleted;
                     continue;
                 }
@@ -109,7 +109,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
             ++remaining;
         }
         // how about date dir itself... empty by now?
-        if (remaining == 0) {
+        if (remaining == 0 && !_shutdown.get()) {
             File dir = dateDir.getDirectory();
             if (dir.delete()) {
                 if (deleted == 0) { // was already empty
