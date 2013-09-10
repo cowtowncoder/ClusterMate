@@ -58,6 +58,7 @@ public class JdkHttpContentPutter<K extends EntryKey>
     /**********************************************************************
      */
 
+    @SuppressWarnings("resource")
     public CallFailure _tryPut(CallConfig config, PutCallParameters params,
     		long endOfTime,
     		K contentId, PutContentProvider content,
