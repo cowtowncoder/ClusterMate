@@ -2,7 +2,8 @@ Project: ClusterMate
 
 0.9.14 (??-???-2013)
 
-...
+- Fixed issues with `StoreForTests`, double-initialization (which caused issues
+  with cleanup tasks during tests)
 
 0.9.13 (05-Sep-2013)
 
