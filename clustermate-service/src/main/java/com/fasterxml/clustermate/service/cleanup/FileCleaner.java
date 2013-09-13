@@ -84,7 +84,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
         int remaining = 0, deleted = 0;
         for (DirByTime timeDir : dateDir.listTimeDirs(stats)) {
             if (shouldStop()) {
-                LOG.info("Terminating file cleanup pre-maturely");
+                _reportProblem("Terminating file cleanup pre-maturely, due to stop request");
                 return;
             }
             // ok; we know rough time by now...
@@ -96,8 +96,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
                     ++deleted;
                     continue;
                 }
-                LOG.warn("Failed to nuke directory {}; {} files remain, must skip",
-                        timeDir.toString(), failedFiles);
+                _reportProblem("Failed to nuke directory "+timeDir.toString()+"; "+failedFiles+" files remain, must skip");
             } else {
                 // otherwise just weed out empty dirs
                 if (timeDir.removeEmpty(stats, _shutdown)) {
@@ -119,7 +118,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
                 }
                 return;
             }
-            LOG.warn("Failed to nuke directory {} for some reason, must skip", dir);
+            _reportProblem("Failed to nuke directory "+dir+" for some reason, must skip");
         }
         stats.addRemainingDir();
     }
@@ -138,6 +137,13 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
         }
     }
 
+    protected void _reportProblem(String msg)
+    {
+        if (LOG != null) {
+            LOG.warn(msg);
+        }
+    }
+    
     protected void _reportEndNoDirs() {
         if (LOG != null) {
             LOG.warn("No date directories found for clean up -- bailing out");
