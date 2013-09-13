@@ -143,7 +143,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
             LOG.warn(msg);
         }
     }
-    
+
     protected void _reportEndNoDirs() {
         if (LOG != null) {
             LOG.warn("No date directories found for clean up -- bailing out");

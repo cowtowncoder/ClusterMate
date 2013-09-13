@@ -39,6 +39,11 @@ public class NodeMetricsServlet extends ServletBase
      */
     protected final static String QUERY_PARAM_FULL = "full";
 
+    /**
+     * Can also explicitly request indentation (or lack thereof)
+     */
+    protected final static String QUERY_PARAM_INDENT = "indent";
+    
     // Only probe for metrics once every 10 seconds (unless forced)
     protected final static long UPDATE_PERIOD_MSECS = 1L * 10 * 1000;
 
@@ -62,7 +67,8 @@ public class NodeMetricsServlet extends ServletBase
     protected final AtomicReference<SerializedMetrics> _cachedMetrics
         = new AtomicReference<SerializedMetrics>();
 
-    protected final AtomicBoolean _indent = new AtomicBoolean(true);
+    // Let's NOT indent by default. To save bandwidth
+    protected final AtomicBoolean _indent = new AtomicBoolean(false);
     
     /*
     /**********************************************************************
@@ -93,7 +99,7 @@ public class NodeMetricsServlet extends ServletBase
     }
 
     public void setIndent(boolean state) {
-    	_indent.set(state);
+        _indent.set(state);
     }
     
     /*
@@ -113,6 +119,12 @@ public class NodeMetricsServlet extends ServletBase
             // One more thing: is caller trying to force refresh?
             boolean forceRefresh = "true".equals(request.getQueryParameter(QUERY_PARAM_REFRESH));
             boolean full = "true".equals(request.getQueryParameter(QUERY_PARAM_FULL));
+            boolean indent = _indent.get();
+            // or, enable/disable indentation explicitly
+            String indentStr = request.getQueryParameter(QUERY_PARAM_INDENT);
+            if (indentStr != null && indentStr.length() > 0) {
+                indent = Boolean.valueOf(indentStr.trim());
+            }
 
             SerializedMetrics ser = _cachedMetrics.get();
             long now = _timeMaster.currentTimeMillis();
@@ -120,7 +132,7 @@ public class NodeMetricsServlet extends ServletBase
             if (_shouldRefresh(forceRefresh, now, ser)) {
                 ExternalMetrics metrics = _gatherMetrics(now, full);
                 ObjectWriter w = _jsonWriter;
-                if (_indent.get()) {
+                if (indent) {
                 	w = w.withDefaultPrettyPrinter();
                 }
                 final byte[] raw = w.writeValueAsBytes(metrics);
