@@ -183,21 +183,25 @@ public abstract class ServiceConfig
     public TimeSpan cfgDefaultSinceAccessTTL = new TimeSpan("3h");
     
     /**
-     * By default we will not run cleanup more often than once per hour.
-     * The first cleanup will typically be run earlier than delay.
+     * By default we will not run cleanup more often than about once
+     * an hour.
+     * But the first cleanup will typically be run earlier than delay.
+     *<p>
+     * Let's use a value that is NOT neatly divisible, just to try to 
+     * avoid syncing up to some schedule.
      */
     @NotNull
-    public TimeSpan cfgDelayBetweenCleanup = new TimeSpan("60m");
+    public TimeSpan cfgDelayBetweenCleanup = new TimeSpan("40m");
     
     /**
      * This value specifies time that tombstones (deletion markers) should
      * be kept in the metadata store before purging. Delay in deletion is
      * necessary to ensure proper deletion across instance during outages.
      *<p>
-     * Current default value (1 hour) is chosen to balance eventual consistency
+     * Current default value (45 minutes) is chosen to balance eventual consistency
      * (when some nodes fail) with additional storage cost.
      */
-    public TimeSpan cfgTombstoneTTL = new TimeSpan("1h");
+    public TimeSpan cfgTombstoneTTL = new TimeSpan("45m");
 
     /*
     /**********************************************************************

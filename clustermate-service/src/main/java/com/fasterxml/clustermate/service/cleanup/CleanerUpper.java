@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.service.cleanup;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -66,6 +67,16 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
      */
     protected final AtomicBoolean _completed = new AtomicBoolean(false);
 
+    /**
+     * Marker we use to simplify checks for "is cleaner upper running right now".
+     */
+    protected final AtomicBoolean _isRunning = new AtomicBoolean(false);
+
+    /**
+     * And for testing purposes let's also keep track of run count.
+     */
+    protected final AtomicInteger _runCount = new AtomicInteger(0);
+    
     /**
      * Actual clean up thread we use
      */
@@ -152,6 +163,10 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     @Override
     public void stop()
     {
+        if (!_shutdown.getAndSet(true)) {
+            LOG.warn("CleanerUpper's 'shutdown' flag was not set when 'stop()' called; setting it now");
+        }
+        
         if (!_completed.get() && (_thread != null)) {
             CleanupTask<?> curr = _currentTask.get();
             // with actual task running, need to be bit more careful?
@@ -214,6 +229,7 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
         // ok, run...
         LOG.info("Starting cleanup tasks ({})", _tasks.length);
         _nextStartTime.set(startTime + _delayBetweenCleanups.getMillis());
+        _isRunning.set(true);
         for (CleanupTask<?> task : _tasks) {
             if (_shutdown.get()) {
 //                if (!_stuff.isRunningTests()) {
@@ -233,6 +249,8 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
                 _currentTask.set(null);
             }
         }
+        _isRunning.set(false);
+        _runCount.addAndGet(1);
         long tookAll = _timeMaster.currentTimeMillis() - startTime;
         LOG.info("Completed running of clean up tasks in {}", TimeMaster.timeDesc(tookAll));
     }
@@ -243,6 +261,14 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
+    public boolean isRunning() {
+        return _isRunning.get();
+    }
+
+    public int getRunCount() {
+        return _runCount.get();
+    }
+    
     /**
      * Method is overridden to provide somewhat readable description of
      * current state, to be served externally.
