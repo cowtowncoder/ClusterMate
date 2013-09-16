@@ -1,11 +1,15 @@
 package com.fasterxml.clustermate.service.metrics;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.backend.BackendStats;
 
 /**
  * POJO for simple backend metrics
  */
+@JsonPropertyOrder({
+    // define ordering just for readability for manual debug cases
+    "count", "onlyFastStats", "timeTaken", "lastUpdated", "stats" })
 public class BackendMetrics
 {
     /**
@@ -13,19 +17,22 @@ public class BackendMetrics
      */
     public long count;
 
+    public Boolean onlyFastStats;
+
     /**
-     * Backend-dependant "raw" statistics
+     * How long did it take to generate these metrics?
      */
-    public BackendStats stats;
+    public String timeTaken;
 
     /**
      * Timestamp of time when metrics were gathered
      */
     public long lastUpdated;
 
-    public Boolean onlyFastStats;
-    
-    public String timeTaken;
+    /**
+     * Backend-dependant "raw" statistics
+     */
+    public BackendStats stats;
     
     // for (de)serializer
     protected BackendMetrics() { }

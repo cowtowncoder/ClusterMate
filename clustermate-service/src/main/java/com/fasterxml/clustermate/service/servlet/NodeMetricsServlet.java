@@ -172,16 +172,14 @@ public class NodeMetricsServlet extends ServletBase
     {
         ExternalMetrics metrics = new ExternalMetrics(creationTime);
         StoreBackend entries = _entryStore.getBackend();
-        BackendStatsConfig conf = BACKEND_STATS_CONFIG;
-        if (fullStats) {
-            conf = conf.onlyCollectFast(false);
-        }
+        BackendStatsConfig conf = BACKEND_STATS_CONFIG
+                .onlyCollectFast(!fullStats);
         metrics.stores.entries = new BackendMetrics(entries.getEntryCount(),
-                _clean(entries.getEntryStatistics(BACKEND_STATS_CONFIG)));
+                _clean(entries.getEntryStatistics(conf)));
         metrics.stores.entryIndex = new BackendMetrics(entries.getIndexedCount(),
-                _clean(entries.getIndexStatistics(BACKEND_STATS_CONFIG)));
+                _clean(entries.getIndexStatistics(conf)));
         metrics.stores.lastAccessStore = new BackendMetrics(_lastAccessStore.getEntryCount(),
-                _clean(_lastAccessStore.getEntryStatistics(BACKEND_STATS_CONFIG)));
+                _clean(_lastAccessStore.getEntryStatistics(conf)));
 
         AllOperationMetrics opMetrics = new AllOperationMetrics();
         metrics.operations = opMetrics;
