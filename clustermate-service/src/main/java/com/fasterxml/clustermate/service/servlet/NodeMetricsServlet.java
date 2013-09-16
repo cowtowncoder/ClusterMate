@@ -221,7 +221,7 @@ public class NodeMetricsServlet extends ServletBase
 
         public CleanBDBStats(BDBBackendStats raw)
         {
-            super();
+            super(raw);
             db = raw.db;
             env = raw.env;
         }
