@@ -104,7 +104,7 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
             .setFast(config.onlyCollectFast())
             .setClear(config.resetStatsAfterCollection())
             ;
-        BDBBackendStats stats = new BDBBackendStats();
+        BDBBackendStats stats = new BDBBackendStats(config, System.currentTimeMillis());
         stats.db = _store.getStats(statsConfig);
         stats.env = _store.getEnvironment().getStats(statsConfig);
         return stats;
