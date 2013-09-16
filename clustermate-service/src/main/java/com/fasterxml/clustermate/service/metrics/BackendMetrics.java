@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.service.metrics;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.backend.BackendStats;
@@ -32,6 +33,9 @@ public class BackendMetrics
     /**
      * Backend-dependant "raw" statistics
      */
+    @JsonIgnoreProperties({ // since these would otherwise be duplicated
+        "creationTime", "timeTakenMsecs", "onlyFastStats"
+    })
     public BackendStats stats;
     
     // for (de)serializer
