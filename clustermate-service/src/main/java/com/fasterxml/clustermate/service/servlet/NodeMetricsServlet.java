@@ -2,24 +2,11 @@ package com.fasterxml.clustermate.service.servlet;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
-import com.fasterxml.storemate.store.StorableStore;
-import com.fasterxml.storemate.store.backend.BackendStats;
-import com.fasterxml.storemate.store.backend.BackendStatsConfig;
-import com.fasterxml.storemate.store.backend.StoreBackend;
 import com.fasterxml.storemate.store.util.OperationDiagnostics;
 import com.fasterxml.clustermate.service.*;
-import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
-import com.fasterxml.clustermate.service.metrics.BackendMetrics;
-import com.fasterxml.clustermate.service.metrics.ExternalMetrics;
-import com.sleepycat.je.EnvironmentStats;
+import com.fasterxml.clustermate.service.metrics.BackgroundMetricsAccessor;
+import com.fasterxml.clustermate.service.metrics.SerializedMetrics;
 
 /**
  * Stand-alone servlet that may be used for serving metrics information
@@ -44,28 +31,7 @@ public class NodeMetricsServlet extends ServletBase
      */
     protected final static String QUERY_PARAM_INDENT = "indent";
     
-    // Only probe for metrics once every 10 seconds (unless forced)
-    protected final static long UPDATE_PERIOD_MSECS = 1L * 10 * 1000;
-
-    // And even with forcing, do not query more often than once per second
-    protected final static long MINIMUM_MSECS_BETWEEN_RECALC = 1000L;
-    
-    // let's only collect what can be gathered fast; not reset stats
-    protected final static BackendStatsConfig BACKEND_STATS_CONFIG
-        = BackendStatsConfig.DEFAULT
-            .onlyCollectFast(true)
-            .resetStatsAfterCollection(false);
-    
-    protected final ObjectWriter _jsonWriter;
-
-    protected final StorableStore _entryStore;
-
-    protected final AllOperationMetrics.Provider[] _metricsProviders;
-
-    protected final LastAccessStore<?,?> _lastAccessStore;
-    
-    protected final AtomicReference<SerializedMetrics> _cachedMetrics
-        = new AtomicReference<SerializedMetrics>();
+    protected final BackgroundMetricsAccessor _accessor;
 
     // Let's NOT indent by default. To save bandwidth
     protected final AtomicBoolean _indent = new AtomicBoolean(false);
@@ -76,26 +42,16 @@ public class NodeMetricsServlet extends ServletBase
     /**********************************************************************
      */
 
-    public NodeMetricsServlet(SharedServiceStuff stuff, Stores<?,?> stores,
+    /*
+    SharedServiceStuff stuff, Stores<?,?> stores,
             AllOperationMetrics.Provider[] metricsProviders)
+     */
+    
+    public NodeMetricsServlet(SharedServiceStuff stuff, BackgroundMetricsAccessor accessor)
     {
         // null -> use servlet path base as-is
         super(stuff, null, null);
-        // for robustness, allow empty beans...
-
-        /* 16-May-2013, tatu: Need to use separate mapper just because
-         *   our default inclusion mechanism may differ...
-         */
-        ObjectMapper mapper = new ObjectMapper();
-        /* Looks like NON_DEFAULT can not be used, just because not all
-         * classes can be instantiated. So for now need to use NON_EMPTY...
-         */
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        _jsonWriter = mapper.writerWithType(ExternalMetrics.class)
-                .without(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-        _entryStore = stores.getEntryStore();
-        _lastAccessStore = stores.getLastAccessStore();
-        _metricsProviders = metricsProviders;
+        _accessor = accessor;
     }
 
     public void setIndent(boolean state) {
@@ -125,20 +81,7 @@ public class NodeMetricsServlet extends ServletBase
             if (indentStr != null && indentStr.length() > 0) {
                 indent = Boolean.valueOf(indentStr.trim());
             }
-
-            SerializedMetrics ser = _cachedMetrics.get();
-            long now = _timeMaster.currentTimeMillis();
-    
-            if (_shouldRefresh(forceRefresh, now, ser)) {
-                ExternalMetrics metrics = _gatherMetrics(now, full);
-                ObjectWriter w = _jsonWriter;
-                if (indent) {
-                	w = w.withDefaultPrettyPrinter();
-                }
-                final byte[] raw = w.writeValueAsBytes(metrics);
-                ser = new SerializedMetrics(now, raw);
-                _cachedMetrics.set(ser);
-            }
+            SerializedMetrics ser = _accessor.getMetrics(forceRefresh, full, indent);
             response = (ServletServiceResponse) response.ok()
                     .setContentTypeJson();
             response.writeRaw(ser.serialized);
@@ -149,90 +92,7 @@ public class NodeMetricsServlet extends ServletBase
                 .internalError(msg)
                 .setContentTypeText()
                 ;
-            response.writeOut(_jsonWriter);
-        }
-    }
-
-    private static boolean _shouldRefresh(boolean forced, long now, SerializedMetrics metrics)
-    {
-        if (metrics == null) {
-            return true;
-        }
-        long wait = forced ? MINIMUM_MSECS_BETWEEN_RECALC : UPDATE_PERIOD_MSECS;
-        return now >= (metrics.created + wait);
-    }
-    
-    /*
-    /**********************************************************************
-    /* Internal methods
-    /**********************************************************************
-     */
-
-    protected ExternalMetrics _gatherMetrics(long creationTime, boolean fullStats)
-    {
-        ExternalMetrics metrics = new ExternalMetrics(creationTime);
-        StoreBackend entries = _entryStore.getBackend();
-        BackendStatsConfig conf = BACKEND_STATS_CONFIG
-                .onlyCollectFast(!fullStats);
-        metrics.stores.entries = new BackendMetrics(entries.getEntryCount(),
-                _clean(entries.getEntryStatistics(conf)));
-        metrics.stores.entryIndex = new BackendMetrics(entries.getIndexedCount(),
-                _clean(entries.getIndexStatistics(conf)));
-        metrics.stores.lastAccessStore = new BackendMetrics(_lastAccessStore.getEntryCount(),
-                _clean(_lastAccessStore.getEntryStatistics(conf)));
-
-        AllOperationMetrics opMetrics = new AllOperationMetrics();
-        metrics.operations = opMetrics;
-        for (AllOperationMetrics.Provider provider : _metricsProviders) {
-            provider.fillOperationMetrics(opMetrics);
-        }
-        return metrics;
-    }
-
-    protected BackendStats _clean(BackendStats stats)
-    {
-        // Nasty back-dep, but has to do for now...
-        if (stats instanceof BDBBackendStats) {
-            return new CleanBDBStats((BDBBackendStats) stats);
-        }
-        return stats;
-    }
-
-    /*
-    /**********************************************************************
-    /* Helper class(es)
-    /**********************************************************************
-     */
-
-    /**
-     * Helper class we only need for filtering out some unwanted
-     * properties.
-     */
-    static class CleanBDBStats
-        extends BDBBackendStats
-    {
-        // this is an alternative to mix-ins, which would also work
-        @JsonIgnoreProperties({ "tips", "statGroups" })
-        public EnvironmentStats getEnv() {
-            return env;
-        }
-
-        public CleanBDBStats(BDBBackendStats raw)
-        {
-            super(raw);
-            db = raw.db;
-            env = raw.env;
-        }
-    }
-
-    private final static class SerializedMetrics
-    {
-        public final long created;
-        public final byte[] serialized;
-
-        public SerializedMetrics(long cr, byte[] data) {
-            created = cr;
-            serialized = data;
+            response.writeOut(null);
         }
     }
 }

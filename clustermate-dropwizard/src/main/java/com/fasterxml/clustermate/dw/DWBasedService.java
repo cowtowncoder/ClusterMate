@@ -35,6 +35,7 @@ import com.fasterxml.clustermate.service.cleanup.CleanerUpper;
 import com.fasterxml.clustermate.service.cleanup.CleanupTask;
 import com.fasterxml.clustermate.service.cluster.*;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
+import com.fasterxml.clustermate.service.metrics.BackgroundMetricsAccessor;
 import com.fasterxml.clustermate.service.servlet.*;
 import com.fasterxml.clustermate.service.store.*;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
@@ -339,7 +340,13 @@ public abstract class DWBasedService<
 
     // since 0.9.6
     protected abstract List<CleanupTask<?>> constructCleanupTasks();
-    
+
+    protected BackgroundMetricsAccessor constructMetricsAccessor(SharedServiceStuff stuff,
+            ClusterViewByServer cluster, Stores<K,E> stores,
+            AllOperationMetrics.Provider[] metrics) {
+        return new BackgroundMetricsAccessor(stuff, stores, metrics);
+    }
+
     /*
     /**********************************************************************
     /* Factory methods: servlets
@@ -355,9 +362,8 @@ public abstract class DWBasedService<
     }
 
     protected ServletBase constructNodeMetricsServlet(SharedServiceStuff stuff,
-            ClusterViewByServer cluster, Stores<K,E> stores,
-            AllOperationMetrics.Provider[] metrics) {
-        return new NodeMetricsServlet(stuff, stores, metrics);
+            BackgroundMetricsAccessor accessor) {
+        return new NodeMetricsServlet(stuff, accessor);
     }
         
     protected SyncListServlet<K,E> constructSyncListServlet(SharedServiceStuff stuff,
@@ -406,13 +412,12 @@ public abstract class DWBasedService<
                 cluster, storeHandler);
         servlets.put(PathType.STORE_LIST, storeListServlet);
 
-        servlets.put(PathType.NODE_METRICS, constructNodeMetricsServlet(stuff, cluster,
+        final BackgroundMetricsAccessor metrics = constructMetricsAccessor(stuff, cluster,
                 storeHandler.getStores(),
                 new AllOperationMetrics.Provider[] {
                     storeEntryServlet, storeListServlet, syncListServlet
-                }
-        ));
-
+                });
+        servlets.put(PathType.NODE_METRICS, constructNodeMetricsServlet(stuff, metrics));
 
 //        servlets.put(PathType.STORE_FIND_ENTRY, );
 //        servlets.put(PathType.STORE_FIND_LIST, );
