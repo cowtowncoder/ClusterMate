@@ -72,20 +72,15 @@ public class BackgroundMetricsAccessor
                 .without(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     }
     
-    public SerializedMetrics getMetrics(boolean forceRefresh, boolean full, boolean indent)
+    public SerializedMetrics getMetrics(boolean forceRefresh, boolean full)
         throws IOException
     {
         SerializedMetrics ser = _cachedMetrics.get();
-        long now = _timeMaster.currentTimeMillis();
-
+        final long now = _timeMaster.currentTimeMillis();
         if (_shouldRefresh(forceRefresh, now, ser)) {
             ExternalMetrics metrics = _gatherMetrics(now, full);
-            ObjectWriter w = _jsonWriter;
-            if (indent) {
-                w = w.withDefaultPrettyPrinter();
-            }
-            final byte[] raw = w.writeValueAsBytes(metrics);
-            ser = new SerializedMetrics(now, raw);
+            ser = new SerializedMetrics(_jsonWriter.getFactory(), now,
+                    _jsonWriter.writeValueAsBytes(metrics));
             _cachedMetrics.set(ser);
         }
         return ser;

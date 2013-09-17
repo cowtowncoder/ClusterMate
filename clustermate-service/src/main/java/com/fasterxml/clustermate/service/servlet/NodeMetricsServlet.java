@@ -81,10 +81,10 @@ public class NodeMetricsServlet extends ServletBase
             if (indentStr != null && indentStr.length() > 0) {
                 indent = Boolean.valueOf(indentStr.trim());
             }
-            SerializedMetrics ser = _accessor.getMetrics(forceRefresh, full, indent);
+            SerializedMetrics ser = _accessor.getMetrics(forceRefresh, full);
             response = (ServletServiceResponse) response.ok()
                     .setContentTypeJson();
-            response.writeRaw(ser.serialized);
+            response.writeRaw(indent ? ser.getIndented() : ser.getRaw());
         } catch (Exception e) {
             String msg = "Failed to serialize Metrics: "+e;
             LOG.warn(msg, e);
