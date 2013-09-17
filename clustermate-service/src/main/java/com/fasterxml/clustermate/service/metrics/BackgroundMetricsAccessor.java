@@ -59,7 +59,7 @@ public class BackgroundMetricsAccessor
         _entryStore = stores.getEntryStore();
         _lastAccessStore = stores.getLastAccessStore();
         _metricsProviders = metricsProviders;
-        
+
         /* 16-May-2013, tatu: Need to use separate mapper just because
          *   our default inclusion mechanism may differ...
          */

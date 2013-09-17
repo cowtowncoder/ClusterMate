@@ -104,9 +104,12 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
             .setFast(config.onlyCollectFast())
             .setClear(config.resetStatsAfterCollection())
             ;
-        BDBBackendStats stats = new BDBBackendStats(config, System.currentTimeMillis());
+        final long start = System.currentTimeMillis();
+        BDBBackendStats stats = new BDBBackendStats(config, start);
         stats.db = _store.getStats(statsConfig);
         stats.env = _store.getEnvironment().getStats(statsConfig);
+        // don't accept "0 msecs" as answer :)
+        stats.setTimeTakenMsecs(Math.max(1L, System.currentTimeMillis() - start));
         return stats;
     }
 
