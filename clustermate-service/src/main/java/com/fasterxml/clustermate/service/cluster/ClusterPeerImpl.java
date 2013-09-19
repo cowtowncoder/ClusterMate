@@ -12,25 +12,19 @@ import org.skife.config.TimeSpan;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.clustermate.api.ClusterStatusAccessor;
-import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.KeyRange;
-import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.storemate.shared.*;
+import com.fasterxml.storemate.shared.util.IOUtil;
+import com.fasterxml.storemate.store.*;
+import com.fasterxml.storemate.store.util.BoundedInputStream;
+
+import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.service.NodeStateStore;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 import com.fasterxml.clustermate.service.sync.*;
-
-import com.fasterxml.storemate.shared.ByteContainer;
-import com.fasterxml.storemate.shared.IpAndPort;
-import com.fasterxml.storemate.shared.StorableKey;
-import com.fasterxml.storemate.shared.TimeMaster;
-import com.fasterxml.storemate.shared.util.IOUtil;
-import com.fasterxml.storemate.store.*;
-import com.fasterxml.storemate.store.util.BoundedInputStream;
+import com.fasterxml.clustermate.service.util.StoreUtil;
 
 public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     extends ClusterPeer
@@ -642,13 +636,17 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
              *   necessary.
              */
             Storable localEntry = _entryStore.findEntry(StoreOperationSource.SYNC, null, remoteEntry.key);
-            // either needs to have been seen
             if (localEntry != null) {
+                // Do we have an actual conflict? If so, needs resolution as per:
+                if (StoreUtil.needToPullRemoteToResolve(localEntry.getLastModified(), localEntry.getContentHash(),
+                        remoteEntry.insertionTime, remoteEntry.hash)) {
+                    continue;
+                }
                 it.remove();
             }
         }
     }
-
+    
     /**
      * Helper method that handles actual fetching of missing entries, to synchronize
      * content.
@@ -684,7 +682,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             try {
                 in = _syncListAccessor.readSyncPullResponse(req, TIMEOUT_FOR_SYNCLIST,
                          getAddress(), status, payloadSize.get());
-//            } catch (org.apache.http.conn.HttpHostConnectException e) {
+//            } catch (org.apache.http.conn.HttpHostConnectException e) { // if using Apache HC
             } catch (java.net.ConnectException e) {
                 ++fails;
                 LOG.warn("Failed to connect server "+getAddress()+" to fetch missing entries", e);
@@ -819,7 +817,8 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     }
     
     /**
-     * Method that does the heavy lifting of pulling a single synchronized entry.
+     * Method that does the heavy lifting of pulling a single synchronized entry,
+     * if and as necessary.
      */
     private void _pullEntry(SyncListResponseEntry reqEntry, SyncPullEntry header,
             InputStream in)
@@ -831,13 +830,12 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
          * or pipe into a file.
          */
         long expSize = header.storageSize;
-        // Sanity check: although rare, deletion could have occured after we got
+        // Sanity check: although rare, deletion could have occurred after we got
         // the initial sync list, so:
         if (header.isDeleted) {
             _entryStore.softDelete(StoreOperationSource.SYNC, null, key, true, true);
             return;
         }
-
         StorableCreationResult result;
         StorableCreationMetadata stdMetadata = new StorableCreationMetadata(header.compression,
                 header.checksum, header.checksumForCompressed);
@@ -860,14 +858,21 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                 }
                 data = ByteContainer.simple(bytes);
             }
-            result = _entryStore.insert(StoreOperationSource.SYNC, null, key, data, stdMetadata, customMetadata);
+            // 19-Sep-2013, tatu: May need to upsert, when resolving conflicts
+            result = _entryStore.upsertConditionally(StoreOperationSource.SYNC, null, key, data,
+                    stdMetadata, customMetadata, true,
+                    new ConflictOverwriteChecker(reqEntry.insertionTime));
         } else {
             /* 21-Sep-2012, tatu: Important -- we must ensure that store only reads
              *   bytes that belong to the entry payload. The easiest way is by adding
              *   a wrapper stream that ensures this...
              */
             BoundedInputStream bin = new BoundedInputStream(in, stdMetadata.storageSize, false);
-            result = _entryStore.insert(StoreOperationSource.SYNC, null, key, bin, stdMetadata, customMetadata);
+            // 19-Sep-2013, tatu: May need to upsert, when resolving conflicts
+            result = _entryStore.upsertConditionally(StoreOperationSource.SYNC, null, key, bin,
+                    stdMetadata, customMetadata, true,
+                    new ConflictOverwriteChecker(reqEntry.insertionTime));
+
             if (result.succeeded() && !bin.isCompletelyRead()) { // error or warning?
                 Storable entry = result.getNewEntry();
                 long ssize = (entry == null) ? -1L : entry.getStorageLength();
@@ -875,6 +880,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                         new Object[] { header.key, bin.bytesRead(), bin.bytesLeft(), ssize });
             }
         }
+        
         // should we care whether this was redundant or not?
         if (!result.succeeded()) {
             if (result.getPreviousEntry() != null) {

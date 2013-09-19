@@ -7,7 +7,9 @@ import org.slf4j.helpers.MessageFormatter;
  * Helper class added to make it easier to use alternate logging
  * systems, if slf4j won't work. Implementation leaves out support
  * for debug, trace (who needs them anyway?); assumes 'warn' and 'error'
- * are enabled by default
+ * are enabled by default.
+ *<p>
+ * NOTE: NOT COMPLETE -- NOT YET READY FOR USE!
  */
 @SuppressWarnings("serial")
 public abstract class LoggerBaseImpl

@@ -2,6 +2,8 @@ Project: ClusterMate
 
 0.9.14 (??-???-2013)
 
+#25: Add conflict resolution for rare case of two nodes receiving differing data
+  for same key (older one wins; if tie, one with "higher" content hash)
 - Fixed issues with `StoreForTests`, double-initialization (which caused issues
   with cleanup tasks during tests)
 

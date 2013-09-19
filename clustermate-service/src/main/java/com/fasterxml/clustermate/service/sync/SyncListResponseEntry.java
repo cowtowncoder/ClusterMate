@@ -19,6 +19,9 @@ public class SyncListResponseEntry
     // Of timestamps, just need 'insertionTime' (i.e. last state modification);
     // creationTime only needed if we do sync
     public long insertionTime;
+
+    // Content hash of the entry
+    public int hash;
     
     static SyncListResponseEntry valueOf(StoredEntry<?> src)
     {
@@ -27,6 +30,7 @@ public class SyncListResponseEntry
         Storable raw = src.getRaw();
         e.insertionTime = raw.getLastModified();
         e.size = raw.isDeleted() ? -1L : raw.getStorageLength();
+        e.hash = raw.getContentHash();
         return e;
     }
 
