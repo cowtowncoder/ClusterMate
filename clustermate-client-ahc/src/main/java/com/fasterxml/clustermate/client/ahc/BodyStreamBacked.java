@@ -52,9 +52,15 @@ public abstract class BodyStreamBacked extends BodyBase
         if (_cheksumCalculator != null) {
             _checksum.set((int) _cheksumCalculator.calculateHash());
         }
-        if (_buffer != null) {
-            _bufferHolder.returnBuffer(_buffer);
+        /* 19-Spe-2013, tatu: Should not need this, but I have seen odd warnings about
+         *   "Trying to double-return a buffer"; so let's see if we can squash it
+         *   without sync (or further investigation).
+         *   ... and yes, obviously something funky is going here. I blame AHC or Netty.
+         */
+        byte[] b = _buffer;
+        if (b != null) {
             _buffer = null;
+            _bufferHolder.returnBuffer(b);
         }
     }
 
