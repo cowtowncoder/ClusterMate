@@ -26,10 +26,12 @@ public class GetContentProcessorForBytes extends GetContentProcessor<ByteAggrega
         public Handler() { }
 
         @Override
-        public void processContent(byte[] content, int offset, int length)
+        public boolean processContent(byte[] content, int offset, int length)
             throws IOException
         {
             _bytes = ByteAggregator.with(_bytes, content, offset, length);
+            // yeah, let's get all there is?
+            return true;
         }
 
         @Override

@@ -32,8 +32,10 @@ public abstract class GetContentProcessor<T>
          * Method used when content can only be delivered in
          * chunks: if so, this method may be called zero or more times
          * before {@link #completeContentProcessing} is called.
+         * 
+         * @return True, if more content is to be sent; false to abort processing
          */
-        public abstract void processContent(byte[] content, int offset, int length) throws IOException;
+        public abstract boolean processContent(byte[] content, int offset, int length) throws IOException;
     
         /**
          * Method called once stateful content processing has been successfully completed,

@@ -32,7 +32,7 @@ public class GetContentProcessorForFiles extends GetContentProcessor<File>
         }
 
         @Override
-        public void processContent(byte[] content, int offset, int length)
+        public boolean processContent(byte[] content, int offset, int length)
             throws IOException
         {
             if (_out == null) {
@@ -41,6 +41,8 @@ public class GetContentProcessorForFiles extends GetContentProcessor<File>
             if (length > 0) {
                 _out.write(content, offset, length);
             }
+            // yeah, let's get all there is?
+            return true;
         }
 
         @Override

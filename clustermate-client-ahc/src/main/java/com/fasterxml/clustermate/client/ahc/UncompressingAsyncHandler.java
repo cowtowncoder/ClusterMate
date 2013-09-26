@@ -210,8 +210,8 @@ public class UncompressingAsyncHandler<T>
      * Method called by uncompressor; needs to dispatch content call appropriately.
      */
     @Override
-    public void handleData(byte[] buffer, int offset, int len) throws IOException {
-        _handler.processContent(buffer, offset, len);
+    public boolean handleData(byte[] buffer, int offset, int len) throws IOException {
+        return _handler.processContent(buffer, offset, len);
     }
 
     @Override

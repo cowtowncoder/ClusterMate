@@ -755,12 +755,12 @@ public class FileBackedResponseContentImpl
         }
         
         @Override
-        public void handleData(byte[] buffer, int offset, int len) throws IOException
+        public boolean handleData(byte[] buffer, int offset, int len) throws IOException
         {
             if (_leftToSkip > 0L) {
                 if (len <= _leftToSkip) {
                     _leftToSkip -= len;
-                    return;
+                    return true;
                 }
                 offset += (int) _leftToSkip;
                 len -= (int) _leftToSkip;
@@ -772,7 +772,11 @@ public class FileBackedResponseContentImpl
                 }
                 _out.write(buffer, offset, len);
                 _leftToWrite -= len;
+                // all done?
+                return (_leftToWrite > 0);
             }
+            // No need to call again, all done!
+            return false;
         }
 
         @Override
@@ -781,5 +785,5 @@ public class FileBackedResponseContentImpl
                 throw new IOException("Could not uncompress all data ("+_fullDataLength+" bytes): missing last "+_leftToWrite);
             }
         }
-    };
+    }
 }

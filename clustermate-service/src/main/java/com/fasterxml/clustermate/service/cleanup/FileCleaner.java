@@ -35,11 +35,11 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
     protected long _maxTimeToLiveMsecs;
     
     public FileCleaner() {
-        this(LoggerFactory.getLogger(FileCleaner.class));
+        this(null);
     }
 
     public FileCleaner(Logger log) {
-        LOG = log;
+        LOG = (log == null) ? LoggerFactory.getLogger(getClass()) : log;
     }
     
     @Override
