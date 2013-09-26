@@ -168,16 +168,29 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
         if (nodeCount == 1) {
             copies = 1;
         } else {
-            copies = clusterConfig.numberOfCopies;
+            int copies0 = clusterConfig.numberOfCopies;
             // otherwise verify (NOTE: may need to change for dynamic registration)
-            if (copies > nodeCount) {
-                throw new IllegalStateException("Can not require "+copies+" copies with "+nodeCount+" nodes");
-            } else if (copies < 1) {
+            if (copies0 > nodeCount) { 
+                // actually, let's simply truncate
+                if (strategy == KeyRangeAllocationStrategy.SIMPLE_LINEAR) {
+                    copies = nodeCount;
+                    LOG.warn("Number of copies set to "+copies0+": but with "+copies+" nodes need to truncate to that value");
+                } else {
+                    throw new IllegalStateException("Can not require "+copies0+" copies with "+nodeCount+" nodes");
+                }
+            } else if (copies0 < 1) {
                 // Ok for STATIC, but not for others
-                if (strategy != KeyRangeAllocationStrategy.STATIC) {
+                if (strategy == KeyRangeAllocationStrategy.STATIC) {
+                    copies = copies0; // fine, whatever
+                } else if (copies0 < 0 && strategy == KeyRangeAllocationStrategy.SIMPLE_LINEAR) {
+                    copies = nodes.size();
+                    LOG.info("Number of copies set to "+copies0+": taken to mean 'maximum', in this case "+copies);
+                } else {
                     throw new IllegalStateException("Missing 'numbedOfCopies' setting in ClusterConfig (required with strategy "
                             +strategy+")");
                 }
+            } else {
+                copies = copies0;
             }
         }
         for (int i = 0, end = nodes.size(); i < end; ++i) {

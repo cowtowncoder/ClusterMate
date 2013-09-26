@@ -1,5 +1,12 @@
 Project: ClusterMate
 
+0.9.15
+
+- Allow use of -1 and values above node count for 'numberOfCopies', to mean
+ "maximum number of copies" (that is, same as number of nodes); this to make
+ configuration more robust.
+- Add new pseudo-cleanup-task for disk space usage tracking.
+
 0.9.14 (25-Sep-2013)
 
 #25: Add conflict resolution for rare case of two nodes receiving differing data

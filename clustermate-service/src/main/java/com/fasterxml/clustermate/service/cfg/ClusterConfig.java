@@ -32,9 +32,10 @@ public class ClusterConfig
      * Number of copies that should be stored for each entry: typically either
      * 3 (higher redundancy) or 2 (lower), although other values are legal
      * too (1 means there is no redundancy).
-     * Value of 0 is allowed since this is optional for certain configurations.
+     * Value of 0 is allowed since this is optional for certain configurations;
+     * and -1 may be used as marker for special value ("maximum copies", usually)
      */
-    @Min(0)
+    @Min(-1)
     @Max(Integer.MAX_VALUE)
     public int numberOfCopies;
 
