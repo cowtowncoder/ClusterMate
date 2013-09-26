@@ -92,7 +92,7 @@ public class NodeMetricsServlet extends ServletBase
                 .internalError(msg)
                 .setContentTypeText()
                 ;
-            response.writeOut(null);
+            response.writeText(msg);
         }
     }
 }

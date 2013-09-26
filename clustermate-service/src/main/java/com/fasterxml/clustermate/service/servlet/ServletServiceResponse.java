@@ -57,6 +57,11 @@ public class ServletServiceResponse extends ServiceResponse
         }
     }
 
+    public void writeText(String msg) throws IOException
+    {
+        writeRaw(msg.getBytes("UTF-8"));
+    }
+    
     public void writeRaw(byte[] raw) throws IOException
     {
         setContentLength(raw.length);
