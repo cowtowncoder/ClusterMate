@@ -1,6 +1,6 @@
 Project: ClusterMate
 
-0.9.14 (??-???-2013)
+0.9.14 (25-Sep-2013)
 
 #25: Add conflict resolution for rare case of two nodes receiving differing data
   for same key (older one wins; if tie, one with "higher" content hash)
