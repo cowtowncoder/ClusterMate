@@ -17,10 +17,8 @@ public abstract class CleanupTask<T>
 
     protected CleanupTask() { }
 
-    protected void init(SharedServiceStuff stuff,
-            Stores<?,?> stores,
-            ClusterViewByServer cluster,
-            AtomicBoolean shutdown)
+    protected void init(SharedServiceStuff stuff, Stores<?,?> stores,
+            ClusterViewByServer cluster, AtomicBoolean shutdown)
     {
         _timeMaster = stuff.getTimeMaster();
         _shutdown = shutdown;

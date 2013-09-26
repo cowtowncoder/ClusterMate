@@ -21,10 +21,10 @@ import com.fasterxml.storemate.store.file.*;
  */
 public class FileCleaner extends CleanupTask<FileCleanupStats>
 {
-    private final Logger LOG;
+    protected final Logger LOG;
     
     protected FileManager _fileManager;
-
+    
     /**
      * Age used for checking if a directory is safe to completely nuke,
      * due to its contents necessarily being older than their maximum
@@ -33,7 +33,7 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
      * and alike.
      */
     protected long _maxTimeToLiveMsecs;
-    
+
     public FileCleaner() {
         this(null);
     }
@@ -66,16 +66,15 @@ public class FileCleaner extends CleanupTask<FileCleanupStats>
         final int dirCount = dateDirs.size();
         if (dirCount == 0) { // none?
             _reportEndNoDirs();
-            return stats;
+        } else {
+            for (int i = 0, end = dirCount-1; i < end; ++i) {
+                _cleanDateDir(dateDirs.get(i), stats);
+            }
+            _reportEndSuccess(stats, dateDirs.get(dirCount-1).getDirectory());
         }
-        for (int i = 0, end = dirCount-1; i < end; ++i) {
-            _cleanDateDir(dateDirs.get(i), stats);
-        }
-        // all done
-        _reportEndSuccess(stats, dateDirs.get(dirCount-1).getDirectory());
         return stats;
     }
-
+    
     /**
      * Helper method called for given "date directory", to do recursively clean up.
      */
