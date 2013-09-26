@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import com.fasterxml.clustermate.service.LastAccessStore;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -17,7 +16,6 @@ import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.backend.BackendStats;
 import com.fasterxml.storemate.store.backend.BackendStatsConfig;
 import com.fasterxml.storemate.store.backend.StoreBackend;
-import com.sleepycat.je.EnvironmentStats;
 
 /**
  * Helper class that is used to access metrics from a separate thread,
@@ -136,25 +134,4 @@ public class BackgroundMetricsAccessor
     /* Helper class(es)
     /**********************************************************************
      */
-
-    /**
-     * Helper class we only need for filtering out some unwanted
-     * properties.
-     */
-    static class CleanBDBStats
-        extends BDBBackendStats
-    {
-        // this is an alternative to mix-ins, which would also work
-        @JsonIgnoreProperties({ "tips", "statGroups" })
-        public EnvironmentStats getEnv() {
-            return env;
-        }
-
-        public CleanBDBStats(BDBBackendStats raw)
-        {
-            super(raw);
-            db = raw.db;
-            env = raw.env;
-        }
-    }
 }

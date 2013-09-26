@@ -25,7 +25,7 @@ public class SyncListTest extends JaxrsStoreTestBase
      * for now can be inlined.
      */
     final long GRACE_PERIOD = 5000L;
-    
+
     @Override
     public void setUp() {
         initTestLogging();
