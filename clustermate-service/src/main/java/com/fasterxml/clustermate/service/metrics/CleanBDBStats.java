@@ -13,11 +13,11 @@ public class CleanBDBStats // public for testing
 {
     // this is an alternative to mix-ins, which would also work
     @JsonIgnoreProperties({
-        "tips", "statGroups",
+        "tips", "statGroups", "statGroupsMap" // names keep changing...
         /* 26-Sep-2013, tatu: Apparently these cause probs with 5.0.84:
          *   Curse: these keep on changing on version-by-version basis...
          */
-        "avgBatchCacheMode", "avgBatchCritical", "avgBatchDaemon", "avgBatchEvictorThread", "avgBatchManual",
+        ,"avgBatchCacheMode", "avgBatchCritical", "avgBatchDaemon", "avgBatchEvictorThread", "avgBatchManual"
     })
     public EnvironmentStats getEnv() {
         return env;
