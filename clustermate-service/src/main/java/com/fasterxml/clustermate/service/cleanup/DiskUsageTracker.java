@@ -22,18 +22,12 @@ public class DiskUsageTracker extends CleanupTask<DiskUsageStats>
 
     protected final static int MAX_FILES = 25000;
     
-    protected final Logger LOG;
-    
     /**
      * We will also calculate disk usage of metadata database, if available.
      */
     protected File _dbRoot;
 
-    public DiskUsageTracker() { this(null); }
-
-    public DiskUsageTracker(Logger log) {
-        LOG = (log == null) ? LoggerFactory.getLogger(getClass()) : log;
-    }
+    public DiskUsageTracker() { }
 
     @Override
     protected void init(SharedServiceStuff stuff, Stores<?,?> stores,
@@ -71,4 +65,14 @@ public class DiskUsageTracker extends CleanupTask<DiskUsageStats>
         }
         return true;
     }
+
+    /*
+    /**********************************************************************
+    /* Overridable reporting methods
+    /**********************************************************************
+     */
+
+    protected void _reportStart() { }
+
+    protected void _reportEnd(DiskUsageStats stats) { }
 }
