@@ -7,14 +7,14 @@ public class SizeUtil
         // yeah I'm old-fashioned, kilo-byte is 2^10 bytes
         double kbs = amount / 1024.0;
         if (kbs < 1000.0) {
-            return String.format("%.1d kB", kbs);
+            return String.format("%.1f kB", kbs);
         }
         double mbs = kbs / 1024.0;
         if (mbs < 1000.0) {
-            return String.format("%.1d MB", mbs);
+            return String.format("%.1f MB", mbs);
         }
         double gigs = mbs / 1024.0;
-        return String.format("%.1d GB", gigs);
+        return String.format("%.1f GB", gigs);
     }
 
 }
