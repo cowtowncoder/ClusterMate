@@ -270,6 +270,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                     syncLoop();
                 }
             });
+            _syncThread.setDaemon(true);
             _syncThread.setName("NodeSync-"+_syncState.getAddress());
         }
         t.start();

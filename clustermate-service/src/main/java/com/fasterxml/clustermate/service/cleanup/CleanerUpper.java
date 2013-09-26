@@ -144,6 +144,7 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
         
         _nextStartTime.set(_timeMaster.currentTimeMillis() + delayMsecs);
         _thread = new Thread(this);
+        _thread.setDaemon(true);
         _thread.start();
     }
 

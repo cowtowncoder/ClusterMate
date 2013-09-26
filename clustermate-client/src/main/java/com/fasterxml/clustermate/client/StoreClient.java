@@ -133,6 +133,8 @@ public abstract class StoreClient<K extends EntryKey,
                 updateLoop();
             }
         });
+        // make it daemon, so as not to block shutdowns
+        t.setDaemon(runAsDaemon());
         _thread = t;
         t.start();
     }
@@ -175,6 +177,15 @@ public abstract class StoreClient<K extends EntryKey,
 
     public EntryKeyConverter<K> getKeyConverter() {
         return _keyConverter;
+    }
+
+    /**
+     * Overridable internal accessor to define whether background thread used
+     * for updates is to run as daemon or not; usually it should (and by default
+     * does)
+     */
+    public boolean runAsDaemon() {
+        return true;
     }
     
     /*
