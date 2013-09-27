@@ -3,9 +3,6 @@ package com.fasterxml.clustermate.service.cleanup;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
@@ -41,10 +38,15 @@ public class DiskUsageTracker extends CleanupTask<DiskUsageStats>
     public DiskUsageStats _cleanUp()
     {
         DiskUsageStats stats = new DiskUsageStats(MAX_DIRS, MAX_FILES);
+        _reportStart();        
         if (_dbRoot != null) {
             _add(stats, _dbRoot);
         }
-        return stats;
+        try {
+            return stats;
+        } finally {
+            _reportEnd(stats);
+        }
     }
 
     private boolean _add(DiskUsageStats stats, File curr)
