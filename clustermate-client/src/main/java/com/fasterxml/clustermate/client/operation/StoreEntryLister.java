@@ -63,7 +63,7 @@ public class StoreEntryLister<K extends EntryKey,T>
     {
         return listMore(DEFAULT_MAX_ENTRIES);
     }
-        
+
     public ListOperationResult<T> listMore(int maxToList) throws InterruptedException
     {
         ListOperationResult<T> result = _listMore(maxToList);
@@ -76,7 +76,7 @@ public class StoreEntryLister<K extends EntryKey,T>
         return result;
     }
 
-    public ListOperationResult<T> _listMore(int maxToList) throws InterruptedException
+    protected ListOperationResult<T> _listMore(int maxToList) throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
 
@@ -95,7 +95,7 @@ public class StoreEntryLister<K extends EntryKey,T>
         final long endOfTime = startTime + _clientConfig.getOperationConfig().getGetOperationTimeoutMsecs();
         final long lastValidTime = endOfTime - _clientConfig.getCallConfig().getMinimumTimeoutMsecs();
 
-        // Ok: first round; try HEAD from every enabled store (or, if only one try, all)
+        // Ok: first round; try List from every enabled store (or, if only one try, all)
         final boolean noRetries = !allowRetries();
         List<NodeFailure> retries = null;
         for (int i = 0; i < nodeCount; ++i) {
