@@ -1,16 +1,13 @@
 Project: ClusterMate
 
-0.9.15
+0.9.15 (27-Sep-2013)
 
 #5: Allow use of -1 and values above node count for 'numberOfCopies', to mean
  "maximum number of copies" (that is, same as number of nodes); this to make
  configuration more robust.
-- Add new pseudo-cleanup-task for disk space usage tracking.
-
-0.9.14 (25-Sep-2013)
-
 #25: Add conflict resolution for rare case of two nodes receiving differing data
   for same key (older one wins; if tie, one with "higher" content hash)
+- Add new pseudo-cleanup-task for disk space usage tracking.
 - Fixed issues with `StoreForTests`, double-initialization (which caused issues
   with cleanup tasks during tests)
 
@@ -19,14 +16,8 @@ Project: ClusterMate
 #29: Add 'PutCallParams' to pass additional parameters through client
    (like max-TTL)
 - Refactor FileCleaner to allow overriding of logging details
-
-0.9.12 (08-Aug-2013)
-
 - Fix a problem with metrics; internal change from millis to nanos made tpXXX
   values exposed as nanos
-
-0.9.11 (11-Jul-2013)
-
 - Fixed a problem with sync-pull, where server was not updating timestamps after
   internal sleep
 
@@ -37,12 +28,9 @@ Project: ClusterMate
 
 0.9.9 (04-Jun-2013)
 
+#26: Add support for deferred (async) DELETEs.
 #28: Upgrade metrics to 3.0.0
 - Add support for database/file-system-access - based throttling.
-
-0.9.8 (31-May-2013)
-
-#26: Add support for deferred (async) DELETEs.
 
 0.9.7 (23-May-2013)
 
@@ -65,9 +53,6 @@ Project: ClusterMate
 
 #21: Provide `Content-Length` for GET requests
 - Increased default read buffer for StreamingResponseContentImpl 8k->16k
-
-0.9.4 (12-Apr-2013)
-
 - Add more stuff in OperationDiagnostics, for DB read/write, last-access update
   breakdowns
 
@@ -81,42 +66,24 @@ Project: ClusterMate
 0.9.2 (21-Mar-2013)
 
 #13: Change logging to use slf4j for client package
-
-0.9.1 (18-Mar-2013)
-
 - Add basic handling of StoreExceptions, to try to give caller better idea of
   failures due to underlying storage engine
 
-0.8.9 (25-Feb-2013)
+0.8.9 and earlier
 
-#17: Filter out tombstones from `listEntries`.
-
-0.8.8 (11-Feb-2013)
-
-#15: Implement client accessor that uses default JDK-provided http client
-
-0.8.7 (05-Feb-2013)
-
+#4: Add Servlet/Handler for listing entries
+#6: Provide Etag for GET, when content hash known
+#7: Support conditional GET with Etag
+#8: Fix problems with file auto-cleaning, dangling metadata, failing sync pulls
+#11: Use long-polling for SYNC LIST operation
 #12: Implement/require external String representation for Keys.
+#15: Implement client accessor that uses default JDK-provided http client
+#17: Filter out tombstones from `listEntries`.
 - Add 'ExtensibleType' base class, to try to improve forwards compatibility
 - Fix issues with handling (or lack thereof) of "full items" (ListItem sub-classes)
-
-0.8.6 (03-Feb-2013)
-
-#11: Use long-polling for SYNC LIST operation
-
-0.8.5 (01-Feb-2013)
-
 - Add 'itemCount' property in 'OperationDiagnostics', populate for sync list, pull,
   list entries
 - Add 'ListItem' parameterization, to allow custom sub-classes.
 - Make 'LastAccessUpdatedMethod' an interface to make values configurable
-
-0.8.4 and earlier
-
-#4: Add Servlet/Handler for listing entries
-#8: Fix problems with file auto-cleaning, dangling metadata, failing sync pulls
-#6: Provide Etag for GET, when content hash known
-#7: Support conditional GET with Etag
 
 Earlier notes not maintained; first version (0.5.0) released in September 2012
