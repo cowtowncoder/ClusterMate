@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.9.16 (28-Sep-2013)
+
+Need to upgrade StoreMate to roll back BDB-JE version, due to a critical bug.
+
 0.9.15 (27-Sep-2013)
 
 #5: Allow use of -1 and values above node count for 'numberOfCopies', to mean
