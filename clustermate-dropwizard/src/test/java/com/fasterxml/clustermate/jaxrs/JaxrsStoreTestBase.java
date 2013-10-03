@@ -46,6 +46,14 @@ public abstract class JaxrsStoreTestBase extends TestCase
      */
     protected final static int TEST_PORT = 7777;
 
+    /**
+     * This compile-time flag is here to remind that tests use (or not)
+     * BDB-JE transctions. This should make no difference under normal test
+     * conditions, since we don't do anything to cause problems. But
+     * at higher level we may experience other issues with shutdown.
+     */
+    protected final static boolean USE_TRANSACTIONS = true;
+    
     // null -> require client id with key
     protected final TestKeyConverter _keyConverter = TestKeyConverter.defaultInstance(null);
 
@@ -92,7 +100,7 @@ public abstract class JaxrsStoreTestBase extends TestCase
     /* Store creation
     /**********************************************************************
      */
-
+    
     protected StoreResourceForTests<TestKey, StoredEntry<TestKey>>
     createResource(String testSuffix, TimeMaster timeMaster,
             boolean cleanUp)
@@ -106,6 +114,12 @@ public abstract class JaxrsStoreTestBase extends TestCase
 
         BDBJEConfig bdbConfig = new BDBJEConfig();
         bdbConfig.dataRoot = new File(fileDir.getParent(), "bdb-storemate");
+
+        /* 03-Oct-2013, tatu: Should we verify that BDB-JE transactions may
+         *   be used?
+         */
+        bdbConfig.useTransactions = USE_TRANSACTIONS;
+
         BDBJEBuilder b = new BDBJEBuilder(config.storeConfig, bdbConfig);
         StoreBackend backend = b.buildCreateAndInit();
         // null -> use default throttler (simple)
