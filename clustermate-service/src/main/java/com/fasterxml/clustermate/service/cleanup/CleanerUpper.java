@@ -174,18 +174,21 @@ public class CleanerUpper<K extends EntryKey, E extends StoredEntry<K>>
             if (curr != null) {
                 LOG.warn("CleanerUpper not complete when stop() called: will wait a bit first");
                 boolean complete = false;
-
-                // up to 1 second only
+                long start = System.currentTimeMillis();
+                // up to 3 seconds only
                 try {
-                    for (int i = 0; i < 20; ++i) {
+                    for (int i = 0; !complete && i < 60; ++i) {
                         Thread.sleep(50L);
                         complete = _completed.get();
                     }
                 } catch (InterruptedException e) { }
 
                 if (!complete) {
-                    LOG.warn("CleanerUpper task '{}' not complete when stop() called: will try Thread.interrupt()",
-                            curr.toString());
+                    long msecs = System.currentTimeMillis() - start;
+                    curr = _currentTask.get();
+                    String desc = (curr == null) ? "NONE" : curr.toString();
+                    LOG.warn("CleanerUpper task '{}' still not complete after {} msec wait: will try Thread.interrupt() as last resort",
+                            desc, msecs);
                     _thread.interrupt();
                 }
             } else { // otherwise... should be fine
