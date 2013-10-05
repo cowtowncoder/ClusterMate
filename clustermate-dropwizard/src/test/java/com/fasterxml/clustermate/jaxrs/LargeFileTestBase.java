@@ -13,7 +13,7 @@ import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreConfig;
 import com.fasterxml.storemate.store.StoreOperationSource;
 
-public class LargeFileTest extends JaxrsStoreTestBase
+public abstract class LargeFileTestBase extends JaxrsStoreTestBase
 {
     final static int MAX_PAYLOAD_IN_MEMORY = StoreConfig.DEFAULT_MIN_PAYLOAD_FOR_STREAMING-1;
 

@@ -19,7 +19,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
 /**
  * Basic testing of creating some data from scratch, accessing it.
  */
-public class SmallFileTest extends JaxrsStoreTestBase
+public abstract class SmallFileTestBase extends JaxrsStoreTestBase
 {
     final static CustomerId CLIENT_ID = CustomerId.valueOf(1234);
 

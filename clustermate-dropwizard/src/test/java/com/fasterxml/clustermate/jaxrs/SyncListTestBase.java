@@ -16,7 +16,7 @@ import com.fasterxml.clustermate.service.sync.SyncListResponse;
 /**
  * Test case(s) to verify that we can handle basic pull list request
  */
-public class SyncListTest extends JaxrsStoreTestBase
+public abstract class SyncListTestBase extends JaxrsStoreTestBase
 {
     final static CustomerId CLIENT_ID = CustomerId.valueOf(1234);
 

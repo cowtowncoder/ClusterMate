@@ -17,7 +17,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
 /**
  * Unit tests to verify basic functioning of DELETE operation
  */
-public class DeleteTest extends JaxrsStoreTestBase
+public abstract class DeleteTestBase extends JaxrsStoreTestBase
 {
     final static CustomerId CLIENT_ID = CustomerId.valueOf(123);
 
@@ -26,6 +26,18 @@ public class DeleteTest extends JaxrsStoreTestBase
         initTestLogging();
     }
 
+    /*
+    protected abstract StoreResource<TestKey, StoredEntry<TestKey>> createResource(String name,
+            TimeMasterForSimpleTesting timeMaster, boolean fullInit);
+            */
+
+    /*
+    protected StoreResource<TestKey, StoredEntry<TestKey>> createResource(String name,
+            TimeMasterForSimpleTesting timeMaster, boolean fullInit) {
+        
+    }
+    */
+    
     public void testCreateDeleteTwo() throws Exception
     {
         long startTime = 1234L;

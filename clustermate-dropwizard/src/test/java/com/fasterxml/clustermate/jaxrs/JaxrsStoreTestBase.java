@@ -9,8 +9,6 @@ import org.skife.config.TimeSpan;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.storemate.backend.bdbje.BDBJEBuilder;
-import com.fasterxml.storemate.backend.bdbje.BDBJEConfig;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;
@@ -29,6 +27,7 @@ import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ClusterConfig;
 import com.fasterxml.clustermate.service.cfg.NodeConfig;
+import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerImpl;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -45,14 +44,6 @@ public abstract class JaxrsStoreTestBase extends TestCase
      * Lucky four sevens...
      */
     protected final static int TEST_PORT = 7777;
-
-    /**
-     * This compile-time flag is here to remind that tests use (or not)
-     * BDB-JE transctions. This should make no difference under normal test
-     * conditions, since we don't do anything to cause problems. But
-     * at higher level we may experience other issues with shutdown.
-     */
-    protected final static boolean USE_TRANSACTIONS = true;
     
     // null -> require client id with key
     protected final TestKeyConverter _keyConverter = TestKeyConverter.defaultInstance(null);
@@ -100,6 +91,8 @@ public abstract class JaxrsStoreTestBase extends TestCase
     /* Store creation
     /**********************************************************************
      */
+
+    protected abstract StoreBackend createBackend(ServiceConfig config, File fileDir);
     
     protected StoreResourceForTests<TestKey, StoredEntry<TestKey>>
     createResource(String testSuffix, TimeMaster timeMaster,
@@ -111,17 +104,7 @@ public abstract class JaxrsStoreTestBase extends TestCase
         // can just use the default file manager impl...
         FileManager files = new FileManager(new FileManagerConfig(fileDir), timeMaster,
                 new DefaultFilenameConverter());
-
-        BDBJEConfig bdbConfig = new BDBJEConfig();
-        bdbConfig.dataRoot = new File(fileDir.getParent(), "bdb-storemate");
-
-        /* 03-Oct-2013, tatu: Should we verify that BDB-JE transactions may
-         *   be used?
-         */
-        bdbConfig.useTransactions = USE_TRANSACTIONS;
-
-        BDBJEBuilder b = new BDBJEBuilder(config.storeConfig, bdbConfig);
-        StoreBackend backend = b.buildCreateAndInit();
+        StoreBackend backend = createBackend(config, fileDir);
         // null -> use default throttler (simple)
         StorableStore store = new StorableStoreImpl(config.storeConfig,
                 backend, timeMaster, files, null, null);

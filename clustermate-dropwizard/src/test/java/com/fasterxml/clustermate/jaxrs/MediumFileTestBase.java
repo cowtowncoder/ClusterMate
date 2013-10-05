@@ -13,7 +13,7 @@ import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreOperationSource;
 
-public class MediumFileTest extends JaxrsStoreTestBase
+public abstract class MediumFileTestBase extends JaxrsStoreTestBase
 {
     final static CustomerId CLIENT_ID = CustomerId.valueOf("MED_");
 

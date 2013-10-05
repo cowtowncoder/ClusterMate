@@ -16,7 +16,7 @@ import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.json.ClusterMateObjectMapper;
 
-public class EntryListTest extends JaxrsStoreTestBase
+public abstract class EntryListTestBase extends JaxrsStoreTestBase
 {
     final static CustomerId CUSTOMER_ID1 = CustomerId.valueOf(1234);
     final static CustomerId CUSTOMER_ID2 = CustomerId.valueOf(4567);
