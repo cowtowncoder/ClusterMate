@@ -82,6 +82,11 @@ DropWizard container.
       <artifactId>storemate-backend-bdb-je</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-backend-leveldb</artifactId>
+      <scope>test</scope>
+    </dependency>
 
   </dependencies>
 

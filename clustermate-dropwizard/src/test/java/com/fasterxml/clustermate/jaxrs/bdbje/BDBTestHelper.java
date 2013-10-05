@@ -20,7 +20,7 @@ public class BDBTestHelper
     public static StoreBackend createBDBJEBackend(ServiceConfig config, File fileDir)
     {
         BDBJEConfig bdbConfig = new BDBJEConfig();
-        bdbConfig.dataRoot = new File(fileDir.getParent(), "bdb-storemate");
+        bdbConfig.dataRoot = new File(fileDir.getParent(), "test-bdb");
         bdbConfig.useTransactions = USE_TRANSACTIONS;
         BDBJEBuilder b = new BDBJEBuilder(config.storeConfig, bdbConfig);
         return b.buildCreateAndInit();
