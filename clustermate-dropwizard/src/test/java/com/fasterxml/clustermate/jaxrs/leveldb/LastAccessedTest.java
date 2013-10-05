@@ -2,7 +2,7 @@ package com.fasterxml.clustermate.jaxrs.leveldb;
 
 import java.io.File;
 
-import com.fasterxml.clustermate.jaxrs.LastAccessedTestBase;
+import com.fasterxml.clustermate.jaxrs.common.LastAccessedTestBase;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.storemate.store.backend.StoreBackend;
 

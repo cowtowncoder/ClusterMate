@@ -1,13 +1,12 @@
-package com.fasterxml.clustermate.jaxrs;
+package com.fasterxml.clustermate.jaxrs.common;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.backend.BackendStats;
 import com.fasterxml.storemate.store.backend.BackendStatsConfig;
-
+import com.fasterxml.clustermate.jaxrs.StoreResource;
 import com.fasterxml.clustermate.jaxrs.testutil.TestKey;
 import com.fasterxml.clustermate.jaxrs.testutil.TimeMasterForSimpleTesting;
 import com.fasterxml.clustermate.service.metrics.CleanBDBStats;
@@ -26,7 +25,7 @@ public abstract class StatsTestBase extends JaxrsStoreTestBase
         StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("stats", timeMaster, true);
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         BackendStats stats = entries.getBackend().getEntryStatistics(BackendStatsConfig.DEFAULT);
         assertNotNull(stats);

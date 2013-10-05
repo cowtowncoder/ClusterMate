@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.jaxrs;
+package com.fasterxml.clustermate.jaxrs.common;
 
 import java.io.*;
 import java.util.*;
@@ -8,19 +8,18 @@ import junit.framework.TestCase;
 import org.skife.config.TimeSpan;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
+import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.backend.StoreBackend;
 import com.fasterxml.storemate.store.file.DefaultFilenameConverter;
 import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.file.FileManagerConfig;
 import com.fasterxml.storemate.store.impl.StorableStoreImpl;
-
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeDefinition;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
@@ -166,6 +165,28 @@ public abstract class JaxrsStoreTestBase extends TestCase
         return _mapper.convertValue(rawKey.asBytes(), String.class);
     }
 
+    /*
+    /**********************************************************************
+    /* Backend store access
+    /**********************************************************************
+     */
+
+    protected long entryCount(StorableStore store) throws StoreException
+    {
+        if (store.getBackend().hasEfficientEntryCount()) {
+            return store.getEntryCount();
+        }
+        return store.getBackend().countEntries();
+    }
+
+    protected long indexCount(StorableStore store) throws StoreException
+    {
+        if (store.getBackend().hasEfficientIndexCount()) {
+            return store.getIndexedCount();
+        }
+        return store.getBackend().countIndexed();
+    }
+    
     /*
     /**********************************************************************
     /* Methods for file, directory handling

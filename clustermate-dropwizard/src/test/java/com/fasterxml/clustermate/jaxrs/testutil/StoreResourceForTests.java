@@ -23,4 +23,8 @@ public class StoreResourceForTests<K extends EntryKey, E extends StoredEntry<K>>
     public KeyRange getKeyRange() {
         return _clusterView.getLocalState().getRangeActive();
     }
+
+    public SharedServiceStuff getStuff() {
+        return _stuff;
+    }
 }

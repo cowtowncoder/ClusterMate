@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.jaxrs;
+package com.fasterxml.clustermate.jaxrs.common;
 
 import java.io.ByteArrayInputStream;
 
@@ -36,7 +36,7 @@ public abstract class MediumFileTestBase extends JaxrsStoreTestBase
         
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
         
         // then try to find bogus entry; make sure to use a slash...
         final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID,  "data/medium/1");
@@ -58,7 +58,7 @@ public abstract class MediumFileTestBase extends JaxrsStoreTestBase
         assertFalse(presp.inlined);
 
         // can we count on this getting updated? Seems to be, FWIW
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();
@@ -105,7 +105,7 @@ public abstract class MediumFileTestBase extends JaxrsStoreTestBase
         final byte[] BIG_DATA = Compressors.lzfCompress(BIG_DATA0);
 
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
         
         final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID,  "data/medium/2");
 
@@ -120,7 +120,7 @@ public abstract class MediumFileTestBase extends JaxrsStoreTestBase
 
         assertFalse(presp.inlined);
 
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();

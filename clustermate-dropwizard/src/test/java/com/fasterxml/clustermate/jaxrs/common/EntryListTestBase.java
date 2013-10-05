@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.jaxrs;
+package com.fasterxml.clustermate.jaxrs.common;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -47,7 +47,7 @@ public abstract class EntryListTestBase extends JaxrsStoreTestBase
         TestKey key4 = _addEntry(resource, CUSTOMER_ID2, "data");
         _addEntry(resource, CUSTOMER_ID3, "abcdef");
 
-        assertEquals(5, entries.getEntryCount());
+        assertEquals(5, entryCount(entries));
 
         // and then see what we can see, for group 1; should see 2 entries first
         FakeHttpResponse response = new FakeHttpResponse();

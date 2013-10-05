@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.jaxrs;
+package com.fasterxml.clustermate.jaxrs.common;
 
 import java.io.ByteArrayInputStream;
 
@@ -38,7 +38,7 @@ public abstract class SyncListTestBase extends JaxrsStoreTestBase
 
         StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource = createResource("syncSimple", timeMaster, true);
 
-        SyncHandler<TestKey, StoredEntry<TestKey>> syncH = new SyncHandler<TestKey, StoredEntry<TestKey>>(resource._stuff,
+        SyncHandler<TestKey, StoredEntry<TestKey>> syncH = new SyncHandler<TestKey, StoredEntry<TestKey>>(resource.getStuff(),
                 resource.getStores(), resource.getCluster());
 
         final long SYNC_GRACE_PERIOD_MSECS = syncH.getSyncGracePeriodMsecs();
@@ -54,7 +54,7 @@ public abstract class SyncListTestBase extends JaxrsStoreTestBase
                 calcChecksum(SMALL_DATA), new ByteArrayInputStream(SMALL_DATA),
                 null, null, null);
         assertEquals(200, response.getStatus());
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         SyncListResponse<?> syncList;
 
@@ -121,7 +121,7 @@ public abstract class SyncListTestBase extends JaxrsStoreTestBase
         assertEquals(ContentType.SMILE.toString(), response.getContentType());
         byte[] data = response.getStreamingContentAsBytes();
 
-        return resource._stuff.smileReader(SyncListResponse.class).readValue(data);
+        return resource.getStuff().smileReader(SyncListResponse.class).readValue(data);
     }
 
     /**
@@ -137,7 +137,7 @@ public abstract class SyncListTestBase extends JaxrsStoreTestBase
         StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource = createResource("syncLarger", timeMaster, true);
 
         // set handler's "max-to-list" to 1, less than what we need later on
-        SyncHandler<TestKey, StoredEntry<TestKey>> syncH = new SyncHandler<TestKey, StoredEntry<TestKey>>(resource._stuff,
+        SyncHandler<TestKey, StoredEntry<TestKey>> syncH = new SyncHandler<TestKey, StoredEntry<TestKey>>(resource.getStuff(),
                 resource.getStores(), resource.getCluster(), 1);
         
         // First, add entries
@@ -164,7 +164,7 @@ public abstract class SyncListTestBase extends JaxrsStoreTestBase
                 null, null, null);
         assertEquals(200, response.getStatus());
         
-        assertEquals(3, entries.getEntryCount());
+        assertEquals(3, entryCount(entries));
         timeMaster.advanceCurrentTimeMillis(30000L);
 
         FakeHttpRequest syncReq = new FakeHttpRequest();

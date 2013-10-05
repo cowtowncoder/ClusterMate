@@ -2,7 +2,7 @@ package com.fasterxml.clustermate.jaxrs.bdbje;
 
 import java.io.File;
 
-import com.fasterxml.clustermate.jaxrs.LargeFileTestBase;
+import com.fasterxml.clustermate.jaxrs.common.LargeFileTestBase;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.storemate.store.backend.StoreBackend;
 

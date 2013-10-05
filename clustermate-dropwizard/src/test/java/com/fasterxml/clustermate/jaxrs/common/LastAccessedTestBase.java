@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.jaxrs;
+package com.fasterxml.clustermate.jaxrs.common;
 
 import java.io.ByteArrayInputStream;
 import java.util.*;
@@ -76,7 +76,7 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
 
         // find entries; should not yet have last-accessed timestamps
         final StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(3, entries.getEntryCount());
+        assertEquals(3, entryCount(entries));
 
         StoredEntry<TestKey> entry2 = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST,
                 null, KEY2.asStorableKey()));

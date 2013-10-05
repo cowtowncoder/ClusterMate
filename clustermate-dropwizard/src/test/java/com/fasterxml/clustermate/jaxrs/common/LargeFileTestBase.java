@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.jaxrs;
+package com.fasterxml.clustermate.jaxrs.common;
 
 import java.io.*;
 
@@ -51,7 +51,7 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
 
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         // then try to find bogus entry; make sure to use a slash...
         final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, "data/big/1");
@@ -75,7 +75,7 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         assertFalse(presp.inlined);
 
         // can we count on this getting updated? Seems to be, FWIW
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();
@@ -130,7 +130,7 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, "data/bigZ-1");
 
@@ -158,7 +158,7 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         assertEquals(-1, presp.size);
 
         // can we count on this getting updated? Seems to be, FWIW
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();
@@ -213,7 +213,7 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, "data/bigPrecomp-1");
 
@@ -240,7 +240,7 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         assertEquals(-1, presp.size);
 
         // can we count on this getting updated? Seems to be, FWIW
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();

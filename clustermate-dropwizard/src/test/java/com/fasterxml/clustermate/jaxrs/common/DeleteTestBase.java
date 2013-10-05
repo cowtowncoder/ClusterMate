@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.jaxrs;
+package com.fasterxml.clustermate.jaxrs.common;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
@@ -51,7 +51,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
 
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         final String KEY1 = "data/small/1";
         final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, KEY1);
@@ -68,7 +68,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
                 INTERNAL_KEY2, calcChecksum(DATA2), new ByteArrayInputStream(DATA2),
                 null, null, null);
         assertEquals(200, response.getStatus());
-        assertEquals(2, entries.getEntryCount());
+        assertEquals(2, entryCount(entries));
 
         // then verify we can find them:
         response = new FakeHttpResponse();
@@ -96,7 +96,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         assertEquals(deleteKey.toString(), dr.key);
 
         // count won't change, since there's tombstone:
-        assertEquals(2, entries.getEntryCount());
+        assertEquals(2, entryCount(entries));
 
         // but shouldn't be able to find it any more; 204 indicates this
         response = new FakeHttpResponse();
@@ -144,7 +144,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(deleteKey.toString(), dr.key);
 
-        assertEquals(2, entries.getEntryCount());
+        assertEquals(2, entryCount(entries));
         response = new FakeHttpResponse();
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
         assertEquals(204, response.getStatus());
@@ -165,7 +165,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         final byte[] DATA1 = "bit of data".getBytes("UTF-8");
 
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         final String KEY1 = "data/small/1";
         final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, KEY1);
@@ -176,7 +176,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
                 INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
                 null, null, null);
         assertEquals(200, response.getStatus());
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // then DELETE it
         timeMaster.advanceCurrentTimeMillis(10L);
@@ -186,7 +186,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(INTERNAL_KEY1.toString(), dr.key);
         // count won't change, since there's tombstone:
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // but then an attempt to "re-PUT" entry must fail with 410 (not conflict)
         response = new FakeHttpResponse();
@@ -218,7 +218,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         final byte[] DATA1 = PAYLOAD.getBytes("UTF-8");
 
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         final String KEY1 = "data/small/1";
         final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, KEY1);
@@ -229,7 +229,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
                 INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
                 null, null, null);
         assertEquals(200, response.getStatus());
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         timeMaster.advanceCurrentTimeMillis(10L);
         resource.getHandler().removeEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
@@ -238,7 +238,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(INTERNAL_KEY1.toString(), dr.key);
         // count won't change, since there's tombstone:
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // and this ought to be fine too
         response = new FakeHttpResponse();

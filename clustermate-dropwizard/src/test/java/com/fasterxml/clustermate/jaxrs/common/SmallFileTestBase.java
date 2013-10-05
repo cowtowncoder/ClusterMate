@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.jaxrs;
+package com.fasterxml.clustermate.jaxrs.common;
 
 import java.io.*;
 
@@ -39,7 +39,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
 
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         // then try to find bogus entry; make sure to use a slash...
         final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, "data/entry/1");
@@ -59,7 +59,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
                 null, null, null);
         assertEquals(200, response.getStatus());
         // can we count on this getting updated? Seems to be, FWIW
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
         // not accessed yet:
         assertEquals(0L, resource.getStores().getLastAccessStore().findLastAccessTime(INTERNAL_KEY1,
                 FakeLastAccess.INDIVIDUAL));
@@ -149,7 +149,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
         StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(TEST_PREFIX, timeMaster, true);
 
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, "data/entry/0");
         final byte[] SMALL_DATA = new byte[0];
@@ -169,7 +169,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
             PutResponse<?> presp = (PutResponse<?>) response.getEntity();
             fail("Failed with response code of "+response.getStatus()+"; fail="+presp.message);
         }
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
         assertEquals(0L, resource.getStores().getLastAccessStore().findLastAccessTime(INTERNAL_KEY1,
                 FakeLastAccess.INDIVIDUAL));
 
@@ -224,7 +224,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
 
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         final String KEY1 = "data/entry/2";
         final String SMALL_STRING = this.biggerCompressibleData(400);
@@ -246,7 +246,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
                 null, null, null);
         assertEquals(200, response.getStatus());
         // can we count on this getting updated? Seems to be, FWIW
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // Ok. Then, we should also be able to fetch it, right?
         response = new FakeHttpResponse();
@@ -307,7 +307,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
 		
         StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(TEST_PREFIX+"dup", timeMaster, true);
         StorableStore entries = resource.getStores().getEntryStore();
-        assertEquals(0, entries.getEntryCount());
+        assertEquals(0, entryCount(entries));
 
         final String KEY1 = "data";
         final String SMALL_STRING = "Some smallish data...";
@@ -321,7 +321,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
                 null, null, null);
         assertEquals(200, response.getStatus());
         // can we count on this getting updated? Seems to be, FWIW
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // Ok: first, is ok to try to PUT again
         response = new FakeHttpResponse();
@@ -333,7 +333,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
             fail("Failed with response code of "+response.getStatus()+"; fail="+presp.message);
         }
         // but no more entries are created
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         // But not OK if checksum is different
         final String SMALL_STRING2 = "Other data";
@@ -346,7 +346,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
         assertEquals(409, response.getStatus());
         PutResponse<?> pr = (PutResponse<?>) response.getEntity();
         verifyMessage("Failed PUT: trying to overwrite entry", pr.message);
-        assertEquals(1, entries.getEntryCount());
+        assertEquals(1, entryCount(entries));
 
         entries.stop();
     }
