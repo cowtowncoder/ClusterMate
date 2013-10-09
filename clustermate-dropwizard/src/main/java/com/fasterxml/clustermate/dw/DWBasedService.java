@@ -403,7 +403,7 @@ public abstract class DWBasedService<
 
         ServletWithMetricsBase syncListServlet = constructSyncListServlet(stuff, cluster, syncHandler);
         servlets.put(PathType.SYNC_LIST, syncListServlet);
-        ServletBase syncPullServlet = constructSyncPullServlet(stuff, cluster, syncHandler);
+        ServletWithMetricsBase syncPullServlet = constructSyncPullServlet(stuff, cluster, syncHandler);
         servlets.put(PathType.SYNC_PULL, syncPullServlet);
         StoreEntryServlet<K,E> storeEntryServlet = constructStoreEntryServlet(stuff,
                 cluster, storeHandler);
@@ -415,7 +415,7 @@ public abstract class DWBasedService<
         final BackgroundMetricsAccessor metrics = constructMetricsAccessor(stuff, cluster,
                 storeHandler.getStores(),
                 new AllOperationMetrics.Provider[] {
-                    storeEntryServlet, storeListServlet, syncListServlet
+                    storeEntryServlet, storeListServlet, syncListServlet, syncPullServlet
                 });
         servlets.put(PathType.NODE_METRICS, constructNodeMetricsServlet(stuff, metrics));
 
