@@ -420,11 +420,11 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         
         long listTime = _timeMaster.currentTimeMillis();
         SyncListResponse<?> syncResp = _fetchSyncList();
-        if (syncResp == null) { // only for hard errors
-            _timeMaster.sleep(SLEEP_FOR_SYNCLIST_ERRORS_MSECS);
+        if (!_running.get()) { // short-circuit during shutdown
             return;
         }
-        if (!_running.get()) { // short-circuit during shutdown
+        if (syncResp == null) { // only for hard errors
+            _timeMaster.sleep(SLEEP_FOR_SYNCLIST_ERRORS_MSECS);
             return;
         }
 
@@ -802,16 +802,19 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     private long _calculateSleepBetweenSync(int listedCount, long msecsBehind)
     {
-        // if we are behind by more than 5 minutes, or get "full" response, no delay:
-        if ((msecsBehind >= 300000)
-                || (listedCount >= _stuff.getServiceConfig().cfgMaxEntriesPerSyncList)) {
+        // if we are behind by more than 3 minutes, or get >75% "full" response, no delay:
+        final int FULL_ENOUGH = _stuff.getServiceConfig().cfgMaxEntriesPerSyncList * 3 / 4;
+        if ((msecsBehind >= (3 * 60 * 1000)) || (listedCount >= FULL_ENOUGH)) {
             return 0L;
         }
-        // otherwise nominal delay; bit longer for trivial numbers
+        // otherwise moderate delay; bit longer for shorter lists
         if (listedCount < 5) {
+            return 300L;
+        }
+        if (listedCount <= 10) {
             return 200L;
         }
-        if (listedCount < 20) {
+        if (listedCount < 40) {
             return 100L;
         }
         return 50L;
