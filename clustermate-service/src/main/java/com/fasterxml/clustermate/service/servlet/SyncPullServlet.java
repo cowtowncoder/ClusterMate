@@ -12,13 +12,15 @@ import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
+import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
+import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.OperationMetrics;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 
 @SuppressWarnings("serial")
 public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
-    extends ServletBase
+    extends ServletWithMetricsBase
 {
     protected final SyncHandler<K,E> _syncHandler;
 
@@ -36,10 +38,15 @@ public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
         _jsonWriter = stuff.jsonWriter();
         final ServiceConfig serviceConfig = stuff.getServiceConfig();
         if (serviceConfig.metricsEnabled) {
-            _pullMetrics = OperationMetrics.forListingOperation(serviceConfig, "syncList");
+            _pullMetrics = OperationMetrics.forListingOperation(serviceConfig, "syncPull");
         } else {
             _pullMetrics = null;
         }
+    }
+
+    @Override
+    public void fillOperationMetrics(AllOperationMetrics metrics) {
+        metrics.SYNCLIST = ExternalOperationMetrics.create(_pullMetrics);
     }
     
     @Override
