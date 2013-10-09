@@ -16,6 +16,12 @@ import org.skife.config.TimeSpan;
 public class DeferredDeleteConfig
 {
     /**
+     * Default target for delay entries are to spend in queue is 100
+     * milliseconds.
+     */
+    private final static TimeSpan DEFAULT_TARGET_DELAY = new TimeSpan(100, TimeUnit.MILLISECONDS);
+    
+    /**
      * This is the minimum length of deferred deletion queue to use,
      * regardless of dynamic calculation
      */
@@ -36,7 +42,7 @@ public class DeferredDeleteConfig
      * Note that specifying value of 0 (or negative) will effectively
      * disable use of deferred-deletes queue.
      *<p>
-     * Default value is 60 milliseconds
+     * Default value is 100 milliseconds
      */
     public TimeSpan queueTargetDelayMsecs;
 
@@ -49,13 +55,13 @@ public class DeferredDeleteConfig
     public TimeSpan queueMaxDelayMsecs;
 
     public DeferredDeleteConfig() {
-        this(5, 100, new TimeSpan(60, TimeUnit.MILLISECONDS),
+        this(5, 100, DEFAULT_TARGET_DELAY,
                 new TimeSpan(2500, TimeUnit.MILLISECONDS)
                 // !!! TEST
 //        new TimeSpan(1000, TimeUnit.MILLISECONDS)
             );
     }
-
+    
     public DeferredDeleteConfig(int minQueueLength, int maxQueueLength,
             TimeSpan queueTargetDelayMsecs, TimeSpan queueMaxDelayMsecs)
     {
