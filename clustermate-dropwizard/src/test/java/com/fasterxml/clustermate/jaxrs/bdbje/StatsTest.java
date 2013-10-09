@@ -8,6 +8,9 @@ import com.fasterxml.storemate.store.backend.StoreBackend;
 
 public class StatsTest extends StatsTestBase
 {
+    @Override protected String testPrefix() { return "stats-bdb"; }
+
+    @Override
     protected StoreBackend createBackend(ServiceConfig config, File fileDir) {
         return BDBTestHelper.createBDBJEBackend(config, fileDir);
     }

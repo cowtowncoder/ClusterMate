@@ -30,13 +30,15 @@ public abstract class EntryListTestBase extends JaxrsStoreTestBase
     public void setUp() {
         initTestLogging();
     }
+
+    protected abstract String testPrefix();
     
     public void testSimpleEntryList() throws Exception
     {
         final long creationTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(creationTime);
 
-        StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource = createResource("listSimple", timeMaster, true);
+        StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"Simple", timeMaster, true);
         
         // First, add couple of entries
         StorableStore entries = resource.getStores().getEntryStore();

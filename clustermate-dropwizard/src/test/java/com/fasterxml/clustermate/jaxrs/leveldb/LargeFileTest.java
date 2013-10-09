@@ -8,6 +8,9 @@ import com.fasterxml.storemate.store.backend.StoreBackend;
 
 public class LargeFileTest extends LargeFileTestBase
 {
+    @Override protected String testPrefix() { return "large-leveldb"; }
+
+    @Override
     protected StoreBackend createBackend(ServiceConfig config, File fileDir) {
         return LevelDBTestHelper.createLevelDBBackend(config, fileDir);
     }

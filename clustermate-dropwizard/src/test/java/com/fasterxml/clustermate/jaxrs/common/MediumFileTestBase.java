@@ -22,13 +22,15 @@ public abstract class MediumFileTestBase extends JaxrsStoreTestBase
         initTestLogging();
     }
 
+    protected abstract String testPrefix();
+    
     // Test to use GZIP
     public void testMediumFile() throws Exception
     {
         final long startTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
 		
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("medium", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix(), timeMaster, true);
         // ensure it'll use gzip compression
         int origSize = new ServiceConfigForTests().storeConfig.maxUncompressedSizeForGZIP - 100;
         final String BIG_STRING = biggerCompressibleData(origSize);
@@ -96,7 +98,7 @@ public abstract class MediumFileTestBase extends JaxrsStoreTestBase
         final long startTime = 5000L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
           
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("medium-noncomp", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"-noncomp", timeMaster, true);
 
         int origSize = new ServiceConfigForTests().storeConfig.maxUncompressedSizeForGZIP + 7777;
         final String BIG_STRING = biggerRandomData(origSize);

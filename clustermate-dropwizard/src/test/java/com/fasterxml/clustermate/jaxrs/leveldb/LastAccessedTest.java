@@ -8,6 +8,9 @@ import com.fasterxml.storemate.store.backend.StoreBackend;
 
 public class LastAccessedTest extends LastAccessedTestBase
 {
+    @Override protected String testPrefix() { return "lastAccess-leveldb"; }
+
+    @Override
     protected StoreBackend createBackend(ServiceConfig config, File fileDir) {
         return LevelDBTestHelper.createLevelDBBackend(config, fileDir);
     }

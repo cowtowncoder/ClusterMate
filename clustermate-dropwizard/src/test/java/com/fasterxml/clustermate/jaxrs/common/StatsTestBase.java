@@ -19,10 +19,12 @@ public abstract class StatsTestBase extends JaxrsStoreTestBase
         initTestLogging();
     }
 
+    protected abstract String testPrefix();
+    
     public void testSimpleStatsAccess() throws Exception
     {
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(100);
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("stats", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix(), timeMaster, true);
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
         assertEquals(0, entryCount(entries));

@@ -8,6 +8,9 @@ import com.fasterxml.storemate.store.backend.StoreBackend;
 
 public class SyncListTest extends SyncListTestBase
 {
+    @Override protected String testPrefix() { return "syncList-bdb"; }
+
+    @Override
     protected StoreBackend createBackend(ServiceConfig config, File fileDir) {
         return BDBTestHelper.createBDBJEBackend(config, fileDir);
     }

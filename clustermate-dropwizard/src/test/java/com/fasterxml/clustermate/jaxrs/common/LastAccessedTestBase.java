@@ -31,6 +31,8 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
         initTestLogging();
     }
 
+    protected abstract String testPrefix();
+    
     // Simple test that creates 3 entries: two under same group, third
     // one as it's "own group"
     public void testGroupedLastAccess() throws Exception
@@ -42,7 +44,7 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
         final TestKey KEY2 = contentKey(UNGROUPED, "stuff/ungrouped.txt");
         
         // what data we use does not really matter; use diff styles for different compression
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("LastUpdatedTest", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix(), timeMaster, true);
         final String DATA1A = biggerCompressibleData(45000);
         final byte[] DATA1A_BYTES = DATA1A.getBytes("UTF-8");
         final String DATA1B = biggerRandomData(1500);

@@ -8,6 +8,9 @@ import com.fasterxml.storemate.store.backend.StoreBackend;
 
 public class EntryListTest extends EntryListTestBase
 {
+    @Override protected String testPrefix() { return "entryList-bdb"; }
+
+    @Override
     protected StoreBackend createBackend(ServiceConfig config, File fileDir) {
         return BDBTestHelper.createBDBJEBackend(config, fileDir);
     }

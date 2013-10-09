@@ -23,19 +23,19 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
 {
     final static CustomerId CLIENT_ID = CustomerId.valueOf(1234);
 
-    final static String TEST_PREFIX = "small";
-
     @Override
     public void setUp() {
         initTestLogging();
     }
-	
+
+    protected abstract String testPrefix();
+    
     public void testSmallFile() throws Exception
     {
         final long creationTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(creationTime);
 
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(TEST_PREFIX, timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix(), timeMaster, true);
 
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
@@ -146,7 +146,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
         final long creationTime = 456L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(creationTime);
 
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(TEST_PREFIX, timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix(), timeMaster, true);
 
         StorableStore entries = resource.getStores().getEntryStore();
         assertEquals(0, entryCount(entries));
@@ -220,7 +220,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
     {
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(1234L);
 
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(TEST_PREFIX+"gzip", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"gzip", timeMaster, true);
 
         // ok: assume empty Entity Store
         StorableStore entries = resource.getStores().getEntryStore();
@@ -305,7 +305,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
     {
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(1234L);
 		
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(TEST_PREFIX+"dup", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"dup", timeMaster, true);
         StorableStore entries = resource.getStores().getEntryStore();
         assertEquals(0, entryCount(entries));
 
@@ -359,7 +359,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
         final long startTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
 
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(TEST_PREFIX+"lzf", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"lzf", timeMaster, true);
         final StorableStore entries = resource.getStores().getEntryStore();
         final String SMALL_STRING = this.biggerCompressibleData(400);
         final byte[] SMALL_DATA_ORIG = SMALL_STRING.getBytes("UTF-8");
@@ -405,7 +405,7 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
     {
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(1234L);
 
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(TEST_PREFIX+"lzfFail", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"lzfFail", timeMaster, true);
         final StorableStore entries = resource.getStores().getEntryStore();
         final String STRING = "ZV but not really LZF";
         final byte[] STRING_BYTES = STRING.getBytes("UTF-8");

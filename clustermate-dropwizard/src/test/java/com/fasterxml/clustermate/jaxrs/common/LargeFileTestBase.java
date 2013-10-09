@@ -23,6 +23,8 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
     public void setUp() {
         initTestLogging();
     }
+
+    protected abstract String testPrefix();
     
     // Test larger content that should end up as file, with LZF encoding
     // if client sends it uncompressed.
@@ -44,7 +46,7 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
 	
         // Need to make big enough to use streaming, too...
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("large"+origSize,
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+origSize,
                 timeMaster, true);
         final String BIG_STRING = biggerCompressibleData(origSize);
         final byte[] BIG_DATA = BIG_STRING.getBytes("UTF-8");
@@ -123,7 +125,7 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         
         // Need to make big enough to use streaming, but should be compressible as well
         int origSize = 256000;
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("largeGzip", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"Gzip", timeMaster, true);
         final String BIG_STRING = biggerSomewhatCompressibleData(origSize);
         final byte[] BIG_DATA_ORIG = BIG_STRING.getBytes("UTF-8");
         final byte[] BIG_DATA_GZIP = gzip(BIG_DATA_ORIG);
@@ -205,7 +207,7 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
         
         // Need to make big enough to use streaming, but should be compressible as well
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("largePrecomp"+origSize,
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"Precomp"+origSize,
                 timeMaster, true);
         final String BIG_STRING = biggerRandomData(origSize);
         final byte[] BIG_DATA_ORIG = BIG_STRING.getBytes("UTF-8");
@@ -278,7 +280,7 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         
         // Need to make big enough to use streaming, but should be compressible as well
         int origSize = 256000;
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("largeGzipInvalid", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"GzipInvalid", timeMaster, true);
         final StorableStore entries = resource.getStores().getEntryStore();
         final String BIG_STRING = biggerSomewhatCompressibleData(origSize);
         final byte[] BIG_DATA_RAW = BIG_STRING.getBytes("UTF-8");

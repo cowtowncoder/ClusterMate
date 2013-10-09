@@ -31,12 +31,14 @@ public abstract class SyncListTestBase extends JaxrsStoreTestBase
         initTestLogging();
     }
 
+    protected abstract String testPrefix();
+    
     public void testSimpleSyncList() throws Exception
     {
         final long creationTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(creationTime);
 
-        StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource = createResource("syncSimple", timeMaster, true);
+        StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"Simple", timeMaster, true);
 
         SyncHandler<TestKey, StoredEntry<TestKey>> syncH = new SyncHandler<TestKey, StoredEntry<TestKey>>(resource.getStuff(),
                 resource.getStores(), resource.getCluster());
@@ -134,7 +136,7 @@ public abstract class SyncListTestBase extends JaxrsStoreTestBase
         final long creationTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(creationTime);
 
-        StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource = createResource("syncLarger", timeMaster, true);
+        StoreResourceForTests<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"Larger", timeMaster, true);
 
         // set handler's "max-to-list" to 1, less than what we need later on
         SyncHandler<TestKey, StoredEntry<TestKey>> syncH = new SyncHandler<TestKey, StoredEntry<TestKey>>(resource.getStuff(),

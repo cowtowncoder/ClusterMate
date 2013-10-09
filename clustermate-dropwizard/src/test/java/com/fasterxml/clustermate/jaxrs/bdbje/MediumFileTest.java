@@ -8,6 +8,9 @@ import com.fasterxml.storemate.store.backend.StoreBackend;
 
 public class MediumFileTest extends MediumFileTestBase
 {
+    @Override protected String testPrefix() { return "medium-bdb"; }
+
+    @Override
     protected StoreBackend createBackend(ServiceConfig config, File fileDir) {
         return BDBTestHelper.createBDBJEBackend(config, fileDir);
     }

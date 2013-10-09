@@ -26,24 +26,14 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         initTestLogging();
     }
 
-    /*
-    protected abstract StoreResource<TestKey, StoredEntry<TestKey>> createResource(String name,
-            TimeMasterForSimpleTesting timeMaster, boolean fullInit);
-            */
-
-    /*
-    protected StoreResource<TestKey, StoredEntry<TestKey>> createResource(String name,
-            TimeMasterForSimpleTesting timeMaster, boolean fullInit) {
-        
-    }
-    */
+    protected abstract String testPrefix();
     
     public void testCreateDeleteTwo() throws Exception
     {
         long startTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
 
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("delete", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix(), timeMaster, true);
         final String DATA1_STR = "bit of data, very very short";
         final String DATA2_STR = biggerCompressibleData(29000);
         final byte[] DATA1 = DATA1_STR.getBytes("UTF-8");
@@ -161,7 +151,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
     {
         long startTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("deleteRecreateFAIL", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"RecreateFAIL", timeMaster, true);
         final byte[] DATA1 = "bit of data".getBytes("UTF-8");
 
         StorableStore entries = resource.getStores().getEntryStore();
@@ -211,7 +201,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
     {
         long startTime = 1234L;
         final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
-        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource("deleteRecreateOK", timeMaster, true);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"RecreateOK", timeMaster, true);
         // IMPORTANT: need to explicitly enable
         resource.getServiceConfig().cfgAllowUndelete = true;
         final String PAYLOAD = "tiny gob of stuff, ends up inlined";
