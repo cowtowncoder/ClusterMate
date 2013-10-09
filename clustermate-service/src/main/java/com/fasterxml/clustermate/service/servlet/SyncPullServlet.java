@@ -46,7 +46,7 @@ public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
 
     @Override
     public void fillOperationMetrics(AllOperationMetrics metrics) {
-        metrics.SYNCLIST = ExternalOperationMetrics.create(_pullMetrics);
+        metrics.SYNCPULL = ExternalOperationMetrics.create(_pullMetrics);
     }
     
     @Override
