@@ -1,5 +1,11 @@
 Project: ClusterMate
 
+0.9.18
+
+- Expose SYNCPULL metrics (was accidentally missing)
+- Minor improvements to calculation of sync delay to use, to try to reduce rate
+  of calls
+
 0.9.17 (03-Oct-2013)
 
 - Need to upgrade StoreMate to roll back BDB-JE version, due to a critical bug.
