@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.client.ahc;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.storemate.shared.IpAndPort;
@@ -19,7 +18,9 @@ public class AHCPathBuilder
     protected String _path;
 
     protected List<String> _queryParams;
-	
+
+    protected Map<String, Object> _headers;
+    
     public AHCPathBuilder(IpAndPort server) {
         this(server, null, null);
     }
@@ -39,9 +40,38 @@ public class AHCPathBuilder
         _queryParams = qp;
     }
 
+    public AHCPathBuilder(AHCPath src)
+    {
+        _serverPart = src._serverPart;
+        _path = src._path;
+        _queryParams = _arrayToList(src._queryParams);
+        _headers = _arrayToMap(src._headers);
+    }
+    
+    @Override
+    public AHCPath build() {
+        return new AHCPath(this);
+    }
+    
     /*
     /*********************************************************************
-    /* API impl
+    /* API impl, accessors
+    /*********************************************************************
+     */
+    
+    @Override
+    public String getServerPart() {
+        return _serverPart;
+    }
+
+    @Override
+    public String getPath() {
+        return _path;
+    }
+    
+    /*
+    /*********************************************************************
+    /* API impl, 
     /*********************************************************************
      */
 	
@@ -56,29 +86,21 @@ public class AHCPathBuilder
     }
 	
     @Override
-    public RequestPathBuilder addParameter(String key, String value)
-    {
-        if (_queryParams == null) {
-            _queryParams = new ArrayList<String>(8);
-        }
-        _queryParams.add(key);
-        _queryParams.add(value);
+    public RequestPathBuilder addParameter(String key, String value) {
+        _queryParams = _defaultAddParameter(_queryParams, key, value);
         return this;
     }
 
     @Override
-    public String getServerPart() {
-        return _serverPart;
+    public RequestPathBuilder addHeader(String key, String value) {
+        _headers = _defaultAddHeader(_headers, key, value);
+        return this;
     }
 
     @Override
-    public String getPath() {
-        return _path;
-    }
-	
-    @Override
-    public AHCPath build() {
-        return new AHCPath(_serverPart, _path, _queryParams);
+    public RequestPathBuilder setHeader(String key, String value) {
+        _headers = _defaultSetHeader(_headers, key, value);
+        return this;
     }
 
     /*

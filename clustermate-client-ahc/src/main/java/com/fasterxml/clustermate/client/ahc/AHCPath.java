@@ -1,7 +1,5 @@
 package com.fasterxml.clustermate.client.ahc;
 
-import java.util.List;
-
 import com.fasterxml.clustermate.api.RequestPath;
 
 public class AHCPath extends RequestPath
@@ -10,24 +8,27 @@ public class AHCPath extends RequestPath
 
 	protected final String _path;
 
-	protected String[] _queryParams;
-	
+	protected final String[] _queryParams;
+
+	protected final Object[] _headers;
+
+	/*
 	public AHCPath(String serverPart, String path, List<String> qp) {
 		_serverPart = serverPart;
 		_path = path;
 		_queryParams = _listToArray(qp);
 	}
+	*/
 
+     public AHCPath(AHCPathBuilder src) {
+         _serverPart = src._serverPart;
+         _path = src._path;
+         _queryParams = _listToArray(src._queryParams);
+         _headers = _mapToArray(src._headers);
+     }
+	
 	@Override
 	public AHCPathBuilder builder() {
-		return new AHCPathBuilder(_serverPart, _path, _queryParams);
-	}
-
-	private String[] _listToArray(List<String> list)
-	{
-		if (list == null || list.size() == 0) {
-			return null;
-		}
-		return list.toArray(new String[list.size()]);
+		return new AHCPathBuilder(this);
 	}
 }

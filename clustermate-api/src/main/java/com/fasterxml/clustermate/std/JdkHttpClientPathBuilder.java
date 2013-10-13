@@ -2,8 +2,7 @@ package com.fasterxml.clustermate.std;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.storemate.shared.IpAndPort;
@@ -11,7 +10,7 @@ import com.fasterxml.storemate.shared.util.UTF8UrlEncoder;
 
 /**
  * Simple {@link RequestPathBuilder} implementation that can be used
- * with the default JDK http client.
+ * with the default JDK HTTP client.
  */
 public class JdkHttpClientPathBuilder extends RequestPathBuilder
 {
@@ -23,6 +22,8 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
 
     protected List<String> _queryParams;
 
+    protected Map<String, Object> _headers;
+    
     protected transient URL _url;
     
     public JdkHttpClientPathBuilder(IpAndPort server) {
@@ -52,33 +53,25 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
         _queryParams = qp;
     }
 
-    /*
-    /*********************************************************************
-    /* API impl
-    /*********************************************************************
-     */
-     
-    @Override
-    public JdkHttpClientPathBuilder addPathSegment(String segment) {
-        return _appendSegment(segment, true);
-    }
-
-    @Override
-    public JdkHttpClientPathBuilder addPathSegmentsRaw(String segments) {
-        return _appendSegment(segments, false);
+    public JdkHttpClientPathBuilder(JdkHttpClientPath src)
+    {
+        _serverPart = src._serverPart;
+        _path = src._path;
+        _queryParams = _arrayToList(src._queryParams);
+        _headers = _arrayToMap(src._headers);
     }
     
     @Override
-    public JdkHttpClientPathBuilder addParameter(String key, String value)
-    {
-         if (_queryParams == null) {
-              _queryParams = new ArrayList<String>(8);
-         }
-         _queryParams.add(key);
-         _queryParams.add(value);
-         return this;
+    public JdkHttpClientPath build() {
+        return new JdkHttpClientPath(this);
     }
-
+    
+    /*
+    /*********************************************************************
+    /* API impl, accessors
+    /*********************************************************************
+     */
+    
     @Override
     public String getServerPart() {
         return _serverPart;
@@ -87,11 +80,6 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
     @Override
     public String getPath() {
         return _path;
-    }
-    
-    @Override
-    public JdkHttpClientPath build() {
-        return new JdkHttpClientPath(_serverPart, _path, _queryParams);
     }
 
     protected String _url()
@@ -119,6 +107,40 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
          return _url();
     }
 
+    /*
+    /*********************************************************************
+    /* API impl, mutators
+    /*********************************************************************
+     */
+     
+    @Override
+    public JdkHttpClientPathBuilder addPathSegment(String segment) {
+        return _appendSegment(segment, true);
+    }
+
+    @Override
+    public JdkHttpClientPathBuilder addPathSegmentsRaw(String segments) {
+        return _appendSegment(segments, false);
+    }
+    
+    @Override
+    public JdkHttpClientPathBuilder addParameter(String key, String value) {
+         _queryParams = _defaultAddParameter(_queryParams, key, value);
+         return this;
+    }
+
+    @Override
+    public RequestPathBuilder addHeader(String key, String value) {
+        _headers = _defaultAddHeader(_headers, key, value);
+        return this;
+    }
+
+    @Override
+    public RequestPathBuilder setHeader(String key, String value) {
+        _headers = _defaultSetHeader(_headers, key, value);
+        return this;
+    }
+    
     /*
     /*********************************************************************
     /* Extended API

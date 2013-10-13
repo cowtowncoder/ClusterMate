@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.api;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Builder object used for constructing {@link RequestPath}
@@ -9,6 +8,18 @@ import java.util.List;
  */
 public abstract class RequestPathBuilder
 {
+    /**
+     * Method that will construct the immutable {@link RequestPath} instance
+     * with information builder has accumulated.
+     */
+    public abstract RequestPath build();
+
+    /*
+    /*********************************************************************
+    /* Mutators
+    /*********************************************************************
+     */
+    
     /**
      * Method that will append a single path segment, escaping characters
      * as necessary, including escaping of slash character so that
@@ -59,7 +70,7 @@ public abstract class RequestPathBuilder
      *</pre>
      */
     public RequestPathBuilder addParameter(String key, int value) {
-    	return addParameter(key, String.valueOf(value));
+        return addParameter(key, String.valueOf(value));
     }
 
     /**
@@ -69,9 +80,27 @@ public abstract class RequestPathBuilder
      *</pre>
      */
     public RequestPathBuilder addParameter(String key, long value) {
-    	return addParameter(key, String.valueOf(value));
+        return addParameter(key, String.valueOf(value));
+    }
+
+    public abstract RequestPathBuilder addHeader(String key, String value);
+
+    public RequestPathBuilder addHeader(String key, long value) {
+        return addHeader(key, String.valueOf(value));
     }
     
+    public abstract RequestPathBuilder setHeader(String key, String value);
+
+    public RequestPathBuilder setHeader(String key, long value) {
+        return setHeader(key, String.valueOf(value));
+    }
+
+    /*
+    /*********************************************************************
+    /* Accessors
+    /*********************************************************************
+     */
+
     /**
      * Method for returning only the logical "server part", which also includes
      * the protocol (like 'http') and port number, as well as trailing
@@ -84,12 +113,6 @@ public abstract class RequestPathBuilder
      * either server part or query parameters.
      */
     public abstract String getPath();
-    
-    /**
-     * Method that will construct the immutable {@link RequestPath} instance
-     * with information builder has accumulated.
-     */
-    public abstract RequestPath build();
 
     /**
      * Implementations MUST override this to produce a valid URL that
@@ -107,7 +130,7 @@ public abstract class RequestPathBuilder
     protected static List<String> _arrayToList(String[] qp)
     {
          if (qp == null) {
-              return new ArrayList<String>(8);
+             return null;
          }
          int len = qp.length;
          List<String> list = new ArrayList<String>(Math.min(8, len));
@@ -117,5 +140,68 @@ public abstract class RequestPathBuilder
               }
          }
          return list;
+    }
+
+    protected static Map<String,Object> _arrayToMap(Object[] qp)
+    {
+         if (qp == null) {
+             return null;
+         }
+         int len = qp.length;
+         Map<String,Object> result = new LinkedHashMap<String,Object>(len >> 1);
+         for (int i = 0; i < len; i += 2) {
+             result.put((String) qp[i], qp[i+1]); 
+         }
+         return result;
+    }
+
+    protected Map<String,Object> _newHeaderMap() {
+        return new LinkedHashMap<String,Object>(8);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected Map<String, Object> _defaultAddHeader(Map<String, Object> headers,
+        String key, String value)
+    {
+        if (headers == null) {
+            headers = _newHeaderMap();
+            headers.put(key, value);
+            return headers;
+        }
+        Object ob = headers.get(key);
+        if (ob == null) {
+            headers.put(key, value);
+        } else {
+            List<Object> l;
+            if (ob instanceof String) {
+                l = new ArrayList<Object>(4);
+                l.add(ob);
+            } else {
+                l = (List<Object>) ob;
+            }
+            l.add(value);
+        }
+        return headers;
+    }
+
+    protected Map<String, Object> _defaultSetHeader(Map<String, Object> headers,
+        String key, String value)
+    {
+        if (headers == null) {
+            headers = _newHeaderMap();
+        }
+        headers.put(key, value);
+        return headers;
+    }
+
+    protected List<String> _defaultAddParameter(List<String> qp,
+            String key, String value)
+    {
+        if (qp == null) {
+            qp = new ArrayList<String>(8);
+        }
+        qp.add(key);
+        qp.add(value);
+        return qp;
     }
 }

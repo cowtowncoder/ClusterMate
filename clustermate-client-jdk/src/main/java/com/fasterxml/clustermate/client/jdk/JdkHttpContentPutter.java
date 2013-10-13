@@ -68,6 +68,9 @@ public class JdkHttpContentPutter<K extends EntryKey>
         JdkHttpClientPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
         path = _keyConverter.appendToPath(path, contentId);
+        // Is compression known?
+        
+        
         if (params != null) {
             path = params.appendToPath(path, contentId);
         }
