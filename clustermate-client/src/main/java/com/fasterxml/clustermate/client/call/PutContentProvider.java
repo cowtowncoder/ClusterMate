@@ -3,6 +3,7 @@ package com.fasterxml.clustermate.client.call;
 import java.io.File;
 
 import com.fasterxml.storemate.shared.ByteContainer;
+import com.fasterxml.storemate.shared.compress.Compression;
 
 /**
  * Interface that defines how calling application needs to expose data to upload,
@@ -32,6 +33,15 @@ public interface PutContentProvider
     public java.io.InputStream contentAsStream() throws java.io.IOException;
 
     public int getContentHash();
-    
+
     public void setContentHash(int hash);
+
+    /**
+     * Accessor used to find out if content has already been compressed
+     * (and is not to be compressed but should be identified as having
+     * that compression); or is explicitly indicated not to be compressed
+     * (value of {@link Compression#NONE}); or, that nothing is known about
+     * possible existing compression (<code>null</code>).
+     */
+    public Compression getExistingCompression();
 }

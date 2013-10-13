@@ -60,8 +60,8 @@ public class JdkHttpContentPutter<K extends EntryKey>
 
     @SuppressWarnings("resource")
     public CallFailure _tryPut(CallConfig config, PutCallParameters params,
-    		long endOfTime,
-    		K contentId, PutContentProvider content,
+            long endOfTime,
+            K contentId, PutContentProvider content,
             final long startTime, final long timeout)
         throws IOException, ExecutionException, InterruptedException
     {
@@ -69,7 +69,7 @@ public class JdkHttpContentPutter<K extends EntryKey>
         path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
         path = _keyConverter.appendToPath(path, contentId);
         if (params != null) {
-        	path = params.appendToPath(path, contentId);
+            path = params.appendToPath(path, contentId);
         }
         // Ok; and then figure out most optimal way for getting content:
 

@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.fasterxml.storemate.shared.ByteContainer;
+import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.hash.HashConstants;
 
 /**
@@ -30,7 +31,13 @@ public class PutContentProviders
     public abstract static class ProviderBase
         implements PutContentProvider
     {
+        protected final Compression _existingCompression;
+
         protected final AtomicInteger _contentHash = new AtomicInteger(HashConstants.NO_CHECKSUM);
+
+        protected ProviderBase(Compression comp) {
+            _existingCompression = comp;
+        }
 
         @Override
         public int getContentHash() {
@@ -42,6 +49,11 @@ public class PutContentProviders
             // Should get same value always, but just to make sure we never
             // change value, or overwrite with "no hash"
             _contentHash.compareAndSet(HashConstants.NO_CHECKSUM, hash);
+        }
+
+        @Override
+        public Compression getExistingCompression() {
+            return _existingCompression;
         }
     }
     
@@ -61,9 +73,14 @@ public class PutContentProviders
         protected final ByteContainer _bytes;
 
         public ByteBacked(ByteContainer data) {
-            _bytes = data;
+            this(data, null);
         }
 
+        public ByteBacked(ByteContainer data, Compression comp) {
+            super(comp);
+            _bytes = data;
+        }
+        
         @Override
         public long length() {
             return (long) _bytes.byteLength();
@@ -101,8 +118,13 @@ public class PutContentProviders
         protected final File _file;
         protected final long _length;
 
-        public FileBacked(File file, long length)
+        public FileBacked(File file, long length) {
+            this(file, length, null);
+        }
+
+        public FileBacked(File file, long length, Compression existingCompression)
         {
+            super(existingCompression);
             _file = file;
             _length = length;
         }

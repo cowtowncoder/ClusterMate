@@ -18,7 +18,7 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 public abstract class BaseJdkHttpAccessor<K extends EntryKey> extends Loggable
 {
     /**
-     * Not sure what is optimal chunk size, but 64k sounds like
+     * Not sure what is optimal chunk size, but 16k sounds like
      * a reasonable starting point.
      */
     protected final static int CHUNK_SIZE = 16 * 1024;
@@ -85,7 +85,7 @@ public abstract class BaseJdkHttpAccessor<K extends EntryKey> extends Loggable
         return path.addParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM,
                 (checksum == 0) ? "0" : String.valueOf(checksum));
     }
-    
+
     /*
     /**********************************************************************
     /* HTTP Response helpers
