@@ -56,7 +56,7 @@ public class AHCContentHeader<K extends EntryKey>
             ListenableFuture<Object> futurama = _httpClient.executeRequest(reqBuilder.build(), hh);
             // First, see if we can get the answer without time out...
             try {
-            	futurama.get(timeout, TimeUnit.MILLISECONDS);
+                futurama.get(timeout, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
                 return new AHCHeadCallResult(CallFailure.timeout(_server, startTime, System.currentTimeMillis()));
             }
@@ -64,21 +64,21 @@ public class AHCContentHeader<K extends EntryKey>
             int statusCode = hh.statusCode;
             // call ok?
             if (!IOUtil.isHTTPSuccess(statusCode)) {
-            	if (hh.fail != null) {
+                if (hh.fail != null) {
                     return new AHCHeadCallResult(CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), hh.fail));
-            	}
+                }
                 // if not, why not? Any well-known problems? (besides timeout that was handled earlier)
                 return new AHCHeadCallResult(CallFailure.general(_server, statusCode, startTime,
                 		System.currentTimeMillis(), "N/A"));
             }
             String lenStr = hh.contentLength;
             try {
-            	long l;
-            	if (lenStr == null || (lenStr = lenStr.trim()).length() == 0) {
-            		l = -1;
-            	} else {
+                long l;
+                if (lenStr == null || (lenStr = lenStr.trim()).length() == 0) {
+                    l = -1;
+                } else {
             		l = Long.parseLong(lenStr.trim());
-            	}
+                }
                 return new AHCHeadCallResult(200, l);
             } catch (Exception e) {
                 String desc = (lenStr == null) ? "null" : "\""+lenStr+"\"";

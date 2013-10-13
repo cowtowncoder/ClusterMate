@@ -5,6 +5,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.CallFailure;
@@ -12,8 +13,8 @@ import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
-
 import com.fasterxml.storemate.shared.ByteContainer;
+import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.hash.HashConstants;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
@@ -62,15 +63,18 @@ public class JdkHttpContentPutter<K extends EntryKey>
     public CallFailure _tryPut(CallConfig config, PutCallParameters params,
             long endOfTime,
             K contentId, PutContentProvider content,
-            final long startTime, final long timeout)
+            final long startTime, final long timeoutMsecs)
         throws IOException, ExecutionException, InterruptedException
     {
         JdkHttpClientPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
         path = _keyConverter.appendToPath(path, contentId);
+
         // Is compression known?
-        
-        
+        Compression comp = content.getExistingCompression();
+        if (comp != null) { // if so, must be indicated
+            path = path.setHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION, comp.asContentEncoding());
+        }
         if (params != null) {
             path = params.appendToPath(path, contentId);
         }
@@ -92,7 +96,7 @@ public class JdkHttpContentPutter<K extends EntryKey>
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
                 conn.setFixedLengthStreamingMode(bc.byteLength());
-                conn.setRequestMethod("PUT");
+                conn = initRequest("PUT", conn, path, timeoutMsecs);
                 out = conn.getOutputStream();
                 bc.writeBytes(out);
             } else {
@@ -111,7 +115,7 @@ public class JdkHttpContentPutter<K extends EntryKey>
                 conn = (HttpURLConnection) url.openConnection();
                 conn.setDoOutput(true);
                 conn.setChunkedStreamingMode(CHUNK_SIZE);
-                conn.setRequestMethod("PUT");
+                conn = initRequest("PUT", conn, path, timeoutMsecs);
                 out = conn.getOutputStream();
                 copy(in, out, true);
             }

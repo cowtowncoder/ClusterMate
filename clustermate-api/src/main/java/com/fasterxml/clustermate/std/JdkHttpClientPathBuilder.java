@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.std;
 
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -25,7 +26,7 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
     protected Map<String, Object> _headers;
     
     protected transient URL _url;
-    
+
     public JdkHttpClientPathBuilder(IpAndPort server) {
         this(server, null, null);
     }
@@ -82,6 +83,16 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
         return _path;
     }
 
+    @Override
+    public boolean hasHeaders() {
+        return (_headers != null) && !_headers.isEmpty();
+    }
+
+    @Override
+    public String toString() {
+         return _url();
+    }
+
     protected String _url()
     {
          if (_path == null) {
@@ -101,12 +112,7 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
          }
          return sb.toString();
     }
-
-    @Override
-    public String toString() {
-         return _url();
-    }
-
+    
     /*
     /*********************************************************************
     /* API impl, mutators
@@ -129,24 +135,22 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
          return this;
     }
 
-    @Override
-    public RequestPathBuilder addHeader(String key, String value) {
-        _headers = _defaultAddHeader(_headers, key, value);
-        return this;
-    }
-
-    @Override
-    public RequestPathBuilder setHeader(String key, String value) {
-        _headers = _defaultSetHeader(_headers, key, value);
-        return this;
-    }
-    
     /*
     /*********************************************************************
     /* Extended API
     /*********************************************************************
      */
 
+    public JdkHttpClientPathBuilder addHeader(String key, String value) {
+        _headers = _defaultAddHeader(_headers, key, value);
+        return this;
+    }
+
+    public JdkHttpClientPathBuilder setHeader(String key, String value) {
+        _headers = _defaultSetHeader(_headers, key, value);
+        return this;
+    }
+    
     public URL asURL()
     {
         if (_url == null) {
@@ -158,6 +162,29 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
             }
         }
         return _url;
+    }
+
+    public void addHeaders(HttpURLConnection conn)
+    {
+        if (_headers != null) {
+            for (Map.Entry<String,Object> entry : _headers.entrySet()) {
+                String name = entry.getKey();
+                Object ob = entry.getValue();
+                if (ob instanceof String) {
+                    conn.setRequestProperty(name,  (String) ob);
+                } else {
+                    boolean first = true;
+                    for (Object value : (Object[]) ob) {
+                        if (first) {
+                            conn.setRequestProperty(name, (String) value);
+                            first = false;
+                        } else {
+                            conn.addRequestProperty(name, (String) value);
+                        }
+                    }
+                }
+            }
+        }
     }
     
     /*

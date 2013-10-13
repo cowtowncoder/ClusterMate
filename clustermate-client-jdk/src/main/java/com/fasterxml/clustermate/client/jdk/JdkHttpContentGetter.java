@@ -53,18 +53,16 @@ public class JdkHttpContentGetter<K extends EntryKey>
             path = _keyConverter.appendToPath(path, contentId);
             URL url = path.asURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
             // plus, allow use of GZIP and LZF
-            conn.setRequestProperty(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION,
+            path = path.setHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION,
                     "lzf, gzip, identity");
             // and may use range as well
             if (range != null) {
-                conn.setRequestProperty(ClusterMateConstants.HTTP_HEADER_RANGE_FOR_REQUEST,
-                         range.asRequestHeader());
+                path = path.setHeader(ClusterMateConstants.HTTP_HEADER_RANGE_FOR_REQUEST,
+                        range.asRequestHeader());
             }
+            int statusCode = sendRequest("GET", conn, path, timeoutMsecs);
 
-            setTimeouts(conn, timeoutMsecs);
-            int statusCode = conn.getResponseCode();
             // one thing first: handle standard headers, if any?
             handleHeaders(_server, conn, startTime);
 

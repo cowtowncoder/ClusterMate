@@ -12,15 +12,7 @@ public class AHCPath extends RequestPath
 
 	protected final Object[] _headers;
 
-	/*
-	public AHCPath(String serverPart, String path, List<String> qp) {
-		_serverPart = serverPart;
-		_path = path;
-		_queryParams = _listToArray(qp);
-	}
-	*/
-
-     public AHCPath(AHCPathBuilder src) {
+	public AHCPath(AHCPathBuilder src) {
          _serverPart = src._serverPart;
          _path = src._path;
          _queryParams = _listToArray(src._queryParams);

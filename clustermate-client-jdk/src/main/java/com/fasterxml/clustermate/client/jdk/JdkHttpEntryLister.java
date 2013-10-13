@@ -56,9 +56,7 @@ public class JdkHttpEntryLister<K extends EntryKey>
         try {
             URL url = path.asURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            setTimeouts(conn, timeoutMsecs);
-            conn.setRequestMethod("GET");
-            int statusCode = conn.getResponseCode();
+            int statusCode = sendRequest("GET", conn, path, timeoutMsecs);
 
             // call ok?
             if (!IOUtil.isHTTPSuccess(statusCode)) {

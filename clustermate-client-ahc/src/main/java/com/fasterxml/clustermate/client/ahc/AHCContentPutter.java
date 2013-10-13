@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.PathType;
@@ -13,11 +14,10 @@ import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.*;
-
 import com.fasterxml.storemate.shared.ByteContainer;
+import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.util.IOUtil;
 import com.fasterxml.storemate.shared.util.WithBytesCallback;
-
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.Body;
@@ -145,13 +145,19 @@ public class AHCContentPutter<K extends EntryKey>
         path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
         path = _keyConverter.appendToPath(path, contentId);       
         if (params != null) {
-        	path = params.appendToPath(path, contentId);
+            path = params.appendToPath(path, contentId);
         }
-        
-        BoundRequestBuilder reqBuilder = path.putRequest(_httpClient);
+        // Is compression known?
+        Compression comp = content.getExistingCompression();
+        if (comp != null) { // if so, must be indicated
+            path = path.setHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION, comp.asContentEncoding());
+        }
         Generator<K> gen = new Generator<K>(content, _keyConverter);
         int checksum = gen.getChecksum();
-        reqBuilder = addCheckSum(reqBuilder, checksum);
+        path = path.addParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM,
+                (checksum == 0) ? "0" : String.valueOf(checksum));
+
+        BoundRequestBuilder reqBuilder = path.putRequest(_httpClient);
         reqBuilder = reqBuilder.setBody(gen);
         ListenableFuture<Response> futurama = _httpClient.executeRequest(reqBuilder.build());
 

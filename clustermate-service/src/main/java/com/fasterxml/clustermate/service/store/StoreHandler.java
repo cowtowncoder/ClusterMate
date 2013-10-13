@@ -463,14 +463,9 @@ public abstract class StoreHandler<
     {
         final long  creationTime = _timeMaster.currentTimeMillis();
 
-        // first things first: ensure that request was correctly sent wrt routing
+        // What compression, if any, is payload using?
         Compression inputCompression = Compression.forContentEncoding(request.getHeader(
                 ClusterMateConstants.HTTP_HEADER_COMPRESSION));
-        // NOTE: in future, may want to allow client to specify "do not compress"; if so,
-        // we would pass Compression.NONE explicitly: null means "try to use whatever"
-        if (inputCompression == Compression.NONE) {
-            inputCompression = null;
-        }
         // assumption here is that we may be passed hash code of orig content, but
         // not that of compressed (latter is easy to calculate on server anyway)
         final StorableCreationMetadata stdMetadata = new StorableCreationMetadata(inputCompression,

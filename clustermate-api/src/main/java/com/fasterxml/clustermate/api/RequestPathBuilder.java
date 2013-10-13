@@ -85,16 +85,6 @@ public abstract class RequestPathBuilder
 
     public abstract RequestPathBuilder addHeader(String key, String value);
 
-    public RequestPathBuilder addHeader(String key, long value) {
-        return addHeader(key, String.valueOf(value));
-    }
-    
-    public abstract RequestPathBuilder setHeader(String key, String value);
-
-    public RequestPathBuilder setHeader(String key, long value) {
-        return setHeader(key, String.valueOf(value));
-    }
-
     /*
     /*********************************************************************
     /* Accessors
@@ -114,6 +104,8 @@ public abstract class RequestPathBuilder
      */
     public abstract String getPath();
 
+    public abstract boolean hasHeaders();
+    
     /**
      * Implementations MUST override this to produce a valid URL that
      * represents the current state of builder.

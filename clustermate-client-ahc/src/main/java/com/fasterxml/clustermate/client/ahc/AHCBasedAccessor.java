@@ -2,11 +2,8 @@ package com.fasterxml.clustermate.client.ahc;
 
 import java.io.*;
 
-import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.clustermate.api.ContentType;
-import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.api.RequestPathStrategy;
+import com.fasterxml.clustermate.api.*;
+
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.Loggable;
 import com.fasterxml.clustermate.client.StoreClientConfig;
@@ -16,7 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.FluentCaseInsensitiveStringsMap;
 import com.ning.http.client.Response;
-import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
 /**
  * Intermediate base class used by accessors that use
@@ -84,19 +80,6 @@ public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
             }
         }
         return -1;
-    }
-    
-    /*
-    /**********************************************************************
-    /* HTTP Request helpers
-    /**********************************************************************
-     */
-
-    protected BoundRequestBuilder addCheckSum(BoundRequestBuilder reqBuilder, int checksum)
-    {
-        reqBuilder = reqBuilder.addQueryParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM,
-                (checksum == 0) ? "0" : String.valueOf(checksum));
-        return reqBuilder;
     }
     
     /*

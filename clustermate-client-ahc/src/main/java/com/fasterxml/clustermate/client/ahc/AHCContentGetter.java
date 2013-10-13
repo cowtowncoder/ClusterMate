@@ -49,16 +49,18 @@ public class AHCContentGetter<K extends EntryKey>
         AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
         path = _keyConverter.appendToPath(path, contentId);       
-        BoundRequestBuilder reqBuilder = path.getRequest(_httpClient);
+
         // plus, allow use of GZIP and LZF
-        reqBuilder = reqBuilder.addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION,
+        path = path.setHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION,
                 "lzf, gzip, identity");
         // and may use range as well
         if (range != null) {
-            reqBuilder = reqBuilder.addHeader(ClusterMateConstants.HTTP_HEADER_RANGE_FOR_REQUEST,
-            		range.asRequestHeader());
+            path = path.setHeader(ClusterMateConstants.HTTP_HEADER_RANGE_FOR_REQUEST,
+                    range.asRequestHeader());
         }
-        
+
+        BoundRequestBuilder reqBuilder = path.getRequest(_httpClient);
+
         int statusCode = -1;
         UncompressingAsyncHandler<T> handler = new UncompressingAsyncHandler<T>(processor);
         

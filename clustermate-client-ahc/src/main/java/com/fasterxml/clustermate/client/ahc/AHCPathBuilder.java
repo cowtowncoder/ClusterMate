@@ -68,7 +68,12 @@ public class AHCPathBuilder
     public String getPath() {
         return _path;
     }
-    
+
+    @Override
+    public boolean hasHeaders() {
+        return (_headers != null) && !_headers.isEmpty();
+    }
+
     /*
     /*********************************************************************
     /* API impl, 
@@ -76,30 +81,18 @@ public class AHCPathBuilder
      */
 	
     @Override
-    public RequestPathBuilder addPathSegment(String segment) {
+    public AHCPathBuilder addPathSegment(String segment) {
         return _appendSegment(segment, true);
     }
 
     @Override
-    public RequestPathBuilder addPathSegmentsRaw(String segments) {
+    public AHCPathBuilder addPathSegmentsRaw(String segments) {
         return _appendSegment(segments, false);
     }
 	
     @Override
-    public RequestPathBuilder addParameter(String key, String value) {
+    public AHCPathBuilder addParameter(String key, String value) {
         _queryParams = _defaultAddParameter(_queryParams, key, value);
-        return this;
-    }
-
-    @Override
-    public RequestPathBuilder addHeader(String key, String value) {
-        _headers = _defaultAddHeader(_headers, key, value);
-        return this;
-    }
-
-    @Override
-    public RequestPathBuilder setHeader(String key, String value) {
-        _headers = _defaultSetHeader(_headers, key, value);
         return this;
     }
 
@@ -109,36 +102,65 @@ public class AHCPathBuilder
     /*********************************************************************
      */
 
+    public AHCPathBuilder addHeader(String key, String value) {
+        _headers = _defaultAddHeader(_headers, key, value);
+        return this;
+    }
+
+    public AHCPathBuilder setHeader(String key, String value) {
+        _headers = _defaultSetHeader(_headers, key, value);
+        return this;
+    }
+
     public BoundRequestBuilder putRequest(AsyncHttpClient ahc) {
-        return _addParams(ahc.preparePut(_url(false)));
+        return _addParamsAndHeaders(ahc.preparePut(_url(false)));
     }
 
     public BoundRequestBuilder getRequest(AsyncHttpClient ahc) {
-        return _addParams(ahc.prepareGet(_url(false)));
+        return _addParamsAndHeaders(ahc.prepareGet(_url(false)));
     }
 
     public BoundRequestBuilder headRequest(AsyncHttpClient ahc) {
-        return _addParams(ahc.prepareHead(_url(false)));
+        return _addParamsAndHeaders(ahc.prepareHead(_url(false)));
     }
 
     public BoundRequestBuilder deleteRequest(AsyncHttpClient ahc) {
-        return _addParams(ahc.prepareDelete(_url(false)));
+        return _addParamsAndHeaders(ahc.prepareDelete(_url(false)));
     }
 
     public BoundRequestBuilder listRequest(AsyncHttpClient ahc) {
-        return _addParams(ahc.prepareGet(_url(false)));
+        return _addParamsAndHeaders(ahc.prepareGet(_url(false)));
     }
 
-    private BoundRequestBuilder _addParams(BoundRequestBuilder b)
+    private BoundRequestBuilder _addParamsAndHeaders(BoundRequestBuilder reqBuilder)
     {
-        if (_queryParams != null) {
-            for (int i = 0, len = _queryParams.size(); i < len; i += 2) {
-                b = b.addQueryParameter(_queryParams.get(i), _queryParams.get(i+1));
+        if (_headers != null) {
+            for (Map.Entry<String,Object> entry : _headers.entrySet()) {
+                String name = entry.getKey();
+                Object ob = entry.getValue();
+                if (ob instanceof String) {
+                    reqBuilder = reqBuilder.setHeader(name,  (String) ob);
+                } else {
+                    boolean first = true;
+                    for (Object value : (Object[]) ob) {
+                        if (first) {
+                            reqBuilder = reqBuilder.setHeader(name,  (String) value);
+                            first = false;
+                        } else {
+                            reqBuilder = reqBuilder.addHeader(name,  (String) value);
+                        }
+                    }
+                }
             }
         }
-        return b;
+        if (_queryParams != null) {
+            for (int i = 0, len = _queryParams.size(); i < len; i += 2) {
+                reqBuilder = reqBuilder.addQueryParameter(_queryParams.get(i), _queryParams.get(i+1));
+            }
+        }
+        return reqBuilder;
     }
-
+    
     protected String _url(boolean addQueryParams)
     {
 		if (_path == null) {
@@ -168,7 +190,7 @@ public class AHCPathBuilder
         return _url(true);
     }
 
-    protected final RequestPathBuilder _appendSegment(String segment, boolean escapeSlash)
+    protected final AHCPathBuilder _appendSegment(String segment, boolean escapeSlash)
     {
         if (_path == null) {
             _path = _urlEncoder.encode(segment, escapeSlash);

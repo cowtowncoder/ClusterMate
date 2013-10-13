@@ -5,7 +5,6 @@ import java.net.HttpURLConnection;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.util.BufferRecycler;
-
 import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
@@ -66,13 +65,6 @@ public abstract class BaseJdkHttpAccessor<K extends EntryKey> extends Loggable
            throw new IllegalArgumentException("Bad numeric value for header '"+headerName+"': "+desc);
        }
     }
-
-    protected void setTimeouts(HttpURLConnection conn, long timeoutMsecs)
-    {
-        // not optimal, will have to do:
-        conn.setConnectTimeout((int) timeoutMsecs);
-        conn.setReadTimeout((int) timeoutMsecs);
-    }
     
     /*
     /**********************************************************************
@@ -80,6 +72,29 @@ public abstract class BaseJdkHttpAccessor<K extends EntryKey> extends Loggable
     /**********************************************************************
      */
 
+    /**
+     * Helper method that encapsulates logic of setting various connection
+     * settings, and then forcing sending of the request.
+     */
+    protected int sendRequest(String method, HttpURLConnection conn, JdkHttpClientPathBuilder path,
+            long timeoutMsecs)
+        throws IOException
+    {
+        return initRequest(method, conn, path, timeoutMsecs).getResponseCode();
+    }
+
+    protected HttpURLConnection initRequest(String method, HttpURLConnection conn, JdkHttpClientPathBuilder path,
+            long timeoutMsecs)
+        throws IOException
+    {
+        conn.setRequestMethod(method);
+        // not optimal, will have to do:
+        conn.setConnectTimeout((int) timeoutMsecs);
+        conn.setReadTimeout((int) timeoutMsecs);
+        path.addHeaders(conn);
+        return conn;
+    }
+    
     protected JdkHttpClientPathBuilder addChecksum(JdkHttpClientPathBuilder path, int checksum)
     {
         return path.addParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM,

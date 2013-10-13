@@ -43,9 +43,8 @@ public class JdkHttpContentDeleter<K extends EntryKey>
             path = _keyConverter.appendToPath(path, contentId);
             URL url = path.asURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("DELETE");
-            setTimeouts(conn, timeoutMsecs);
-            int statusCode = conn.getResponseCode();
+            int statusCode = sendRequest("DELETE", conn, path, timeoutMsecs);
+            
             // one thing first: handle standard headers, if any?
             handleHeaders(_server, conn, startTime);
 
