@@ -5,6 +5,7 @@ Project: ClusterMate
 - Expose SYNCPULL metrics (was accidentally missing)
 - Minor improvements to calculation of sync delay to use, to try to reduce rate
   of calls
+- Try to support HTTP Headers better with client
 
 0.9.17 (03-Oct-2013)
 
