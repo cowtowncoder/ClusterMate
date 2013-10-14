@@ -161,8 +161,13 @@ public abstract class DWBasedService<
     
     public void _stop() throws Exception
     {
+        if (_managed == null) {
+            LOG.error("_managed is null on _stop(): should never happen; skipping");
+            return;
+        }
+        
         int count = _managed.size();
-        LOG.info("Stopping {} VManaged objects", count);
+        LOG.info("Stopping {} managed objects", count);
         while (--count >= 0) {
             StartAndStoppable managed = _managed.remove(count);
             String desc = managed.getClass().getName();
