@@ -1,6 +1,6 @@
 Project: ClusterMate
 
-0.9.18
+0.9.18 (17-Oct-2013)
 
 - Expose SYNCPULL metrics (was accidentally missing)
 - Minor improvements to calculation of sync delay to use, to try to reduce rate
