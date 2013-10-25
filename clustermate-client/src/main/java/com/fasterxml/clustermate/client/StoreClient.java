@@ -248,16 +248,7 @@ public abstract class StoreClient<K extends EntryKey,
     public final PutOperationResult putContent(PutCallParameters params, K key, byte[] data)
     		throws InterruptedException
     {
-        return putContent(_config, params, key, data);
-    }
-
-    /**
-     * Convenience method for PUTting specified static content,
-     * using specified configuration overrides.
-     */
-    public PutOperationResult putContent(CONFIG config, PutCallParameters params, K key, byte[] data)
-        throws InterruptedException {
-        return putContent(config, params, key, data, 0, data.length);
+        return putContent(params, key, data, 0, data.length);
     }
 
     /**
@@ -268,18 +259,7 @@ public abstract class StoreClient<K extends EntryKey,
     		byte[] data, int dataOffset, int dataLength)
             throws InterruptedException
     {
-        return putContent(_config, params, key, data, dataOffset, dataLength);
-    }
-    
-    /**
-     * Convenience method for PUTting specified static content;
-     * may be used if content need not be streamed from other sources.
-     */
-    public PutOperationResult putContent(CONFIG config, PutCallParameters params, K key,
-            byte[] data, int dataOffset, int dataLength)
-        throws InterruptedException
-    {
-        return putContent(config, params, key, PutContentProviders.forBytes(data, dataOffset, dataLength));
+        return putContent(params, key, PutContentProviders.forBytes(data, dataOffset, dataLength));
     }
     
     /**
@@ -287,16 +267,7 @@ public abstract class StoreClient<K extends EntryKey,
      */
     public final PutOperationResult putContent(PutCallParameters params, K key, File file)
     		throws InterruptedException {
-        return putContent(_config, params, key, file);
-    }
-
-    /**
-     * Convenience method for PUTting contents of specified File.
-     */
-    public PutOperationResult putContent(CONFIG config, PutCallParameters params, K key, File file)
-        throws InterruptedException
-    {
-        return putContent(config, params, key, PutContentProviders.forFile(file, file.length()));
+        return putContent(params, key, PutContentProviders.forFile(file, file.length()));
     }
 
     /*

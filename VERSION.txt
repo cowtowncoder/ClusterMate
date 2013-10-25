@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.9.19
+
+- Refactoring CallParameters
+
 0.9.18 (17-Oct-2013)
 
 - Expose SYNCPULL metrics (was accidentally missing)

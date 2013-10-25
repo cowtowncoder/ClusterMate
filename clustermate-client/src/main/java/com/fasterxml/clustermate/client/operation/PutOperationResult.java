@@ -37,5 +37,5 @@ public class PutOperationResult extends OperationResultImpl<PutOperationResult>
 
     // generic type to allow for more convenient casting
     @SuppressWarnings("unchecked")
-	public <P extends PutCallParameters> P getParams() { return (P) _params; }
+    public <P extends PutCallParameters> P getParams() { return (P) _params; }
 }
