@@ -2,7 +2,8 @@ Project: ClusterMate
 
 0.9.19
 
-- Refactoring CallParameters
+- Refactoring CallParameters, so that all methods take one; and this is used
+  also to pass `StoreClientConfig` overrides, if any
 
 0.9.18 (17-Oct-2013)
 

@@ -276,19 +276,7 @@ public abstract class StoreClient<K extends EntryKey,
     /**********************************************************************
      */
 
-    /**
-     * Convenience method for GETting specific content and aggregating it as a
-     * byte array.
-     * Note that failure to perform GET operation will be signaled with
-     * {@link IllegalStateException}, whereas missing content is indicated by
-     * null return value.
-     * 
-     * @return Array of bytes returned, if content exists; null if no such content
-     *    exists (never PUT, or has been DELETEd)
-     */
-    public byte[] getContentAsBytes(K key) throws InterruptedException {
-        return getContentAsBytes(_config, key);
-    }
+    
     
     /**
      * Convenience method for GETting specific content and aggregating it as a
@@ -300,13 +288,13 @@ public abstract class StoreClient<K extends EntryKey,
      * @return Array of bytes returned, if content exists; null if no such content
      *    exists (never PUT, or has been DELETEd)
      */
-    public byte[] getContentAsBytes(CONFIG config, K key)
+    public byte[] getContentAsBytes(ReadCallParameters params, K key)
             throws InterruptedException
     {
         GetContentProcessorForBytes processor = new GetContentProcessorForBytes();
-        GetOperationResult<ByteAggregator> result = getContent(config, key, processor);
+        GetOperationResult<ByteAggregator> result = getContent(params, key, processor);
         if (result.failed()) { // failed to contact any server
-            _handleGetFailure(key, result);
+            _handleGetFailure(params, key, result);
         }
         // otherwise, we either got content, or got 404 or deletion
         ByteAggregator aggr = result.getContents();
@@ -322,26 +310,13 @@ public abstract class StoreClient<K extends EntryKey,
      * @return Original result file, if content exists; null if content was not found but
      *   operation succeeded (throw exception if access operation itself fails)
      */
-    public final File getContentAsFile(K key, File resultFile) throws InterruptedException {
-        return getContentAsFile(_config, key, resultFile);
-    }
-
-    /**
-     * Convenience method for GETting specific content and storing it in specified file.
-     * Note that failure to perform GET operation will be signaled with
-     * {@link IllegalStateException}, whereas missing content is indicated by
-     * 'false' return value
-     * 
-     * @return Original result file, if content exists; null if content was not found but
-     *   operation succeeded (throw exception if access operation itself fails)
-     */
-    public File getContentAsFile(CONFIG config, K key, File resultFile)
-            throws InterruptedException
+    public final File getContentAsFile(ReadCallParameters params, K key, File resultFile)
+        throws InterruptedException
     {
         GetContentProcessorForFiles processor = new GetContentProcessorForFiles(resultFile);
-        GetOperationResult<File> result = getContent(config, key, processor);
+        GetOperationResult<File> result = getContent(params, key, processor);
         if (result.failed()) { // failed to contact any server
-            _handleGetFailure(key, result);
+            _handleGetFailure(params, key, result);
         }
         // otherwise, we either got content, or got 404 or deletion -- latter means we return null:
         return result.getContents();
@@ -364,18 +339,13 @@ public abstract class StoreClient<K extends EntryKey,
      * @return Array of bytes returned, if content exists; null if no such content
      *    exists (never PUT, or has been DELETEd)
      */
-    public final byte[] getPartialContentAsBytes(K key, ByteRange range) throws InterruptedException {
-        return getPartialContentAsBytes(key, range);
-    }
-    
-    public byte[] getPartialContentAsBytes(CONFIG config, K key,
-            ByteRange range)
-          throws InterruptedException
-  {
+    public final byte[] getPartialContentAsBytes(ReadCallParameters params, K key, ByteRange range)
+        throws InterruptedException
+    {
         GetContentProcessorForBytes processor = new GetContentProcessorForBytes();
-        GetOperationResult<ByteAggregator> result = getContent(config, key, processor, range);
+        GetOperationResult<ByteAggregator> result = getContent(params, key, processor, range);
         if (result.failed()) { // failed to contact any server
-            _handleGetFailure(key, result);
+            _handleGetFailure(params, key, result);
         }
         // otherwise, we either got content, or got 404 or deletion
         ByteAggregator aggr = result.getContents();
@@ -399,19 +369,13 @@ public abstract class StoreClient<K extends EntryKey,
      * @return Original result file, if content exists; null if content was not found but
      *   operation succeeded (throw exception if access operation itself fails)
      */
-    public final File getPartialContentAsFile(K key, File resultFile,
-    		ByteRange range) throws InterruptedException {
-        return getPartialContentAsFile(key, resultFile, range);
-    }
-    
-    public File getPartialContentAsFile(CONFIG config, K key, File resultFile,
-            ByteRange range)
-          throws InterruptedException
-      {
+    public final File getPartialContentAsFile(ReadCallParameters params, K key, File resultFile,
+    		ByteRange range) throws InterruptedException
+    {
         GetContentProcessorForFiles processor = new GetContentProcessorForFiles(resultFile);
-        GetOperationResult<File> result = getContent(config, key, processor, range);
+        GetOperationResult<File> result = getContent(params, key, processor, range);
         if (result.failed()) { // failed to contact any server
-            _handleGetFailure(key, result);
+            _handleGetFailure(params, key, result);
         }
         // otherwise, we either got content, or got 404 or deletion -- latter means we return null:
         return result.getContents();
@@ -424,14 +388,10 @@ public abstract class StoreClient<K extends EntryKey,
      * @return Length of entry in bytes, if entry exists: -1 if no such entry
      *    exists
      */
-    public final long getContentLength(K key) throws InterruptedException {
-        return getContentLength(_config, key);
-    }
-    
-    public long getContentLength(CONFIG config, K key)
-            throws InterruptedException
+    public final long getContentLength(ReadCallParameters params, K key)
+        throws InterruptedException
     {
-        HeadOperationResult result = headContent(config, key);
+        HeadOperationResult result = headContent(params, key);
         if (result.failed()) { // failed to contact any server
             NodeFailure nodeFail = result.getFirstFail();
             if (nodeFail != null) {
@@ -450,7 +410,7 @@ public abstract class StoreClient<K extends EntryKey,
         return result.getContentLength();
     }
     
-    protected void _handleGetFailure(K key, GetOperationResult<?> result)
+    protected void _handleGetFailure(ReadCallParameters params, K key, GetOperationResult<?> result)
     {
         NodeFailure nodeFail = result.getFirstFail();
         if (nodeFail != null) {
@@ -482,15 +442,11 @@ public abstract class StoreClient<K extends EntryKey,
      *   whether operation was successful or not.
      */
     public final PutOperationResult putContent(PutCallParameters params, K key, PutContentProvider content)
-        throws InterruptedException {
-        return putContent(_config, params, key, content);
-    }
-    
-    public PutOperationResult putContent(CONFIG config, PutCallParameters params, K key, PutContentProvider content)
         throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
-        
+        final CONFIG config = _getConfig(params);
+
         // First things first: find Server nodes to talk to:
         NodesForKey nodes = _clusterView.getNodesFor(key);
         PutOperationResult result = new PutOperationResult(config.getOperationConfig(), params);
@@ -508,7 +464,7 @@ public abstract class StoreClient<K extends EntryKey,
         /* Ok: first round; try PUT into every enabled store, up to optimal number
          * of successes we expect.
          */
-        final boolean noRetries = !allowRetries();
+        final boolean noRetries = !allowRetries(config);
         List<NodeFailure> retries = null;
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
@@ -641,46 +597,19 @@ public abstract class StoreClient<K extends EntryKey,
      *   Caller is expected to check details from this object to determine
      *   whether operation was successful or not.
      */
-    public final <T> GetOperationResult<T> getContent(K key, GetContentProcessor<T> processor)
+    public final <T> GetOperationResult<T> getContent(ReadCallParameters params,
+            K key, GetContentProcessor<T> processor)
         throws InterruptedException
     {
-        return getContent(_config, key, processor, null);
-    }
-    
-    /**
-     * Method called to GET specified content from an appropriate server node,
-     * and to pass it to specified processor for actual handling such as
-     * aggregating or writing to an output stream.
-     *<p>
-     * NOTE: definition of "success" for result object is whether operation succeeded
-     * in finding entry iff one exists -- but if entry did not exist, operation may
-     * still succeed. To check whether entry was fetched, you will need to use
-     * {@link GetOperationResult#entryFound()}.
-     * 
-     * @return Result object that indicates state of the operation as whole,
-     *   including information on servers that were accessed during operation.
-     *   Caller is expected to check details from this object to determine
-     *   whether operation was successful or not.
-     */
-    public final <T> GetOperationResult<T> getContent(CONFIG config, K key,
-            GetContentProcessor<T> processor)
-        throws InterruptedException
-    {
-        return getContent(config, key, processor, null);
+        return getContent(params, key, processor, null);
     }
 
-    public final <T> GetOperationResult<T> getContent(K key,
-            GetContentProcessor<T> processor, ByteRange range)
-        throws InterruptedException
-    {
-        return getContent(_config, key, processor, range);
-    }
-    
-    public <T> GetOperationResult<T> getContent(CONFIG config, K key,
-            GetContentProcessor<T> processor, ByteRange range)
+    public <T> GetOperationResult<T> getContent(ReadCallParameters params,
+            K key, GetContentProcessor<T> processor, ByteRange range)
         throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
+        final CONFIG config = _getConfig(params);
 
         // First things first: find Server nodes to talk to:
         NodesForKey nodes = _clusterView.getNodesFor(key);
@@ -698,7 +627,7 @@ public abstract class StoreClient<K extends EntryKey,
         final long lastValidTime = endOfTime - config.getCallConfig().getMinimumTimeoutMsecs();
 
         // Ok: first round; try GET from every enabled store
-        final boolean noRetries = !allowRetries();
+        final boolean noRetries = !allowRetries(config);
         List<NodeFailure> retries = null;
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
@@ -826,15 +755,12 @@ public abstract class StoreClient<K extends EntryKey,
     /* Actual Client API, low-level operations: HEAD
     /**********************************************************************
      */
-
-    public final HeadOperationResult headContent(K key) throws InterruptedException {
-        return headContent(_config, key);
-    }
     
-    public HeadOperationResult headContent(CONFIG config, K key)
+    public HeadOperationResult headContent(ReadCallParameters params, K key)
         throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
+        final CONFIG config = _getConfig(params);
 
         // First things first: find Server nodes to talk to:
         NodesForKey nodes = _clusterView.getNodesFor(key);
@@ -852,7 +778,7 @@ public abstract class StoreClient<K extends EntryKey,
         final long lastValidTime = endOfTime - config.getCallConfig().getMinimumTimeoutMsecs();
 
         // Ok: first round; try HEAD from every enabled store (or, if only one try, all)
-        final boolean noRetries = !allowRetries();
+        final boolean noRetries = !allowRetries(config);
         List<NodeFailure> retries = null;
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
@@ -977,11 +903,7 @@ public abstract class StoreClient<K extends EntryKey,
      * Result object is basically an iterator, and no actual access occurs
      * before methods are called on iterator.
      */
-    public final <T> StoreEntryLister<K,T> listContent(K prefix, ListItemType itemType) throws InterruptedException {
-        return listContent(_config, prefix, itemType);
-    }
-    
-    public <T> StoreEntryLister<K,T> listContent(CONFIG config, K prefix, ListItemType itemType)
+    public <T> StoreEntryLister<K,T> listContent(ReadCallParameters params, K prefix, ListItemType itemType)
             throws InterruptedException
     {
         if (itemType == null) {
@@ -992,6 +914,7 @@ public abstract class StoreClient<K extends EntryKey,
         if (converter == null) { // sanity check, should never occur
             throw new IllegalArgumentException("Unsupported item type: "+itemType);
         }
+        final CONFIG config = _getConfig(params);
         return new StoreEntryLister<K,T>(config, _clusterView, prefix, itemType, converter, null);
     }
     
@@ -1009,16 +932,11 @@ public abstract class StoreClient<K extends EntryKey,
      *   Caller is expected to check details from this object to determine
      *   whether operation was successful or not.
      */
-    public final DeleteOperationResult deleteContent(K key)
+    public DeleteOperationResult deleteContent(DeleteCallParameters params, K key)
         throws InterruptedException
     {
-        return deleteContent(_config, key);
-    }
-    
-    public DeleteOperationResult deleteContent(CONFIG config, K key)
-            throws InterruptedException
-        {
         final long startTime = System.currentTimeMillis();
+        final CONFIG config = _getConfig(params);
 
         // First things first: find Server nodes to talk to:
         NodesForKey nodes = _clusterView.getNodesFor(key);
@@ -1036,7 +954,7 @@ public abstract class StoreClient<K extends EntryKey,
         /* Ok: first round; try DETE from every enabled store, up to optimal number
          * of successes we expect.
          */
-        final boolean noRetries = !allowRetries();
+        final boolean noRetries = !allowRetries(config);
         List<NodeFailure> retries = null;
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
@@ -1153,8 +1071,20 @@ public abstract class StoreClient<K extends EntryKey,
     /**********************************************************************
      */
 
-    protected boolean allowRetries() {
-        return _config.getOperationConfig().getAllowRetries();
+    @SuppressWarnings("unchecked")
+    protected CONFIG _getConfig(CallParameters callParams)
+    {
+        if (callParams != null) {
+            CONFIG cfg = (CONFIG) callParams.getClientConfig();
+            if (cfg != null) {
+                return cfg;
+            }
+        }
+        return _config;
+    }
+    
+    protected boolean allowRetries(CONFIG config) {
+        return config.getOperationConfig().getAllowRetries();
     }
     
     protected <T> List<T> _add(List<T> list, T entry)

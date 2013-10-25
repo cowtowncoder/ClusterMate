@@ -1,5 +1,7 @@
 package com.fasterxml.clustermate.client.call;
 
+import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 
 /**
@@ -21,14 +23,42 @@ public abstract class CallParameters
             _clientConfig =  src._clientConfig;
         }
     }
-    
-    public StoreClientConfig<?,?> getClientConfig() {
-        return _clientConfig;
-    }
-    
+
+    /*
+    /**********************************************************************
+    /* Mutant factories
+    /**********************************************************************
+     */
+
     /**
      * Mutant factory that will return an instance that is configured
      * with given {@link StoreClientConfig} instance.
      */
     public abstract CallParameters withClientConfig(StoreClientConfig<?,?> config);
+    
+    /*
+    /**********************************************************************
+    /* Simple accessors
+    /**********************************************************************
+     */
+    
+    public StoreClientConfig<?,?> getClientConfig() {
+        return _clientConfig;
+    }
+
+    /*
+    /**********************************************************************
+    /* Other methods
+    /**********************************************************************
+     */
+    
+    /**
+     * Method called by low-level HTTP client to add parameters into request
+     * path (and related information, like headers).
+     * 
+     * @param pathBuilder builder used for building request path
+     * @param contentId If of the entry being put; usually not directly needed (already appended to path),
+     *   but may be needed by some implementations
+     */
+    public abstract <B extends RequestPathBuilder> B appendToPath(B pathBuilder, EntryKey contentId);
 }
