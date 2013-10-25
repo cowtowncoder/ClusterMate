@@ -16,5 +16,6 @@ public interface ContentHeader<K extends EntryKey>
      * @param endOfTime Time point at which the whole operation will time out
      * @param contentId Key of content to access
      */
-    public HeadCallResult tryHead(CallConfig config, long endOfTime, K contentId);
+    public HeadCallResult tryHead(CallConfig config,  ReadCallParameters params,
+            long endOfTime, K contentId);
 }

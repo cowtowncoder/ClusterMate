@@ -5,6 +5,8 @@ import com.fasterxml.clustermate.client.StoreClientConfig;
 public abstract class DeleteCallParameters
     extends CallParameters
 {
+    protected DeleteCallParameters() { super(); }
+
     protected DeleteCallParameters(StoreClientConfig<?,?> config) {
         super(config);
     }

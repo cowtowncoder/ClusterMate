@@ -10,6 +10,8 @@ import com.fasterxml.clustermate.client.StoreClientConfig;
 public abstract class PutCallParameters
     extends CallParameters
 {
+    protected PutCallParameters() { super(); }
+
     protected PutCallParameters(StoreClientConfig<?,?> config) {
         super(config);
     }

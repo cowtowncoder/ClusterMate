@@ -11,6 +11,10 @@ import com.fasterxml.clustermate.client.StoreClientConfig;
 public abstract class CallParameters
 {
     protected final StoreClientConfig<?,?> _clientConfig;
+
+    protected CallParameters() {
+        _clientConfig = null;
+    }
     
     protected CallParameters(StoreClientConfig<?,?> config) {
         _clientConfig = config;

@@ -632,8 +632,8 @@ public abstract class StoreClient<K extends EntryKey,
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
             if (!server.isDisabled() || noRetries) {
-                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(), endOfTime, key,
-                		processor, range);
+                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
+                        params, endOfTime, key, processor, range);
                 if (gotten.failed()) {
                     CallFailure fail = gotten.getFailure();
                     if (fail.isRetriable()) {
@@ -668,8 +668,8 @@ public abstract class StoreClient<K extends EntryKey,
             while (it.hasNext()) {
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(), endOfTime, key,
-                		processor, range);
+                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
+                        params, endOfTime, key, processor, range);
                 if (gotten.succeeded()) {
                     T entry = gotten.getResult(); // got it?
                     if (entry != null) {
@@ -695,8 +695,8 @@ public abstract class StoreClient<K extends EntryKey,
                 if (System.currentTimeMillis() >= lastValidTime) {
                     return result.withFailed(retries);
                 }
-                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(), endOfTime, key,
-                		processor, range);
+                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
+                        params, endOfTime, key, processor, range);
                 if (gotten.succeeded()) {
                     T entry = gotten.getResult(); // got it?
                     if (entry != null) {
@@ -726,8 +726,8 @@ public abstract class StoreClient<K extends EntryKey,
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(), endOfTime, key,
-                		processor, range);
+                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
+                        params, endOfTime, key, processor, range);
                 if (gotten.succeeded()) {
                     T entry = gotten.getResult(); // got it?
                     if (entry != null) {
@@ -783,7 +783,8 @@ public abstract class StoreClient<K extends EntryKey,
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
             if (!server.isDisabled() || noRetries) {
-                HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(), endOfTime, key);
+                HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(),
+                        params, endOfTime, key);
                 if (gotten.failed()) {
                     CallFailure fail = gotten.getFailure();
                     if (fail.isRetriable()) {
@@ -816,7 +817,8 @@ public abstract class StoreClient<K extends EntryKey,
             while (it.hasNext()) {
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(), endOfTime, key);
+                HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(),
+                        params, endOfTime, key);
                 if (gotten.succeeded()) {
                     if (gotten.hasContentLength()) {
                         return result.withFailed(retries).setContentLength(server, gotten.getContentLength());
@@ -841,7 +843,8 @@ public abstract class StoreClient<K extends EntryKey,
                 if (System.currentTimeMillis() >= lastValidTime) {
                     return result.withFailed(retries);
                 }
-                HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(), endOfTime, key);
+                HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(),
+                        params, endOfTime, key);
                 if (gotten.succeeded()) {
                     if (gotten.hasContentLength()) {
                         return result.withFailed(retries).setContentLength(server, gotten.getContentLength());
@@ -870,7 +873,8 @@ public abstract class StoreClient<K extends EntryKey,
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(), endOfTime, key);
+                HeadCallResult gotten = server.entryHeader().tryHead(config.getCallConfig(),
+                        params, endOfTime, key);
                 if (gotten.succeeded()) {
                     if (gotten.hasContentLength()) {
                         return result.withFailed(retries).setContentLength(server, gotten.getContentLength());
@@ -961,7 +965,8 @@ public abstract class StoreClient<K extends EntryKey,
             if (server.isDisabled() && !noRetries) { // should be able to break, but let's double check
                 break;
             }
-            CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(), endOfTime, key);
+            CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(),
+                    params, endOfTime, key);
             if (fail != null) {
                 if (fail.isRetriable()) {
                     retries = _add(retries, new NodeFailure(server, fail));
@@ -999,7 +1004,8 @@ public abstract class StoreClient<K extends EntryKey,
             while (it.hasNext()) {
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(), endOfTime, key);
+                CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(),
+                        params, endOfTime, key);
                 if (fail != null) {
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) { // not worth retrying?
@@ -1023,7 +1029,8 @@ public abstract class StoreClient<K extends EntryKey,
             }
             ClusterServerNode server = nodes.node(i);
             if (server.isDisabled()) {
-                CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(), endOfTime, key);
+                CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(),
+                        params, endOfTime, key);
                 if (fail != null) {
                     if (fail.isRetriable()) {
                         retries.add(new NodeFailure(server, fail));
@@ -1048,7 +1055,8 @@ public abstract class StoreClient<K extends EntryKey,
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = retry.getServer();
-                CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(), endOfTime, key);
+                CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(),
+                        params, endOfTime, key);
                 if (fail != null) {
                     retry.addFailure(fail);
                     if (!fail.isRetriable()) {

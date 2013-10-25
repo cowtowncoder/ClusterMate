@@ -9,5 +9,6 @@ import com.fasterxml.clustermate.client.CallFailure;
  */
 public interface ContentDeleter<K extends EntryKey>
 {
-    public CallFailure tryDelete(CallConfig config, long endOfTime, K key);
+    public CallFailure tryDelete(CallConfig config, DeleteCallParameters params,
+            long endOfTime, K key);
 }

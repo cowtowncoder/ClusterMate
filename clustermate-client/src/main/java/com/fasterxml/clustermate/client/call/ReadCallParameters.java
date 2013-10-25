@@ -5,6 +5,8 @@ import com.fasterxml.clustermate.client.StoreClientConfig;
 public abstract class ReadCallParameters
     extends CallParameters
 {
+    protected ReadCallParameters() { super(); }
+
     protected ReadCallParameters(StoreClientConfig<?,?> config) {
         super(config);
     }
