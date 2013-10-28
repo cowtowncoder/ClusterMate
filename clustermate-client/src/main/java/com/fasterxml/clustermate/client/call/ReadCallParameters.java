@@ -11,11 +11,11 @@ public abstract class ReadCallParameters
         super(config);
     }
     
-    protected ReadCallParameters(DeleteCallParameters base) {
+    protected ReadCallParameters(ReadCallParameters base) {
         super(base);
     }
 
-    protected ReadCallParameters(DeleteCallParameters base, StoreClientConfig<?,?> config) {
+    protected ReadCallParameters(ReadCallParameters base, StoreClientConfig<?,?> config) {
         super(config);
     }
 }

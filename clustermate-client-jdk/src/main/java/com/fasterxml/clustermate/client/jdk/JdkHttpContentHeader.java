@@ -9,6 +9,7 @@ import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.CallConfig;
 import com.fasterxml.clustermate.client.call.ContentHeader;
+import com.fasterxml.clustermate.client.call.ReadCallParameters;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
@@ -35,7 +36,8 @@ public class JdkHttpContentHeader<K extends EntryKey>
      */
     
     @Override
-    public JdkHttpHeadCallResult tryHead(CallConfig config, long endOfTime, K contentId)
+    public JdkHttpHeadCallResult tryHead(CallConfig config, ReadCallParameters params,
+            long endOfTime, K contentId)
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
@@ -47,6 +49,9 @@ public class JdkHttpContentHeader<K extends EntryKey>
             JdkHttpClientPathBuilder path = _server.rootPath();
             path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
             path = _keyConverter.appendToPath(path, contentId);
+            if (params != null) {
+                path = params.appendToPath(path, contentId);
+            }
             URL url = path.asURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             int statusCode = sendRequest("HEAD", conn, path, timeoutMsecs);

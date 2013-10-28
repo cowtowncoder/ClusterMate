@@ -13,6 +13,7 @@ import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.CallConfig;
 import com.fasterxml.clustermate.client.call.ContentDeleter;
+import com.fasterxml.clustermate.client.call.DeleteCallParameters;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
@@ -33,7 +34,8 @@ public class AHCContentDeleter<K extends EntryKey>
     }
 
     @Override
-    public CallFailure tryDelete(CallConfig config, long endOfTime, K contentId)
+    public CallFailure tryDelete(CallConfig config, DeleteCallParameters params,
+            long endOfTime, K contentId)
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
@@ -44,6 +46,9 @@ public class AHCContentDeleter<K extends EntryKey>
         AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
         path = _keyConverter.appendToPath(path, contentId);    	
+        if (params != null) {
+            path = params.appendToPath(path, contentId);
+        }
         BoundRequestBuilder reqBuilder = path.deleteRequest(_httpClient);
 
         try {

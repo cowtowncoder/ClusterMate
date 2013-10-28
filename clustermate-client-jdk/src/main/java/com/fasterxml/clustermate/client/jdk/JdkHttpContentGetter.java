@@ -37,9 +37,8 @@ public class JdkHttpContentGetter<K extends EntryKey>
      */
 
     @Override
-    public <T> GetCallResult<T> tryGet(CallConfig config, long endOfTime,
-    		K contentId, GetContentProcessor<T> processor,
-    		ByteRange range)
+    public <T> GetCallResult<T> tryGet(CallConfig config, ReadCallParameters params,
+            long endOfTime, K contentId, GetContentProcessor<T> processor, ByteRange range)
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
@@ -51,6 +50,9 @@ public class JdkHttpContentGetter<K extends EntryKey>
             JdkHttpClientPathBuilder path = _server.rootPath();
             path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
             path = _keyConverter.appendToPath(path, contentId);
+            if (params != null) {
+                path = params.appendToPath(path, contentId);
+            }
             URL url = path.asURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             // plus, allow use of GZIP and LZF

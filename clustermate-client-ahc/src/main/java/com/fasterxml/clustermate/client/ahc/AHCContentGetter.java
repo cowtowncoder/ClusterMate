@@ -36,9 +36,8 @@ public class AHCContentGetter<K extends EntryKey>
      */
 
     @Override
-    public <T> GetCallResult<T> tryGet(CallConfig config, long endOfTime,
-    		K contentId, GetContentProcessor<T> processor,
-    		ByteRange range)
+    public <T> GetCallResult<T> tryGet(CallConfig config, ReadCallParameters params,
+            long endOfTime, K contentId, GetContentProcessor<T> processor, ByteRange range)
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
@@ -48,7 +47,10 @@ public class AHCContentGetter<K extends EntryKey>
         }
         AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
-        path = _keyConverter.appendToPath(path, contentId);       
+        path = _keyConverter.appendToPath(path, contentId);
+        if (params != null) {
+            path = params.appendToPath(path, contentId);
+        }
 
         // plus, allow use of GZIP and LZF
         path = path.setHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION,

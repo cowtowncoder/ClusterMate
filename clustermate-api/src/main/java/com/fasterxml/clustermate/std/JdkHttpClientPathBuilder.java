@@ -141,6 +141,7 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
     /*********************************************************************
      */
 
+    @Override
     public JdkHttpClientPathBuilder addHeader(String key, String value) {
         _headers = _defaultAddHeader(_headers, key, value);
         return this;
