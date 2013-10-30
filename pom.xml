@@ -45,8 +45,8 @@
     <javac.target.version>1.6</javac.target.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <!-- Occasionally use SNAPSHOT version; no need now -->
-    <version.storemate>0.9.20</version.storemate>
+    <!-- Occasionally use SNAPSHOT version -->
+    <version.storemate>0.9.21-SNAPSHOT</version.storemate>
 
     <version.jackson.annotations>2.2.3</version.jackson.annotations>
     <version.jackson.core>2.2.3</version.jackson.core>
