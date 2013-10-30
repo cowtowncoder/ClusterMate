@@ -32,11 +32,18 @@ public class PutContentProviders
         implements PutContentProvider
     {
         protected final Compression _existingCompression;
+        protected final long _uncompressedLength;
 
         protected final AtomicInteger _contentHash = new AtomicInteger(HashConstants.NO_CHECKSUM);
 
-        protected ProviderBase(Compression comp) {
+        protected ProviderBase() {
+            _existingCompression = null;
+            _uncompressedLength = 0L;
+        }
+        
+        protected ProviderBase(Compression comp, long uncompressedLength) {
             _existingCompression = comp;
+            _uncompressedLength = uncompressedLength;
         }
 
         @Override
@@ -55,8 +62,13 @@ public class PutContentProviders
         public Compression getExistingCompression() {
             return _existingCompression;
         }
+
+        @Override
+        public long uncompressedLength() {
+            return _uncompressedLength;
+        }
     }
-    
+
     /*
     /**********************************************************************
     /* Simple standard implementation for byte[] backed
@@ -67,17 +79,18 @@ public class PutContentProviders
      * Simple {@link PutContentProvider} implementation that is backed by
      * a raw byte array.
      */
-    protected static class ByteBacked
-        extends ProviderBase
+    protected static class ByteBacked extends ProviderBase
     {
         protected final ByteContainer _bytes;
 
         public ByteBacked(ByteContainer data) {
-            this(data, null);
+            super();
+            _bytes = data;
         }
 
-        public ByteBacked(ByteContainer data, Compression comp) {
-            super(comp);
+        public ByteBacked(ByteContainer data,
+                Compression comp, long originalLength) {
+            super(comp, originalLength);
             _bytes = data;
         }
         
@@ -119,12 +132,13 @@ public class PutContentProviders
         protected final long _length;
 
         public FileBacked(File file, long length) {
-            this(file, length, null);
+            this(file, length, null, 0L);
         }
 
-        public FileBacked(File file, long length, Compression existingCompression)
+        public FileBacked(File file, long length,
+                Compression existingCompression, long uncompressedLength)
         {
-            super(existingCompression);
+            super(existingCompression, uncompressedLength);
             _file = file;
             _length = length;
         }

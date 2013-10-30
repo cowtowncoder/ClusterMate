@@ -63,14 +63,20 @@ public interface ClusterMateConstants
      * Whether to use "X-" prefix or not seems in dispute; can change
      * if need be.
      */
-    public final static String CUSTOM_HTTP_HEADER_LAST_CLUSTER_UPDATE = "X-TempStore-ClusterUpdate";
+    public final static String CUSTOM_HTTP_HEADER_LAST_CLUSTER_UPDATE = "X-CM-ClusterUpdate";
 
     /**
      * In case of PUT that does not provide checksum as argument, server may
      * return checksum upon successful call. This can be used for further
      * calls by client.
      */
-    public final static String CUSTOM_HTTP_HEADER_CHECKSUM = "X-TempStore-Checksum";
+    public final static String CUSTOM_HTTP_HEADER_CHECKSUM = "X-CM-Checksum";
+
+    /**
+     * When specifying {@link #HTTP_HEADER_COMPRESSION} for values other than "none",
+     * it is necessary to also indicate the original content length
+     */
+    public final static String CUSTOM_HTTP_HEADER_UNCOMPRESSED_LENGTH = "X-CM-UncompressedLength";
 
     /*
     /**********************************************************************
@@ -78,6 +84,9 @@ public interface ClusterMateConstants
     /**********************************************************************
      */
 
+    /**
+     * When passing various checksums with GET, can use this query parameter.
+     */
     public final static String QUERY_PARAM_CHECKSUM = "checksum";
 
     /**

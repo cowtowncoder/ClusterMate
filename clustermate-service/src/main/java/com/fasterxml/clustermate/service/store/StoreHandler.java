@@ -466,10 +466,26 @@ public abstract class StoreHandler<
         // What compression, if any, is payload using?
         Compression inputCompression = Compression.forContentEncoding(request.getHeader(
                 ClusterMateConstants.HTTP_HEADER_COMPRESSION));
+        final StorableCreationMetadata stdMetadata = new StorableCreationMetadata(inputCompression,
+                checksum, 0);
+        if (inputCompression != null && inputCompression != Compression.NONE) {
+            String valueStr = request.getHeader(ClusterMateConstants.CUSTOM_HTTP_HEADER_UNCOMPRESSED_LENGTH);
+            long uncompLen = -1L;
+            if (valueStr != null) {
+                uncompLen = _decodeLong(valueStr, uncompLen);
+            }
+            if (uncompLen <= 0L) {
+                final String prefix = (valueStr == null)? "Missing" : "Invalid";
+                return response.badRequest
+                        (PutResponse.badCompression(key, prefix+" value for header "
+                                +ClusterMateConstants.CUSTOM_HTTP_HEADER_UNCOMPRESSED_LENGTH
+                                +"; required for compression type of "+inputCompression));
+            }
+            stdMetadata.uncompressedSize = uncompLen;
+        }
+
         // assumption here is that we may be passed hash code of orig content, but
         // not that of compressed (latter is easy to calculate on server anyway)
-        final StorableCreationMetadata stdMetadata = new StorableCreationMetadata(inputCompression,
-        		checksum, 0);
         ByteContainer customMetadata = constructPutMetadata(request, key, creationTime,
         		minTTLSinceAccess, maxTTL);
         StorableCreationResult result;
@@ -491,7 +507,7 @@ public abstract class StoreHandler<
             switch (e.getProblem()) {
             case BAD_COMPRESSION:
                 return response.badRequest
-                        (PutResponse.badArg(key, "Bad Compression information passed: "+e.getMessage()));
+                        (PutResponse.badCompression(key, "Bad Compression information passed: "+e.getMessage()));
             case BAD_CHECKSUM:
                 return response.badRequest
                         (PutResponse.badArg(key, "Bad Checksum information passed: "+e.getMessage()));
@@ -1051,6 +1067,37 @@ public abstract class StoreHandler<
         }
     }
     
+    private final long _decodeLong(String input, long defaultValue)
+    {
+        if (input == null || input.length() == 0) {
+            return defaultValue;
+        }
+        if ("0".equals(input)) {
+            return 0L;
+        }
+        final int len = input.length();
+        int i = 0;
+        if (input.charAt(0) == '-') {
+            if (len > 1) {
+                ++i;
+            }
+        }
+        for (; i < len; ++i) {
+            char c = input.charAt(i);
+            if (c > '9' || c < '0') {
+                // invalid... error or default?
+                return defaultValue;
+            }
+        }
+        // let's allow both positive (unsigned 32 int) and negative (signed); to do that
+        // need to parse as Long, cast down.
+        try {
+            return Long.parseLong(input);
+        } catch (IllegalArgumentException e) {
+            return defaultValue;
+        }
+    }
+
     protected static Throwable _peel(Throwable t) {
         while (t.getCause() != null) {
                 t = t.getCause();

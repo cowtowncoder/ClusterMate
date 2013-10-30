@@ -417,7 +417,10 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
 
         // then try adding said entry, and claiming it's LZF encoded
         FakeHttpRequest request = new FakeHttpRequest()
-            .addHeader("Content-Encoding", "lzf");
+            .addHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION, "lzf")
+            .addHeader(ClusterMateConstants.CUSTOM_HTTP_HEADER_UNCOMPRESSED_LENGTH,
+                String.valueOf(STRING_BYTES.length));
+        
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(request, response,
                 INTERNAL_KEY1, calcChecksum(STRING_BYTES), new ByteArrayInputStream(STRING_BYTES),

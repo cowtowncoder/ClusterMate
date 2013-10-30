@@ -22,10 +22,22 @@ import com.fasterxml.storemate.shared.compress.Compression;
 public interface PutContentProvider
 {
     /**
+     * Physical length of content; compressed content if
+     * {@link #getExistingCompression()} returns actual compression
+     * method.
+     * 
      * @return Length of content, if known; -1 if not known
      */
     public long length();
-    
+
+    /**
+     * Accessor used for figuring out original length of content before
+     * compression; used only if compression method is used.
+     * 
+     * @return Length of content before compression was applied
+     */
+    public long uncompressedLength();
+
     public ByteContainer contentAsBytes();
 
     public File contentAsFile() throws java.io.IOException;

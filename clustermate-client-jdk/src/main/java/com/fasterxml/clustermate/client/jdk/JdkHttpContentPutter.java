@@ -5,7 +5,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
-import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.storemate.shared.ByteContainer;
+import com.fasterxml.storemate.shared.compress.Compression;
+import com.fasterxml.storemate.shared.hash.HashConstants;
+import com.fasterxml.storemate.shared.util.IOUtil;
+
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.CallFailure;
@@ -13,10 +17,6 @@ import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
-import com.fasterxml.storemate.shared.ByteContainer;
-import com.fasterxml.storemate.shared.compress.Compression;
-import com.fasterxml.storemate.shared.hash.HashConstants;
-import com.fasterxml.storemate.shared.util.IOUtil;
 
 /**
  * Helper accessors class used for making a single PUT call to a single
@@ -73,7 +73,7 @@ public class JdkHttpContentPutter<K extends EntryKey>
         // Is compression known?
         Compression comp = content.getExistingCompression();
         if (comp != null) { // if so, must be indicated
-            path = path.setHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION, comp.asContentEncoding());
+            path = path.addCompression(comp, content.uncompressedLength());
         }
         if (params != null) {
             path = params.appendToPath(path, contentId);

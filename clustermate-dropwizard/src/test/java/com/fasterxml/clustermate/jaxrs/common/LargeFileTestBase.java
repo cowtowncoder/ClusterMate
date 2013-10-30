@@ -4,6 +4,7 @@ import java.io.*;
 
 import org.junit.Assert;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.jaxrs.StoreResource;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.msg.PutResponse;
@@ -142,7 +143,9 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
 
         // then try adding said entry, and letting server know it's gzip'd
         FakeHttpRequest request = new FakeHttpRequest()
-            .addHeader("Content-Encoding", "gzip");
+            .addHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION, "gzip")
+            .addHeader(ClusterMateConstants.CUSTOM_HTTP_HEADER_UNCOMPRESSED_LENGTH,
+                    String.valueOf(BIG_DATA_ORIG.length));
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(request, response,
                 INTERNAL_KEY1, calcChecksum(BIG_DATA_GZIP), new ByteArrayInputStream(BIG_DATA_GZIP),
@@ -293,7 +296,9 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
 
         // then try adding said entry, and letting server know it's gzip'd
         FakeHttpRequest request = new FakeHttpRequest()
-            .addHeader("Content-Encoding", "gzip");
+            .addHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION, "gzip")
+            .addHeader(ClusterMateConstants.CUSTOM_HTTP_HEADER_UNCOMPRESSED_LENGTH,
+                    String.valueOf(BIG_DATA_RAW.length));
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(request, response,
                 INTERNAL_KEY1, calcChecksum(BIG_DATA_RAW), new ByteArrayInputStream(BIG_DATA_RAW),

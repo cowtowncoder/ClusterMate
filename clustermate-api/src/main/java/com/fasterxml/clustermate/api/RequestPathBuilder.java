@@ -2,6 +2,8 @@ package com.fasterxml.clustermate.api;
 
 import java.util.*;
 
+import com.fasterxml.storemate.shared.compress.Compression;
+
 /**
  * Builder object used for constructing {@link RequestPath}
  * instances.
@@ -85,6 +87,24 @@ public abstract class RequestPathBuilder
 
     public abstract RequestPathBuilder addHeader(String key, String value);
 
+    public RequestPathBuilder addHeader(String key, long value) {
+        return addHeader(key, String.valueOf(value));
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T extends RequestPathBuilder> T addCompression(Compression comp, long originalLength) {
+        if (comp != null) {
+            RequestPathBuilder req = addHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION,
+                    comp.asContentEncoding());
+            if (comp != Compression.NONE) {
+                req = req.addHeader(ClusterMateConstants.CUSTOM_HTTP_HEADER_UNCOMPRESSED_LENGTH,
+                        originalLength);
+            }
+            return (T) req;
+        }
+        return (T) this;
+    }
+    
     /*
     /*********************************************************************
     /* Accessors
