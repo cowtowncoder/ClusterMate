@@ -97,7 +97,22 @@ public abstract class CompressionTestBase extends JaxrsStoreTestBase
         // and importantly, should also be auto-uncompressed as expected:
         assertEquals(origSize, data.length);
         Assert.assertArrayEquals(INPUT_STR_BYTES, data);
-        
+
+        // ... except if we tell it's cool to serve compressed content as-is
+        response = new FakeHttpResponse();
+        req = new FakeHttpRequest()
+            .addHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION, "lzf,gzip")
+        ;
+        resource.getHandler().getEntry(req, response, INTERNAL_KEY1);
+        assertEquals(200, response.getStatus());
+
+        assertTrue(response.hasStreamingContent());
+        assertTrue(response.hasFile());
+        data = collectOutput(response);
+
+        assertEquals(INPUT_DATA_LZF.length, data.length);
+        Assert.assertArrayEquals(INPUT_DATA_LZF, data);
+
         entries.stop();
     }
 
