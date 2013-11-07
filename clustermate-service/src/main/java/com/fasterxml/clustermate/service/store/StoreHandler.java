@@ -855,20 +855,20 @@ public abstract class StoreHandler<
             TimeSpan minTTLSinceAccess, TimeSpan maxTTL)
     {
         if (minTTLSinceAccess == null) {
-        	minTTLSinceAccess = findMinTTLParameter(request, key);
+            minTTLSinceAccess = findMinTTLParameter(request, key);
         }
         if (maxTTL == null) {
-        	maxTTL = findMaxTTLParameter(request, key);
+            maxTTL = findMaxTTLParameter(request, key);
         }
         LastAccessUpdateMethod lastAcc = _findLastAccessUpdateMethod(request, key);
         int minTTLSecs = (minTTLSinceAccess == null) ? findMinTTLDefaultSecs(request, key)
-        		: (int) (minTTLSinceAccess.getMillis() / 1000);
+                : (int) (minTTLSinceAccess.getMillis() / 1000);
         int maxTTLSecs = (maxTTL == null) ? findMaxTTLDefaultSecs(request, key)
-        		: (int) (maxTTL.getMillis() / 1000);
+                : (int) (maxTTL.getMillis() / 1000);
 
         return _entryConverter.createMetadata(creationTime,
-            ((lastAcc == null) ? 0 : lastAcc.asByte()),
-            minTTLSecs, maxTTLSecs);
+                ((lastAcc == null) ? 0 : lastAcc.asByte()),
+                minTTLSecs, maxTTLSecs);
     }
     
     /**
@@ -889,13 +889,14 @@ public abstract class StoreHandler<
     protected TimeSpan findMaxTTLParameter(ServiceRequest request, K key)
     {
         String paramKey = ClusterMateConstants.QUERY_PARAM_MAX_TTL;
-        return _timeSpanFrom(paramKey, request.getQueryParameter(paramKey));
+        final String paramValue = request.getQueryParameter(paramKey);
+        return _timeSpanFrom(paramKey, paramValue);
     }
     
     protected TimeSpan _timeSpanFrom(String key, String value)
     {
         if (_isEmpty(value)) {
-    		    return null;
+            return null;
         }
         // Let's use bit of heuristics; pure number == seconds; otherwise, TimeSpan
         char c = value.charAt(value.length() - 1);
