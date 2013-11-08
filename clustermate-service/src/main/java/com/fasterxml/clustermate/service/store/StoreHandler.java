@@ -260,13 +260,12 @@ public abstract class StoreHandler<
         } catch (IllegalArgumentException e) {
             return invalidRange(response, key, rangeStr, e.getMessage());
         }
-        String acceptableEnc = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
-        Storable rawEntry = null;
         final StorableStore entryStore = _stores.getEntryStore();
+        String acceptableEnc = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
+        Storable rawEntry;
 
         try {
-            rawEntry = entryStore.findEntry(StoreOperationSource.REQUEST,
-                    diag, key.asStorableKey());
+            rawEntry = findRawEntryForReads(entryStore, key, diag);
         } catch (IOException e) {
             return _storeError(response, key, e);
         }
@@ -351,7 +350,7 @@ public abstract class StoreHandler<
         }
         return response;
     }
-
+    
     protected boolean _notChanged(ServiceRequest request, Storable rawEntry)
     {
         // First: entry must have hash value to compare against
@@ -392,20 +391,19 @@ public abstract class StoreHandler<
     
     // public for calling from unit tests
     public ServiceResponse getEntryStats(ServiceRequest request, ServiceResponse response, K key,
-            OperationDiagnostics metadata)
+            OperationDiagnostics diag)
         throws StoreException
     {
         // Do we need special handling for Range requests? (GET only?)
     	// Should this update last-accessed as well? (for now, won't)
         Storable rawEntry;
         try {
-            rawEntry = _stores.getEntryStore().findEntry(StoreOperationSource.REQUEST,
-                    metadata, key.asStorableKey());
+            rawEntry = findRawEntryForReads(_stores.getEntryStore(), key, diag);
         } catch (IOException e) {
             return _storeError(response, key, e);
         } 
-        if (metadata != null) {
-            metadata.setEntry(rawEntry);
+        if (diag != null) {
+            diag.setEntry(rawEntry);
         }
         if (rawEntry == null) {
             return response.notFound(new GetErrorResponse<K>(key, "No entry found for key '"+key+"'"));
@@ -917,6 +915,23 @@ public abstract class StoreHandler<
 
     protected int findMaxTTLDefaultSecs(ServiceRequest request, K key) {
         return _cfgDefaultMaxTTLSecs;
+    }
+
+    /*
+    /**********************************************************************
+    /* Customizable handling for locating raw entries for reads (GET, HEAD)
+    /**********************************************************************
+     */
+    
+    /**
+     * Overridable accessor methods used for GET and HEAD requests.
+     */
+    protected Storable findRawEntryForReads(StorableStore entryStore, K key,
+            OperationDiagnostics diag)
+        throws IOException, StoreException
+    {
+        return entryStore.findEntry(StoreOperationSource.REQUEST,
+            diag, key.asStorableKey());
     }
     
     /*
