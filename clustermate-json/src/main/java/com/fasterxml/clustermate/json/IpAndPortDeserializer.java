@@ -22,7 +22,7 @@ public class IpAndPortDeserializer extends StdScalarDeserializer<IpAndPort>
         case VALUE_STRING:
             return new IpAndPort(jp.getText());
         default:
-        	throw ctxt.mappingException(getValueClass(), jp.getCurrentToken());
+        	throw ctxt.mappingException(handledType(), jp.getCurrentToken());
         }
     }
 }

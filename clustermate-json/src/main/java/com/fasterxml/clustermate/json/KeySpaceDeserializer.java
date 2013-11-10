@@ -28,6 +28,6 @@ public class KeySpaceDeserializer extends StdScalarDeserializer<KeySpace>
             return new KeySpace(jp.getIntValue());
         default:
         }
-        throw ctxt.mappingException(getValueClass(), jp.getCurrentToken());
+        throw ctxt.mappingException(handledType(), jp.getCurrentToken());
     }
 }

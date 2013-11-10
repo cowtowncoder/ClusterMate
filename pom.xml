@@ -46,10 +46,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- Occasionally use SNAPSHOT version -->
-    <version.storemate>0.9.21-SNAPSHOT</version.storemate>
+    <version.storemate>0.9.21</version.storemate>
 
-    <version.jackson.annotations>2.2.3</version.jackson.annotations>
-    <version.jackson.core>2.2.3</version.jackson.core>
+    <version.jackson.annotations>2.3.0-rc1</version.jackson.annotations>
+    <version.jackson.core>2.3.0-rc1</version.jackson.core>
     <version.jackson.smile>${version.jackson.core}</version.jackson.smile>
     <version.metrics>3.0.1</version.metrics>
 

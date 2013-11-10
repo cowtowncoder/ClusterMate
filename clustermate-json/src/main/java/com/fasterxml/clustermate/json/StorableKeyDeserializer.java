@@ -24,7 +24,7 @@ public class StorableKeyDeserializer extends StdScalarDeserializer<StorableKey>
             byte[] raw = jp.getBinaryValue();
             return new StorableKey(raw);
         default:
-            throw ctxt.mappingException(getValueClass(), jp.getCurrentToken());
+            throw ctxt.mappingException(handledType(), jp.getCurrentToken());
         }
     }
 }
