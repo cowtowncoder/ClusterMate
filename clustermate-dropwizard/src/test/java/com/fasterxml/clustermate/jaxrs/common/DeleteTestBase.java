@@ -99,7 +99,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         assertTrue(rawEntry.isDeleted());
 
         StoredEntry<TestKey> entry = rawToEntry(rawEntry);
-        
+
         // important: creationTime does NOT change
         assertEquals(startTime, entry.getCreationTime());
         // but last-modified should
