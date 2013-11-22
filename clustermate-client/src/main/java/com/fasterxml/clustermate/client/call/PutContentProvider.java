@@ -22,6 +22,14 @@ import com.fasterxml.storemate.shared.compress.Compression;
 public interface PutContentProvider
 {
     /**
+     * Method that is to be called after caller is done using content
+     * that is being provided. This means that no data may be accessed,
+     * and provider is free to release any resources it has retained
+     * (temporary files, memory buffers).
+     */
+    public void release();
+    
+    /**
      * Physical length of content; compressed content if
      * {@link #getExistingCompression()} returns actual compression
      * method.

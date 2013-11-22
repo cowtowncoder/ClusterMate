@@ -441,7 +441,17 @@ public abstract class StoreClient<K extends EntryKey,
      *   Caller is expected to check details from this object to determine
      *   whether operation was successful or not.
      */
-    public final PutOperationResult putContent(PutCallParameters params, K key, PutContentProvider content)
+    public PutOperationResult putContent(PutCallParameters params, K key, PutContentProvider content)
+        throws InterruptedException
+    {
+        try {
+            return _putContent(params, key, content);
+        } finally {
+            content.release();
+        }
+    }
+    
+    protected PutOperationResult _putContent(PutCallParameters params, K key, PutContentProvider content)
         throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();

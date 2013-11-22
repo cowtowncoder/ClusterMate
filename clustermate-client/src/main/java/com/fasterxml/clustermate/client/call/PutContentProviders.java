@@ -46,6 +46,13 @@ public class PutContentProviders
             _uncompressedLength = uncompressedLength;
         }
 
+        /**
+         * Default implementation does not require any clean up, so implementation
+         * is empty.
+         */
+        @Override
+        public void release() { }
+        
         @Override
         public int getContentHash() {
             return _contentHash.get();
@@ -93,7 +100,7 @@ public class PutContentProviders
             super(comp, originalLength);
             _bytes = data;
         }
-        
+
         @Override
         public long length() {
             return (long) _bytes.byteLength();
