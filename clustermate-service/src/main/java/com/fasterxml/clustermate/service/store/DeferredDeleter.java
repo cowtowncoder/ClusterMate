@@ -14,11 +14,11 @@ import com.fasterxml.clustermate.service.cfg.DeferredDeleteConfig;
 import com.fasterxml.clustermate.service.metrics.DeferQueueMetrics;
 import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.util.DecayingAverageCalculator;
-import com.fasterxml.clustermate.service.util.SimpleLogThrottler;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreOperationSource;
+import com.fasterxml.storemate.store.util.SimpleLogThrottler;
 
 /**
  * Helper class used for handling deletions asynchronously.

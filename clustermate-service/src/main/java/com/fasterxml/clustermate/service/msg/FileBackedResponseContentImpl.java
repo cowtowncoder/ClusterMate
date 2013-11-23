@@ -12,6 +12,8 @@ import com.ning.compress.gzip.GZIPUncompressor;
 import com.ning.compress.lzf.LZFInputStream;
 import com.ning.compress.lzf.LZFUncompressor;
 
+import com.fasterxml.util.membuf.StreamyBytesMemBuffer;
+
 import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;
@@ -27,7 +29,7 @@ import com.fasterxml.storemate.store.StoreOperationThrottler;
 import com.fasterxml.storemate.store.util.ByteBufferCallback;
 import com.fasterxml.storemate.store.util.CountingInputStream;
 import com.fasterxml.storemate.store.util.OperationDiagnostics;
-import com.fasterxml.util.membuf.StreamyBytesMemBuffer;
+import com.fasterxml.storemate.store.util.SimpleLogThrottler;
 
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.util.BufferBackedInputStream;
@@ -43,8 +45,13 @@ import com.fasterxml.clustermate.service.util.BufferBackedInputStream;
 public class FileBackedResponseContentImpl
     implements StreamingResponseContent
 {
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(FileBackedResponseContentImpl.class);
 
+    /**
+     * Since allocation failures can come in clusters, let's do basic throttling
+     */
+    protected final static SimpleLogThrottler bufferAllocFailLogger = new SimpleLogThrottler(LOG, 1000);
+    
     /**
      * Let's use large enough read buffer to allow read-all-write-all
      * cases.
@@ -234,6 +241,12 @@ public class FileBackedResponseContentImpl
                 }
                 return null;
             }
+
+            @Override
+            public IOException withError(IllegalStateException e) {
+                bufferAllocFailLogger.logWarn("Failed to allocate off-heap buffer for streaming output: {}", e);
+                return withBuffer(null);
+            }
         });
         if (e0 != null) {
             throw e0;
@@ -370,6 +383,12 @@ public class FileBackedResponseContentImpl
                     _close(in);
                 }
                 return null;
+            }
+
+            @Override
+            public IOException withError(IllegalStateException e) {
+                bufferAllocFailLogger.logWarn("Failed to allocate off-heap buffer for streaming output: {}", e);
+                return withBuffer(null);
             }
         });
         if (e0 != null) {
@@ -596,14 +615,15 @@ public class FileBackedResponseContentImpl
                     int maxToRead = (int) Math.min(toRead, readBuffer.length);
                     count = input.read(readBuffer, 0, maxToRead);
                 } catch (IOException e) {
-                    throw new StoreException.IO(key, "Failed to read content to store (after "+offHeap.getTotalPayloadLength()
+                    long offLength = (offHeap == null) ? 0 : offHeap.getTotalPayloadLength();
+                    throw new StoreException.IO(key, "Failed to read content to store (after "+offLength
                             +" bytes)", e);
                 }
                 if (count <= 0) { // got it all babe
                     throw new IOException("Failed to read all content: missing last "+toRead+" bytes");
                 }
                 // can we append it in buffer?
-                if (!offHeap.tryAppend(readBuffer, 0, count)) {
+                if ((offHeap == null) || !offHeap.tryAppend(readBuffer, 0, count)) {
                     _verifyBufferLength(offHeap, total);
                     total += count; // since total is reported via diagnostics
                     return count;
@@ -628,9 +648,12 @@ public class FileBackedResponseContentImpl
         
         long total = 0L;
         int count;
-        while ((count = offHeap.readIfAvailable(copyBuffer)) > 0) {
-            out.write(copyBuffer, 0, count);
-            total += count;
+        
+        if (offHeap != null) {
+            while ((count = offHeap.readIfAvailable(copyBuffer)) > 0) {
+                out.write(copyBuffer, 0, count);
+                total += count;
+            }
         }
         if (leftovers != null) {
             out.write(leftovers);
@@ -645,7 +668,7 @@ public class FileBackedResponseContentImpl
     private void _verifyBufferLength(StreamyBytesMemBuffer offHeap, long total) throws IOException
     {
         // sanity check to verify that buffer has everything it is supposed to...
-        long bufd = offHeap.getTotalPayloadLength();
+        long bufd = (offHeap == null) ? 0L : offHeap.getTotalPayloadLength();
         if (bufd != total) {
             throw new IOException("Internal buffering problem: read "+total
                     +" bytes, buffer contains "+bufd);

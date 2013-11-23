@@ -28,7 +28,7 @@ import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.msg.*;
-import com.fasterxml.clustermate.service.util.SimpleLogThrottler;
+import com.fasterxml.storemate.store.util.SimpleLogThrottler;
 
 /**
  * Class that handles coordination between front-end service layer (servlet,
