@@ -15,9 +15,8 @@ public class GetContentProcessorForBytes extends GetContentProcessor<ByteAggrega
     }
 
     /**
-     * Simple {@link PutContentProvider} implementation that is backed by
-     * specific File. More advanced implementations would probably try creating
-     * new temporary files instead.
+     * Simple {@link PutContentProvider} implementation that collects content
+     * as bytes, producing a {@link ByteAggregator}.
      */
     public static class Handler extends GetContentProcessor.Handler<ByteAggregator>
     {

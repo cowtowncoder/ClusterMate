@@ -2,6 +2,8 @@ package com.fasterxml.clustermate.client.call;
 
 import java.io.*;
 
+import com.fasterxml.storemate.shared.compress.Compression;
+
 /**
  * Interface used to create {@link GetContentProcessor.Handler}s that are used 
  * for handling of HTTP GET content.
@@ -27,10 +29,24 @@ public abstract class GetContentProcessor<T>
         }
         
         // // // Sequence of stateful calls for success case
-    
+
         /**
-         * Method used when content can only be delivered in
-         * chunks: if so, this method may be called zero or more times
+         * Method that is called before any content is produced
+         * via {@link #processContent}.
+         *<p>
+         * Default implementation simply returns true.
+         * 
+         * @return True, if content is to be produced; false to abort processing
+         */
+        public boolean startContent(int statusCode, Compression compression)
+            throws IOException
+        {
+            return true;
+        }
+
+        /**
+         * Method called to indicate that more content is available.
+         * This method may be called zero or more times
          * before {@link #completeContentProcessing} is called.
          * 
          * @return True, if more content is to be sent; false to abort processing

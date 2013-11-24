@@ -87,8 +87,18 @@ public class JdkHttpContentGetter<K extends EntryKey>
                 }
             }
             Handler<T> h = processor.createHandler();
-            copy(in, h.asStream(), true);
-            T result = h.completeContentProcessing();
+            T result;
+            // !!! TODO: compression, iff it's not being uncompressed
+            if (h.startContent(statusCode, null)) {
+                copy(in, h.asStream(), true);
+                result = h.completeContentProcessing();
+            } else {
+                // need to skip contents, if caller is not interested in them...
+                while (in.skip(64000) > 0) { 
+                    ;
+                }
+                result = null;
+            }
             return new JdkHttpGetCallResult<T>(conn, statusCode, result);
         } catch (Exception e) {
             return new JdkHttpGetCallResult<T>(CallFailure.clientInternal(_server,

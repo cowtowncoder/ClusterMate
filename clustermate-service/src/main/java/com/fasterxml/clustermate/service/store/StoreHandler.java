@@ -113,8 +113,6 @@ public abstract class StoreHandler<
     
     /**
      * Does store use deferred (queued) deletions?
-     *
-     * @since 0.9.8
      */
     protected final DeferredDeleter _deferredDeleter;
     

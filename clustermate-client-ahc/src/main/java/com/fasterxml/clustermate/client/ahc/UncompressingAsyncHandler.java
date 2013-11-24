@@ -22,7 +22,6 @@ import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.util.ByteAggregator;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
-
 /**
  * Translator class that implements {@link AsyncHandler} but
  * calls {@link GetContentProcessor} with contents.
@@ -178,6 +177,10 @@ public class UncompressingAsyncHandler<T>
             // if no uncompression needed, still need to wrap async handler as an OutputStream
             // to efficiently get contents from BodyPart
             _streamAdapter = _handler.asStream();
+        }
+        // !!! TODO: if we are not uncompress, indicate remaining compression here
+        if (!_handler.startContent(_status, null)) {
+            return STATE.ABORT;
         }
         return STATE.CONTINUE;
     }
