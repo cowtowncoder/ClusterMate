@@ -2,7 +2,8 @@ Project: ClusterMate
 
 0.9.20
 
-Not yet released
+- Minor improvements to handling of failures to allocate off-heap memory buffers
+- Dependency updates (StoreMate 0.9.22, Jackson 2.3.0)
 
 0.9.19 (09-Nov-2013)
 
