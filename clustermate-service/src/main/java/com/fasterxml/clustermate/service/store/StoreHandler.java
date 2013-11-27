@@ -595,10 +595,10 @@ public abstract class StoreHandler<
 
         switch (result.getStatus()) {
         case COMPLETED:
-            response = response.ok(new DeleteResponse<K>(key));
+            response = response.ok(new DeleteResponse<K>(key, 1));
             break;
         case DEFERRED:
-            response = response.accepted(new DeleteResponse<K>(key));
+            response = response.accepted(new DeleteResponse<K>(key, -1));
             break;
         case QUEUE_FULL:
             return response.internalServerError();
