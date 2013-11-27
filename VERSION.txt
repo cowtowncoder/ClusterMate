@@ -1,6 +1,10 @@
 Project: ClusterMate
 
-0.9.20
+09.21
+
+- Add 'count' to DeleteResponse
+
+0.9.20 (25-Nov-2013)
 
 - Minor improvements to handling of failures to allocate off-heap memory buffers
 - Dependency updates (StoreMate 0.9.22, Jackson 2.3.0)

@@ -215,7 +215,7 @@ public class DeferredDeleter
     /* Batch operations are more efficient than individual ones, and this
      * even extends to this seemingly trivial case -- based on measurements,
      * doing this does speed things up (probably since sync'ed access to
-     * blokcing queue may trigger context switch?)
+     * blocking queue may trigger context switch?)
      */
     private final static int CHUNK_SIZE = 10;
     
@@ -305,7 +305,6 @@ public class DeferredDeleter
             deletion.setStatus(DeletionResult.forTimeOut());
             return false;
         }
-        
         try {
             _entryStore.softDelete(StoreOperationSource.REQUEST, null, deletion.getKey(), true, true);
             deletion.setStatus(DeletionResult.forCompleted());

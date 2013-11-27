@@ -10,17 +10,20 @@ public class DeleteResponse<K extends EntryKey> extends CRUDResponseBase<K>
 {
     public final static String PATH_FOR_INLINED = "NA";
 
-    @Deprecated
-    public long creationTime;
+    /**
+     * Number of entries confirmed deleted, if known; -1 if not yet known
+     * (deferred deletes)
+     */
+    public int count;
 
+    @Deprecated
     public DeleteResponse(K key) {
         super(key, "OK");
+        count = 0;
     }
 
-    @Deprecated
-    public DeleteResponse(K key, long creationTime)
-    {
+    public DeleteResponse(K key, int count) {
         super(key, "OK");
-        this.creationTime = creationTime;
+        this.count = count;
     }
 }
