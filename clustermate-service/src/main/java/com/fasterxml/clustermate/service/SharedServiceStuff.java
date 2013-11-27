@@ -85,7 +85,7 @@ public abstract class SharedServiceStuff
         smileMapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);
         _smileMapper = smileMapper;
     }
-    
+
     /*
     /**********************************************************************
     /* Basic config access
