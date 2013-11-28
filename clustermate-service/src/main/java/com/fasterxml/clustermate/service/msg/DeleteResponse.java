@@ -26,4 +26,10 @@ public class DeleteResponse<K extends EntryKey> extends CRUDResponseBase<K>
         super(key, "OK");
         this.count = count;
     }
+
+    // For errors
+    public DeleteResponse(K key, String message, int count) {
+        super(key, message);
+        this.count = count;
+    }
 }
