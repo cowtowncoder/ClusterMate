@@ -154,7 +154,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         try {
             K key = _findKey(request, response);
             if (key != null) { // null means trouble; response has all we need
-                _handleGet(request, response, stats, key);
+                response = _handleGet(request, response, stats, key);
             }
             response.writeOut(_jsonWriter);
         } finally {
@@ -170,7 +170,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     {
         K key = _findKey(request, response);
         if (key != null) {
-            _handleHead(request, response, stats, key);
+            response = _handleHead(request, response, stats, key);
         }
         // note: should be enough to just add headers; no content to write
     }
@@ -193,7 +193,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         try {
             K key = _findKey(request, response);
             if (key != null) {
-                _handlePut(request, response, stats, key);
+                response = _handlePut(request, response, stats, key);
             }
             response.writeOut(_jsonWriter);
         } finally {
@@ -213,7 +213,7 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         try {
             K key = _findKey(request, response);
             if (key != null) {
-                _handleDelete(request, response, stats, key);
+                response = _handleDelete(request, response, stats, key);
             }
             response.writeOut(_jsonWriter);
         } finally {
@@ -229,35 +229,39 @@ public class StoreEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
     /**********************************************************************
      */
 
-    protected void _handleGet(ServletServiceRequest request, ServletServiceResponse response,
+    protected ServletServiceResponse _handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats, K key)
         throws IOException
     {
-        _storeHandler.getEntry(request, response, key, stats);
+        response = (ServletServiceResponse) _storeHandler.getEntry(request, response, key, stats);
         _addStdHeaders(response);
+        return response;
     }
 
-    protected void _handleHead(ServletServiceRequest request, ServletServiceResponse response,
+    protected ServletServiceResponse _handleHead(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats, K key)
         throws IOException
     {
-        _storeHandler.getEntryStats(request, response, key, stats);
+        response = (ServletServiceResponse) _storeHandler.getEntryStats(request, response, key, stats);
         _addStdHeaders(response);
+        return response;
     }
 
-    protected void _handlePut(ServletServiceRequest request, ServletServiceResponse response,
+    protected ServletServiceResponse _handlePut(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats, K key)
         throws IOException
     {
-        _storeHandler.putEntry(request, response, key, request.getInputStream(), stats);
+        response = (ServletServiceResponse) _storeHandler.putEntry(request, response, key, request.getInputStream(), stats);
         _addStdHeaders(response);
+        return response;
     }
 
-    protected void _handleDelete(ServletServiceRequest request, ServletServiceResponse response,
+    protected ServletServiceResponse _handleDelete(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats, K key)
         throws IOException
     {
-        _storeHandler.removeEntry(request, response, key, stats);
+        response = (ServletServiceResponse) _storeHandler.removeEntry(request, response, key, stats);
         _addStdHeaders(response);
+        return response;
     }    
 }

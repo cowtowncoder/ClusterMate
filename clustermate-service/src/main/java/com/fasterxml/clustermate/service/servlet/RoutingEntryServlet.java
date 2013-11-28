@@ -52,22 +52,22 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
      */
 
     @Override
-    protected void _handleGet(ServletServiceRequest request, ServletServiceResponse response,
+    protected ServletServiceResponse _handleGet(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats, K key)
         throws IOException
     {
         NodeState node = _findRedirect(request, response, key);
         if (node == null) {
-            _storeHandler.getEntry(request, response, key, stats);
+            response = (ServletServiceResponse) _storeHandler.getEntry(request, response, key, stats);
             _addStdHeaders(response);
-            return;
+            return response;
         }
         // TODO: routing!
         throw new IllegalStateException("Not yet implemented!");
     }
 
     @Override
-    protected void _handleHead(ServletServiceRequest request, ServletServiceResponse response,
+    protected ServletServiceResponse _handleHead(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats, K key)
         throws IOException
     {
@@ -75,14 +75,14 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         if (node == null) {
             _storeHandler.getEntryStats(request, response, key, stats);
             _addStdHeaders(response);
-            return;
+            return response;
         }
         // TODO: routing!
         throw new IllegalStateException("Not yet implemented!");
     }
 
     @Override
-    protected void _handlePut(ServletServiceRequest request, ServletServiceResponse response,
+    protected ServletServiceResponse _handlePut(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats, K key)
         throws IOException
     {
@@ -91,14 +91,14 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
             _storeHandler.putEntry(request, response, key, request.getInputStream(),
                     stats);
             _addStdHeaders(response);
-            return;
+            return response;
         }
         throw new IllegalStateException("Not yet implemented!");
         // TODO: routing!
     }
 
     @Override
-    protected void _handleDelete(ServletServiceRequest request, ServletServiceResponse response,
+    protected ServletServiceResponse _handleDelete(ServletServiceRequest request, ServletServiceResponse response,
             OperationDiagnostics stats, K key)
         throws IOException
     {
@@ -106,7 +106,7 @@ public class RoutingEntryServlet<K extends EntryKey, E extends StoredEntry<K>>
         if (node == null) {
             _storeHandler.removeEntry(request, response, key, stats);
             _addStdHeaders(response);
-            return;
+            return response;
         }
         throw new IllegalStateException("Not yet implemented!");
         // TODO: routing!
