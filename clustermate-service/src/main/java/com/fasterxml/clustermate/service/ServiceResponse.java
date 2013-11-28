@@ -144,6 +144,10 @@ public abstract class ServiceResponse
     public final ServiceResponse internalServerError() { // 500
         return setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     }
+
+    public final ServiceResponse internalServerError(String msg) { // 500
+        return set(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, msg);
+    }
     
     public final ServiceResponse accepted(Object entity) {
         return set(HttpServletResponse.SC_ACCEPTED, entity);

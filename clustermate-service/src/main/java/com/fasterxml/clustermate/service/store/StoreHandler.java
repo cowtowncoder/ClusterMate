@@ -613,8 +613,11 @@ public abstract class StoreHandler<
                 return response.internalError("Failure due to: "+t);
             }
         default:
-            LOG.error("Unrecognized status: "+result.getStatus());
-            return response.internalServerError();
+            {
+                String msg = "Unrecognized status: "+result.getStatus();
+                LOG.error(msg);
+                return response.internalServerError(msg);
+            }
         }
 
         // If we got this far, can queue last-access deletion as well
