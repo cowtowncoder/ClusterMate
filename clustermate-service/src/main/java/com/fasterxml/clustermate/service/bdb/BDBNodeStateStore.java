@@ -98,7 +98,7 @@ public class BDBNodeStateStore extends NodeStateStore
     }
 
     @Override
-    public List<ActiveNodeState> readAll(KeySpace keyspace)
+    public List<ActiveNodeState> readAll()
     {
         List<ActiveNodeState> all = new ArrayList<ActiveNodeState>(30);
         CursorConfig config = new CursorConfig();

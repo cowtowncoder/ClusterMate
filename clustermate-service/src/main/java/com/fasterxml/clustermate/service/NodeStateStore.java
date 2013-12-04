@@ -53,7 +53,7 @@ public abstract class NodeStateStore
      * Method for simply reading all node entries store has; called usually
      * only during bootstrapping.
      */
-    public abstract List<ActiveNodeState> readAll(KeySpace keyspace);
+    public abstract List<ActiveNodeState> readAll();
 
     /*
     /**********************************************************************

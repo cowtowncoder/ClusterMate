@@ -105,7 +105,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
         
         final NodeStateStore nodes = _stores.getNodeStore();
         // Next: load state definitions from BDB
-        List<ActiveNodeState> storedStates = nodes.readAll(_keyspace);
+        List<ActiveNodeState> storedStates = nodes.readAll();
         LOG.info("Read {} persisted node entries from local store", storedStates.size());
 
         // First things first: find and update node for local node
