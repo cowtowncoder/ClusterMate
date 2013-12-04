@@ -19,7 +19,6 @@ import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
-import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
@@ -27,7 +26,8 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
-public class SyncListAccessor implements StartAndStoppable
+public class SyncListAccessor
+    implements com.fasterxml.storemate.shared.StartAndStoppable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     

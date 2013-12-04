@@ -20,7 +20,7 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
  * key as is or do not use last-accessed information at all.
  */
 public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<K>>
-    implements StartAndStoppable
+    implements com.fasterxml.storemate.shared.StartAndStoppable
 {
     protected final StoredEntryConverter<K,E,?> _entryConverter;
 

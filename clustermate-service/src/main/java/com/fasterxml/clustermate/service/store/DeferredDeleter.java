@@ -9,7 +9,6 @@ import java.util.concurrent.locks.LockSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.cfg.DeferredDeleteConfig;
 import com.fasterxml.clustermate.service.metrics.DeferQueueMetrics;
 import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
@@ -24,7 +23,7 @@ import com.fasterxml.storemate.store.util.SimpleLogThrottler;
  * Helper class used for handling deletions asynchronously.
  */
 public class DeferredDeleter
-    implements StartAndStoppable
+    implements com.fasterxml.storemate.shared.StartAndStoppable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     

@@ -21,7 +21,6 @@ import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.LastAccessStore;
 import com.fasterxml.clustermate.service.NodeStateStore;
-import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.bdb.BDBNodeStateStore;
 import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
@@ -29,7 +28,7 @@ import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 
 public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
 	extends Stores<K, E>
-     implements StartAndStoppable
+    implements com.fasterxml.storemate.shared.StartAndStoppable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 

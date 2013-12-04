@@ -18,7 +18,7 @@ import com.fasterxml.storemate.shared.IpAndPort;
  * be low.
  */
 public abstract class NodeStateStore
-    implements StartAndStoppable
+    implements com.fasterxml.storemate.shared.StartAndStoppable
 {
     /*
     /**********************************************************************

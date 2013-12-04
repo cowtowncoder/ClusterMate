@@ -2,7 +2,6 @@ package com.fasterxml.clustermate.service.cluster;
 
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
-import com.fasterxml.clustermate.service.StartAndStoppable;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 /**
@@ -11,7 +10,7 @@ import com.fasterxml.storemate.shared.IpAndPort;
  */
 public abstract class ClusterViewByServerUpdatable
     extends ClusterViewByServer
-    implements StartAndStoppable
+    implements com.fasterxml.storemate.shared.StartAndStoppable
 {
     /*
     /**********************************************************************
