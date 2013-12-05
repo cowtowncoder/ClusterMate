@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.UTF8Encoder;
 
-import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.service.NodeStateStore;
 import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
 
@@ -23,7 +22,7 @@ import com.fasterxml.clustermate.service.cluster.ActiveNodeState;
  * Concrete {@link NodeStateStore} implementation that uses BDB-JE
  * as the backing storage.
  */
-public class BDBNodeStateStore extends NodeStateStore
+public class OldBDBNodeStateStore extends NodeStateStore
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
     
@@ -42,7 +41,7 @@ public class BDBNodeStateStore extends NodeStateStore
     /**********************************************************************
      */
         
-    public BDBNodeStateStore(Environment env, ObjectMapper jsonMapper) throws DatabaseException
+    public OldBDBNodeStateStore(Environment env, ObjectMapper jsonMapper) throws DatabaseException
     {
         _jsonReader = jsonMapper.reader(ActiveNodeState.class);
         _jsonWriter = jsonMapper.writerWithType(ActiveNodeState.class);

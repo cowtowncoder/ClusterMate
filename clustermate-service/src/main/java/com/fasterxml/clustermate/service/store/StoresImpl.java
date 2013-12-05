@@ -22,7 +22,7 @@ import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.LastAccessStore;
 import com.fasterxml.clustermate.service.NodeStateStore;
 import com.fasterxml.clustermate.service.Stores;
-import com.fasterxml.clustermate.service.bdb.BDBNodeStateStore;
+import com.fasterxml.clustermate.service.bdb.OldBDBNodeStateStore;
 import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 
@@ -282,7 +282,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         }
         _nodeEnv = new Environment(_bdbRootForNodes, nodeEnvConfig(allowCreate, writeAccess));
         try {
-            _nodeStore = new BDBNodeStateStore(_nodeEnv, _jsonMapper);
+            _nodeStore = new OldBDBNodeStateStore(_nodeEnv, _jsonMapper);
         } catch (DatabaseException e) {
             _initProblem = "Failed to open Node store: "+e.getMessage();
             throw new IllegalStateException(_initProblem, e);
