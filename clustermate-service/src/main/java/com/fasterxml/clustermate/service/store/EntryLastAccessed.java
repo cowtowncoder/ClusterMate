@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.service.store;
 
-import com.fasterxml.clustermate.service.util.ByteUtil;
+import com.fasterxml.storemate.shared.util.ByteUtil;
 
 /**
  * Default value container for simple last-accessed information, associated with

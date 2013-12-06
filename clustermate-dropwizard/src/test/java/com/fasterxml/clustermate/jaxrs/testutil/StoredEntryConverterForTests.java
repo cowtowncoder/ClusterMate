@@ -2,15 +2,14 @@ package com.fasterxml.clustermate.jaxrs.testutil;
 
 import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.shared.StorableKey;
+import com.fasterxml.storemate.shared.util.ByteUtil;
 import com.fasterxml.storemate.shared.util.WithBytesCallback;
 import com.fasterxml.storemate.store.Storable;
-
 import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
-import com.fasterxml.clustermate.service.util.ByteUtil;
 
 public class StoredEntryConverterForTests
     extends StoredEntryConverter<TestKey, StoredEntry<TestKey>,FakeFullListItem>
