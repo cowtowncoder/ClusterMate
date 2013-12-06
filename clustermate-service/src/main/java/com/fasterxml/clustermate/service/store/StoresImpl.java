@@ -15,16 +15,19 @@ import com.sleepycat.je.EnvironmentConfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.fasterxml.storemate.backend.bdbje.BDBNodeStateStoreImpl;
+import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
+import com.fasterxml.storemate.store.state.NodeStateStore;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.LastAccessStore;
-import com.fasterxml.clustermate.service.NodeStateStore;
 import com.fasterxml.clustermate.service.Stores;
-import com.fasterxml.clustermate.service.bdb.OldBDBNodeStateStore;
 import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.clustermate.service.state.ActiveNodeState;
+import com.fasterxml.clustermate.service.state.JacksonBasedConverter;
 
 public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
 	extends Stores<K, E>
@@ -95,7 +98,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     
     private Environment _nodeEnv;
 
-    private NodeStateStore _nodeStore;
+    private NodeStateStore<IpAndPort, ActiveNodeState> _nodeStore;
 
     private Environment _lastAccessEnv;
 
@@ -187,8 +190,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
             LOG.info("Closing Node store...");
             try {
                 _nodeStore.stop();
-                LOG.info("Closing Node store environment...");
-                _nodeEnv.close();
             } catch (Exception e) {
                 LOG.error("Problems closing node store: {}", e.getMessage(), e);
             }
@@ -280,9 +281,22 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (log) {
             LOG.info(logPrefix+" Node store...");
         }
+
+        /*
+    public BDBNodeStateStoreImpl(Logger logger,
+            RawEntryConverter<K> keyConv,
+            RawEntryConverter<V> valueConv,
+            Environment env)
+    {
+         */
         _nodeEnv = new Environment(_bdbRootForNodes, nodeEnvConfig(allowCreate, writeAccess));
         try {
-            _nodeStore = new OldBDBNodeStateStore(_nodeEnv, _jsonMapper);
+            _nodeStore = new BDBNodeStateStoreImpl
+                    <IpAndPort, ActiveNodeState>
+            (null,
+                    new JacksonBasedConverter<IpAndPort>(_jsonMapper, IpAndPort.class),
+                    new JacksonBasedConverter<ActiveNodeState>(_jsonMapper, ActiveNodeState.class),
+                    _nodeEnv);
         } catch (DatabaseException e) {
             _initProblem = "Failed to open Node store: "+e.getMessage();
             throw new IllegalStateException(_initProblem, e);
@@ -336,7 +350,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     @Override
     public StorableStore getEntryStore() { return _entryStore; }
     @Override
-    public NodeStateStore getNodeStore() { return _nodeStore; }
+    public NodeStateStore<IpAndPort, ActiveNodeState> getNodeStore() { return _nodeStore; }
     @Override
     public LastAccessStore<K, E> getLastAccessStore() { return _lastAccessStore; }
     

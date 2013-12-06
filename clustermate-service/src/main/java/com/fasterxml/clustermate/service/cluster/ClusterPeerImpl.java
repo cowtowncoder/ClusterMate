@@ -15,11 +15,11 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.shared.util.IOUtil;
 import com.fasterxml.storemate.store.*;
+import com.fasterxml.storemate.store.state.NodeStateStore;
 import com.fasterxml.storemate.store.util.BoundedInputStream;
-
 import com.fasterxml.clustermate.api.*;
-import com.fasterxml.clustermate.service.NodeStateStore;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
+import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 import com.fasterxml.clustermate.service.sync.*;
@@ -155,7 +155,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      * Persistent data store in which we store information regarding
      * synchronization.
      */
-    protected final NodeStateStore _stateStore;
+    protected final NodeStateStore<IpAndPort, ActiveNodeState> _stateStore;
 
     /**
      * Hash code of contents of the last cluster view we received from
@@ -182,7 +182,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     
     public ClusterPeerImpl(SharedServiceStuff stuff, ClusterViewByServerUpdatable cluster,
-            NodeStateStore stateStore, StorableStore entryStore,
+            NodeStateStore<IpAndPort, ActiveNodeState> stateStore, StorableStore entryStore,
             ActiveNodeState state,
             ClusterStatusAccessor accessor)
     {
@@ -544,7 +544,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (state != _syncState) {
             _syncState = state;
             try {
-                _stateStore.upsertEntry(state);
+                _stateStore.upsertEntry(state.getAddress(), state);
             } catch (Exception e) {
                 LOG.error("Failed to update node state (disabled to {}) for {}. Problem ({}): {}",
                         isDisabled, _syncState, e.getClass().getName(), e.getMessage());
@@ -575,7 +575,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (_syncState != orig) {
 //LOG.warn("Saving sync state ({}) (args: {}, {}): lastStartTime {}, lastSeen {}", orig.address, syncStartTime, lastSeen, _syncState.lastSyncAttempt, _syncState.syncedUpTo);
             try {
-                _stateStore.upsertEntry(_syncState);
+                _stateStore.upsertEntry(_syncState.getAddress(), _syncState);
             } catch (Exception e) {
                 LOG.error("Failed to update node state for {}. Problem ({}): {}",
                         _syncState, e.getClass().getName(), e.getMessage());

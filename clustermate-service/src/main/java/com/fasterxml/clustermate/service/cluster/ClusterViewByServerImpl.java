@@ -9,22 +9,15 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.TimeMaster;
-
-import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.clustermate.api.ClusterStatusAccessor;
-import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.KeyRange;
-import com.fasterxml.clustermate.api.KeySpace;
-import com.fasterxml.clustermate.api.NodeDefinition;
-import com.fasterxml.clustermate.api.NodeState;
-import com.fasterxml.clustermate.api.RequestPathBuilder;
+import com.fasterxml.storemate.store.state.NodeStateStore;
+import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.clustermate.json.ClusterMessageConverter;
-import com.fasterxml.clustermate.service.NodeStateStore;
 import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.std.JdkClusterStatusAccessor;
 
@@ -394,7 +387,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
          * local DB. If we do, we may be able to avoid syncing from
          * the beginning of time; and/or obtain actual key range.
          */
-        NodeStateStore stateStore = _stores.getNodeStore();
+        NodeStateStore<IpAndPort, ActiveNodeState> stateStore = _stores.getNodeStore();
         ActiveNodeState initialStatus = new ActiveNodeState(_localState, nodeStatus,
                 _timeMaster.currentTimeMillis());
         // TODO: should perhaps also find by index + range?

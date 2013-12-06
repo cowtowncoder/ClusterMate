@@ -8,12 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.storemate.shared.IpAndPort;
-
+import com.fasterxml.storemate.store.state.NodeStateStore;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeDefinition;
-import com.fasterxml.clustermate.service.NodeStateStore;
 import com.fasterxml.clustermate.service.ServerUtil;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
@@ -21,6 +20,7 @@ import com.fasterxml.clustermate.service.cfg.ClusterConfig;
 import com.fasterxml.clustermate.service.cfg.KeyRangeAllocationStrategy;
 import com.fasterxml.clustermate.service.cfg.NodeConfig;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**
@@ -103,7 +103,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
         LOG.info("Node definition used for this host: {}, found {} configured peer nodes",
         		localDef, nodeDefs.size());
         
-        final NodeStateStore nodes = _stores.getNodeStore();
+        final NodeStateStore<IpAndPort, ActiveNodeState> nodes = _stores.getNodeStore();
         // Next: load state definitions from BDB
         List<ActiveNodeState> storedStates = nodes.readAll();
         LOG.info("Read {} persisted node entries from local store", storedStates.size());
@@ -126,7 +126,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
         // one more thing: force dummy update on restart as well (official startup time too)
         localAct = localAct.withLastUpdated(_startTime);
         // Either way, need to update persisted version
-        nodes.upsertEntry(localAct);
+        nodes.upsertEntry(localAct.getAddress(), localAct);
         
         // then merge entries; create/delete orphans
         Map<IpAndPort,ActiveNodeState> activeState = _mergeStates(nodes,
@@ -236,7 +236,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
      * node states, to create active node definitions and update persisted
      * state if and as necessary.
      */
-    protected Map<IpAndPort,ActiveNodeState> _mergeStates(NodeStateStore nodeStore,
+    protected Map<IpAndPort,ActiveNodeState> _mergeStates(NodeStateStore<IpAndPort, ActiveNodeState> nodeStore,
     		ActiveNodeState localState, Map<IpAndPort,NodeDefinition> nodeDefs,
             List<ActiveNodeState> storedStates)
     {
@@ -268,7 +268,11 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
                     LOG.warn("Unrecognized persisted Node state, key {}: more than 24h old ({} days), will DELETE",
                             key, (staleTimeSecs / SECS_IN_24H));
                 }
-                nodeStore.deleteEntry(key);
+                try {
+                    nodeStore.deleteEntry(key);
+                } catch (Exception e) {
+                    LOG.warn("Failed to delete node state entry for {}: {}", key, e);
+                }
                 continue;
             }
             // We have both config and state: merge
@@ -289,7 +293,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
                         def.getAddress(), state.getRangeSync());
             }
             try {
-                nodeStore.upsertEntry(state);
+                nodeStore.upsertEntry(state.getAddress(), state);
             } catch (Exception e) {
                 LOG.error("Failed to update node state entry #{}, must skip. Problem ({}): {}",
                         i, e.getClass().getName(), e.getMessage());
@@ -317,7 +321,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
      * Helper method that will figure out how to modify persistent state,
      * considering active configuration and persisted state.
      */
-    protected ActiveNodeState _updatePersistentState(NodeStateStore nodeStore,
+    protected ActiveNodeState _updatePersistentState(NodeStateStore<IpAndPort, ActiveNodeState> nodeStore,
             ActiveNodeState localNode,
             NodeDefinition remoteDef, ActiveNodeState remoteNode)
     {
@@ -341,7 +345,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
             }
             remoteNode = remoteNode.withSyncRange(newSyncRange, syncedTo);
             try {
-                nodeStore.upsertEntry(remoteNode);
+                nodeStore.upsertEntry(remoteNode.getAddress(), remoteNode);
             } catch (Exception e) {
                 LOG.error("Failed to update node state for {}, must skip. Problem ({}): {}",
                         remoteNode, e.getClass().getName(), e.getMessage());
