@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sleepycat.je.DatabaseException;
-import com.sleepycat.je.Durability;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
 
@@ -34,12 +33,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     implements com.fasterxml.storemate.shared.StartAndStoppable
 {
     private final Logger LOG = LoggerFactory.getLogger(getClass());
-
-    /**
-     * For Node stores we do not really need much any caching;
-     * but throw dog a bone of, say, nice round 200k.
-     */
-    private final static long NODE_BDB_CACHE_SIZE = 200L * 1024L;
 
     /**
      * Last-access table may get rather high concurrency as it may be
@@ -93,11 +86,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     protected final StoredEntryConverter<K,E,?> _entryConverter;
     
-    // Separate Environments for node state, last-accessed: latter much bigger,
-    // former possibly transactional
-    
-    private Environment _nodeEnv;
-
+    // Separate Environments for last-accessed, with relatively large cache
     private NodeStateStore<IpAndPort, ActiveNodeState> _nodeStore;
 
     private Environment _lastAccessEnv;
@@ -281,22 +270,11 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (log) {
             LOG.info(logPrefix+" Node store...");
         }
-
-        /*
-    public BDBNodeStateStoreImpl(Logger logger,
-            RawEntryConverter<K> keyConv,
-            RawEntryConverter<V> valueConv,
-            Environment env)
-    {
-         */
-        _nodeEnv = new Environment(_bdbRootForNodes, nodeEnvConfig(allowCreate, writeAccess));
         try {
-            _nodeStore = new BDBNodeStateStoreImpl
-                    <IpAndPort, ActiveNodeState>
-            (null,
+            _nodeStore = BDBNodeStateStoreImpl.<IpAndPort, ActiveNodeState>construct
+            (_bdbRootForNodes,
                     new JacksonBasedConverter<IpAndPort>(_jsonMapper, IpAndPort.class),
-                    new JacksonBasedConverter<ActiveNodeState>(_jsonMapper, ActiveNodeState.class),
-                    _nodeEnv);
+                    new JacksonBasedConverter<ActiveNodeState>(_jsonMapper, ActiveNodeState.class));
         } catch (DatabaseException e) {
             _initProblem = "Failed to open Node store: "+e.getMessage();
             throw new IllegalStateException(_initProblem, e);
@@ -392,19 +370,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         return true;
     }
 
-    protected EnvironmentConfig nodeEnvConfig(boolean allowCreate, boolean writeAccess)
-    {
-        EnvironmentConfig config = new EnvironmentConfig();
-        config.setAllowCreate(allowCreate);
-        config.setReadOnly(!writeAccess);
-        config.setSharedCache(false);
-        config.setCacheSize(NODE_BDB_CACHE_SIZE);
-        config.setDurability(Durability.COMMIT_SYNC);
-        // default of 500 msec too low; although for node settings should not really matter:
-        config.setLockTimeout(5000L, TimeUnit.MILLISECONDS);
-        return config;
-    }
-    
     protected EnvironmentConfig lastAccessEnvConfig(boolean allowCreate, boolean writeAccess)
     {
         EnvironmentConfig config = new EnvironmentConfig();

@@ -51,7 +51,7 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
         _store = env.openDatabase(null, // no TX
                 "LastAccessed", dbConfig(env, config));
     }
-
+    
     @Override
     public void start() {
         _closed.set(false);
