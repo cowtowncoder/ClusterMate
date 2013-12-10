@@ -3,9 +3,13 @@ package com.fasterxml.clustermate.jaxrs.bdbje;
 import java.io.File;
 
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.storemate.backend.bdbje.BDBJEBuilder;
 import com.fasterxml.storemate.backend.bdbje.BDBJEConfig;
+import com.fasterxml.storemate.shared.IpAndPort;
+import com.fasterxml.storemate.shared.util.RawEntryConverter;
 import com.fasterxml.storemate.store.backend.StoreBackend;
+import com.fasterxml.storemate.store.state.NodeStateStore;
 
 public class BDBTestHelper
 {
@@ -24,5 +28,12 @@ public class BDBTestHelper
         bdbConfig.useTransactions = USE_TRANSACTIONS;
         BDBJEBuilder b = new BDBJEBuilder(config.storeConfig, bdbConfig);
         return b.buildCreateAndInit();
+    }
+
+    public static NodeStateStore<IpAndPort, ActiveNodeState> createBDBNodeStateStore(ServiceConfig config,
+            RawEntryConverter<IpAndPort> keyConv, RawEntryConverter<ActiveNodeState> valueConv) {
+        BDBJEConfig bdbConfig = new BDBJEConfig();
+        BDBJEBuilder b = new BDBJEBuilder(config.storeConfig, bdbConfig);
+        return b.buildNodeStateStore(config.metadataDirectory, keyConv, valueConv);
     }
 }

@@ -14,7 +14,6 @@ import com.sleepycat.je.EnvironmentConfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.storemate.backend.bdbje.BDBNodeStateStoreImpl;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
@@ -26,7 +25,6 @@ import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
-import com.fasterxml.clustermate.service.state.JacksonBasedConverter;
 
 public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
 	extends Stores<K, E>
@@ -87,7 +85,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     protected final StoredEntryConverter<K,E,?> _entryConverter;
     
     // Separate Environments for last-accessed, with relatively large cache
-    private NodeStateStore<IpAndPort, ActiveNodeState> _nodeStore;
+    private final NodeStateStore<IpAndPort, ActiveNodeState> _nodeStore;
 
     private Environment _lastAccessEnv;
 
@@ -118,12 +116,15 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      
     public StoresImpl(ServiceConfig config, TimeMaster timeMaster, ObjectMapper jsonMapper,
             StoredEntryConverter<K,E,?> entryConverter,
-            StorableStore entryStore, File bdbEnvRoot)
+            StorableStore entryStore,
+            NodeStateStore<IpAndPort, ActiveNodeState> nodeStates,
+            File bdbEnvRoot)
     {
         _timeMaster = timeMaster;
         _jsonMapper = jsonMapper;
         _entryConverter = entryConverter;
         _entryStore = entryStore;
+        _nodeStore = nodeStates;
         if (bdbEnvRoot == null) {
             bdbEnvRoot = config.metadataDirectory;
         }
@@ -265,24 +266,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         _initProblem = null;
 
         final String logPrefix = allowCreate ? "Trying to open (or initialize)" : "Trying to open";
-
-        // First, node (state) store
-        if (log) {
-            LOG.info(logPrefix+" Node store...");
-        }
-        try {
-            _nodeStore = BDBNodeStateStoreImpl.<IpAndPort, ActiveNodeState>construct
-            (_bdbRootForNodes,
-                    new JacksonBasedConverter<IpAndPort>(_jsonMapper, IpAndPort.class),
-                    new JacksonBasedConverter<ActiveNodeState>(_jsonMapper, ActiveNodeState.class));
-        } catch (DatabaseException e) {
-            _initProblem = "Failed to open Node store: "+e.getMessage();
-            throw new IllegalStateException(_initProblem, e);
-        }
-        _nodeStore.start();
-        if (log) {
-            LOG.info("Node store succesfully opened");
-        }
 
         // then last access store:
         if (log) {

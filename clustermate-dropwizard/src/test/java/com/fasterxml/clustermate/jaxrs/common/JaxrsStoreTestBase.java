@@ -12,6 +12,7 @@ import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.shared.compress.Compressors;
+import com.fasterxml.storemate.shared.util.RawEntryConverter;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreException;
@@ -20,6 +21,7 @@ import com.fasterxml.storemate.store.file.DefaultFilenameConverter;
 import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.file.FileManagerConfig;
 import com.fasterxml.storemate.store.impl.StorableStoreImpl;
+import com.fasterxml.storemate.store.state.NodeStateStore;
 import com.fasterxml.clustermate.api.KeySpace;
 import com.fasterxml.clustermate.api.NodeDefinition;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
@@ -29,6 +31,7 @@ import com.fasterxml.clustermate.service.cfg.NodeConfig;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerImpl;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
+import com.fasterxml.clustermate.service.state.JacksonBasedConverter;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.std.ChecksumUtil;
 
@@ -92,6 +95,11 @@ public abstract class JaxrsStoreTestBase extends TestCase
      */
 
     protected abstract StoreBackend createBackend(ServiceConfig config, File fileDir);
+
+    protected abstract NodeStateStore<IpAndPort, ActiveNodeState> createNodeStateStore(
+            ServiceConfig config,
+            RawEntryConverter<IpAndPort> keyConv,
+            RawEntryConverter<ActiveNodeState> valueConv);
     
     protected StoreResourceForTests<TestKey, StoredEntry<TestKey>>
     createResource(String testSuffix, TimeMaster timeMaster,
@@ -109,8 +117,14 @@ public abstract class JaxrsStoreTestBase extends TestCase
                 backend, timeMaster, files, null, null);
         SharedStuffForTests stuff = new SharedStuffForTests(config, timeMaster,
                 _entryConverter, files);
+
+        NodeStateStore<IpAndPort, ActiveNodeState> nodeStates =
+                createNodeStateStore(config,
+                        new JacksonBasedConverter<IpAndPort>(_mapper, IpAndPort.class),
+                        new JacksonBasedConverter<ActiveNodeState>(_mapper, ActiveNodeState.class));
+
         StoresForTests stores = new StoresForTests(config, timeMaster, stuff.jsonMapper(),
-                _entryConverter, store, config.metadataDirectory);
+                _entryConverter, store, nodeStates, config.metadataDirectory);
         // important: configure to reduce log noise:
         stuff.markAsTest();
         stores.initAndOpen(false);

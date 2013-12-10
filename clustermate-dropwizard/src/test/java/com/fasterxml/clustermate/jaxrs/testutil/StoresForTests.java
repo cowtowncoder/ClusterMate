@@ -6,12 +6,15 @@ import com.sleepycat.je.Environment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
+import com.fasterxml.storemate.store.state.NodeStateStore;
 
 import com.fasterxml.clustermate.service.LastAccessStore;
 import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 import com.fasterxml.clustermate.service.store.StoresImpl;
@@ -20,16 +23,17 @@ public class StoresForTests extends StoresImpl<TestKey, StoredEntry<TestKey>>
 {
     public StoresForTests(ServiceConfig config, TimeMaster timeMaster, ObjectMapper jsonMapper,
             StoredEntryConverter<TestKey, StoredEntry<TestKey>,FakeFullListItem> entryFactory,
-            StorableStore entryStore) {
+            StorableStore entryStore, NodeStateStore<IpAndPort, ActiveNodeState> nodeStates) {
         this(config, timeMaster, jsonMapper,
-                entryFactory, entryStore, null);
+                entryFactory, entryStore, nodeStates, null);
     }
 
     public StoresForTests(ServiceConfig config, TimeMaster timeMaster, ObjectMapper jsonMapper,
             StoredEntryConverter<TestKey, StoredEntry<TestKey>,FakeFullListItem> entryConverter,
-            StorableStore entryStore, File dataStoreRoot)
+            StorableStore entryStore, NodeStateStore<IpAndPort, ActiveNodeState> nodeStates,
+            File dataStoreRoot)
     {
-        super(config, timeMaster, jsonMapper, entryConverter, entryStore, dataStoreRoot);
+        super(config, timeMaster, jsonMapper, entryConverter, entryStore, nodeStates, dataStoreRoot);
     }
 
     @Override

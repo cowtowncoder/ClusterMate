@@ -20,6 +20,7 @@ import com.fasterxml.storemate.store.backend.StoreBackendBuilder;
 import com.fasterxml.storemate.store.backend.StoreBackendConfig;
 import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.impl.StorableStoreImpl;
+import com.fasterxml.storemate.store.state.NodeStateStore;
 import com.fasterxml.storemate.store.util.PartitionedWriteMutex;
 
 import com.fasterxml.clustermate.api.EntryKey;
@@ -36,9 +37,12 @@ import com.fasterxml.clustermate.service.cluster.*;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.BackgroundMetricsAccessor;
 import com.fasterxml.clustermate.service.servlet.*;
+import com.fasterxml.clustermate.service.state.ActiveNodeState;
+import com.fasterxml.clustermate.service.state.JacksonBasedConverter;
 import com.fasterxml.clustermate.service.store.*;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class DWBasedService<
     K extends EntryKey,
@@ -307,7 +311,8 @@ public abstract class DWBasedService<
     protected abstract FileManager constructFileManager(SCONFIG serviceConfig);
 
     protected abstract StoresImpl<K,E> constructStores(SharedServiceStuff stuff,
-            SCONFIG serviceConfig, StorableStore store);    
+            SCONFIG serviceConfig, StorableStore store,
+            NodeStateStore<IpAndPort, ActiveNodeState> nodeStates);
 
     protected abstract SharedServiceStuff constructServiceStuff(SCONFIG serviceConfig,
             TimeMaster timeMaster, StoredEntryConverter<K,E,L> entryConverter,
@@ -438,41 +443,6 @@ public abstract class DWBasedService<
         
         addStoreEntryServlet(stuff, environment, cluster, _storeHandler);
     }
-
-    /*
-     * Old single-Servlet implementation:
-     */
-    /*
-    {
-        final ServiceConfig config = stuff.getServiceConfig();
-        final ClusterViewByServer cluster = syncHandler.getCluster();
-
-        // All paths are dynamic, so we need a mapper:
-        RequestPathStrategy pathStrategy = stuff.getPathStrategy();
-        RequestPathBuilder pathBuilder;
-
-        pathBuilder = pathStrategy.appendNodeStatusPath(rootPath(config));
-
-        // // And then start by adding cluster-info (aka node status)
-        // // and sync end points as plain servlets
-        
-        NodeStatusServlet nsServlet = constructNodeStatusServlet(nodeHandler);
-        if (nsServlet != null) {
-            environment.addServlet(nsServlet, servletPath(pathBuilder));
-        }
-    
-        pathBuilder = pathStrategy.appendSyncListPath(rootPath(config));
-        environment.addServlet(new SyncListServlet<K,E>(stuff, cluster, syncHandler),
-                servletPath(pathBuilder));
-        pathBuilder = pathStrategy.appendSyncPullPath(rootPath(config));
-        environment.addServlet(new SyncPullServlet<K,E>(stuff, cluster, syncHandler),
-                servletPath(pathBuilder));
-
-        // // And finally servlet for for entry access
-        
-        addStoreEntryServlet(stuff, environment, pathStrategy, cluster, _storeHandler);
-    }
-    */
     
     /**
      * Overridable method used for hooking standard entry access endpoint into
@@ -507,15 +477,29 @@ public abstract class DWBasedService<
             }
             backendConfig = stuff.convertValue(v.storeBackendConfig, cfgType);
         }
-        StoreBackend backend = b.with(v.storeConfig)
-                .with(backendConfig)
-                .build();
+        b = b.with(v.storeConfig)
+                .with(backendConfig);
+        StoreBackend backend = b.build();
         StorableStore store = new StorableStoreImpl(v.storeConfig, backend, _timeMaster,
                stuff.getFileManager(),
                _constructThrottler(stuff), _constructWriteMutex(stuff));
-        return constructStores(stuff, v, store);
+        NodeStateStore<IpAndPort, ActiveNodeState> nodeStates = _buildNodeStateStore(stuff, b);
+        return constructStores(stuff, v, store, nodeStates);
     }
 
+    protected NodeStateStore<IpAndPort, ActiveNodeState> _buildNodeStateStore(SharedServiceStuff stuff,
+            StoreBackendBuilder<?> backendBuilder)
+    {
+        /* 09-Dec-2013, tatu: Now we will also construct NodeStateStore using
+         *   the very same builder...
+         */
+        ObjectMapper mapper = stuff.jsonMapper();
+        File root = null;
+        return backendBuilder.<IpAndPort, ActiveNodeState>buildNodeStateStore(root,
+                        new JacksonBasedConverter<IpAndPort>(mapper, IpAndPort.class),
+                        new JacksonBasedConverter<ActiveNodeState>(mapper, ActiveNodeState.class));
+    }
+    
     /**
      * Factory method called to instantiate {@link StoreOperationThrottler}
      * to use for throttling underlying local database operations.
