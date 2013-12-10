@@ -494,7 +494,7 @@ public abstract class DWBasedService<
          *   the very same builder...
          */
         ObjectMapper mapper = stuff.jsonMapper();
-        File root = null;
+        File root = stuff.getServiceConfig().metadataDirectory;
         return backendBuilder.<IpAndPort, ActiveNodeState>buildNodeStateStore(root,
                         new JacksonBasedConverter<IpAndPort>(mapper, IpAndPort.class),
                         new JacksonBasedConverter<ActiveNodeState>(mapper, ActiveNodeState.class));
