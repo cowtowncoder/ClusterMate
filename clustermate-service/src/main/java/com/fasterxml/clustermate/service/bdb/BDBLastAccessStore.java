@@ -24,6 +24,8 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEntry<K>>
     extends LastAccessStore<K, E>
 {
+    protected final StoredEntryConverter<K,E,?> _entryConverter;
+
     /*
     /**********************************************************************
     /* BDB store for last-accessed timestamps
@@ -47,7 +49,8 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
             LastAccessConfig config)
         throws DatabaseException
     {
-        super(conv, config);
+        super();
+        _entryConverter = conv;
         _store = env.openDatabase(null, // no TX
                 "LastAccessed", dbConfig(env, config));
     }

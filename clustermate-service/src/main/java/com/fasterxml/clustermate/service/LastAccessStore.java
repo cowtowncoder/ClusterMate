@@ -5,10 +5,8 @@ import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.backend.*;
 
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
-import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 
 /**
  * Class that encapsulates optional storage of last-accessed
@@ -22,18 +20,13 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<K>>
     implements com.fasterxml.storemate.shared.StartAndStoppable
 {
-    protected final StoredEntryConverter<K,E,?> _entryConverter;
-
     /*
     /**********************************************************************
     /* Life cycle
     /**********************************************************************
      */
 
-    public LastAccessStore(StoredEntryConverter<K,E,?> conv,
-            LastAccessConfig config)
-    {
-        _entryConverter = conv;
+    public LastAccessStore() {
     }
 
     /*
