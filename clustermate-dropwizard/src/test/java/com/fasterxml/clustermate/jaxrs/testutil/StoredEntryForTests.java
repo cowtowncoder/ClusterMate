@@ -1,9 +1,9 @@
 package com.fasterxml.clustermate.jaxrs.testutil;
 
 import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.storemate.store.Storable;
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 
 public class StoredEntryForTests extends StoredEntry<TestKey>
 {

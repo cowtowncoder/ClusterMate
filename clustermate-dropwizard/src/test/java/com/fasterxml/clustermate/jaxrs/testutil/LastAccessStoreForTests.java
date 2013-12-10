@@ -3,12 +3,12 @@ package com.fasterxml.clustermate.jaxrs.testutil;
 import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.Environment;
 
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.bdb.BDBConverters;
 import com.fasterxml.clustermate.service.bdb.BDBLastAccessStore;
-import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
+import com.fasterxml.storemate.store.lastaccess.LastAccessConfig;
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 
 public class LastAccessStoreForTests
     extends BDBLastAccessStore<TestKey, StoredEntry<TestKey>>

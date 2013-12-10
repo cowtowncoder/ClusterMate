@@ -2,9 +2,9 @@ package com.fasterxml.clustermate.service.store;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.store.Storable;
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 
 /**
  * POJO for storing metadata for a single file entry.

@@ -7,12 +7,12 @@ import com.sleepycat.je.*;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.backend.*;
+import com.fasterxml.storemate.store.lastaccess.LastAccessConfig;
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.LastAccessStore;
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
-import com.fasterxml.clustermate.service.cfg.LastAccessConfig;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
@@ -121,6 +121,11 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
     /* Public API, lookups
     /**********************************************************************
      */
+
+    @Override
+    public long findLastAccessTime(E entry) {
+        return findLastAccessTime(entry.getKey(), entry.getLastAccessUpdateMethod());
+    }
 
     @Override
     public EntryLastAccessed findLastAccessEntry(K key, LastAccessUpdateMethod method)

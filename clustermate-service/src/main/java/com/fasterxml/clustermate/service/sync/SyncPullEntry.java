@@ -1,10 +1,10 @@
 package com.fasterxml.clustermate.service.sync;
 
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.store.Storable;
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 
 /**
  * Helper class we used as an intermediary for per-entry metadata chunk

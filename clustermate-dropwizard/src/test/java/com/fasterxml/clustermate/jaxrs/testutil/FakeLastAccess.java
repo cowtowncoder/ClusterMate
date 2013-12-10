@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.jaxrs.testutil;
 
-import com.fasterxml.clustermate.service.LastAccessUpdateMethod;
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 
 public enum FakeLastAccess implements LastAccessUpdateMethod
 {

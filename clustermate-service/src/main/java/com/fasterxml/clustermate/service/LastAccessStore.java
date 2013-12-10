@@ -3,10 +3,9 @@ package com.fasterxml.clustermate.service;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.backend.*;
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 
-import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.store.EntryLastAccessed;
-import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**
  * Class that encapsulates optional storage of last-accessed
@@ -17,7 +16,7 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
  * map to a single entry, whereas individual entries just use
  * key as is or do not use last-accessed information at all.
  */
-public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<K>>
+public abstract class LastAccessStore<K,E>
     implements com.fasterxml.storemate.shared.StartAndStoppable
 {
     /*
@@ -88,7 +87,9 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
         EntryLastAccessed entry = findLastAccessEntry(key, method);
         return (entry == null) ? 0L : entry.lastAccessTime;
     }
-    
+
+    public abstract long findLastAccessTime(E entry);
+
     public abstract EntryLastAccessed findLastAccessEntry(K key, LastAccessUpdateMethod method);
 
     /*

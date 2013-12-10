@@ -12,6 +12,7 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 import com.fasterxml.storemate.store.StoreConfig;
 import com.fasterxml.storemate.store.backend.StoreBackendBuilder;
 import com.fasterxml.storemate.store.backend.StoreBackendConfig;
+import com.fasterxml.storemate.store.lastaccess.LastAccessConfig;
 
 /**
  * Configuration Object that ClusterMate-based service uses: either read from
