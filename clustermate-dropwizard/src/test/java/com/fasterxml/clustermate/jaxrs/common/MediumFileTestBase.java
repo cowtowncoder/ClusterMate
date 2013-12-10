@@ -87,7 +87,8 @@ public abstract class MediumFileTestBase extends JaxrsStoreTestBase
                 entry.getActualUncompressedLength() > entry.getStorageLength());
         assertEquals(startTime, entry.getCreationTime());
         assertEquals(startTime, entry.getLastModifiedTime());
-        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
+        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime
+                (entry.getKey(), entry.getLastAccessUpdateMethod()));
 
         entries.stop();
     }
@@ -146,7 +147,8 @@ public abstract class MediumFileTestBase extends JaxrsStoreTestBase
         assertEquals(BIG_DATA.length, entry.getActualUncompressedLength());
         assertEquals(startTime, entry.getCreationTime());
         assertEquals(startTime, entry.getLastModifiedTime());
-        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
+        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime
+                (entry.getKey(), entry.getLastAccessUpdateMethod()));
 
         entries.stop();
     }

@@ -114,7 +114,8 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
                 entry.getActualUncompressedLength() > entry.getStorageLength());
         assertEquals(startTime, entry.getCreationTime());
         assertEquals(startTime, entry.getLastModifiedTime());
-        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
+        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime
+                (entry.getKey(), entry.getLastAccessUpdateMethod()));
 
         entries.stop();
     }
@@ -187,7 +188,8 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         assertEquals(-1, entry.getRaw().getOriginalLength());
         assertEquals(startTime, entry.getCreationTime());
         assertEquals(startTime, entry.getLastModifiedTime());
-        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
+        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime
+                (entry.getKey(), entry.getLastAccessUpdateMethod()));
 
         entries.stop();
     }
@@ -269,7 +271,8 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         assertEquals(-1, entry.getRaw().getOriginalLength());
         assertEquals(startTime, entry.getCreationTime());
         assertEquals(startTime, entry.getLastModifiedTime());
-        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
+        assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime
+                (entry.getKey(), entry.getLastAccessUpdateMethod()));
 
         entries.stop();
     }    

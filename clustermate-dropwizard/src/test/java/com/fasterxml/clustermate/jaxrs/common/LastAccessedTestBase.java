@@ -83,15 +83,18 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
         StoredEntry<TestKey> entry2 = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST,
                 null, KEY2.asStorableKey()));
         assertNotNull(entry2);
-        assertEquals(0L, accessStore.findLastAccessTime(entry2));
+        assertEquals(0L, accessStore.findLastAccessTime
+                (entry2.getKey(), entry2.getLastAccessUpdateMethod()));
         StoredEntry<TestKey> entry1b = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST,
                 null, KEY1B.asStorableKey()));
         assertNotNull(entry1b);
-        assertEquals(0L, accessStore.findLastAccessTime(entry1b));
+        assertEquals(0L, accessStore.findLastAccessTime
+                (entry1b.getKey(), entry1b.getLastAccessUpdateMethod()));
         StoredEntry<TestKey> entry1a = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST,
                 null, KEY1A.asStorableKey()));
         assertNotNull(entry1a);
-        assertEquals(0L, accessStore.findLastAccessTime(entry1a));
+        assertEquals(0L, accessStore.findLastAccessTime
+                (entry1a.getKey(), entry1a.getLastAccessUpdateMethod()));
 
         final long UPDATE_TIME1 = 2000L;
         final long UPDATE_TIME2 = 3000L;
@@ -103,26 +106,32 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
                 new FakeHttpResponse(), KEY2);
         assertNotNull(resp);
         assertFalse(resp.isError());
-        assertEquals(UPDATE_TIME1, accessStore.findLastAccessTime(entry2));
+        assertEquals(UPDATE_TIME1, accessStore.findLastAccessTime
+                (entry2.getKey(), entry2.getLastAccessUpdateMethod()));
         
         timeMaster.setCurrentTimeMillis(UPDATE_TIME2);
         resp = resource.getHandler().getEntry(new FakeHttpRequest(), new FakeHttpResponse(), KEY1A);
         assertNotNull(resp);
         assertFalse(resp.isError());
-        assertEquals(UPDATE_TIME1, accessStore.findLastAccessTime(entry2));
-        assertEquals(UPDATE_TIME2, accessStore.findLastAccessTime(entry1a));
+        assertEquals(UPDATE_TIME1, accessStore.findLastAccessTime
+                (entry2.getKey(), entry2.getLastAccessUpdateMethod()));
+        assertEquals(UPDATE_TIME2, accessStore.findLastAccessTime
+                (entry1a.getKey(), entry1a.getLastAccessUpdateMethod()));
 
         // note: second entry should see the last-accessed from the first update!
         entry1b = rawToEntry(entries.findEntry(StoreOperationSource.REQUEST,
                 null, KEY1B.asStorableKey()));
         assertEquals(FakeLastAccess.GROUPED, entry1b.getLastAccessUpdateMethod());
-        assertEquals(UPDATE_TIME2, accessStore.findLastAccessTime(entry1b));
+        assertEquals(UPDATE_TIME2, accessStore.findLastAccessTime
+                (entry1b.getKey(), entry1b.getLastAccessUpdateMethod()));
 
         // as well as vice-versa
         timeMaster.setCurrentTimeMillis(UPDATE_TIME3);
         resp = resource.getHandler().getEntry(new FakeHttpRequest(), new FakeHttpResponse(), KEY1B);
-        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1b));
-        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1a));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime
+                (entry1b.getKey(), entry1b.getLastAccessUpdateMethod()));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime
+                (entry1a.getKey(), entry1a.getLastAccessUpdateMethod()));
 
         assertEquals(2L, accessStore.getEntryCount());
 
@@ -157,9 +166,12 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
         resource.getHandler().removeEntry(new FakeHttpRequest(), response, KEY2);
         assertEquals(200, response.getStatus());
 
-        assertEquals(0L, accessStore.findLastAccessTime(entry2));
-        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1b));
-        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1a));
+        assertEquals(0L, accessStore.findLastAccessTime
+                (entry2.getKey(), entry2.getLastAccessUpdateMethod()));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime
+                (entry1b.getKey(), entry1b.getLastAccessUpdateMethod()));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime
+                (entry1a.getKey(), entry1a.getLastAccessUpdateMethod()));
 
         // and grouped; no deletion.
 
@@ -167,9 +179,12 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
         resource.getHandler().removeEntry(new FakeHttpRequest(), response, KEY1A);
         assertEquals(200, response.getStatus());
 
-        assertEquals(0L, accessStore.findLastAccessTime(entry2));
-        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1b));
-        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime(entry1a));
+        assertEquals(0L, accessStore.findLastAccessTime
+                (entry2.getKey(), entry2.getLastAccessUpdateMethod()));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime
+                (entry1b.getKey(), entry1b.getLastAccessUpdateMethod()));
+        assertEquals(UPDATE_TIME3, accessStore.findLastAccessTime
+                (entry1a.getKey(), entry1a.getLastAccessUpdateMethod()));
 
         // Close'em
         entries.stop();

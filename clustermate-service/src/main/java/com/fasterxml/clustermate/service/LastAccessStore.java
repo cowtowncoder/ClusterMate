@@ -90,19 +90,10 @@ public abstract class LastAccessStore<K extends EntryKey, E extends StoredEntry<
     /**********************************************************************
      */
 
-    public long findLastAccessTime(E entry) {
-        EntryLastAccessed acc = findLastAccessEntry(entry.getKey(), entry.getLastAccessUpdateMethod());
-        return (acc == null) ? 0L : acc.lastAccessTime;
-    }
-    
     public long findLastAccessTime(K key, LastAccessUpdateMethod method)
     {
         EntryLastAccessed entry = findLastAccessEntry(key, method);
         return (entry == null) ? 0L : entry.lastAccessTime;
-    }
-    
-    public EntryLastAccessed findLastAccessEntry(E entry) {
-        return findLastAccessEntry(entry.getKey(), entry.getLastAccessUpdateMethod());
     }
     
     public abstract EntryLastAccessed findLastAccessEntry(K key, LastAccessUpdateMethod method);

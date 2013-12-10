@@ -116,7 +116,8 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
         raw = entries.findEntry(StoreOperationSource.REQUEST,
                 null, INTERNAL_KEY1.asStorableKey());
         assertNotNull(entry);
-        assertEquals(accessTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
+        assertEquals(accessTime, resource.getStores().getLastAccessStore().findLastAccessTime
+                (entry.getKey(), entry.getLastAccessUpdateMethod()));
 
         // and as per Issue #7: should be able to use Conditional GET too:
         response = new FakeHttpResponse();
@@ -292,7 +293,8 @@ public abstract class SmallFileTestBase extends JaxrsStoreTestBase
         assertEquals(SMALL_DATA.length, raw.getOriginalLength());
         assertEquals(creationTime, entry.getCreationTime());
         assertEquals(creationTime, entry.getLastModifiedTime());
-        assertEquals(creationTime, resource.getStores().getLastAccessStore().findLastAccessTime(entry));
+        assertEquals(creationTime, resource.getStores().getLastAccessStore().findLastAccessTime
+                (entry.getKey(), entry.getLastAccessUpdateMethod()));
         
         // need to also close things after done, to exit test
         resource.getStores().stop();

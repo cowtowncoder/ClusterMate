@@ -144,7 +144,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         /* Nothing urgent we have to do, but let's let
          * stores know in case they want to do some flushing
          * ahead of time
-         * 
          */
         if (_nodeStore != null) {
             try {
