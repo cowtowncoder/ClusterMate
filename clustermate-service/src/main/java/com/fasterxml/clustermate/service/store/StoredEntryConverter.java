@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.service.store;
 
 import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.store.Storable;
+import com.fasterxml.storemate.store.lastaccess.EntryLastAccessed;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;

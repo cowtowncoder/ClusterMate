@@ -7,13 +7,14 @@ import com.sleepycat.je.*;
 import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.backend.*;
+import com.fasterxml.storemate.store.lastaccess.EntryLastAccessed;
 import com.fasterxml.storemate.store.lastaccess.LastAccessConfig;
+import com.fasterxml.storemate.store.lastaccess.LastAccessStore;
 import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
+import com.fasterxml.storemate.backend.bdbje.util.BDBConverters;
 
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.service.LastAccessStore;
-import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 

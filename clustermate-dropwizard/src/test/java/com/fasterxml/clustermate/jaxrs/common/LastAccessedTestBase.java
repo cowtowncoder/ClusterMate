@@ -8,13 +8,13 @@ import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreException;
 import com.fasterxml.storemate.store.StoreOperationSource;
 import com.fasterxml.storemate.store.backend.IterationAction;
+import com.fasterxml.storemate.store.lastaccess.EntryLastAccessed;
+import com.fasterxml.storemate.store.lastaccess.LastAccessStore;
+import com.fasterxml.storemate.store.lastaccess.LastAccessStore.LastAccessIterationCallback;
 
 import com.fasterxml.clustermate.jaxrs.StoreResource;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
-import com.fasterxml.clustermate.service.LastAccessStore;
-import com.fasterxml.clustermate.service.LastAccessStore.LastAccessIterationCallback;
 import com.fasterxml.clustermate.service.ServiceResponse;
-import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
 /**

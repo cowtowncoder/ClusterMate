@@ -5,9 +5,9 @@ import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.util.ByteUtil;
 import com.fasterxml.storemate.shared.util.WithBytesCallback;
 import com.fasterxml.storemate.store.Storable;
+import com.fasterxml.storemate.store.lastaccess.EntryLastAccessed;
 import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.api.msg.ListItem;
-import com.fasterxml.clustermate.service.store.EntryLastAccessed;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 
