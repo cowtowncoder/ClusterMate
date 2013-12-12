@@ -87,7 +87,9 @@ public class FileBackedResponseContentImpl
     private final StoredEntry<?> _entry;
 
     private final File _file;
-	
+
+    private FileInputStream _fileInput;
+    
     private final long _dataOffset;
 	
     private final long _dataLength;
@@ -118,6 +120,7 @@ public class FileBackedResponseContentImpl
             StorableStore store, long operationTime,
             File f, Compression comp, ByteRange range,
             StoredEntry<?> entry)
+        throws StoreException
     {
         _diagnostics = diag;
         _timeMaster = timeMaster;
@@ -138,8 +141,14 @@ public class FileBackedResponseContentImpl
         }
         _file = f;
         _compression = comp;
+        try {
+            _fileInput = new FileInputStream(_file);
+        } catch (FileNotFoundException e) {
+            throw new StoreException.NoSuchFile(_entry.getKey().asStorableKey(),
+                    _file, "File '"+_file.getAbsolutePath()+"' not found for Entry "+_entry);
+        }
     }
-
+    
     /*
     /**********************************************************************
     /* Metadata
@@ -270,7 +279,7 @@ public class FileBackedResponseContentImpl
                 if (_diagnostics != null) {
                     _diagnostics.addFileReadWait( _timeMaster.nanosForDiagnostics() - fsWaitStart);
                 }
-                InputStream in = _openStream(_file);
+                final InputStream in = _fileInput;
                 try {
                     if (offset > 0L) {
                         final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
@@ -368,9 +377,8 @@ public class FileBackedResponseContentImpl
         IOException e0 = _store.leaseOffHeapBuffer(new ByteBufferCallback<IOException>() {
             @Override
             public IOException withBuffer(StreamyBytesMemBuffer buffer) {
-                InputStream in = null;
+                InputStream in = _fileInput;
                 try {
-                    in = _openStream(_file);
                     // First: LZF has special optimization to use, if we are to copy the whole thing:
                     if ((_compression == Compression.LZF) && (_dataOffset < 0L)) {
                         _readAllWriteStreamingCompressedLZF(in, out, copyBuffer, buffer);
@@ -688,7 +696,7 @@ public class FileBackedResponseContentImpl
      */
     protected int _readFromFile(File f, byte[] buffer, long toSkip, int dataLength) throws IOException
     {
-        InputStream in = _openStream(_file);
+        InputStream in = _fileInput;
         int offset = 0;
 
         try {
@@ -738,16 +746,6 @@ public class FileBackedResponseContentImpl
                 throw new IOException("Failed to skip more than "+skipped+" bytes (needed to skip "+_dataOffset+")");
             }
             skipped += count;
-        }
-    }
-
-    private FileInputStream _openStream(File f) throws StoreException
-    {
-        try {
-            return new FileInputStream(f);
-        } catch (FileNotFoundException e) {
-            throw new StoreException.NoSuchFile(_entry.getKey().asStorableKey(),
-                    f, "File '"+f.getAbsolutePath()+"' not found for Entry "+_entry);
         }
     }
 

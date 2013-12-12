@@ -313,8 +313,17 @@ public abstract class StoreHandler<
 
         if (entry.hasExternalData()) { // need to stream from File
             File f = entry.getRaw().getExternalFile(_fileManager);
-            output = new FileBackedResponseContentImpl(diag, _timeMaster, entryStore,
+            // this is where we can expect to get "file not found exception".
+            // NOTE: not optimal, since this is one I/O operation that is outside throttling;
+            // but that can't be helped for now -- we MUST catch the problem here, before
+            // adding other response information
+            try {
+                output = new FileBackedResponseContentImpl(diag, _timeMaster, entryStore,
                     accessTime, f, skipCompression ? null : comp, range, entry);
+            } catch (StoreException e) {
+                LOG.error("Problem trying to GET entry '"+key+"': "+e.getMessage());
+                return response.internalFileNotFound(new GetErrorResponse<K>(key, e.getMessage()));
+            }
         } else { // inline
             ByteContainer inlined = entry.getRaw().getInlinedData();
             if (!skipCompression) {

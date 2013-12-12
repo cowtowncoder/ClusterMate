@@ -203,6 +203,14 @@ public abstract class ServiceResponse
         return set(500, entity);
     }
 
+    public final <RESP extends ServiceResponse> RESP  internalFileNotFound(Object entity) {
+        /* 12-Dec-2013, tatu: There isn't really any optimal 5xx code; but to distringuish
+         *    this from generic 500, let's use 507 ("not enough space"), which hopefully
+         *    at least allows separating it from other fails.
+         */
+        return set(507, entity);
+    }
+    
     /**
      * Couple of choices here, but use 504 to distinguish from "unknown" 500 problem
      */
