@@ -18,12 +18,12 @@ public abstract class StoredEntry<K extends EntryKey>
      */
 
     public abstract K getKey();
-    
+
     public abstract long getCreationTime();
     public abstract LastAccessUpdateMethod getLastAccessUpdateMethod();
     public abstract int getMinTTLSinceAccessSecs();
     public abstract int getMaxTTLSecs();
-    
+
     /*
     /**********************************************************************
     /* Public API, derived methods
@@ -123,5 +123,25 @@ public abstract class StoredEntry<K extends EntryKey>
 
     public long getActualUncompressedLength() {
         return getRaw().getActualUncompressedLength();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(100);
+        long msecAge = System.currentTimeMillis() - getCreationTime();
+        int ageSecs = (msecAge <= 0L) ? 0 : (int) (msecAge / 1000);
+        sb.append("[StoredEntry: isDeleted=")
+            .append(isDeleted())
+            .append(", compression=")
+            .append(getCompression())
+            .append(", storageLength=")
+            .append(getStorageLength())
+            .append(", uncompressedLength=")
+            .append(getActualUncompressedLength())
+            .append(", ageSecs=")
+            .append(ageSecs)
+            .append("]")
+            ;
+        return sb.toString();
     }
 }

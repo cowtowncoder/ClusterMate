@@ -270,7 +270,7 @@ public class FileBackedResponseContentImpl
                 if (_diagnostics != null) {
                     _diagnostics.addFileReadWait( _timeMaster.nanosForDiagnostics() - fsWaitStart);
                 }
-                InputStream in = new FileInputStream(_file);
+                InputStream in = _openStream(_file);
                 try {
                     if (offset > 0L) {
                         final long start = (_diagnostics == null) ? 0L : _timeMaster.nanosForDiagnostics();
@@ -370,7 +370,7 @@ public class FileBackedResponseContentImpl
             public IOException withBuffer(StreamyBytesMemBuffer buffer) {
                 InputStream in = null;
                 try {
-                    in = new FileInputStream(_file);
+                    in = _openStream(_file);
                     // First: LZF has special optimization to use, if we are to copy the whole thing:
                     if ((_compression == Compression.LZF) && (_dataOffset < 0L)) {
                         _readAllWriteStreamingCompressedLZF(in, out, copyBuffer, buffer);
@@ -680,7 +680,7 @@ public class FileBackedResponseContentImpl
     /* Simple helper methods
     /**********************************************************************
      */
-    
+
     /**
      * Helper method for reading all the content from specified file
      * into given buffer. Caller must ensure that amount to read fits
@@ -688,7 +688,7 @@ public class FileBackedResponseContentImpl
      */
     protected int _readFromFile(File f, byte[] buffer, long toSkip, int dataLength) throws IOException
     {
-        InputStream in = new FileInputStream(_file);
+        InputStream in = _openStream(_file);
         int offset = 0;
 
         try {
@@ -728,7 +728,7 @@ public class FileBackedResponseContentImpl
         }
         return toRead;
     }
-    
+
     protected final void _skip(InputStream in, long toSkip) throws IOException
     {
         long skipped = 0L;
@@ -740,7 +740,17 @@ public class FileBackedResponseContentImpl
             skipped += count;
         }
     }
-    
+
+    private FileInputStream _openStream(File f) throws StoreException
+    {
+        try {
+            return new FileInputStream(f);
+        } catch (FileNotFoundException e) {
+            throw new StoreException.NoSuchFile(_entry.getKey().asStorableKey(),
+                    f, "File '"+f.getAbsolutePath()+"' not found for Entry "+_entry);
+        }
+    }
+
     private final void _close(InputStream in)
     {
         if (in != null) {
