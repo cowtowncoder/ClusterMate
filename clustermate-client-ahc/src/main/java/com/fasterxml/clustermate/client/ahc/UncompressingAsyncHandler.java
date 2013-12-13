@@ -130,7 +130,7 @@ public class UncompressingAsyncHandler<T>
         // One complication: for failed calls, we take (partial) excerpt
         if (_failExcerpt != null) {
             byte[] data = part.getBodyPartBytes();
-            int needed = _failExcerpt.size() - MAX_EXCERPT_LENGTH;
+            int needed = MAX_EXCERPT_LENGTH - _failExcerpt.size();
             if (needed > 0) {
                 _failExcerpt.write(data, 0, Math.min(needed, data.length));
             }
@@ -141,7 +141,6 @@ public class UncompressingAsyncHandler<T>
             }
             return STATE.ABORT;
         }
-        
         part.writeTo(_streamAdapter);
         return STATE.CONTINUE;
     }

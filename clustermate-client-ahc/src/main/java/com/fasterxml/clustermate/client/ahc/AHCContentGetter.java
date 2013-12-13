@@ -82,8 +82,9 @@ public class AHCContentGetter<K extends EntryKey>
                     return AHCGetCallResult.notFound();
                 }
                 // then the default fallback
-                return new AHCGetCallResult<T>(CallFailure.general(_server, statusCode, startTime, System.currentTimeMillis(),
-                        handler.getExcerpt()));
+                String excerpt = handler.getExcerpt();
+                return new AHCGetCallResult<T>(CallFailure.general(_server, statusCode, startTime,
+                        System.currentTimeMillis(), excerpt));
             }
             return new AHCGetCallResult<T>(statusCode, resp);
         } catch (Exception e) {
