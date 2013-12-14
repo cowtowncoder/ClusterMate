@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.service.store;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
@@ -10,6 +11,7 @@ import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
  * POJO for storing metadata for a single file entry.
  */
 public abstract class StoredEntry<K extends EntryKey>
+    implements StorableKey.Provider
 {
     /*
     /**********************************************************************
@@ -19,6 +21,8 @@ public abstract class StoredEntry<K extends EntryKey>
 
     public abstract K getKey();
 
+    public abstract StorableKey getStorableKey();
+    
     public abstract long getCreationTime();
     public abstract LastAccessUpdateMethod getLastAccessUpdateMethod();
     public abstract int getMinTTLSinceAccessSecs();

@@ -2,15 +2,16 @@ package com.fasterxml.clustermate.jaxrs.testutil;
 
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.service.store.StoredEntry;
+import com.fasterxml.storemate.shared.StorableKey;
 import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 
 public class StoredEntryForTests extends StoredEntry<TestKey>
 {
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Contents
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Contents
+    /**********************************************************************
      */
 
     /**
@@ -53,11 +54,11 @@ public class StoredEntryForTests extends StoredEntry<TestKey>
     public final int minTTLSinceAccessSecs;
 
     public final LastAccessUpdateMethod lastAccessUpdateMethod;
-    
+
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Construction
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Construction
+    /**********************************************************************
      */
 
     /**
@@ -76,14 +77,17 @@ public class StoredEntryForTests extends StoredEntry<TestKey>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Simple accessor implementations
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Simple accessor implementations
+    /**********************************************************************
      */
 
     @Override
     public TestKey getKey() { return key; }
 
+    @Override
+    public StorableKey getStorableKey() { return key.asStorableKey(); }
+    
     @Override
     public Storable getRaw() { return rawEntry; }
 
@@ -108,9 +112,9 @@ public class StoredEntryForTests extends StoredEntry<TestKey>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Derived accessor implementations
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Derived accessor implementations
+    /**********************************************************************
      */
 
     @Override
@@ -158,9 +162,9 @@ public class StoredEntryForTests extends StoredEntry<TestKey>
     }
 
     /*
-    ///////////////////////////////////////////////////////////////////////
-    // Overridden standard methods
-    ///////////////////////////////////////////////////////////////////////
+    /**********************************************************************
+    /* Overridden standard methods
+    /**********************************************************************
      */
     
     // Override for diagnostics, debugging:

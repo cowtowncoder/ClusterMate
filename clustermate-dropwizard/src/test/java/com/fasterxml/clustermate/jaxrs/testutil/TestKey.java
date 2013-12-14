@@ -57,7 +57,7 @@ public class TestKey extends EntryKey
     public StorableKey asStorableKey() {
         return _rawKey;
     }
-
+    
     @Override
     public byte[] asBytes() {
         return _rawKey.asBytes();
