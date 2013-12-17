@@ -23,7 +23,7 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
  * implementation.
  */
 public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEntry<K>>
-    extends LastAccessStore<K, E>
+    extends LastAccessStore<K, E, LastAccessUpdateMethod>
 {
     protected final StoredEntryConverter<K,E,?> _entryConverter;
 

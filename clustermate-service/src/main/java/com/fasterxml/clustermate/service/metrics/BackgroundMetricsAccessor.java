@@ -47,7 +47,7 @@ public class BackgroundMetricsAccessor
 
     protected final AllOperationMetrics.Provider[] _metricsProviders;
 
-    protected final LastAccessStore<?,?> _lastAccessStore;
+    protected final LastAccessStore<?,?,?> _lastAccessStore;
     
     public BackgroundMetricsAccessor(SharedServiceStuff stuff, Stores<?,?> stores,
             AllOperationMetrics.Provider[] metricsProviders)

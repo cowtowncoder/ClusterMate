@@ -11,7 +11,7 @@ import com.fasterxml.storemate.store.backend.IterationAction;
 import com.fasterxml.storemate.store.lastaccess.EntryLastAccessed;
 import com.fasterxml.storemate.store.lastaccess.LastAccessStore;
 import com.fasterxml.storemate.store.lastaccess.LastAccessStore.LastAccessIterationCallback;
-
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 import com.fasterxml.clustermate.jaxrs.StoreResource;
 import com.fasterxml.clustermate.jaxrs.testutil.*;
 import com.fasterxml.clustermate.service.ServiceResponse;
@@ -52,7 +52,7 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
         final String DATA2 = biggerSomewhatCompressibleData(16000);
         final byte[] DATA2_BYTES = DATA2.getBytes("UTF-8");
 
-        final LastAccessStore<TestKey, StoredEntry<TestKey>> accessStore = resource.getStores().getLastAccessStore();
+        final LastAccessStore<TestKey, StoredEntry<TestKey>,LastAccessUpdateMethod> accessStore = resource.getStores().getLastAccessStore();
 
         // verify that first one doesn't exist initially (sanity check)
         FakeHttpResponse response = new FakeHttpResponse();

@@ -5,6 +5,7 @@ import java.io.File;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.lastaccess.LastAccessStore;
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 import com.fasterxml.storemate.store.state.NodeStateStore;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
@@ -28,6 +29,5 @@ public abstract class Stores<K extends EntryKey, E extends StoredEntry<K>>
     
     public abstract StorableStore getEntryStore();
     public abstract NodeStateStore<IpAndPort, ActiveNodeState> getNodeStore();
-    public abstract LastAccessStore<K,E> getLastAccessStore();
-
+    public abstract LastAccessStore<K,E,LastAccessUpdateMethod> getLastAccessStore();
 }

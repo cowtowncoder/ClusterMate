@@ -11,16 +11,14 @@ import org.slf4j.LoggerFactory;
 import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.lastaccess.LastAccessConfig;
 import com.fasterxml.storemate.store.lastaccess.LastAccessStore;
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 import com.fasterxml.storemate.store.state.NodeStateStore;
-
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
@@ -89,7 +87,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
 
     private Environment _lastAccessEnv;
 
-    private LastAccessStore<K, E> _lastAccessStore;
+    private LastAccessStore<K,E,LastAccessUpdateMethod> _lastAccessStore;
 
     /*
     /**********************************************************************
@@ -286,7 +284,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         }
     }
 
-    protected abstract LastAccessStore<K,E> buildAccessStore(Environment env,
+    protected abstract LastAccessStore<K,E,LastAccessUpdateMethod> buildAccessStore(Environment env,
             LastAccessConfig config);
     
     /*
@@ -312,7 +310,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     @Override
     public NodeStateStore<IpAndPort, ActiveNodeState> getNodeStore() { return _nodeStore; }
     @Override
-    public LastAccessStore<K, E> getLastAccessStore() { return _lastAccessStore; }
+    public LastAccessStore<K,E,LastAccessUpdateMethod> getLastAccessStore() { return _lastAccessStore; }
     
     /*
     /**********************************************************************

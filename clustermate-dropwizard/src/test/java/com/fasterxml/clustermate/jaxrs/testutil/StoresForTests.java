@@ -3,16 +3,14 @@ package com.fasterxml.clustermate.jaxrs.testutil;
 import java.io.File;
 
 import com.sleepycat.je.Environment;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.lastaccess.LastAccessConfig;
 import com.fasterxml.storemate.store.lastaccess.LastAccessStore;
+import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 import com.fasterxml.storemate.store.state.NodeStateStore;
-
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -37,7 +35,7 @@ public class StoresForTests extends StoresImpl<TestKey, StoredEntry<TestKey>>
     }
 
     @Override
-    protected LastAccessStore<TestKey, StoredEntry<TestKey>> buildAccessStore(Environment env,
+    protected LastAccessStore<TestKey, StoredEntry<TestKey>,LastAccessUpdateMethod> buildAccessStore(Environment env,
             LastAccessConfig config) {
         return new LastAccessStoreForTests(env, _entryConverter, config);
     }
