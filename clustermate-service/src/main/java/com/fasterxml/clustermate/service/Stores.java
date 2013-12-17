@@ -1,7 +1,5 @@
 package com.fasterxml.clustermate.service;
 
-import java.io.File;
-
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.lastaccess.LastAccessStore;
@@ -22,8 +20,6 @@ public abstract class Stores<K extends EntryKey, E extends StoredEntry<K>>
     public abstract boolean isActive();
 
     public abstract String getInitProblem();
-
-    public abstract File getNodeDirectory();
 
     public abstract StoredEntryConverter<K,E,?> getEntryConverter();
     

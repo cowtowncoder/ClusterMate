@@ -21,6 +21,7 @@ public abstract class StoredEntry<K extends EntryKey>
 
     public abstract K getKey();
 
+    @Override
     public abstract StorableKey getStorableKey();
     
     public abstract long getCreationTime();

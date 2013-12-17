@@ -49,15 +49,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     protected final ObjectMapper _jsonMapper;
 
     protected final LastAccessConfig _lastAccessConfig;
-    
-    /**
-     * Directory that contains environment used for storing state
-     * information for this node instance and its peers.
-     * Separate from other storage to reduce likelihood of corruption;
-     * handling of node data is fully transactional as it should
-     * be less likely to corrupt, ever.
-     */
-    private final File _bdbRootForNodes;
 
     /**
      * Directory for environment used for storing last-accessed
@@ -127,7 +118,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
             bdbEnvRoot = config.metadataDirectory;
         }
         _lastAccessConfig = config.lastAccess;
-        _bdbRootForNodes = new File(bdbEnvRoot, "nodes");
         _bdbRootForLastAccess = new File(bdbEnvRoot, "lastAccess");        
     }
 
@@ -224,8 +214,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     public boolean initAndOpen(boolean logInfo)
     {
         // first things first: must have directories for Environment
-        if (!_verifyOrCreateDirectory(_bdbRootForNodes, logInfo)
-               || !_verifyOrCreateDirectory(_bdbRootForLastAccess, logInfo)) {
+        if (!_verifyOrCreateDirectory(_bdbRootForLastAccess, logInfo)) {
             return false;
         }
         _openBDBs(true, true, true);
@@ -238,8 +227,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     public void openIfExists()
     {
-        // First: verify that the dirs exist:
-        _verifyDirectory(_bdbRootForNodes);
         // then try opening
         _openBDBs(true, false, true);
         _active.set(true);
@@ -250,8 +237,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     public void openForReading(boolean log)
     {
-        // First: verify that the dirs exist:
-        _verifyDirectory(_bdbRootForNodes);
         // then try opening
         _openBDBs(log, false, false);
         _active.set(true);
@@ -298,9 +283,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
 
     @Override
     public String getInitProblem() { return _initProblem; }
-
-    @Override
-    public File getNodeDirectory() { return _bdbRootForNodes; }
 
     @Override
     public StoredEntryConverter<K,E,?> getEntryConverter() { return _entryConverter; }
