@@ -1,8 +1,10 @@
 Project: ClusterMate
 
-09.21
+09.21 (28-Dec-2013)
 
 - Add 'count' to DeleteResponse
+- Refactoring to remove BDB deps; none for node-state store, minor remains
+  for last-access store (to be eliminated RSN)
 
 0.9.20 (25-Nov-2013)
 
