@@ -3,12 +3,11 @@ package com.fasterxml.clustermate.service.metrics;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.fasterxml.clustermate.service.SharedServiceStuff;
-import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+
 import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
@@ -16,6 +15,10 @@ import com.fasterxml.storemate.store.backend.BackendStats;
 import com.fasterxml.storemate.store.backend.BackendStatsConfig;
 import com.fasterxml.storemate.store.backend.StoreBackend;
 import com.fasterxml.storemate.store.lastaccess.LastAccessStore;
+
+import com.fasterxml.clustermate.service.SharedServiceStuff;
+import com.fasterxml.clustermate.service.Stores;
+import com.fasterxml.clustermate.service.bdb.CleanBDBStats;
 
 /**
  * Helper class that is used to access metrics from a separate thread,

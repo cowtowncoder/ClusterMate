@@ -9,7 +9,7 @@ import com.fasterxml.storemate.store.backend.BackendStatsConfig;
 import com.fasterxml.clustermate.jaxrs.StoreResource;
 import com.fasterxml.clustermate.jaxrs.testutil.TestKey;
 import com.fasterxml.clustermate.jaxrs.testutil.TimeMasterForSimpleTesting;
-import com.fasterxml.clustermate.service.metrics.CleanBDBStats;
+import com.fasterxml.clustermate.service.bdb.CleanBDBStats;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
 public abstract class StatsTestBase extends JaxrsStoreTestBase

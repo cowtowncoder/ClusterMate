@@ -21,7 +21,10 @@ import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 /**
  * Intermediate base class for BDB-JE - backed {@link LastAccessStore}
  * implementation.
+ * 
+ * @deprecated Use <code>BDBLastAccessStoreImpl</code> from StoreMate.
  */
+@Deprecated
 public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEntry<K>>
     extends LastAccessStore<K, E, LastAccessUpdateMethod>
 {
@@ -124,13 +127,13 @@ public abstract class BDBLastAccessStore<K extends EntryKey, E extends StoredEnt
      */
 
     @Override
-    public long findLastAccessTime(E entry) {
-        return findLastAccessTime(entry.getKey(), entry.getLastAccessUpdateMethod());
+    public EntryLastAccessed findLastAccessEntry(E entry) {
+        return findLastAccessEntry(entry.getKey(), entry.getLastAccessUpdateMethod());
     }
-
+    
     @Override
     public EntryLastAccessed findLastAccessEntry(K key, LastAccessUpdateMethod method)
-    {
+    {    
         DatabaseEntry lastAccessKey = lastAccessKey(key, method);
         if (lastAccessKey == null) {
             return null;

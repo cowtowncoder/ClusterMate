@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.service.metrics;
+package com.fasterxml.clustermate.service.bdb;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
