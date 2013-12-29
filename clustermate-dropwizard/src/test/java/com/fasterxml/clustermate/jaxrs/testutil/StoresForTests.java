@@ -46,12 +46,6 @@ public class StoresForTests extends StoresImpl<TestKey, StoredEntry<TestKey>>
             = new BDBLastAccessStoreImpl<TestKey, StoredEntry<TestKey>,LastAccessUpdateMethod>(config,
                     new LastAccessConverterForTests(),
                     env);
-        /*
-                    LastAccessConfig config,
-                LastAccessConverter<K, E, ACC> lastAccessedConverter,
-                Environment env) throws DatabaseException
-        return new LastAccessStoreForTests(env, _entryConverter, config);
-                */
         return lastAccessStore;
     }
 }
