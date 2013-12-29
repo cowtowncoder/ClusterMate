@@ -23,7 +23,7 @@ public abstract class LastAccessConverterBase<K extends EntryKey, E extends Stor
     }
 
     @Override
-final   public EntryLastAccessed createLastAccessed(byte[] raw, int offset, int length)
+    public EntryLastAccessed createLastAccessed(byte[] raw, int offset, int length)
     {
         if (length != 17) {
             throw new IllegalArgumentException("LastAccessed entry length must be 17 bytes, was: "+length);

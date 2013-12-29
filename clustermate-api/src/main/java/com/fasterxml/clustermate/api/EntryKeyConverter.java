@@ -99,7 +99,6 @@ public abstract class EntryKeyConverter<K extends EntryKey>
      */
     public abstract <P extends DecodableRequestPath> K extractFromPath(P pathBuilder);
 
-
     /*
     /**********************************************************************
     /* Helper methods
@@ -120,7 +119,4 @@ public abstract class EntryKeyConverter<K extends EntryKey>
         }
         return hash & 0x7FFFFFFF;
     }
-
 }
-
-

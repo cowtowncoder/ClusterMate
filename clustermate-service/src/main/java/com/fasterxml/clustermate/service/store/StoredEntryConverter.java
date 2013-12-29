@@ -59,11 +59,14 @@ public abstract class StoredEntryConverter<K extends EntryKey,
             int minTTLSecs, int maxTTLSecs);
     
     // // // Last accessed
-    
+
+    @Deprecated // since 0.9.22
     public abstract EntryLastAccessed createLastAccessed(E entry, long accessTime);
 
+    @Deprecated // since 0.9.22
     public abstract EntryLastAccessed createLastAccessed(byte[] raw);
 
+    @Deprecated // since 0.9.22
     public abstract EntryLastAccessed createLastAccessed(byte[] raw, int offset, int length);
     
     /*
