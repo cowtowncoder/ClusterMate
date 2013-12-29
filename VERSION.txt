@@ -1,6 +1,10 @@
 Project: ClusterMate
 
-09.21 (28-Dec-2013)
+0.9.22 (xx-Jan-2014?)
+
+...
+
+0.9.21 (28-Dec-2013)
 
 - Add 'count' to DeleteResponse
 - Refactoring to remove BDB deps; none for node-state store, minor remains
