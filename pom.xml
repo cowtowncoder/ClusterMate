@@ -49,7 +49,7 @@
     <version.storemate>0.9.23</version.storemate>
 
     <version.jackson.annotations>2.3.0</version.jackson.annotations>
-    <version.jackson.core>2.3.0</version.jackson.core>
+    <version.jackson.core>2.3.1</version.jackson.core>
     <version.jackson.smile>${version.jackson.core}</version.jackson.smile>
     <version.metrics>3.0.1</version.metrics>
 
