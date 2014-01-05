@@ -13,7 +13,8 @@ import com.fasterxml.storemate.shared.util.UTF8UrlEncoder;
  * Simple {@link RequestPathBuilder} implementation that can be used
  * with the default JDK HTTP client.
  */
-public class JdkHttpClientPathBuilder extends RequestPathBuilder
+public class JdkHttpClientPathBuilder<P extends Enum<P>>
+    extends RequestPathBuilder<P,JdkHttpClientPathBuilder<P>>
 {
     protected final static UTF8UrlEncoder _urlEncoder = new UTF8UrlEncoder();
     
@@ -54,7 +55,7 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
         _queryParams = qp;
     }
 
-    public JdkHttpClientPathBuilder(JdkHttpClientPath src)
+    public JdkHttpClientPathBuilder(JdkHttpClientPath<P> src)
     {
         _serverPart = src._serverPart;
         _path = src._path;
@@ -63,8 +64,8 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
     }
     
     @Override
-    public JdkHttpClientPath build() {
-        return new JdkHttpClientPath(this);
+    public JdkHttpClientPath<P> build() {
+        return new JdkHttpClientPath<P>(this);
     }
     
     /*
@@ -120,17 +121,17 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
      */
      
     @Override
-    public JdkHttpClientPathBuilder addPathSegment(String segment) {
+    public JdkHttpClientPathBuilder<P> addPathSegment(String segment) {
         return _appendSegment(segment, true);
     }
 
     @Override
-    public JdkHttpClientPathBuilder addPathSegmentsRaw(String segments) {
+    public JdkHttpClientPathBuilder<P> addPathSegmentsRaw(String segments) {
         return _appendSegment(segments, false);
     }
     
     @Override
-    public JdkHttpClientPathBuilder addParameter(String key, String value) {
+    public JdkHttpClientPathBuilder<P> addParameter(String key, String value) {
          _queryParams = _defaultAddParameter(_queryParams, key, value);
          return this;
     }
@@ -142,12 +143,12 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
      */
 
     @Override
-    public JdkHttpClientPathBuilder addHeader(String key, String value) {
+    public JdkHttpClientPathBuilder<P> addHeader(String key, String value) {
         _headers = _defaultAddHeader(_headers, key, value);
         return this;
     }
 
-    public JdkHttpClientPathBuilder setHeader(String key, String value) {
+    public JdkHttpClientPathBuilder<P> setHeader(String key, String value) {
         _headers = _defaultSetHeader(_headers, key, value);
         return this;
     }
@@ -194,7 +195,7 @@ public class JdkHttpClientPathBuilder extends RequestPathBuilder
     /*********************************************************************
      */
     
-    protected final JdkHttpClientPathBuilder _appendSegment(String segment, boolean escapeSlash)
+    protected final JdkHttpClientPathBuilder<P> _appendSegment(String segment, boolean escapeSlash)
     {
           if (_path == null) {
                _path = _urlEncoder.encode(segment, escapeSlash);

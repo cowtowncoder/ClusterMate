@@ -5,7 +5,6 @@ import java.net.URL;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.CallConfig;
 import com.fasterxml.clustermate.client.call.ContentHeader;
@@ -16,16 +15,16 @@ import com.fasterxml.storemate.shared.util.IOUtil;
 /**
  * Helper object for making HEAD requests.
  */
-public class JdkHttpContentHeader<K extends EntryKey>
-    extends BaseJdkHttpAccessor<K>
+public class JdkHttpContentHeader<K extends EntryKey,P extends Enum<P>>
+    extends BaseJdkHttpAccessor<K,P>
     implements ContentHeader<K>
 {
     protected final ClusterServerNode _server;
     
-    public JdkHttpContentHeader(StoreClientConfig<K,?> storeConfig,
+    public JdkHttpContentHeader(StoreClientConfig<K,?> storeConfig, P endpoint,
             ClusterServerNode server)
     {
-        super(storeConfig);
+        super(storeConfig, endpoint);
         _server = server;
     }
 
@@ -46,8 +45,8 @@ public class JdkHttpContentHeader<K extends EntryKey>
             return new JdkHttpHeadCallResult(CallFailure.timeout(_server, startTime, startTime));
         }
         try {
-            JdkHttpClientPathBuilder path = _server.rootPath();
-            path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
+            JdkHttpClientPathBuilder<P> path = _server.rootPath();
+            path = _pathFinder.appendPath(path, _endpoint);
             path = _keyConverter.appendToPath(path, contentId);
             if (params != null) {
                 path = params.appendToPath(path, contentId);

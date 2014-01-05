@@ -6,34 +6,28 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.fasterxml.storemate.shared.util.IOUtil;
-
-import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.clustermate.api.ContentType;
-import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.ListItemType;
-import com.fasterxml.clustermate.api.PathType;
+import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.client.util.ContentConverter;
-
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
-public class AHCEntryLister<K extends EntryKey>
-    extends AHCBasedAccessor<K>
+public class AHCEntryLister<K extends EntryKey, P extends Enum<P>>
+    extends AHCBasedAccessor<K,P>
     implements EntryLister<K>
 {
     protected final ClusterServerNode _server;
 
-    public AHCEntryLister(StoreClientConfig<K,?> storeConfig,
+    public AHCEntryLister(StoreClientConfig<K,?> storeConfig, P endpoint,
             AsyncHttpClient hc,
             ClusterServerNode server)
     {
-        super(storeConfig, hc);
+        super(storeConfig, endpoint, hc);
         _server = server;
     }
 
@@ -52,8 +46,8 @@ public class AHCEntryLister<K extends EntryKey>
         if (timeout < config.getMinimumTimeoutMsecs()) {
             return failed(CallFailure.timeout(_server, startTime, startTime));
         }
-        AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, PathType.STORE_LIST);
+        AHCPathBuilder<P> path = _server.rootPath();
+        path = _pathFinder.appendPath(path, _endpoint);
         path = _keyConverter.appendToPath(path, prefix);
         BoundRequestBuilder reqBuilder = path
                 .listRequest(_httpClient)

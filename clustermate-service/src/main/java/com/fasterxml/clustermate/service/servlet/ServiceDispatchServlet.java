@@ -6,7 +6,6 @@ import java.util.EnumMap;
 import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
@@ -19,12 +18,16 @@ import com.fasterxml.storemate.store.util.OperationDiagnostics;
  *
  */
 @SuppressWarnings("serial")
-public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>>
+public class ServiceDispatchServlet<
+    K extends EntryKey,
+    E extends StoredEntry<K>,
+    P extends Enum<P>
+>
     extends ServletBase
 {
-    protected final RequestPathStrategy _pathStrategy;
+    protected final RequestPathStrategy<P> _pathStrategy;
 
-    protected final EnumMap<PathType, ServletBase> _servletsByPath;
+    protected final EnumMap<P, ServletBase> _servletsByPath;
     
     /*
     /**********************************************************************
@@ -37,14 +40,15 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
      * root for resolving references to entry points, as per
      * configured
      */
+    @SuppressWarnings("unchecked")
     public ServiceDispatchServlet(ClusterViewByServer clusterView, String servletPathBase,
             SharedServiceStuff stuff,
-            EnumMap<PathType, ServletBase> servlets)
+            EnumMap<P,ServletBase> servlets)
     {
         // null -> use servlet path base as-is
         super(stuff, clusterView, servletPathBase);
 
-        _pathStrategy = stuff.getPathStrategy();
+        _pathStrategy = (RequestPathStrategy<P>) stuff.getPathStrategy();
         _servletsByPath = servlets;
     }
 
@@ -150,7 +154,7 @@ public class ServiceDispatchServlet<K extends EntryKey, E extends StoredEntry<K>
 
     protected ServletBase _matchServlet(ServletServiceRequest request)
     {
-        PathType type = _pathStrategy.matchPath(request);
+        P type = _pathStrategy.matchPath(request);
         if (type != null) {
             return _servletsByPath.get(type);
         }

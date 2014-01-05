@@ -2,7 +2,8 @@ package com.fasterxml.clustermate.client.ahc;
 
 import com.fasterxml.clustermate.api.RequestPath;
 
-public class AHCPath extends RequestPath
+public class AHCPath<P extends Enum<P>>
+    extends RequestPath<P>
 {
 	protected final String _serverPart;
 
@@ -12,15 +13,15 @@ public class AHCPath extends RequestPath
 
 	protected final Object[] _headers;
 
-	public AHCPath(AHCPathBuilder src) {
+	public AHCPath(AHCPathBuilder<P> src) {
          _serverPart = src._serverPart;
          _path = src._path;
          _queryParams = _listToArray(src._queryParams);
          _headers = _mapToArray(src._headers);
      }
-	
+
 	@Override
-	public AHCPathBuilder builder() {
-		return new AHCPathBuilder(this);
+	public AHCPathBuilder<P> builder() {
+		return new AHCPathBuilder<P>(this);
 	}
 }

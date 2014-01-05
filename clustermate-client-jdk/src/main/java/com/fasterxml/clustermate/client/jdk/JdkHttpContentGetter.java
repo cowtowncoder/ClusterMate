@@ -8,25 +8,23 @@ import com.fasterxml.storemate.shared.ByteRange;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.shared.util.IOUtil;
-
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.client.call.GetContentProcessor.Handler;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
-public class JdkHttpContentGetter<K extends EntryKey>
-    extends BaseJdkHttpAccessor<K>
+public class JdkHttpContentGetter<K extends EntryKey,P extends Enum<P>>
+    extends BaseJdkHttpAccessor<K,P>
     implements ContentGetter<K>
 {
     protected final ClusterServerNode _server;
 
-    public JdkHttpContentGetter(StoreClientConfig<K,?> storeConfig,
+    public JdkHttpContentGetter(StoreClientConfig<K,?> storeConfig, P endpoint,
             ClusterServerNode server)
     {
-        super(storeConfig);
+        super(storeConfig, endpoint);
         _server = server;
     }
 
@@ -47,8 +45,8 @@ public class JdkHttpContentGetter<K extends EntryKey>
             return new JdkHttpGetCallResult<T>(CallFailure.timeout(_server, startTime, startTime));
         }
         try {
-            JdkHttpClientPathBuilder path = _server.rootPath();
-            path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
+            JdkHttpClientPathBuilder<P> path = _server.rootPath();
+            path = _pathFinder.appendPath(path, _endpoint);
             path = _keyConverter.appendToPath(path, contentId);
             if (params != null) {
                 path = params.appendToPath(path, contentId);

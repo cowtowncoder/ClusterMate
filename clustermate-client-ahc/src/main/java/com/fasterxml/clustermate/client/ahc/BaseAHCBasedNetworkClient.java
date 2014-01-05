@@ -1,19 +1,22 @@
 package com.fasterxml.clustermate.client.ahc;
 
-import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.api.RequestPathBuilder;
-import com.fasterxml.clustermate.client.EntryAccessors;
-import com.fasterxml.clustermate.client.NetworkClient;
-import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.storemate.shared.IpAndPort;
+
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.AsyncHttpProvider;
 
+import com.fasterxml.storemate.shared.IpAndPort;
+
+import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.EntryKeyConverter;
+import com.fasterxml.clustermate.client.EntryAccessors;
+import com.fasterxml.clustermate.client.NetworkClient;
+import com.fasterxml.clustermate.client.StoreClientConfig;
+
 public abstract class BaseAHCBasedNetworkClient<
     K extends EntryKey,
+    P extends Enum<P>,
     CONFIG extends StoreClientConfig<K,CONFIG>
 >
     extends NetworkClient<K>
@@ -23,24 +26,37 @@ public abstract class BaseAHCBasedNetworkClient<
     protected final ObjectMapper _mapper;
 
     protected final CONFIG _config;
+
+    /**
+     * End point that basic CRUD accessors use.
+     */
+    protected final P _singleEntryEndpoint;
+
+    /**
+     * End point that entry lister will use
+     */
+    protected final P _entryListEndpoint;
     
     /**
      * The usual constructor to call; configures AHC using standard
      * settings.
      */
-    protected BaseAHCBasedNetworkClient(CONFIG config)
+    protected BaseAHCBasedNetworkClient(CONFIG config,
+            P singleEntryEndpoint, P entryListEndpoint)
     {
-        // not entirely kosher to call member methods from ctor but...
-        this(config, (AsyncHttpClientConfig) null);
+        this(config, singleEntryEndpoint, entryListEndpoint, (AsyncHttpClientConfig) null);
     }
 
-    protected BaseAHCBasedNetworkClient(CONFIG config, AsyncHttpClientConfig ahcConfig)
+    protected BaseAHCBasedNetworkClient(CONFIG config,
+            P singleEntryEndpoint, P entryListEndpoint,
+            AsyncHttpClientConfig ahcConfig)
     {
         if (ahcConfig == null) {
             ahcConfig = buildAHCConfig(config);
         }
-        
         _config = config;
+        _singleEntryEndpoint = singleEntryEndpoint;
+        _entryListEndpoint = entryListEndpoint;
         _mapper = config.getJsonMapper();
 
         AsyncHttpProvider prov;
@@ -64,9 +80,13 @@ public abstract class BaseAHCBasedNetworkClient<
     /**
      * Alternate constructor to use to use custom configurations of AHC.
      */
-    protected BaseAHCBasedNetworkClient(CONFIG config, AsyncHttpClient ahc)
+    protected BaseAHCBasedNetworkClient(CONFIG config,
+            P singleEntryEndpoint, P entryListEndpoint,
+            AsyncHttpClient ahc)
     {
         _config = config;
+        _singleEntryEndpoint = singleEntryEndpoint;
+        _entryListEndpoint = entryListEndpoint;
         _mapper = config.getJsonMapper();
         _ahc = ahc;
     }
@@ -136,9 +156,8 @@ public abstract class BaseAHCBasedNetworkClient<
      */
 
     @Override
-    public RequestPathBuilder pathBuilder(IpAndPort server)
-    {
-        return new AHCPathBuilder(server);
+    public AHCPathBuilder<P> pathBuilder(IpAndPort server) {
+        return new AHCPathBuilder<P>(server);
     }
     
     @Override
@@ -150,7 +169,8 @@ public abstract class BaseAHCBasedNetworkClient<
     
     @Override
     public EntryAccessors<K> getEntryAccessors() {
-        return new AHCEntryAccessors<K>(_config, _ahc);
+        return new AHCEntryAccessors<K,P>(_config, 
+                _singleEntryEndpoint, _entryListEndpoint, _ahc);
     }
 
     @Override

@@ -14,7 +14,10 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
  * Intermediate base class used by accessors that use
  * Async HTTP Client library for HTTP Access.
  */
-public abstract class BaseJdkHttpAccessor<K extends EntryKey> extends Loggable
+public abstract class BaseJdkHttpAccessor<
+    K extends EntryKey,
+    P extends Enum<P> // Path enumeration
+> extends Loggable
 {
     /**
      * Not sure what is optimal chunk size, but 16k sounds like
@@ -30,15 +33,20 @@ public abstract class BaseJdkHttpAccessor<K extends EntryKey> extends Loggable
 
     protected final ObjectMapper _mapper;
 
-    protected final RequestPathStrategy _pathFinder;
+    protected final RequestPathStrategy<P> _pathFinder;
 
+    protected final P _endpoint;
+    
     protected EntryKeyConverter<K> _keyConverter;
     
-    protected BaseJdkHttpAccessor(StoreClientConfig<K,?> storeConfig)
+    @SuppressWarnings("unchecked")
+    protected BaseJdkHttpAccessor(StoreClientConfig<K,?> storeConfig,
+            P endpoint)
     {
         super();
         _mapper = storeConfig.getJsonMapper();
-        _pathFinder = storeConfig.getPathStrategy();
+        _endpoint = endpoint;
+        _pathFinder = (RequestPathStrategy<P>) storeConfig.getPathStrategy();
         _keyConverter = storeConfig.getKeyConverter();
     }
 
@@ -76,15 +84,15 @@ public abstract class BaseJdkHttpAccessor<K extends EntryKey> extends Loggable
      * Helper method that encapsulates logic of setting various connection
      * settings, and then forcing sending of the request.
      */
-    protected int sendRequest(String method, HttpURLConnection conn, JdkHttpClientPathBuilder path,
-            long timeoutMsecs)
+    protected int sendRequest(String method, HttpURLConnection conn,
+            JdkHttpClientPathBuilder<P> path, long timeoutMsecs)
         throws IOException
     {
         return initRequest(method, conn, path, timeoutMsecs).getResponseCode();
     }
 
-    protected HttpURLConnection initRequest(String method, HttpURLConnection conn, JdkHttpClientPathBuilder path,
-            long timeoutMsecs)
+    protected HttpURLConnection initRequest(String method, HttpURLConnection conn,
+            JdkHttpClientPathBuilder<P> path, long timeoutMsecs)
         throws IOException
     {
         conn.setRequestMethod(method);
@@ -95,7 +103,7 @@ public abstract class BaseJdkHttpAccessor<K extends EntryKey> extends Loggable
         return conn;
     }
     
-    protected JdkHttpClientPathBuilder addChecksum(JdkHttpClientPathBuilder path, int checksum)
+    protected JdkHttpClientPathBuilder<P> addChecksum(JdkHttpClientPathBuilder<P> path, int checksum)
     {
         return path.addParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM,
                 (checksum == 0) ? "0" : String.valueOf(checksum));

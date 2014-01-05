@@ -5,31 +5,27 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import com.fasterxml.storemate.shared.util.IOUtil;
-
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.CallConfig;
 import com.fasterxml.clustermate.client.call.ContentDeleter;
 import com.fasterxml.clustermate.client.call.DeleteCallParameters;
-
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
-public class AHCContentDeleter<K extends EntryKey>
-    extends AHCBasedAccessor<K>
+public class AHCContentDeleter<K extends EntryKey, P extends Enum<P>>
+    extends AHCBasedAccessor<K,P>
     implements ContentDeleter<K>
 {
     protected final ClusterServerNode _server;
 
     public AHCContentDeleter(StoreClientConfig<K,?> storeConfig,
-            AsyncHttpClient hc,
-            ClusterServerNode server)
+            P endpoint, AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(storeConfig, hc);
+        super(storeConfig, endpoint, hc);
         _server = server;
     }
 
@@ -43,13 +39,13 @@ public class AHCContentDeleter<K extends EntryKey>
         if (timeout < config.getMinimumTimeoutMsecs()) {
             return CallFailure.timeout(_server, startTime, startTime);
         }
-        AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
-        path = _keyConverter.appendToPath(path, contentId);    	
+        AHCPathBuilder<P> pathBuilder = _server.rootPath();
+        pathBuilder = _pathFinder.appendPath(pathBuilder, _endpoint);
+        pathBuilder = _keyConverter.appendToPath(pathBuilder, contentId);    	
         if (params != null) {
-            path = params.appendToPath(path, contentId);
+            pathBuilder = params.appendToPath(pathBuilder, contentId);
         }
-        BoundRequestBuilder reqBuilder = path.deleteRequest(_httpClient);
+        BoundRequestBuilder reqBuilder = pathBuilder.deleteRequest(_httpClient);
 
         try {
             Future<Response> futurama = _httpClient.executeRequest(reqBuilder.build());

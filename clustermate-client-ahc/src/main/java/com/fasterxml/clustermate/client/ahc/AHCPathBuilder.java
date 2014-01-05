@@ -8,8 +8,8 @@ import com.fasterxml.storemate.shared.util.UTF8UrlEncoder;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
-public class AHCPathBuilder
-	extends RequestPathBuilder
+public class AHCPathBuilder<P extends Enum <P>>
+	extends RequestPathBuilder<P,AHCPathBuilder<P>>
 {
     protected final static UTF8UrlEncoder _urlEncoder = new UTF8UrlEncoder();
 
@@ -40,7 +40,7 @@ public class AHCPathBuilder
         _queryParams = qp;
     }
 
-    public AHCPathBuilder(AHCPath src)
+    public AHCPathBuilder(AHCPath<P> src)
     {
         _serverPart = src._serverPart;
         _path = src._path;
@@ -49,8 +49,8 @@ public class AHCPathBuilder
     }
     
     @Override
-    public AHCPath build() {
-        return new AHCPath(this);
+    public AHCPath<P> build() {
+        return new AHCPath<P>(this);
     }
     
     /*
@@ -81,17 +81,17 @@ public class AHCPathBuilder
      */
 	
     @Override
-    public AHCPathBuilder addPathSegment(String segment) {
+    public AHCPathBuilder<P> addPathSegment(String segment) {
         return _appendSegment(segment, true);
     }
 
     @Override
-    public AHCPathBuilder addPathSegmentsRaw(String segments) {
+    public AHCPathBuilder<P> addPathSegmentsRaw(String segments) {
         return _appendSegment(segments, false);
     }
 	
     @Override
-    public AHCPathBuilder addParameter(String key, String value) {
+    public AHCPathBuilder<P> addParameter(String key, String value) {
         _queryParams = _defaultAddParameter(_queryParams, key, value);
         return this;
     }
@@ -103,12 +103,12 @@ public class AHCPathBuilder
      */
 
     @Override
-    public AHCPathBuilder addHeader(String key, String value) {
+    public AHCPathBuilder<P> addHeader(String key, String value) {
         _headers = _defaultAddHeader(_headers, key, value);
         return this;
     }
 
-    public AHCPathBuilder setHeader(String key, String value) {
+    public AHCPathBuilder<P> setHeader(String key, String value) {
         _headers = _defaultSetHeader(_headers, key, value);
         return this;
     }
@@ -191,7 +191,7 @@ public class AHCPathBuilder
         return _url(true);
     }
 
-    protected final AHCPathBuilder _appendSegment(String segment, boolean escapeSlash)
+    protected final AHCPathBuilder<P> _appendSegment(String segment, boolean escapeSlash)
     {
         if (_path == null) {
             _path = _urlEncoder.encode(segment, escapeSlash);

@@ -5,27 +5,24 @@ import java.util.concurrent.TimeoutException;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.*;
-
 import com.fasterxml.storemate.shared.ByteRange;
-
 import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
-public class AHCContentGetter<K extends EntryKey>
-    extends AHCBasedAccessor<K>
+public class AHCContentGetter<K extends EntryKey, P extends Enum<P>>
+    extends AHCBasedAccessor<K,P>
     implements ContentGetter<K>
 {
     protected final ClusterServerNode _server;
 
-    public AHCContentGetter(StoreClientConfig<K,?> storeConfig,
+    public AHCContentGetter(StoreClientConfig<K,?> storeConfig, P endpoint,
             AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(storeConfig, hc);
+        super(storeConfig, endpoint, hc);
         _server = server;
     }
 
@@ -45,8 +42,8 @@ public class AHCContentGetter<K extends EntryKey>
         if (timeout < config.getMinimumTimeoutMsecs()) {
             return new AHCGetCallResult<T>(CallFailure.timeout(_server, startTime, startTime));
         }
-        AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
+        AHCPathBuilder<P> path = _server.rootPath();
+        path = _pathFinder.appendPath(path, _endpoint);
         path = _keyConverter.appendToPath(path, contentId);
         if (params != null) {
             path = params.appendToPath(path, contentId);

@@ -4,9 +4,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import com.fasterxml.storemate.shared.util.IOUtil;
-
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
@@ -15,16 +13,16 @@ import com.fasterxml.clustermate.client.call.ContentDeleter;
 import com.fasterxml.clustermate.client.call.DeleteCallParameters;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
-public class JdkHttpContentDeleter<K extends EntryKey>
-    extends BaseJdkHttpAccessor<K>
+public class JdkHttpContentDeleter<K extends EntryKey,P extends Enum<P>>
+    extends BaseJdkHttpAccessor<K,P>
     implements ContentDeleter<K>
 {
     protected final ClusterServerNode _server;
 
-    public JdkHttpContentDeleter(StoreClientConfig<K,?> storeConfig,
+    public JdkHttpContentDeleter(StoreClientConfig<K,?> storeConfig, P endpoint,
             ClusterServerNode server)
     {
-        super(storeConfig);
+        super(storeConfig, endpoint);
         _server = server;
     }
 
@@ -39,8 +37,8 @@ public class JdkHttpContentDeleter<K extends EntryKey>
             return CallFailure.timeout(_server, startTime, startTime);
         }
         try {
-            JdkHttpClientPathBuilder path = _server.rootPath();
-            path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
+            JdkHttpClientPathBuilder<P> path = _server.rootPath();
+            path = _pathFinder.appendPath(path, _endpoint);
             path = _keyConverter.appendToPath(path, contentId);
             if (params != null) {
                 path = params.appendToPath(path, contentId);

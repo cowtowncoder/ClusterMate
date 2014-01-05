@@ -431,12 +431,12 @@ public abstract class DWBasedService<
 //        servlets.put(PathType.STORE_FIND_ENTRY, );
 //        servlets.put(PathType.STORE_FIND_LIST, );
         
-        ServiceDispatchServlet<K,E> dispatcher = new ServiceDispatchServlet<K,E>(cluster,
-                null, stuff, servlets);
+        ServiceDispatchServlet<K,E,PathType> dispatcher = new ServiceDispatchServlet<K,E,PathType>
+            (cluster, null, stuff, servlets);
 
-        RequestPathBuilder rootBuilder = rootPath(stuff.getServiceConfig());
+        RequestPathBuilder<PathType,?> rootBuilder = rootPath(stuff.getServiceConfig());
         String rootPath = servletPath(rootBuilder);
-        LOG.info("Registering main Dispatcher servlet at: {}", rootPath);
+        LOG.info("Registering main Dispatcher servlet at: "+rootPath);
         environment.addServlet(dispatcher, rootPath);
 
         // // And finally servlet for for entry access
@@ -549,9 +549,9 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
-    protected RequestPathBuilder rootPath(ServiceConfig config)
+    protected RequestPathBuilder<PathType,?> rootPath(ServiceConfig config)
     {
-        return new JdkHttpClientPathBuilder("localhost")
+        return new JdkHttpClientPathBuilder<PathType>("localhost")
             .addPathSegments(config.servicePathRoot);
     }
 
@@ -560,7 +560,7 @@ public abstract class DWBasedService<
      * a basic end point path definition. Currently just verifies prefix
      * and suffix slashes and adds '*' as necessary.
      */
-    protected String servletPath(RequestPathBuilder pathBuilder)
+    protected String servletPath(RequestPathBuilder<PathType,?> pathBuilder)
     {
         String base = pathBuilder.getPath();
         if (!base.endsWith("*")) {

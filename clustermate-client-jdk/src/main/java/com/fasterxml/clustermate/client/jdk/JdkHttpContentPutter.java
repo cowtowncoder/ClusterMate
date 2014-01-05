@@ -9,9 +9,7 @@ import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.hash.HashConstants;
 import com.fasterxml.storemate.shared.util.IOUtil;
-
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
@@ -22,16 +20,16 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
  * Helper accessors class used for making a single PUT call to a single
  * server node.
  */
-public class JdkHttpContentPutter<K extends EntryKey>
-    extends BaseJdkHttpAccessor<K>
+public class JdkHttpContentPutter<K extends EntryKey,P extends Enum<P>>
+    extends BaseJdkHttpAccessor<K,P>
     implements ContentPutter<K>
 {
     protected final ClusterServerNode _server;
 
-    public JdkHttpContentPutter(StoreClientConfig<K,?> storeConfig,
+    public JdkHttpContentPutter(StoreClientConfig<K,?> storeConfig, P endpoint,
             ClusterServerNode server)
     {
-        super(storeConfig);
+        super(storeConfig, endpoint);
         _server = server;
         _keyConverter = storeConfig.getKeyConverter();
     }
@@ -59,15 +57,14 @@ public class JdkHttpContentPutter<K extends EntryKey>
     /**********************************************************************
      */
 
-    @SuppressWarnings("resource")
     public CallFailure _tryPut(CallConfig config, PutCallParameters params,
             long endOfTime,
             K contentId, PutContentProvider content,
             final long startTime, final long timeoutMsecs)
         throws IOException, ExecutionException, InterruptedException
     {
-        JdkHttpClientPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
+        JdkHttpClientPathBuilder<P> path = _server.rootPath();
+        path = _pathFinder.appendPath(path, _endpoint);
         path = _keyConverter.appendToPath(path, contentId);
 
         // Is compression known?

@@ -5,7 +5,8 @@ import com.fasterxml.clustermate.api.RequestPath;
 /**
  * {@link RequestPath} that {@link JdkHttpClientPathBuilder} creates
  */
-public class JdkHttpClientPath extends RequestPath
+public class JdkHttpClientPath<P extends Enum<P>>
+    extends RequestPath<P>
 {
     protected final String _serverPart;
 
@@ -18,7 +19,7 @@ public class JdkHttpClientPath extends RequestPath
     /**
      * Constructor used by {@link JdkHttpClientPathBuilder}
      */
-    public JdkHttpClientPath(JdkHttpClientPathBuilder src) {
+    public JdkHttpClientPath(JdkHttpClientPathBuilder<P> src) {
         _serverPart = src._serverPart;
         _path = src._path;
         _queryParams = _listToArray(src._queryParams);
@@ -26,8 +27,8 @@ public class JdkHttpClientPath extends RequestPath
     }
     
     @Override
-    public JdkHttpClientPathBuilder builder() {
-        return new JdkHttpClientPathBuilder(this);
+    public JdkHttpClientPathBuilder<P> builder() {
+        return new JdkHttpClientPathBuilder<P>(this);
     }
 }
 

@@ -5,10 +5,8 @@ import java.util.concurrent.TimeoutException;
 
 import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
-
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.CallConfig;
 import com.fasterxml.clustermate.client.call.ContentHeader;
@@ -18,16 +16,16 @@ import com.fasterxml.storemate.shared.util.IOUtil;
 /**
  * Helper object for making HEAD requests.
  */
-public class AHCContentHeader<K extends EntryKey>
-    extends AHCBasedAccessor<K>
+public class AHCContentHeader<K extends EntryKey, P extends Enum<P>>
+    extends AHCBasedAccessor<K,P>
     implements ContentHeader<K>
 {
     protected final ClusterServerNode _server;
     
-    public AHCContentHeader(StoreClientConfig<K,?> storeConfig,
+    public AHCContentHeader(StoreClientConfig<K,?> storeConfig, P endpoint,
             AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(storeConfig, hc);
+        super(storeConfig, endpoint, hc);
         _server = server;
     }
 
@@ -49,15 +47,15 @@ public class AHCContentHeader<K extends EntryKey>
         }
 
         try {
-            AHCPathBuilder path = _server.rootPath();
-            path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
+            AHCPathBuilder<P> path = _server.rootPath();
+            path = _pathFinder.appendPath(path, _endpoint);
             path = _keyConverter.appendToPath(path, contentId);
             if (params != null) {
                 path = params.appendToPath(path, contentId);
             }
             BoundRequestBuilder reqBuilder = path.headRequest(_httpClient);
 
-            HeadHandler<K> hh = new HeadHandler<K>(this, _server, startTime);
+            HeadHandler<K,P> hh = new HeadHandler<K,P>(this, _server, startTime);
             ListenableFuture<Object> futurama = _httpClient.executeRequest(reqBuilder.build(), hh);
             // First, see if we can get the answer without time out...
             try {
@@ -96,10 +94,10 @@ public class AHCContentHeader<K extends EntryKey>
         }
     }
 
-    private final static class HeadHandler<K extends EntryKey>
+    private final static class HeadHandler<K extends EntryKey, P extends Enum<P>>
         implements AsyncHandler<Object>
     {
-        private final AHCContentHeader<K> _parent;
+        private final AHCContentHeader<K,P> _parent;
         private final ClusterServerNode _server;
         private final long _startTime;
     	
@@ -107,7 +105,7 @@ public class AHCContentHeader<K extends EntryKey>
         public int statusCode = -1;
         public String contentLength = null;
 
-        public HeadHandler(AHCContentHeader<K> parent, ClusterServerNode server, long startTime)
+        public HeadHandler(AHCContentHeader<K,P> parent, ClusterServerNode server, long startTime)
         {
             _parent = parent;
             _server = server;

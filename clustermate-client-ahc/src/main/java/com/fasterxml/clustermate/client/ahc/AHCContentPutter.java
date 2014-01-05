@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
@@ -38,16 +37,16 @@ import org.apache.http.util.EntityUtils;
  * Helper accessors class used for making a single PUT call to a single
  * server node.
  */
-public class AHCContentPutter<K extends EntryKey>
-    extends AHCBasedAccessor<K>
+public class AHCContentPutter<K extends EntryKey, P extends Enum<P>>
+    extends AHCBasedAccessor<K,P>
     implements ContentPutter<K>
 {
     protected final ClusterServerNode _server;
 
-    public AHCContentPutter(StoreClientConfig<K,?> storeConfig,
+    public AHCContentPutter(StoreClientConfig<K,?> storeConfig, P endpoint,
             AsyncHttpClient asyncHC, ClusterServerNode server)
     {
-        super(storeConfig, asyncHC);
+        super(storeConfig, endpoint, asyncHC);
         _server = server;
         _keyConverter = storeConfig.getKeyConverter();
     }
@@ -141,8 +140,8 @@ public class AHCContentPutter<K extends EntryKey>
             final long startTime, final long timeout)
         throws IOException, ExecutionException, InterruptedException
     {
-        AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
+        AHCPathBuilder<P> path = _server.rootPath();
+        path = _pathFinder.appendPath(path, _endpoint);
         path = _keyConverter.appendToPath(path, contentId);       
         if (params != null) {
             path = params.appendToPath(path, contentId);

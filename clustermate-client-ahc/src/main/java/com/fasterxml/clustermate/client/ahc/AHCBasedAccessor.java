@@ -3,13 +3,11 @@ package com.fasterxml.clustermate.client.ahc;
 import java.io.*;
 
 import com.fasterxml.clustermate.api.*;
-
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.Loggable;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.FluentCaseInsensitiveStringsMap;
 import com.ning.http.client.Response;
@@ -18,23 +16,31 @@ import com.ning.http.client.Response;
  * Intermediate base class used by accessors that use
  * Async HTTP Client library for HTTP Access.
  */
-public abstract class AHCBasedAccessor<K extends EntryKey> extends Loggable
+public abstract class AHCBasedAccessor<
+    K extends EntryKey,
+    P extends Enum<P> // Path enumeration
+>
+    extends Loggable
 {
     protected final AsyncHttpClient _httpClient;
 
     protected final ObjectMapper _mapper;
 
-    protected final RequestPathStrategy _pathFinder;
+    protected final RequestPathStrategy<P> _pathFinder;
 
+    protected final P _endpoint;
+    
     protected EntryKeyConverter<K> _keyConverter;
     
+    @SuppressWarnings("unchecked")
     protected AHCBasedAccessor(StoreClientConfig<K,?> storeConfig,
-            AsyncHttpClient hc)
+            P endpoint, AsyncHttpClient hc)
     {
         super();
         _httpClient = hc;
+        _endpoint = endpoint;
         _mapper = storeConfig.getJsonMapper();
-        _pathFinder = storeConfig.getPathStrategy();
+        _pathFinder = (RequestPathStrategy<P>) storeConfig.getPathStrategy();
         _keyConverter = storeConfig.getKeyConverter();
     }
 

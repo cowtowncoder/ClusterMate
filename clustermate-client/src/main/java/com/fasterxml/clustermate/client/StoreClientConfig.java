@@ -62,7 +62,7 @@ public abstract class StoreClientConfig<
 
     protected final String[] _basePath;
 
-    protected final RequestPathStrategy _pathStrategy;
+    protected final RequestPathStrategy<?> _pathStrategy;
     
     /*
     /**********************************************************************
@@ -71,7 +71,7 @@ public abstract class StoreClientConfig<
      */
     
     protected StoreClientConfig(EntryKeyConverter<K> keyConverter,
-            String basePath[], RequestPathStrategy pathMapper,
+            String basePath[], RequestPathStrategy<?> pathMapper,
             ObjectMapper jsonMapper,
             OperationConfig operConfig)
     {
@@ -107,7 +107,7 @@ public abstract class StoreClientConfig<
         return _basePath;
     }
 
-    public RequestPathStrategy getPathStrategy() {
+    public RequestPathStrategy<?> getPathStrategy() {
         return _pathStrategy;
     }
     

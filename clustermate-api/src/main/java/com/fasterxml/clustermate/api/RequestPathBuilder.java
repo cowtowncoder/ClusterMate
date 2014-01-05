@@ -8,13 +8,16 @@ import com.fasterxml.storemate.shared.compress.Compression;
  * Builder object used for constructing {@link RequestPath}
  * instances.
  */
-public abstract class RequestPathBuilder
+public abstract class RequestPathBuilder<
+    P extends Enum <P>,
+    THIS extends RequestPathBuilder<P,THIS>
+>
 {
     /**
      * Method that will construct the immutable {@link RequestPath} instance
      * with information builder has accumulated.
      */
-    public abstract RequestPath build();
+    public abstract RequestPath<P> build();
 
     /*
     /*********************************************************************
@@ -30,7 +33,7 @@ public abstract class RequestPathBuilder
      * @return Builder instance to use for further calls (may be 'this',
      *   but does not have to be)
      */
-    public abstract RequestPathBuilder addPathSegment(String segment);
+    public abstract THIS addPathSegment(String segment);
 
     /**
      * Method that will append one or more path segments; contents are
@@ -40,20 +43,20 @@ public abstract class RequestPathBuilder
      * @return Builder instance to use for further calls (may be 'this',
      *   but does not have to be)
      */
-    public abstract RequestPathBuilder addPathSegmentsRaw(String segments);
+    public abstract THIS addPathSegmentsRaw(String segments);
 
     /**
      * Convenience method for appending a sequence of path segments,
      * as if calling {@link #addPathSegment(String)} once per segment,
      * in the order indicated.
      */
-    public RequestPathBuilder addPathSegments(String[] segments)
+    public THIS addPathSegments(String[] segments)
     {
-        RequestPathBuilder builder = this;
+        RequestPathBuilder<P,THIS> builder = this;
         for (String segment : segments) {
             builder = builder.addPathSegment(segment);
         }
-        return builder;
+        return _this(builder);
     }
     
     /**
@@ -63,7 +66,7 @@ public abstract class RequestPathBuilder
      * @return Builder instance to use for further calls (may be 'this',
      *   but does not have to be)
      */
-    public abstract RequestPathBuilder addParameter(String key, String value);
+    public abstract THIS addParameter(String key, String value);
 
     /**
      * Convenience method, functionally equivalent to:
@@ -71,7 +74,7 @@ public abstract class RequestPathBuilder
      *  addParameter(String.valueOf(value));
      *</pre>
      */
-    public RequestPathBuilder addParameter(String key, int value) {
+    public THIS addParameter(String key, int value) {
         return addParameter(key, String.valueOf(value));
     }
 
@@ -81,28 +84,27 @@ public abstract class RequestPathBuilder
      *  addParameter(String.valueOf(value));
      *</pre>
      */
-    public RequestPathBuilder addParameter(String key, long value) {
+    public THIS addParameter(String key, long value) {
         return addParameter(key, String.valueOf(value));
     }
 
-    public abstract RequestPathBuilder addHeader(String key, String value);
+    public abstract THIS addHeader(String key, String value);
 
-    public RequestPathBuilder addHeader(String key, long value) {
+    public THIS addHeader(String key, long value) {
         return addHeader(key, String.valueOf(value));
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends RequestPathBuilder> T addCompression(Compression comp, long originalLength) {
+    public THIS addCompression(Compression comp, long originalLength) {
         if (comp != null) {
-            RequestPathBuilder req = addHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION,
+            THIS req = addHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION,
                     comp.asContentEncoding());
             if (comp != Compression.NONE) {
                 req = req.addHeader(ClusterMateConstants.CUSTOM_HTTP_HEADER_UNCOMPRESSED_LENGTH,
                         originalLength);
             }
-            return (T) req;
+            return req;
         }
-        return (T) this;
+        return _this();
     }
     
     /*
@@ -138,6 +140,15 @@ public abstract class RequestPathBuilder
     /* Helper methods for sub-classes
     /*********************************************************************
      */
+
+    @SuppressWarnings("unchecked")
+    protected THIS _this() {
+        return (THIS) this;
+    }
+    @SuppressWarnings("unchecked")
+    protected THIS _this(RequestPathBuilder<P,THIS> b) {
+        return (THIS) b;
+    }
 
     protected static List<String> _arrayToList(String[] qp)
     {
