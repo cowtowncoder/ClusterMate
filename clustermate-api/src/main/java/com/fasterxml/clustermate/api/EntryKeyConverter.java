@@ -90,7 +90,7 @@ public abstract class EntryKeyConverter<K extends EntryKey>
     /**
      * Method for appending key information into path, using given path builder.
      */
-    public abstract <B extends RequestPathBuilder> B appendToPath(B pathBuilder, K key);
+    public abstract <P extends Enum<P>, B extends RequestPathBuilder<P, B>> B appendToPath(B pathBuilder, K key);
 
     /**
      * Method for extracting key information from the path, using given path builder

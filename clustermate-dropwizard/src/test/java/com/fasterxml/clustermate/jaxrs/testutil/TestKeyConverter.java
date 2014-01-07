@@ -148,9 +148,8 @@ public class TestKeyConverter
     /**********************************************************************
      */
     
-    @SuppressWarnings("unchecked")
     @Override
-    public <B extends RequestPathBuilder> B appendToPath(B b, TestKey key)
+    public <P extends Enum<P>, B extends RequestPathBuilder<P, B>> B appendToPath(B b, TestKey key)
     {
         /* ClientId: could either add as a segment, or query param.
          * For now, do latter.

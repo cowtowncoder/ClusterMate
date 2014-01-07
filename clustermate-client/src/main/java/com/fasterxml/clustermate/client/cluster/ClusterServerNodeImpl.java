@@ -25,7 +25,7 @@ import com.fasterxml.storemate.shared.IpAndPort;
  * thread-safe use.
  */
 public class ClusterServerNodeImpl
-	implements ClusterServerNode
+    implements ClusterServerNode
 {
     /**
      * Address (ip number and port) used for communicating with the

@@ -5,10 +5,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import com.fasterxml.clustermate.api.ClusterStatusAccessor;
-import com.fasterxml.clustermate.api.PathType;
-import com.fasterxml.clustermate.api.RequestPathBuilder;
-import com.fasterxml.clustermate.api.RequestPathStrategy;
+import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.IOUtil;
@@ -23,24 +20,25 @@ public class JdkClusterStatusAccessor extends ClusterStatusAccessor
 
     protected final String[] _basePath;
     
-    protected final RequestPathStrategy _paths;
+    protected final RequestPathStrategy<PathType> _paths;
 
+    @SuppressWarnings("unchecked")
     public JdkClusterStatusAccessor(ClusterStatusAccessor.Converter converter,
             String[] basePath,
-            RequestPathStrategy paths)
+            RequestPathStrategy<?> paths)
     {
         _converter = converter;
         _basePath = basePath;
-        _paths = paths;
+        _paths = (RequestPathStrategy<PathType>) paths;
     }
 
     @Override
     public ClusterStatusMessage getClusterStatus(IpAndPort ip, long timeoutMsecs)
         throws IOException
     {
-        RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(ip)
+        JdkHttpClientPathBuilder<PathType> pathBuilder = new JdkHttpClientPathBuilder<PathType>(ip)
             .addPathSegments(_basePath);
-        pathBuilder = _paths.appendPath(pathBuilder,  PathType.NODE_STATUS);
+        pathBuilder = _paths.appendPath(pathBuilder, PathType.NODE_STATUS);
         return getClusterStatus(pathBuilder.toString(), timeoutMsecs);
     }
 

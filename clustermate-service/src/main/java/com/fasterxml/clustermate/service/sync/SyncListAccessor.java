@@ -363,7 +363,7 @@ public class SyncListAccessor
          */
         final KeyRange syncRange = local.totalRange();
         final ServiceConfig config = _stuff.getServiceConfig();
-        RequestPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote.getAddress())
+        RequestPathBuilder<PathType,?> pathBuilder = new JdkHttpClientPathBuilder<PathType>(remote.getAddress())
             .addPathSegments(config.servicePathRoot);
         pathBuilder = _stuff.getPathStrategy().appendPath(pathBuilder, PathType.SYNC_LIST);
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_SINCE,

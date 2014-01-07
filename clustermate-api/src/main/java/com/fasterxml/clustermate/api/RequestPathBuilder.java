@@ -89,11 +89,17 @@ public abstract class RequestPathBuilder<
     }
 
     public abstract THIS addHeader(String key, String value);
-
+    
     public THIS addHeader(String key, long value) {
         return addHeader(key, String.valueOf(value));
     }
 
+    public abstract THIS setHeader(String key, String value);
+
+    public THIS setHeader(String key, long value) {
+        return setHeader(key, String.valueOf(value));
+    }
+    
     public THIS addCompression(Compression comp, long originalLength) {
         if (comp != null) {
             THIS req = addHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION,
