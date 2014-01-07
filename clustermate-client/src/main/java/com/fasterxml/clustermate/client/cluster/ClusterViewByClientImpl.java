@@ -222,7 +222,7 @@ public class ClusterViewByClientImpl<K extends EntryKey>
 
     protected RequestPath _rootPathFor(IpAndPort serverAddress)
     {
-        RequestPathBuilder builder = _client.pathBuilder(serverAddress);
+        RequestPathBuilder<?> builder = _client.pathBuilder(serverAddress);
         for (String component : _rootPathSegments) {
             builder = builder.addPathSegment(component);
         }

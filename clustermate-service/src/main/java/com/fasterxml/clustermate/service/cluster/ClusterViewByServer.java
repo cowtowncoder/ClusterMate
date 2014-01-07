@@ -73,7 +73,7 @@ public abstract class ClusterViewByServer
      * Method called to add information about cluster state caller has when making
      * Sync List request.
      */
-    public abstract RequestPathBuilder addClusterStateInfo(RequestPathBuilder requestBuilder);
+    public abstract <B extends RequestPathBuilder<B>> B addClusterStateInfo(B requestBuilder);
 
     /**
      * Method called to add information about cluster state, as piggy-backed

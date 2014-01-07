@@ -11,18 +11,17 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
-
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.KeyRange;
 import com.fasterxml.clustermate.api.NodeState;
 import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
+import com.fasterxml.clustermate.api.RequestPathStrategy;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
-
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
@@ -363,9 +362,9 @@ public class SyncListAccessor
          */
         final KeyRange syncRange = local.totalRange();
         final ServiceConfig config = _stuff.getServiceConfig();
-        RequestPathBuilder<?> pathBuilder = new JdkHttpClientPathBuilder(remote.getAddress())
+        JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote.getAddress())
             .addPathSegments(config.servicePathRoot);
-        pathBuilder = _stuff.getPathStrategy().appendPath(pathBuilder, PathType.SYNC_LIST);
+        pathBuilder = _path(pathBuilder, PathType.SYNC_LIST);
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_SINCE,
                 String.valueOf(syncedUpTo));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
@@ -381,9 +380,9 @@ public class SyncListAccessor
             String state)
     {
         final KeyRange syncRange = cluster.getLocalState().totalRange();
-        RequestPathBuilder<?> pathBuilder = new JdkHttpClientPathBuilder(remote)
+        JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote)
             .addPathSegments(_stuff.getServiceConfig().servicePathRoot);
-        pathBuilder = _stuff.getPathStrategy().appendPath(pathBuilder, PathType.NODE_STATUS);
+        pathBuilder = _path(pathBuilder, PathType.NODE_STATUS);
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_TIMESTAMP,
@@ -397,9 +396,15 @@ public class SyncListAccessor
     protected String _buildSyncPullUrl(IpAndPort endpoint)
     {
         final ServiceConfig config = _stuff.getServiceConfig();
-        RequestPathBuilder<?> pathBuilder = new JdkHttpClientPathBuilder(endpoint)
+        JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(endpoint)
             .addPathSegments(config.servicePathRoot);
-        pathBuilder = _stuff.getPathStrategy().appendPath(pathBuilder, PathType.SYNC_PULL);
+        pathBuilder = _path(pathBuilder, PathType.SYNC_PULL);
         return pathBuilder.toString();
+    }
+
+    protected <B extends RequestPathBuilder<B>> B _path(B builder, PathType path)
+    {
+        RequestPathStrategy<PathType> st = _stuff.getPathStrategy();
+        return st.appendPath(builder, path);
     }
 }

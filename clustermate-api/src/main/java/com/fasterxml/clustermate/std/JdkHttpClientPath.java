@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.std;
 
 import com.fasterxml.clustermate.api.RequestPath;
-import com.fasterxml.clustermate.api.RequestPathBuilder;
 
 /**
  * {@link RequestPath} that {@link JdkHttpClientPathBuilder} creates

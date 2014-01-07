@@ -15,14 +15,14 @@ public class ServiceConfigForTests
     // need to match
     protected final static String[] TEST_SVC_ROOT = new String[] { "cmtest" };
     
-    protected RequestPathStrategy _requestPathStrategy;
+    protected RequestPathStrategy<?> _requestPathStrategy;
     protected String defaultPartition;
 
     public ServiceConfigForTests() {
         this(new PathsForTests());
     }
 
-    public ServiceConfigForTests(RequestPathStrategy paths) {
+    public ServiceConfigForTests(RequestPathStrategy<?> paths) {
         super(TEST_SVC_ROOT);
         _requestPathStrategy = paths;
     }
@@ -34,7 +34,7 @@ public class ServiceConfigForTests
      */
     
     @Override
-    public RequestPathStrategy getServicePathStrategy() {
+    public RequestPathStrategy<?> getServicePathStrategy() {
         return _requestPathStrategy;
     }
     

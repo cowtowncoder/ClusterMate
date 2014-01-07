@@ -7,11 +7,9 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.fasterxml.jackson.dataformat.smile.SmileGenerator;
 import com.fasterxml.jackson.dataformat.smile.SmileParser;
-
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StoreConfig;
 import com.fasterxml.storemate.store.file.FileManager;
-
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
@@ -41,7 +39,7 @@ public abstract class SharedServiceStuff
     
     protected final ObjectMapper _jsonMapper, _smileMapper;
 
-    protected final RequestPathStrategy _pathStrategy;
+    protected final RequestPathStrategy<?> _pathStrategy;
 
     /*
     /**********************************************************************
@@ -50,7 +48,7 @@ public abstract class SharedServiceStuff
      */
 
     protected SharedServiceStuff(TimeMaster timeMaster, FileManager fileManager,
-            RequestPathStrategy pathStrategy)
+            RequestPathStrategy<?> pathStrategy)
     {
         _timeMaster = timeMaster;
         _fileManager = fileManager;
@@ -109,8 +107,9 @@ public abstract class SharedServiceStuff
         return _timeMaster;
     }
 
-    public RequestPathStrategy getPathStrategy() {
-        return _pathStrategy;
+    @SuppressWarnings("unchecked")
+    public <P extends Enum<P>> RequestPathStrategy<P> getPathStrategy() {
+        return (RequestPathStrategy<P>) _pathStrategy;
     }
 
     /*

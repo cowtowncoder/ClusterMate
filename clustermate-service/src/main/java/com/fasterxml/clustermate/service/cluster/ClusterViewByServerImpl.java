@@ -484,14 +484,13 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     }
 
     @Override
-    public RequestPathBuilder addClusterStateInfo(RequestPathBuilder requestBuilder)
+    public <B extends RequestPathBuilder<B>> B addClusterStateInfo(B requestBuilder)
     {
         /* Since key range information will be included anyway, all we need here
          * is just the endpoint name ("caller").
          */
-        requestBuilder = requestBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_CALLER,
+        return requestBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_CALLER,
                 _localState.getAddress().toString());
-        return requestBuilder;
     }
     
     /*

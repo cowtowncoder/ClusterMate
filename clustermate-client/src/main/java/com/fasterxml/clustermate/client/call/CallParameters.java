@@ -64,5 +64,5 @@ public abstract class CallParameters
      * @param contentId If of the entry being put; usually not directly needed (already appended to path),
      *   but may be needed by some implementations
      */
-    public abstract <B extends RequestPathBuilder> B appendToPath(B pathBuilder, EntryKey contentId);
+    public abstract <B extends RequestPathBuilder<B>> B appendToPath(B pathBuilder, EntryKey contentId);
 }

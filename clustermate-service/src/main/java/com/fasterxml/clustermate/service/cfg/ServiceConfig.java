@@ -39,7 +39,7 @@ public abstract class ServiceConfig
      * Method to find {@link RequestPathStrategy} used for matching
      * request paths to resources.
      */
-    public abstract RequestPathStrategy getServicePathStrategy();
+    public abstract RequestPathStrategy<?> getServicePathStrategy();
     
     /*
     /**********************************************************************

@@ -43,7 +43,7 @@ public abstract class StoreClientConfigBuilder<
 
     protected String[] _basePath;
 
-    protected RequestPathStrategy _pathStrategy;
+    protected RequestPathStrategy<?> _pathStrategy;
     
     // // // General configuration
     
@@ -92,7 +92,7 @@ public abstract class StoreClientConfigBuilder<
      */
     
     public StoreClientConfigBuilder(EntryKeyConverter<K> keyConverter,
-            String[] basePath, RequestPathStrategy pathStrategy)
+            String[] basePath, RequestPathStrategy<?> pathStrategy)
     {
         this(keyConverter, basePath, pathStrategy,
                 DEFAULT_JSON_MAPPER, DEFAULT_OPERATION_CONFIG);
@@ -106,7 +106,7 @@ public abstract class StoreClientConfigBuilder<
     }
 
     protected StoreClientConfigBuilder(EntryKeyConverter<K> keyConv,
-            String[] basePath, RequestPathStrategy pathStrategy,
+            String[] basePath, RequestPathStrategy<?> pathStrategy,
             ObjectMapper jsonMapper, OperationConfig operationConfig)
     {
         _keyConverter = keyConv;
@@ -243,7 +243,7 @@ public abstract class StoreClientConfigBuilder<
     }
 
     @SuppressWarnings("unchecked")
-    public BUILDER setBasePath(RequestPathStrategy pathStrategy) {
+    public BUILDER setBasePath(RequestPathStrategy<?> pathStrategy) {
         _pathStrategy = pathStrategy;
          return (BUILDER) this;
     }
@@ -262,7 +262,7 @@ public abstract class StoreClientConfigBuilder<
         return _basePath;
     }
 
-    public RequestPathStrategy getPathStrategy() {
+    public RequestPathStrategy<?> getPathStrategy() {
         return _pathStrategy;
     }
     

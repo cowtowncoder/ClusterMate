@@ -16,7 +16,7 @@ public abstract class NetworkClient<K extends EntryKey>
      * Factory method for getting a path builder initialized with specified
      * host, but without actual path.
      */
-    public abstract RequestPathBuilder pathBuilder(IpAndPort server);
+    public abstract RequestPathBuilder<?> pathBuilder(IpAndPort server);
     
     /**
      * Method to call to shut down client implementation; called when
