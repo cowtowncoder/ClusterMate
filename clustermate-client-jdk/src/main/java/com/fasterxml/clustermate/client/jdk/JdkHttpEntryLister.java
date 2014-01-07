@@ -40,7 +40,7 @@ public class JdkHttpEntryLister<K extends EntryKey,P extends Enum<P>>
         if (timeoutMsecs < config.getMinimumTimeoutMsecs()) {
             return failed(CallFailure.timeout(_server, startTime, startTime));
         }
-        JdkHttpClientPathBuilder<P> path = _server.rootPath();
+        JdkHttpClientPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, _endpoint);
         path = _keyConverter.appendToPath(path, prefix);
         path.addParameter(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES, String.valueOf(maxResults))

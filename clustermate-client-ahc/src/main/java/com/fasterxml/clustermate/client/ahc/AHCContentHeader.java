@@ -47,7 +47,7 @@ public class AHCContentHeader<K extends EntryKey, P extends Enum<P>>
         }
 
         try {
-            AHCPathBuilder<P> path = _server.rootPath();
+            AHCPathBuilder path = _server.rootPath();
             path = _pathFinder.appendPath(path, _endpoint);
             path = _keyConverter.appendToPath(path, contentId);
             if (params != null) {

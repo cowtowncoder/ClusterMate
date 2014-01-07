@@ -9,14 +9,14 @@ import java.util.Map;
  * {@link RequestPathBuilder}s to use, and accept
  * {@link RequestPath} instances as call targets.
  */
-public abstract class RequestPath<P extends Enum<P>>
+public abstract class RequestPath
 {
     /**
      * Factory method for creating builder instance that can
      * be used for building a more refined path, given this
      * instance as the base.
      */
-    public abstract RequestPathBuilder<P,?> builder();
+    public abstract <B extends RequestPathBuilder<B>> B builder();
 
     @Override
     public String toString() {

@@ -156,8 +156,8 @@ public abstract class BaseAHCBasedNetworkClient<
      */
 
     @Override
-    public AHCPathBuilder<P> pathBuilder(IpAndPort server) {
-        return new AHCPathBuilder<P>(server);
+    public AHCPathBuilder pathBuilder(IpAndPort server) {
+        return new AHCPathBuilder(server);
     }
     
     @Override

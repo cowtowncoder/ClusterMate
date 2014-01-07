@@ -9,15 +9,14 @@ import com.fasterxml.storemate.shared.compress.Compression;
  * instances.
  */
 public abstract class RequestPathBuilder<
-    P extends Enum <P>,
-    THIS extends RequestPathBuilder<P,THIS>
+    THIS extends RequestPathBuilder<THIS>
 >
 {
     /**
      * Method that will construct the immutable {@link RequestPath} instance
      * with information builder has accumulated.
      */
-    public abstract RequestPath<P> build();
+    public abstract RequestPath build();
 
     /*
     /*********************************************************************
@@ -52,7 +51,7 @@ public abstract class RequestPathBuilder<
      */
     public THIS addPathSegments(String[] segments)
     {
-        RequestPathBuilder<P,THIS> builder = this;
+        RequestPathBuilder<THIS> builder = this;
         for (String segment : segments) {
             builder = builder.addPathSegment(segment);
         }
@@ -152,7 +151,7 @@ public abstract class RequestPathBuilder<
         return (THIS) this;
     }
     @SuppressWarnings("unchecked")
-    protected THIS _this(RequestPathBuilder<P,THIS> b) {
+    protected THIS _this(RequestPathBuilder<THIS> b) {
         return (THIS) b;
     }
 

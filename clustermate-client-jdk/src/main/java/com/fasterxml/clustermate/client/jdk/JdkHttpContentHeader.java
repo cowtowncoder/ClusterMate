@@ -45,7 +45,7 @@ public class JdkHttpContentHeader<K extends EntryKey,P extends Enum<P>>
             return new JdkHttpHeadCallResult(CallFailure.timeout(_server, startTime, startTime));
         }
         try {
-            JdkHttpClientPathBuilder<P> path = _server.rootPath();
+            JdkHttpClientPathBuilder path = _server.rootPath();
             path = _pathFinder.appendPath(path, _endpoint);
             path = _keyConverter.appendToPath(path, contentId);
             if (params != null) {

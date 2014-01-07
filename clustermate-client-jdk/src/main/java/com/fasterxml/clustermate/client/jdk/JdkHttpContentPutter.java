@@ -63,7 +63,7 @@ public class JdkHttpContentPutter<K extends EntryKey,P extends Enum<P>>
             final long startTime, final long timeoutMsecs)
         throws IOException, ExecutionException, InterruptedException
     {
-        JdkHttpClientPathBuilder<P> path = _server.rootPath();
+        JdkHttpClientPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, _endpoint);
         path = _keyConverter.appendToPath(path, contentId);
 

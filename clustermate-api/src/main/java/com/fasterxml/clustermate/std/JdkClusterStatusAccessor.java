@@ -36,7 +36,7 @@ public class JdkClusterStatusAccessor extends ClusterStatusAccessor
     public ClusterStatusMessage getClusterStatus(IpAndPort ip, long timeoutMsecs)
         throws IOException
     {
-        JdkHttpClientPathBuilder<PathType> pathBuilder = new JdkHttpClientPathBuilder<PathType>(ip)
+        JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(ip)
             .addPathSegments(_basePath);
         pathBuilder = _paths.appendPath(pathBuilder, PathType.NODE_STATUS);
         return getClusterStatus(pathBuilder.toString(), timeoutMsecs);

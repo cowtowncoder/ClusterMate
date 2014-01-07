@@ -13,8 +13,8 @@ import com.fasterxml.storemate.shared.util.UTF8UrlEncoder;
  * Simple {@link RequestPathBuilder} implementation that can be used
  * with the default JDK HTTP client.
  */
-public class JdkHttpClientPathBuilder<P extends Enum<P>>
-    extends RequestPathBuilder<P,JdkHttpClientPathBuilder<P>>
+public class JdkHttpClientPathBuilder
+    extends RequestPathBuilder<JdkHttpClientPathBuilder>
 {
     protected final static UTF8UrlEncoder _urlEncoder = new UTF8UrlEncoder();
     
@@ -55,7 +55,7 @@ public class JdkHttpClientPathBuilder<P extends Enum<P>>
         _queryParams = qp;
     }
 
-    public JdkHttpClientPathBuilder(JdkHttpClientPath<P> src)
+    public JdkHttpClientPathBuilder(JdkHttpClientPath src)
     {
         _serverPart = src._serverPart;
         _path = src._path;
@@ -64,8 +64,8 @@ public class JdkHttpClientPathBuilder<P extends Enum<P>>
     }
     
     @Override
-    public JdkHttpClientPath<P> build() {
-        return new JdkHttpClientPath<P>(this);
+    public JdkHttpClientPath build() {
+        return new JdkHttpClientPath(this);
     }
     
     /*
@@ -121,17 +121,17 @@ public class JdkHttpClientPathBuilder<P extends Enum<P>>
      */
      
     @Override
-    public JdkHttpClientPathBuilder<P> addPathSegment(String segment) {
+    public JdkHttpClientPathBuilder addPathSegment(String segment) {
         return _appendSegment(segment, true);
     }
 
     @Override
-    public JdkHttpClientPathBuilder<P> addPathSegmentsRaw(String segments) {
+    public JdkHttpClientPathBuilder addPathSegmentsRaw(String segments) {
         return _appendSegment(segments, false);
     }
     
     @Override
-    public JdkHttpClientPathBuilder<P> addParameter(String key, String value) {
+    public JdkHttpClientPathBuilder addParameter(String key, String value) {
          _queryParams = _defaultAddParameter(_queryParams, key, value);
          return this;
     }
@@ -143,12 +143,12 @@ public class JdkHttpClientPathBuilder<P extends Enum<P>>
      */
 
     @Override
-    public JdkHttpClientPathBuilder<P> addHeader(String key, String value) {
+    public JdkHttpClientPathBuilder addHeader(String key, String value) {
         _headers = _defaultAddHeader(_headers, key, value);
         return this;
     }
 
-    public JdkHttpClientPathBuilder<P> setHeader(String key, String value) {
+    public JdkHttpClientPathBuilder setHeader(String key, String value) {
         _headers = _defaultSetHeader(_headers, key, value);
         return this;
     }
@@ -195,7 +195,7 @@ public class JdkHttpClientPathBuilder<P extends Enum<P>>
     /*********************************************************************
      */
     
-    protected final JdkHttpClientPathBuilder<P> _appendSegment(String segment, boolean escapeSlash)
+    protected final JdkHttpClientPathBuilder _appendSegment(String segment, boolean escapeSlash)
     {
           if (_path == null) {
                _path = _urlEncoder.encode(segment, escapeSlash);

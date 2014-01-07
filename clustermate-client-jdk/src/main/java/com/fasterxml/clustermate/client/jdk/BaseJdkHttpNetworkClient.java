@@ -47,8 +47,8 @@ public abstract class BaseJdkHttpNetworkClient<
      */
 
     @Override
-    public JdkHttpClientPathBuilder<P> pathBuilder(IpAndPort server) {
-        return new JdkHttpClientPathBuilder<P>(server);
+    public JdkHttpClientPathBuilder pathBuilder(IpAndPort server) {
+        return new JdkHttpClientPathBuilder(server);
     }
     
     @Override

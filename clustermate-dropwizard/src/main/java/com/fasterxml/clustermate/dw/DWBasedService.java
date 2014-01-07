@@ -434,7 +434,7 @@ public abstract class DWBasedService<
         ServiceDispatchServlet<K,E,PathType> dispatcher = new ServiceDispatchServlet<K,E,PathType>
             (cluster, null, stuff, servlets);
 
-        RequestPathBuilder<PathType,?> rootBuilder = rootPath(stuff.getServiceConfig());
+        RequestPathBuilder<?> rootBuilder = rootPath(stuff.getServiceConfig());
         String rootPath = servletPath(rootBuilder);
         LOG.info("Registering main Dispatcher servlet at: "+rootPath);
         environment.addServlet(dispatcher, rootPath);
@@ -508,8 +508,6 @@ public abstract class DWBasedService<
      *<p>
      * Default implementation simply returns null to let the default throttler
      * be used.
-     * 
-     * @since 0.9.9
      */
     protected StoreOperationThrottler _constructThrottler(SharedServiceStuff stuff)
     {
@@ -524,8 +522,6 @@ public abstract class DWBasedService<
      *<p>
      * Default implementation simply returns null to let the default implementation
      * be used.
-     * 
-     * @since 0.9.10
      */
     protected PartitionedWriteMutex _constructWriteMutex(SharedServiceStuff stuff)
     {
@@ -549,9 +545,9 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
-    protected RequestPathBuilder<PathType,?> rootPath(ServiceConfig config)
+    protected JdkHttpClientPathBuilder rootPath(ServiceConfig config)
     {
-        return new JdkHttpClientPathBuilder<PathType>("localhost")
+        return new JdkHttpClientPathBuilder("localhost")
             .addPathSegments(config.servicePathRoot);
     }
 
@@ -560,7 +556,7 @@ public abstract class DWBasedService<
      * a basic end point path definition. Currently just verifies prefix
      * and suffix slashes and adds '*' as necessary.
      */
-    protected String servletPath(RequestPathBuilder<PathType,?> pathBuilder)
+    protected String servletPath(RequestPathBuilder<?> pathBuilder)
     {
         String base = pathBuilder.getPath();
         if (!base.endsWith("*")) {

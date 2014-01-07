@@ -1,12 +1,13 @@
 package com.fasterxml.clustermate.std;
 
 import com.fasterxml.clustermate.api.RequestPath;
+import com.fasterxml.clustermate.api.RequestPathBuilder;
 
 /**
  * {@link RequestPath} that {@link JdkHttpClientPathBuilder} creates
  */
-public class JdkHttpClientPath<P extends Enum<P>>
-    extends RequestPath<P>
+public class JdkHttpClientPath
+    extends RequestPath
 {
     protected final String _serverPart;
 
@@ -19,16 +20,17 @@ public class JdkHttpClientPath<P extends Enum<P>>
     /**
      * Constructor used by {@link JdkHttpClientPathBuilder}
      */
-    public JdkHttpClientPath(JdkHttpClientPathBuilder<P> src) {
+    public JdkHttpClientPath(JdkHttpClientPathBuilder src) {
         _serverPart = src._serverPart;
         _path = src._path;
         _queryParams = _listToArray(src._queryParams);
         _headers = _mapToArray(src._headers);
     }
     
+    @SuppressWarnings("unchecked")
     @Override
-    public JdkHttpClientPathBuilder<P> builder() {
-        return new JdkHttpClientPathBuilder<P>(this);
+    public JdkHttpClientPathBuilder builder() {
+        return new JdkHttpClientPathBuilder(this);
     }
 }
 

@@ -46,7 +46,7 @@ public class AHCEntryLister<K extends EntryKey, P extends Enum<P>>
         if (timeout < config.getMinimumTimeoutMsecs()) {
             return failed(CallFailure.timeout(_server, startTime, startTime));
         }
-        AHCPathBuilder<P> path = _server.rootPath();
+        AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, _endpoint);
         path = _keyConverter.appendToPath(path, prefix);
         BoundRequestBuilder reqBuilder = path

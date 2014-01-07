@@ -140,7 +140,7 @@ public class AHCContentPutter<K extends EntryKey, P extends Enum<P>>
             final long startTime, final long timeout)
         throws IOException, ExecutionException, InterruptedException
     {
-        AHCPathBuilder<P> path = _server.rootPath();
+        AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendPath(path, _endpoint);
         path = _keyConverter.appendToPath(path, contentId);       
         if (params != null) {

@@ -22,7 +22,7 @@ public abstract class RequestPathStrategy<P extends Enum <P>>
      * 
      * @return Path builder after appending specified path
      */
-    public abstract <B extends RequestPathBuilder<P,B>> B appendPath(B basePath, P type);
+    public abstract <B extends RequestPathBuilder<B>> B appendPath(B basePath, P type);
 
     /*
     /**********************************************************************

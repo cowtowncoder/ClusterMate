@@ -39,7 +39,7 @@ public class AHCContentDeleter<K extends EntryKey, P extends Enum<P>>
         if (timeout < config.getMinimumTimeoutMsecs()) {
             return CallFailure.timeout(_server, startTime, startTime);
         }
-        AHCPathBuilder<P> pathBuilder = _server.rootPath();
+        AHCPathBuilder pathBuilder = _server.rootPath();
         pathBuilder = _pathFinder.appendPath(pathBuilder, _endpoint);
         pathBuilder = _keyConverter.appendToPath(pathBuilder, contentId);    	
         if (params != null) {

@@ -85,14 +85,14 @@ public abstract class BaseJdkHttpAccessor<
      * settings, and then forcing sending of the request.
      */
     protected int sendRequest(String method, HttpURLConnection conn,
-            JdkHttpClientPathBuilder<P> path, long timeoutMsecs)
+            JdkHttpClientPathBuilder path, long timeoutMsecs)
         throws IOException
     {
         return initRequest(method, conn, path, timeoutMsecs).getResponseCode();
     }
 
     protected HttpURLConnection initRequest(String method, HttpURLConnection conn,
-            JdkHttpClientPathBuilder<P> path, long timeoutMsecs)
+            JdkHttpClientPathBuilder path, long timeoutMsecs)
         throws IOException
     {
         conn.setRequestMethod(method);
@@ -103,7 +103,7 @@ public abstract class BaseJdkHttpAccessor<
         return conn;
     }
     
-    protected JdkHttpClientPathBuilder<P> addChecksum(JdkHttpClientPathBuilder<P> path, int checksum)
+    protected JdkHttpClientPathBuilder addChecksum(JdkHttpClientPathBuilder path, int checksum)
     {
         return path.addParameter(ClusterMateConstants.QUERY_PARAM_CHECKSUM,
                 (checksum == 0) ? "0" : String.valueOf(checksum));
