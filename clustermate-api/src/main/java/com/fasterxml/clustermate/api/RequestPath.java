@@ -20,7 +20,9 @@ public abstract class RequestPath
 
     @Override
     public String toString() {
-        return builder().toString();
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        RequestPathBuilder b = builder();
+        return b.toString();
     }
 
     /*

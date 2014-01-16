@@ -404,7 +404,8 @@ public class SyncListAccessor
 
     protected <B extends RequestPathBuilder<B>> B _path(B builder, PathType path)
     {
-        RequestPathStrategy<PathType> st = _stuff.getPathStrategy();
+        @SuppressWarnings("unchecked")
+        RequestPathStrategy<PathType> st = (RequestPathStrategy<PathType>) _stuff.getPathStrategy();
         return st.appendPath(builder, path);
     }
 }

@@ -107,9 +107,8 @@ public abstract class SharedServiceStuff
         return _timeMaster;
     }
 
-    @SuppressWarnings("unchecked")
-    public <P extends Enum<P>> RequestPathStrategy<P> getPathStrategy() {
-        return (RequestPathStrategy<P>) _pathStrategy;
+    public RequestPathStrategy<?> getPathStrategy() {
+        return _pathStrategy;
     }
 
     /*

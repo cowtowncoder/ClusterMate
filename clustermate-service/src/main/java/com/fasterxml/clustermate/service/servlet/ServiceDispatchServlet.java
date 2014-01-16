@@ -48,7 +48,9 @@ public class ServiceDispatchServlet<
         // null -> use servlet path base as-is
         super(stuff, clusterView, servletPathBase);
 
-        _pathStrategy = (RequestPathStrategy<P>) stuff.getPathStrategy();
+        @SuppressWarnings("rawtypes")
+        RequestPathStrategy<?> s = stuff.getPathStrategy();
+        _pathStrategy = (RequestPathStrategy<P>) s;
         _servletsByPath = servlets;
     }
 
