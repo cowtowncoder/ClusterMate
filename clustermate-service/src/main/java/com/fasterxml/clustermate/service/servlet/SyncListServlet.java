@@ -87,7 +87,11 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
                     } catch (InterruptedException e) {
                         // Swallow during shutdown (mostly during tests)
                         if (!_terminated.get()) {
-                            throw new IOException(e);
+                            /* 08-Jan-2013, tatu: This seems to occur during shutdowns, should
+                             *   find a way to pipe shutdown notifications to servlet too.
+                             *   But for now, let's just customize message a bit:
+                             */
+                            throw new IOException("syncHandler.listEntries() interrupted, system not yet shut down: probably harmless");
                         }
                         LOG.info("SyncListServlet interupted due to termination, ignoring");
                         return;

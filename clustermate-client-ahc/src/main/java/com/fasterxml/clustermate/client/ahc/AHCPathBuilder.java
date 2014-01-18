@@ -109,6 +109,7 @@ public class AHCPathBuilder
         return this;
     }
 
+    @Override
     public AHCPathBuilder setHeader(String key, String value) {
         _headers = _defaultSetHeader(_headers, key, value);
         return this;

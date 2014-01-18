@@ -148,6 +148,7 @@ public class JdkHttpClientPathBuilder
         return this;
     }
 
+    @Override
     public JdkHttpClientPathBuilder setHeader(String key, String value) {
         _headers = _defaultSetHeader(_headers, key, value);
         return this;
