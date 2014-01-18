@@ -5,11 +5,7 @@ import java.util.*;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 
 /**
- * Intermediate base class for read operations (GET, HEAD, List).
- * Note that definitions of {@link #failed} and {@link #succeeded()} refer
- * to success of operation itself, but do <b>NOT</b> necessarily mean
- * that content was found: it is possible for operation to succeed but
- * content not to be found (not to exist).
+ * Intermediate base class for write operations (PUT, DELETE).
  */
 public class WriteOperationResult<T extends WriteOperationResult<T>>
     extends OperationResultImpl<T>
