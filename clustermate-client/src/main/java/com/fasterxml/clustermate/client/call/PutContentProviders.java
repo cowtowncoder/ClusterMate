@@ -21,8 +21,16 @@ public class PutContentProviders
         return forBytes(bytes, 0, bytes.length);
     }
 
+    public static StdPutContentProvider forBytes(byte[] bytes, Compression comp, long origLen) {
+        return forBytes(ByteContainer.simple(bytes, 0, bytes.length), comp, origLen);
+    }
+
     public static StdPutContentProvider forBytes(byte[] bytes, int offset, int len) {
         return new ByteBacked(ByteContainer.simple(bytes, offset, len));
+    }
+
+    public static StdPutContentProvider forBytes(ByteContainer bytes, Compression comp, long origLen) {
+        return new ByteBacked(bytes, comp, origLen);
     }
     
     /**
