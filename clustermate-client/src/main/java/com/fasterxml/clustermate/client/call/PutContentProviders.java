@@ -24,11 +24,11 @@ public class PutContentProviders
     public static PutContentProvider forBytes(byte[] bytes, int offset, int len) {
         return new ByteBacked(ByteContainer.simple(bytes, offset, len));
     }
-
+    
     /**
      * Intermediate base class used for building actual {@link PutContentProvider} instances.
      */
-    public abstract static class ProviderBase
+    public abstract static class StdPutContentProvider
         implements PutContentProvider
     {
         protected final Compression _existingCompression;
@@ -36,16 +36,18 @@ public class PutContentProviders
 
         protected final AtomicInteger _contentHash = new AtomicInteger(HashConstants.NO_CHECKSUM);
 
-        protected ProviderBase() {
+        protected StdPutContentProvider() {
             _existingCompression = null;
             _uncompressedLength = 0L;
         }
         
-        protected ProviderBase(Compression comp, long uncompressedLength) {
+        protected StdPutContentProvider(Compression comp, long uncompressedLength) {
             _existingCompression = comp;
             _uncompressedLength = uncompressedLength;
         }
 
+        public abstract StdPutContentProvider withCompression(Compression comp, long uncompLen);
+        
         /**
          * Default implementation does not require any clean up, so implementation
          * is empty.
@@ -86,7 +88,7 @@ public class PutContentProviders
      * Simple {@link PutContentProvider} implementation that is backed by
      * a raw byte array.
      */
-    protected static class ByteBacked extends ProviderBase
+    protected static class ByteBacked extends StdPutContentProvider
     {
         protected final ByteContainer _bytes;
 
@@ -101,6 +103,11 @@ public class PutContentProviders
             _bytes = data;
         }
 
+        @Override
+        public ByteBacked withCompression(Compression comp, long uncompLen) {
+            return new ByteBacked(_bytes, comp, uncompLen);
+        }
+        
         @Override
         public long length() {
             return (long) _bytes.byteLength();
@@ -133,7 +140,7 @@ public class PutContentProviders
      * a File.
      */
     protected static class FileBacked
-        extends ProviderBase
+        extends StdPutContentProvider
     {
         protected final File _file;
         protected final long _length;
@@ -150,6 +157,11 @@ public class PutContentProviders
             _length = length;
         }
 
+        @Override
+        public FileBacked withCompression(Compression comp, long uncompLen) {
+            return new FileBacked(_file, _length, comp, uncompLen);
+        }
+        
         @Override
         public long length() {
             return _length;
