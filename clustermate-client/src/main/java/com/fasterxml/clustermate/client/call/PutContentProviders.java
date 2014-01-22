@@ -13,15 +13,15 @@ import com.fasterxml.storemate.shared.hash.HashConstants;
  */
 public class PutContentProviders
 {
-    public static PutContentProvider forFile(File f, long length) {
+    public static StdPutContentProvider forFile(File f, long length) {
         return new FileBacked(f, length);
     }
 
-    public static PutContentProvider forBytes(byte[] bytes) {
+    public static StdPutContentProvider forBytes(byte[] bytes) {
         return forBytes(bytes, 0, bytes.length);
     }
 
-    public static PutContentProvider forBytes(byte[] bytes, int offset, int len) {
+    public static StdPutContentProvider forBytes(byte[] bytes, int offset, int len) {
         return new ByteBacked(ByteContainer.simple(bytes, offset, len));
     }
     
@@ -40,12 +40,17 @@ public class PutContentProviders
             _existingCompression = null;
             _uncompressedLength = 0L;
         }
-        
+
         protected StdPutContentProvider(Compression comp, long uncompressedLength) {
             _existingCompression = comp;
             _uncompressedLength = uncompressedLength;
         }
 
+        protected StdPutContentProvider(StdPutContentProvider base) {
+            _existingCompression = base._existingCompression;
+            _uncompressedLength = base._uncompressedLength;
+        }
+        
         public abstract StdPutContentProvider withCompression(Compression comp, long uncompLen);
         
         /**
