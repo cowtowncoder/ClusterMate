@@ -149,7 +149,7 @@ public class AHCContentPutter<K extends EntryKey, P extends Enum<P>>
         // Is compression known?
         Compression comp = content.getExistingCompression();
         if (comp != null) { // if so, must be indicated
-            path = path.setHeader(ClusterMateConstants.HTTP_HEADER_COMPRESSION, comp.asContentEncoding());
+            path = path.addCompression(comp, content.uncompressedLength());
         }
         Generator<K> gen = new Generator<K>(content, _keyConverter);
         int checksum = gen.getChecksum();

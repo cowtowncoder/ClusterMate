@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.9.23 (---)
+
+- Fixed an issue with AHC-provider, pre-compressed content (was not sending original length)
+
 0.9.22 (22-Jan-2014?)
 
 - Adding more support for client-side compression (to be enabled by implementations)
