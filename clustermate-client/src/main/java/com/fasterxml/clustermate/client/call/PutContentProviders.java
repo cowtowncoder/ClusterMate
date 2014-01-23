@@ -121,25 +121,10 @@ public class PutContentProviders
             return new ByteBacked(_bytes, comp, uncompLen);
         }
         
-        @Override
-        public long length() {
-            return (long) _bytes.byteLength();
-        }
-        
-        @Override
-        public ByteContainer contentAsBytes() {
-            return _bytes;
-        }
-
-        @Override
-        public File contentAsFile() {
-            return null;
-        }
-        
-        @Override
-        public InputStream contentAsStream() {
-            return null;
-        }
+        @Override public long length() { return (long) _bytes.byteLength(); }
+        @Override public ByteContainer contentAsBytes() { return _bytes; }
+        @Override public File contentAsFile() { return null; }
+        @Override public InputStream contentAsStream() { return null; }
     }
     
     /*
@@ -150,7 +135,7 @@ public class PutContentProviders
     
     /**
      * Simple {@link PutContentProvider} implementation that is backed by
-     * a File.
+     * a {@link java.io.File}.
      */
     protected static class FileBacked
         extends StdPutContentProvider
@@ -163,8 +148,7 @@ public class PutContentProviders
         }
 
         public FileBacked(File file, long length,
-                Compression existingCompression, long uncompressedLength)
-        {
+                Compression existingCompression, long uncompressedLength) {
             super(existingCompression, uncompressedLength);
             _file = file;
             _length = length;
@@ -175,24 +159,9 @@ public class PutContentProviders
             return new FileBacked(_file, _length, comp, uncompLen);
         }
         
-        @Override
-        public long length() {
-            return _length;
-        }
-
-        @Override
-        public ByteContainer contentAsBytes() {
-            return null;
-        }
-
-        @Override
-        public File contentAsFile() {
-            return _file;
-        }
-        
-        @Override
-        public InputStream contentAsStream() {
-            return null;
-        }
+        @Override public long length() { return _length; }
+        @Override public ByteContainer contentAsBytes() { return null; }
+        @Override public File contentAsFile() { return _file; }
+        @Override public InputStream contentAsStream() { return null; }
     }
 }
