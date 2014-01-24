@@ -59,19 +59,19 @@ public abstract class BaseJdkHttpAccessor<
     protected long parseLongHeader(HttpURLConnection conn, String headerName)
     {
         String lenStr = conn.getHeaderField(headerName);
-       if (lenStr == null) {
-           return -1L;
-       }
-       lenStr = lenStr.trim();
-       if (lenStr.length() == 0) {
-           return -1L;
-       }
-       try {
-           return  Long.parseLong(lenStr.trim());
-       } catch (NumberFormatException e) {
-           String desc = (lenStr == null) ? "null" : "\""+lenStr+"\"";
-           throw new IllegalArgumentException("Bad numeric value for header '"+headerName+"': "+desc);
-       }
+        if (lenStr == null) {
+            return -1L;
+        }
+        lenStr = lenStr.trim();
+        if (lenStr.length() == 0) {
+            return -1L;
+        }
+        try {
+            return  Long.parseLong(lenStr.trim());
+        } catch (NumberFormatException e) {
+            String desc = (lenStr == null) ? "null" : "\""+lenStr+"\"";
+            throw new IllegalArgumentException("Bad numeric value for header '"+headerName+"': "+desc);
+        }
     }
     
     /*
@@ -252,8 +252,7 @@ public abstract class BaseJdkHttpAccessor<
     /**********************************************************************
      */
 
-    protected static Throwable _unwrap(Throwable t)
-    {
+    protected static Throwable _unwrap(Throwable t) {
         while (t.getCause() != null) {
             t = t.getCause();
         }
@@ -267,5 +266,4 @@ public abstract class BaseJdkHttpAccessor<
     protected String toBase64(byte[] data) {
         return _mapper.convertValue(data, String.class);
     }
-    
 }
