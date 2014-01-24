@@ -36,8 +36,8 @@ import com.fasterxml.clustermate.service.msg.*;
 import com.fasterxml.storemate.store.util.SimpleLogThrottler;
 
 /**
- * Class that handles coordination between front-end service layer (servlet,
- * jax-rs) and back-end storage layer.
+ * Class that handles coordination between front-end service layer (Servlet,
+ * JAX-RS) and back-end storage layer.
  */
 public abstract class StoreHandler<
     K extends EntryKey,
@@ -437,7 +437,8 @@ public abstract class StoreHandler<
         // Would we return content as-is? (not compressed, or compressed using something
         // client accepts)
         String acceptableComp = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
-        if (comp == Compression.NONE || comp.isAcceptable(acceptableComp)) {
+        if ((comp == Compression.NONE) ||
+                (acceptableComp != null && !acceptableComp.isEmpty() && comp.isAcceptable(acceptableComp))) {
             size = entry.getStorageLength();
         } else {
             size = entry.getActualUncompressedLength();
@@ -501,8 +502,8 @@ public abstract class StoreHandler<
         StorableCreationResult result;
 
         try {
-            /* This gets quite convoluted but that's how it goes: if undelete is
-             * allowed, we must use different method:
+            /* This gets quite convoluted but that's how it goes: if undelete (put with
+             * exact same content) is allowed, we must use different method:
              */
             if (_serviceConfig.cfgAllowUndelete) {
                 result = _stores.getEntryStore().upsertConditionally(StoreOperationSource.REQUEST, stats,
