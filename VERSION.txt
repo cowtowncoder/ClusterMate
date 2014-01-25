@@ -1,12 +1,10 @@
 Project: ClusterMate
 
-0.9.23 (---)
+0.9.23 (24-Jan-2014)
 
 - Fixed an issue with AHC-provider, pre-compressed content (was not sending original length)
-
-0.9.22 (22-Jan-2014?)
-
 - Adding more support for client-side compression (to be enabled by implementations)
+- Dep update: StoreMate 0.9.24
 
 0.9.21 (28-Dec-2013)
 
