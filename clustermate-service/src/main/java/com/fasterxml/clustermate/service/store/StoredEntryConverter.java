@@ -2,7 +2,6 @@ package com.fasterxml.clustermate.service.store;
 
 import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.store.Storable;
-import com.fasterxml.storemate.store.lastaccess.EntryLastAccessed;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.EntryKeyConverter;
@@ -57,17 +56,6 @@ public abstract class StoredEntryConverter<K extends EntryKey,
     public abstract ByteContainer createMetadata(long creationTime,
             byte lastAccessUpdateMethod,
             int minTTLSecs, int maxTTLSecs);
-    
-    // // // Last accessed
-
-    @Deprecated // since 0.9.22
-    public abstract EntryLastAccessed createLastAccessed(E entry, long accessTime);
-
-    @Deprecated // since 0.9.22
-    public abstract EntryLastAccessed createLastAccessed(byte[] raw);
-
-    @Deprecated // since 0.9.22
-    public abstract EntryLastAccessed createLastAccessed(byte[] raw, int offset, int length);
     
     /*
     /**********************************************************************

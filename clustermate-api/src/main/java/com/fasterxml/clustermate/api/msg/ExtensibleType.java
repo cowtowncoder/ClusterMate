@@ -17,9 +17,10 @@ public abstract class ExtensibleType
      * For bit of defensive coding, allow crap to be accumulated...
      */
     protected ArrayList<String> _unknown;
+
     /**
      * To keep things robust, we will allow unknown properties to come in;
-     * but we 
+     * but store unrecognized ones into set of "unknown" values.
      */
     @JsonAnyGetter
     public void unknownProperty(String key, Object value) {
