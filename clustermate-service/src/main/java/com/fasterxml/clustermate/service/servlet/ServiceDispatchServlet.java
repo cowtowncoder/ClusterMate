@@ -13,9 +13,8 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.storemate.store.util.OperationDiagnostics;
 
 /**
- * "Uber-servlet" that is usually used to route requests to handlers
+ * "Uber-servlet" that may be used to route requests to handlers
  * (sync, node status, store), instead of handler-specific servlets.
- *
  */
 @SuppressWarnings("serial")
 public class ServiceDispatchServlet<
@@ -25,7 +24,7 @@ public class ServiceDispatchServlet<
 >
     extends ServletBase
 {
-    protected final RequestPathStrategy<P> _pathStrategy;
+    protected final RequestPathStrategy<?> _pathStrategy;
 
     protected final EnumMap<P, ServletBase> _servletsByPath;
     
@@ -40,16 +39,13 @@ public class ServiceDispatchServlet<
      * root for resolving references to entry points, as per
      * configured
      */
-    @SuppressWarnings("unchecked")
     public ServiceDispatchServlet(ClusterViewByServer clusterView, String servletPathBase,
             SharedServiceStuff stuff,
             EnumMap<P,ServletBase> servlets)
     {
         // null -> use servlet path base as-is
         super(stuff, clusterView, servletPathBase);
-
-        RequestPathStrategy<?> s = stuff.getPathStrategy();
-        _pathStrategy = (RequestPathStrategy<P>) s;
+        _pathStrategy = stuff.getPathStrategy();
         _servletsByPath = servlets;
     }
 
@@ -155,7 +151,8 @@ public class ServiceDispatchServlet<
 
     protected ServletBase _matchServlet(ServletServiceRequest request)
     {
-        P type = _pathStrategy.matchPath(request);
+        @SuppressWarnings("unchecked")
+        P type = (P) _pathStrategy.matchPath(request);
         if (type != null) {
             return _servletsByPath.get(type);
         }
