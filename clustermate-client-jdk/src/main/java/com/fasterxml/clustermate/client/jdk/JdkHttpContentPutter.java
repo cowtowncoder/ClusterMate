@@ -20,16 +20,16 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
  * Helper accessors class used for making a single PUT call to a single
  * server node.
  */
-public class JdkHttpContentPutter<K extends EntryKey,P extends Enum<P>>
-    extends BaseJdkHttpAccessor<K,P>
+public class JdkHttpContentPutter<K extends EntryKey>
+    extends BaseJdkHttpAccessor<K>
     implements ContentPutter<K>
 {
     protected final ClusterServerNode _server;
 
-    public JdkHttpContentPutter(StoreClientConfig<K,?> storeConfig, P endpoint,
+    public JdkHttpContentPutter(StoreClientConfig<K,?> storeConfig,
             ClusterServerNode server)
     {
-        super(storeConfig, endpoint);
+        super(storeConfig);
         _server = server;
         _keyConverter = storeConfig.getKeyConverter();
     }
@@ -57,7 +57,6 @@ public class JdkHttpContentPutter<K extends EntryKey,P extends Enum<P>>
     /**********************************************************************
      */
 
-    @SuppressWarnings("resource")
     public CallFailure _tryPut(CallConfig config, PutCallParameters params,
             long endOfTime,
             K contentId, PutContentProvider content,
@@ -65,7 +64,7 @@ public class JdkHttpContentPutter<K extends EntryKey,P extends Enum<P>>
         throws IOException, ExecutionException, InterruptedException
     {
         JdkHttpClientPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, _endpoint);
+        path = _pathFinder.appendStoreEntryPath(path);
         path = _keyConverter.appendToPath(path, contentId);
 
         // Is compression known?

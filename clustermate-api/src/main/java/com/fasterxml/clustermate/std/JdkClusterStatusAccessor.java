@@ -20,16 +20,14 @@ public class JdkClusterStatusAccessor extends ClusterStatusAccessor
 
     protected final String[] _basePath;
     
-    protected final RequestPathStrategy<PathType> _paths;
+    protected final RequestPathStrategy<?> _paths;
 
-    @SuppressWarnings("unchecked")
     public JdkClusterStatusAccessor(ClusterStatusAccessor.Converter converter,
-            String[] basePath,
-            RequestPathStrategy<?> paths)
+            String[] basePath, RequestPathStrategy<?> paths)
     {
         _converter = converter;
         _basePath = basePath;
-        _paths = (RequestPathStrategy<PathType>) paths;
+        _paths = paths;
     }
 
     @Override
@@ -38,7 +36,7 @@ public class JdkClusterStatusAccessor extends ClusterStatusAccessor
     {
         JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(ip)
             .addPathSegments(_basePath);
-        pathBuilder = _paths.appendPath(pathBuilder, PathType.NODE_STATUS);
+        pathBuilder = _paths.appendNodeStatusPath(pathBuilder);
         return getClusterStatus(pathBuilder.toString(), timeoutMsecs);
     }
 

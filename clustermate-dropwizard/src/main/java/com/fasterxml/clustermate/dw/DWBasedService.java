@@ -419,7 +419,7 @@ public abstract class DWBasedService<
         servlets.put(PathType.STORE_ENTRY, storeEntryServlet);
         ServletWithMetricsBase storeListServlet = constructStoreListServlet(stuff,
                 cluster, storeHandler);
-        servlets.put(PathType.STORE_LIST, storeListServlet);
+        servlets.put(PathType.STORE_ENTRIES, storeListServlet);
 
         final BackgroundMetricsAccessor metrics = constructMetricsAccessor(stuff, cluster,
                 storeHandler.getStores(),

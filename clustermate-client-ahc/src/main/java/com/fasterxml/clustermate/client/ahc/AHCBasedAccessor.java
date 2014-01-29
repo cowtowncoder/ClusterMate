@@ -17,8 +17,7 @@ import com.ning.http.client.Response;
  * Async HTTP Client library for HTTP Access.
  */
 public abstract class AHCBasedAccessor<
-    K extends EntryKey,
-    P extends Enum<P> // Path enumeration
+    K extends EntryKey
 >
     extends Loggable
 {
@@ -26,21 +25,16 @@ public abstract class AHCBasedAccessor<
 
     protected final ObjectMapper _mapper;
 
-    protected final RequestPathStrategy<P> _pathFinder;
-
-    protected final P _endpoint;
+    protected final RequestPathStrategy<?> _pathFinder;
     
     protected EntryKeyConverter<K> _keyConverter;
-    
-    @SuppressWarnings("unchecked")
-    protected AHCBasedAccessor(StoreClientConfig<K,?> storeConfig,
-            P endpoint, AsyncHttpClient hc)
+
+    protected AHCBasedAccessor(StoreClientConfig<K,?> storeConfig, AsyncHttpClient hc)
     {
         super();
         _httpClient = hc;
-        _endpoint = endpoint;
         _mapper = storeConfig.getJsonMapper();
-        _pathFinder = (RequestPathStrategy<P>) storeConfig.getPathStrategy();
+        _pathFinder = storeConfig.getPathStrategy();
         _keyConverter = storeConfig.getKeyConverter();
     }
 

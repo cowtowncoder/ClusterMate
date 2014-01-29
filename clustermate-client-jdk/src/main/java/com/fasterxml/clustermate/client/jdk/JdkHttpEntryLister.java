@@ -12,16 +12,16 @@ import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.client.util.ContentConverter;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
-public class JdkHttpEntryLister<K extends EntryKey,P extends Enum<P>>
-    extends BaseJdkHttpAccessor<K,P>
+public class JdkHttpEntryLister<K extends EntryKey>
+    extends BaseJdkHttpAccessor<K>
     implements EntryLister<K>
 {
     protected final ClusterServerNode _server;
 
-    public JdkHttpEntryLister(StoreClientConfig<K,?> storeConfig, P endpoint,
+    public JdkHttpEntryLister(StoreClientConfig<K,?> storeConfig,
             ClusterServerNode server)
     {
-        super(storeConfig, endpoint);
+        super(storeConfig);
         _server = server;
     }
 
@@ -41,7 +41,7 @@ public class JdkHttpEntryLister<K extends EntryKey,P extends Enum<P>>
             return failed(CallFailure.timeout(_server, startTime, startTime));
         }
         JdkHttpClientPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, _endpoint);
+        path = _pathFinder.appendStoreListPath(path);
         path = _keyConverter.appendToPath(path, prefix);
         path.addParameter(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES, String.valueOf(maxResults))
                 .addParameter(ClusterMateConstants.QUERY_PARAM_TYPE, type.toString())

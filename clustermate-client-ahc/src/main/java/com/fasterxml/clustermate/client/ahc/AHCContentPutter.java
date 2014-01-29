@@ -37,16 +37,16 @@ import org.apache.http.util.EntityUtils;
  * Helper accessors class used for making a single PUT call to a single
  * server node.
  */
-public class AHCContentPutter<K extends EntryKey, P extends Enum<P>>
-    extends AHCBasedAccessor<K,P>
+public class AHCContentPutter<K extends EntryKey>
+    extends AHCBasedAccessor<K>
     implements ContentPutter<K>
 {
     protected final ClusterServerNode _server;
 
-    public AHCContentPutter(StoreClientConfig<K,?> storeConfig, P endpoint,
+    public AHCContentPutter(StoreClientConfig<K,?> storeConfig,
             AsyncHttpClient asyncHC, ClusterServerNode server)
     {
-        super(storeConfig, endpoint, asyncHC);
+        super(storeConfig, asyncHC);
         _server = server;
         _keyConverter = storeConfig.getKeyConverter();
     }
@@ -85,8 +85,9 @@ public class AHCContentPutter<K extends EntryKey, P extends Enum<P>>
         throws IOException, ExecutionException, InterruptedException, URISyntaxException
     {
         AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, PathType.STORE_ENTRY);
+        path = _pathFinder.appendPath(path, _endpoint);
         path = _keyConverter.appendToPath(path, contentId);       
+
         if (params != null) {
         	path = params.appendToPath(path, contentId);
         }
@@ -141,7 +142,7 @@ public class AHCContentPutter<K extends EntryKey, P extends Enum<P>>
         throws IOException, ExecutionException, InterruptedException
     {
         AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, _endpoint);
+        path = _pathFinder.appendStoreEntryPath(path);
         path = _keyConverter.appendToPath(path, contentId);       
         if (params != null) {
             path = params.appendToPath(path, contentId);

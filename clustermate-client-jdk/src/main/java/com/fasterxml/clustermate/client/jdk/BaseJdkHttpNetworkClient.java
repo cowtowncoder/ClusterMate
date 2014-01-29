@@ -8,7 +8,6 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
 public abstract class BaseJdkHttpNetworkClient<
     K extends EntryKey,
-    P extends Enum<P>,
     CONFIG extends StoreClientConfig<K,CONFIG>
 >
     extends NetworkClient<K>
@@ -16,27 +15,14 @@ public abstract class BaseJdkHttpNetworkClient<
     protected final ObjectMapper _mapper;
 
     protected final CONFIG _config;
-
-    /**
-     * End point that basic CRUD accessors use.
-     */
-    protected final P _singleEntryEndpoint;
-
-    /**
-     * End point that entry lister will use
-     */
-    protected final P _entryListEndpoint;
     
     /**
      * The usual constructor to call; configures AHC using standard
      * settings.
      */
-    protected BaseJdkHttpNetworkClient(CONFIG config,
-            P singleEntryEndpoint, P entryListEndpoint)
+    protected BaseJdkHttpNetworkClient(CONFIG config)
     {
         _config = config;
-        _singleEntryEndpoint = singleEntryEndpoint;
-        _entryListEndpoint = entryListEndpoint;
         _mapper = config.getJsonMapper();
     }
 
@@ -58,8 +44,7 @@ public abstract class BaseJdkHttpNetworkClient<
     
     @Override
     public EntryAccessors<K> getEntryAccessors() {
-        return new JdkHttpEntryAccessors<K,P>(_config,
-                _singleEntryEndpoint, _entryListEndpoint);
+        return new JdkHttpEntryAccessors<K>(_config);
     }
 
     @Override

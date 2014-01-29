@@ -16,7 +16,6 @@ import com.fasterxml.clustermate.client.StoreClientConfig;
 
 public abstract class BaseAHCBasedNetworkClient<
     K extends EntryKey,
-    P extends Enum<P>,
     CONFIG extends StoreClientConfig<K,CONFIG>
 >
     extends NetworkClient<K>
@@ -26,37 +25,23 @@ public abstract class BaseAHCBasedNetworkClient<
     protected final ObjectMapper _mapper;
 
     protected final CONFIG _config;
-
-    /**
-     * End point that basic CRUD accessors use.
-     */
-    protected final P _singleEntryEndpoint;
-
-    /**
-     * End point that entry lister will use
-     */
-    protected final P _entryListEndpoint;
     
     /**
      * The usual constructor to call; configures AHC using standard
      * settings.
      */
-    protected BaseAHCBasedNetworkClient(CONFIG config,
-            P singleEntryEndpoint, P entryListEndpoint)
+    protected BaseAHCBasedNetworkClient(CONFIG config)
     {
-        this(config, singleEntryEndpoint, entryListEndpoint, (AsyncHttpClientConfig) null);
+        this(config, (AsyncHttpClientConfig) null);
     }
 
     protected BaseAHCBasedNetworkClient(CONFIG config,
-            P singleEntryEndpoint, P entryListEndpoint,
             AsyncHttpClientConfig ahcConfig)
     {
         if (ahcConfig == null) {
             ahcConfig = buildAHCConfig(config);
         }
         _config = config;
-        _singleEntryEndpoint = singleEntryEndpoint;
-        _entryListEndpoint = entryListEndpoint;
         _mapper = config.getJsonMapper();
 
         AsyncHttpProvider prov;
@@ -81,12 +66,9 @@ public abstract class BaseAHCBasedNetworkClient<
      * Alternate constructor to use to use custom configurations of AHC.
      */
     protected BaseAHCBasedNetworkClient(CONFIG config,
-            P singleEntryEndpoint, P entryListEndpoint,
             AsyncHttpClient ahc)
     {
         _config = config;
-        _singleEntryEndpoint = singleEntryEndpoint;
-        _entryListEndpoint = entryListEndpoint;
         _mapper = config.getJsonMapper();
         _ahc = ahc;
     }
@@ -169,8 +151,7 @@ public abstract class BaseAHCBasedNetworkClient<
     
     @Override
     public EntryAccessors<K> getEntryAccessors() {
-        return new AHCEntryAccessors<K,P>(_config, 
-                _singleEntryEndpoint, _entryListEndpoint, _ahc);
+        return new AHCEntryAccessors<K>(_config, _ahc);
     }
 
     @Override

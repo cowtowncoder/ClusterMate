@@ -13,16 +13,16 @@ import com.fasterxml.storemate.shared.ByteRange;
 import com.ning.http.client.*;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
-public class AHCContentGetter<K extends EntryKey, P extends Enum<P>>
-    extends AHCBasedAccessor<K,P>
+public class AHCContentGetter<K extends EntryKey>
+    extends AHCBasedAccessor<K>
     implements ContentGetter<K>
 {
     protected final ClusterServerNode _server;
 
-    public AHCContentGetter(StoreClientConfig<K,?> storeConfig, P endpoint,
+    public AHCContentGetter(StoreClientConfig<K,?> storeConfig,
             AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(storeConfig, endpoint, hc);
+        super(storeConfig, hc);
         _server = server;
     }
 
@@ -43,7 +43,7 @@ public class AHCContentGetter<K extends EntryKey, P extends Enum<P>>
             return new AHCGetCallResult<T>(CallFailure.timeout(_server, startTime, startTime));
         }
         AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, _endpoint);
+        path = _pathFinder.appendStoreEntryPath(path);
         path = _keyConverter.appendToPath(path, contentId);
         if (params != null) {
             path = params.appendToPath(path, contentId);

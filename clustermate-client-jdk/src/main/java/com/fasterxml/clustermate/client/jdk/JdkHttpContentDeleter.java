@@ -13,16 +13,16 @@ import com.fasterxml.clustermate.client.call.ContentDeleter;
 import com.fasterxml.clustermate.client.call.DeleteCallParameters;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
-public class JdkHttpContentDeleter<K extends EntryKey,P extends Enum<P>>
-    extends BaseJdkHttpAccessor<K,P>
+public class JdkHttpContentDeleter<K extends EntryKey>
+    extends BaseJdkHttpAccessor<K>
     implements ContentDeleter<K>
 {
     protected final ClusterServerNode _server;
 
-    public JdkHttpContentDeleter(StoreClientConfig<K,?> storeConfig, P endpoint,
+    public JdkHttpContentDeleter(StoreClientConfig<K,?> storeConfig,
             ClusterServerNode server)
     {
-        super(storeConfig, endpoint);
+        super(storeConfig);
         _server = server;
     }
 
@@ -38,7 +38,7 @@ public class JdkHttpContentDeleter<K extends EntryKey,P extends Enum<P>>
         }
         try {
             JdkHttpClientPathBuilder path = _server.rootPath();
-            path = _pathFinder.appendPath(path, _endpoint);
+            path = _pathFinder.appendStoreEntryPath(path);
             path = _keyConverter.appendToPath(path, contentId);
             if (params != null) {
                 path = params.appendToPath(path, contentId);

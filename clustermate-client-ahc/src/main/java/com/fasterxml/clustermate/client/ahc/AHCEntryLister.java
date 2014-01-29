@@ -17,17 +17,17 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
-public class AHCEntryLister<K extends EntryKey, P extends Enum<P>>
-    extends AHCBasedAccessor<K,P>
+public class AHCEntryLister<K extends EntryKey>
+    extends AHCBasedAccessor<K>
     implements EntryLister<K>
 {
     protected final ClusterServerNode _server;
 
-    public AHCEntryLister(StoreClientConfig<K,?> storeConfig, P endpoint,
+    public AHCEntryLister(StoreClientConfig<K,?> storeConfig,
             AsyncHttpClient hc,
             ClusterServerNode server)
     {
-        super(storeConfig, endpoint, hc);
+        super(storeConfig, hc);
         _server = server;
     }
 
@@ -47,7 +47,7 @@ public class AHCEntryLister<K extends EntryKey, P extends Enum<P>>
             return failed(CallFailure.timeout(_server, startTime, startTime));
         }
         AHCPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendPath(path, _endpoint);
+        path = _pathFinder.appendStoreListPath(path);
         path = _keyConverter.appendToPath(path, prefix);
         BoundRequestBuilder reqBuilder = path
                 .listRequest(_httpClient)

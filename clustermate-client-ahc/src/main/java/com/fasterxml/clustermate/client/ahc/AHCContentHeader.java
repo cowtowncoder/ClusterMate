@@ -16,16 +16,16 @@ import com.fasterxml.storemate.shared.util.IOUtil;
 /**
  * Helper object for making HEAD requests.
  */
-public class AHCContentHeader<K extends EntryKey, P extends Enum<P>>
-    extends AHCBasedAccessor<K,P>
+public class AHCContentHeader<K extends EntryKey>
+    extends AHCBasedAccessor<K>
     implements ContentHeader<K>
 {
     protected final ClusterServerNode _server;
     
-    public AHCContentHeader(StoreClientConfig<K,?> storeConfig, P endpoint,
+    public AHCContentHeader(StoreClientConfig<K,?> storeConfig,
             AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(storeConfig, endpoint, hc);
+        super(storeConfig, hc);
         _server = server;
     }
 
@@ -48,14 +48,14 @@ public class AHCContentHeader<K extends EntryKey, P extends Enum<P>>
 
         try {
             AHCPathBuilder path = _server.rootPath();
-            path = _pathFinder.appendPath(path, _endpoint);
+            path = _pathFinder.appendStoreEntryPath(path);
             path = _keyConverter.appendToPath(path, contentId);
             if (params != null) {
                 path = params.appendToPath(path, contentId);
             }
             BoundRequestBuilder reqBuilder = path.headRequest(_httpClient);
 
-            HeadHandler<K,P> hh = new HeadHandler<K,P>(this, _server, startTime);
+            HeadHandler<K> hh = new HeadHandler<K>(this, _server, startTime);
             ListenableFuture<Object> futurama = _httpClient.executeRequest(reqBuilder.build(), hh);
             // First, see if we can get the answer without time out...
             try {
@@ -94,10 +94,10 @@ public class AHCContentHeader<K extends EntryKey, P extends Enum<P>>
         }
     }
 
-    private final static class HeadHandler<K extends EntryKey, P extends Enum<P>>
+    private final static class HeadHandler<K extends EntryKey>
         implements AsyncHandler<Object>
     {
-        private final AHCContentHeader<K,P> _parent;
+        private final AHCContentHeader<K> _parent;
         private final ClusterServerNode _server;
         private final long _startTime;
     	
@@ -105,7 +105,7 @@ public class AHCContentHeader<K extends EntryKey, P extends Enum<P>>
         public int statusCode = -1;
         public String contentLength = null;
 
-        public HeadHandler(AHCContentHeader<K,P> parent, ClusterServerNode server, long startTime)
+        public HeadHandler(AHCContentHeader<K> parent, ClusterServerNode server, long startTime)
         {
             _parent = parent;
             _server = server;

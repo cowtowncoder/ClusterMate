@@ -15,8 +15,7 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
  * Async HTTP Client library for HTTP Access.
  */
 public abstract class BaseJdkHttpAccessor<
-    K extends EntryKey,
-    P extends Enum<P> // Path enumeration
+    K extends EntryKey
 > extends Loggable
 {
     /**
@@ -33,20 +32,15 @@ public abstract class BaseJdkHttpAccessor<
 
     protected final ObjectMapper _mapper;
 
-    protected final RequestPathStrategy<P> _pathFinder;
+    protected final RequestPathStrategy<?> _pathFinder;
 
-    protected final P _endpoint;
-    
     protected EntryKeyConverter<K> _keyConverter;
-    
-    @SuppressWarnings("unchecked")
-    protected BaseJdkHttpAccessor(StoreClientConfig<K,?> storeConfig,
-            P endpoint)
+
+    protected BaseJdkHttpAccessor(StoreClientConfig<K,?> storeConfig)
     {
         super();
         _mapper = storeConfig.getJsonMapper();
-        _endpoint = endpoint;
-        _pathFinder = (RequestPathStrategy<P>) storeConfig.getPathStrategy();
+        _pathFinder = storeConfig.getPathStrategy();
         _keyConverter = storeConfig.getKeyConverter();
     }
 

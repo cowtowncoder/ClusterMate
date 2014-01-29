@@ -11,13 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.clustermate.api.ClusterMateConstants;
-import com.fasterxml.clustermate.api.ContentType;
-import com.fasterxml.clustermate.api.KeyRange;
-import com.fasterxml.clustermate.api.NodeState;
-import com.fasterxml.clustermate.api.PathType;
-import com.fasterxml.clustermate.api.RequestPathBuilder;
-import com.fasterxml.clustermate.api.RequestPathStrategy;
+import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
@@ -35,6 +29,8 @@ public class SyncListAccessor
         = ContentType.SMILE.toString() + ", " + ContentType.JSON.toString();
 
     protected final SharedServiceStuff _stuff;
+
+    protected final RequestPathStrategy<?> _pathStrategy;
     
 //    protected final AsyncHttpClient _asyncHttpClient;
 //    protected final HttpClient _blockingHttpClient;
@@ -50,6 +46,7 @@ public class SyncListAccessor
     public SyncListAccessor(SharedServiceStuff stuff)
     {
         _stuff = stuff;
+        _pathStrategy = _stuff.getPathStrategy();
         _syncListReader = stuff.smileReader(SyncListResponse.class);
         _syncEntryReader = stuff.smileReader(SyncPullEntry.class);
         _syncPullRequestWriter = stuff.jsonWriter(SyncPullRequest.class);
@@ -70,54 +67,10 @@ public class SyncListAccessor
     public void stop()
     {
         _closed.set(true);
-//        _asyncHttpClient.close();
-//        _blockingHttpClient.getConnectionManager().shutdown();
     }
      
-        // quick note: errors are in JSON, data as Smile.
+    // quick note: errors are in JSON, data as Smile.
         
-        // Old code that uses AHC
-        /*
-    public SyncListResponse fetchSyncList(IpAndPort endpoint,
-            long syncedUpTo, KeyRange syncRange,
-            TimeSpan timeout)
-        throws InterruptedException
-    {
-        String url = endpoint.getEndpoint() + Constants.PATH_SYNC_LIST + "/" + syncedUpTo;
-        
-        Request req = _asyncHttpClient.prepareGet(url)
-                .addQueryParameter(Constants.HTTP_QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()))
-                .addQueryParameter(Constants.HTTP_QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()))
-                .addHeader(HttpHeaders.ACCEPT, ACCEPTED_CONTENT_TYPES)
-                .build();
-        // small responses; let's simply buffer, simpler error handling:
-        try {
-            Future<Response> future = _asyncHttpClient.executeRequest(req);
-            Response resp = future.get(timeout.getMillis(), TimeUnit.MILLISECONDS);
-            // check status code first:
-            int statusCode = resp.getStatusCode();
-            byte[] stuff = resp.getResponseBodyAsBytes();
-            if (HttpUtil.isSuccess(statusCode)) {
-                try {
-                    return _syncListReader.readValue(stuff);
-                } catch (IOException e) {
-                    throw new IOException("Invalid sync list returned by '"+url+"', failed to parse Smile: "+e.getMessage());
-                }
-            }
-            String msg = HttpUtil.getExcerpt(stuff);
-            LOG.warn("Failed to send syncList request to '{}': status code {}, response excerpt: {}",
-                    new Object[] { url, statusCode, msg});
-        } catch (InterruptedException e) {
-            throw e;
-        } catch (TimeoutException e) {
-            LOG.warn("syncList request to {} failed with timeout (of {})", url, timeout);
-        } catch (Exception e) {
-            LOG.warn("syncList request to {} failed with Exception ({}): {}",
-                    new Object[] { url, e.getClass().getName(), e.getMessage()});
-        }
-        return null;
-        */
-
     // And then the Real Thing, with basic JDK stuff:
     
     /*
@@ -171,39 +124,6 @@ public class SyncListAccessor
 
     }
 
-    // Old version with Apache HC:
-    /*
-    public InputStream readSyncPullResponse(SyncPullRequest request,
-            IpAndPort endpoint, AtomicInteger statusCodeWrapper,
-            int expectedPayloadSize)
-        throws IOException
-    {
-        String url = endpoint.getEndpoint() + Constants.PATH_SYNC_PULL;
-        byte[] reqPayload = _syncPullRequestWriter.writeValueAsBytes(request);
-        
-        HttpPost post = new HttpPost(url);
-        
-//        post.setEntity(new ByteArrayEntity(reqPayload, ContentType.APPLICATION_JSON));
-        post.setEntity(new ByteArrayEntity(reqPayload));
-        HttpResponse response = _blockingHttpClient.execute(post);
-        int statusCode = response.getStatusLine().getStatusCode();
-        statusCodeWrapper.set(statusCode);
-        HttpEntity entity = response.getEntity();
-        
-        InputStream in = entity.getContent();
-        
-        if (!HttpUtil.isSuccess(statusCode)) {
-            // try fetching error message?
-            String msg = IOUtil.readExcerpt(in, 500);
-            in.close();
-            LOG.warn("Sync pull failure when requesting {} entries (of about {} mB total payload). Error code {}, response: {}",
-                    new Object[] { request.size(), expectedPayloadSize, statusCode, msg});
-            return null;
-        }
-        return in;
-    }
-    */
-    
     public InputStream readSyncPullResponse(SyncPullRequest request, TimeSpan timeout,
             IpAndPort endpoint, AtomicInteger statusCodeWrapper,
             int expectedPayloadSize)
@@ -364,7 +284,7 @@ public class SyncListAccessor
         final ServiceConfig config = _stuff.getServiceConfig();
         JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote.getAddress())
             .addPathSegments(config.servicePathRoot);
-        pathBuilder = _path(pathBuilder, PathType.SYNC_LIST);
+        pathBuilder = _pathStrategy.appendSyncListPath(pathBuilder);
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_SINCE,
                 String.valueOf(syncedUpTo));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
@@ -382,7 +302,8 @@ public class SyncListAccessor
         final KeyRange syncRange = cluster.getLocalState().totalRange();
         JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote)
             .addPathSegments(_stuff.getServiceConfig().servicePathRoot);
-        pathBuilder = _path(pathBuilder, PathType.NODE_STATUS);
+ 
+        pathBuilder = _pathStrategy.appendNodeStatusPath(pathBuilder);
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
         pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_TIMESTAMP,
@@ -398,14 +319,7 @@ public class SyncListAccessor
         final ServiceConfig config = _stuff.getServiceConfig();
         JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(endpoint)
             .addPathSegments(config.servicePathRoot);
-        pathBuilder = _path(pathBuilder, PathType.SYNC_PULL);
+        pathBuilder = _pathStrategy.appendSyncPullPath(pathBuilder);
         return pathBuilder.toString();
-    }
-
-    protected <B extends RequestPathBuilder<B>> B _path(B builder, PathType path)
-    {
-        @SuppressWarnings("unchecked")
-        RequestPathStrategy<PathType> st = (RequestPathStrategy<PathType>) _stuff.getPathStrategy();
-        return st.appendPath(builder, path);
     }
 }

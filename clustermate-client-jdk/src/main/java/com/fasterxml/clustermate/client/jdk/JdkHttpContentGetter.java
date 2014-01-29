@@ -15,16 +15,16 @@ import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.client.call.GetContentProcessor.Handler;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
-public class JdkHttpContentGetter<K extends EntryKey,P extends Enum<P>>
-    extends BaseJdkHttpAccessor<K,P>
+public class JdkHttpContentGetter<K extends EntryKey>
+    extends BaseJdkHttpAccessor<K>
     implements ContentGetter<K>
 {
     protected final ClusterServerNode _server;
 
-    public JdkHttpContentGetter(StoreClientConfig<K,?> storeConfig, P endpoint,
+    public JdkHttpContentGetter(StoreClientConfig<K,?> storeConfig,
             ClusterServerNode server)
     {
-        super(storeConfig, endpoint);
+        super(storeConfig);
         _server = server;
     }
 
@@ -46,7 +46,7 @@ public class JdkHttpContentGetter<K extends EntryKey,P extends Enum<P>>
         }
         try {
             JdkHttpClientPathBuilder path = _server.rootPath();
-            path = _pathFinder.appendPath(path, _endpoint);
+            path = _pathFinder.appendStoreEntryPath(path);
             path = _keyConverter.appendToPath(path, contentId);
             if (params != null) {
                 path = params.appendToPath(path, contentId);

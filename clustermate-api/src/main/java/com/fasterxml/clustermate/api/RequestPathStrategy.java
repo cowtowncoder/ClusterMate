@@ -10,7 +10,7 @@ public abstract class RequestPathStrategy<P extends Enum <P>>
 {
     /*
     /**********************************************************************
-    /* Methods for building requests paths (by client or server-as-client)
+    /* Methods for building general requests paths (by client or server-as-client)
     /**********************************************************************å
      */
 
@@ -24,6 +24,48 @@ public abstract class RequestPathStrategy<P extends Enum <P>>
      */
     public abstract <B extends RequestPathBuilder<B>> B appendPath(B basePath, P type);
 
+    /*
+    /**********************************************************************
+    /* Methods for building basic content access paths
+    /**********************************************************************å
+     */
+
+    /**
+     * @since 0.9.24
+     */
+    public abstract <B extends RequestPathBuilder<B>> B appendStoreEntryPath(B basePath);
+
+    /**
+     * @since 0.9.24
+     */
+    public abstract <B extends RequestPathBuilder<B>> B appendStoreListPath(B basePath);
+    
+    /*
+    /**********************************************************************
+    /* Methods for building server-side access paths
+    /**********************************************************************å
+     */
+
+    /**
+     * @since 0.9.24
+     */
+    public abstract <B extends RequestPathBuilder<B>> B appendSyncListPath(B basePath);
+
+    /**
+     * @since 0.9.24
+     */
+    public abstract <B extends RequestPathBuilder<B>> B appendSyncPullPath(B basePath);
+
+    /**
+     * @since 0.9.24
+     */
+    public abstract <B extends RequestPathBuilder<B>> B appendNodeMetricsPath(B basePath);
+
+    /**
+     * @since 0.9.24
+     */
+    public abstract <B extends RequestPathBuilder<B>> B appendNodeStatusPath(B basePath);
+    
     /*
     /**********************************************************************
     /* Methods for decoded requests paths (by server)

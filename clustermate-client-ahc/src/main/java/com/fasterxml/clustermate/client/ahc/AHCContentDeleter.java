@@ -16,16 +16,16 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 
-public class AHCContentDeleter<K extends EntryKey, P extends Enum<P>>
-    extends AHCBasedAccessor<K,P>
+public class AHCContentDeleter<K extends EntryKey>
+    extends AHCBasedAccessor<K>
     implements ContentDeleter<K>
 {
     protected final ClusterServerNode _server;
 
     public AHCContentDeleter(StoreClientConfig<K,?> storeConfig,
-            P endpoint, AsyncHttpClient hc, ClusterServerNode server)
+            AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(storeConfig, endpoint, hc);
+        super(storeConfig, hc);
         _server = server;
     }
 
@@ -39,13 +39,13 @@ public class AHCContentDeleter<K extends EntryKey, P extends Enum<P>>
         if (timeout < config.getMinimumTimeoutMsecs()) {
             return CallFailure.timeout(_server, startTime, startTime);
         }
-        AHCPathBuilder pathBuilder = _server.rootPath();
-        pathBuilder = _pathFinder.appendPath(pathBuilder, _endpoint);
-        pathBuilder = _keyConverter.appendToPath(pathBuilder, contentId);    	
+        AHCPathBuilder path = _server.rootPath();
+        path = _pathFinder.appendStoreEntryPath(path);
+        path = _keyConverter.appendToPath(path, contentId);    	
         if (params != null) {
-            pathBuilder = params.appendToPath(pathBuilder, contentId);
+            path = params.appendToPath(path, contentId);
         }
-        BoundRequestBuilder reqBuilder = pathBuilder.deleteRequest(_httpClient);
+        BoundRequestBuilder reqBuilder = path.deleteRequest(_httpClient);
 
         try {
             Future<Response> futurama = _httpClient.executeRequest(reqBuilder.build());

@@ -15,16 +15,16 @@ import com.fasterxml.storemate.shared.util.IOUtil;
 /**
  * Helper object for making HEAD requests.
  */
-public class JdkHttpContentHeader<K extends EntryKey,P extends Enum<P>>
-    extends BaseJdkHttpAccessor<K,P>
+public class JdkHttpContentHeader<K extends EntryKey>
+    extends BaseJdkHttpAccessor<K>
     implements ContentHeader<K>
 {
     protected final ClusterServerNode _server;
     
-    public JdkHttpContentHeader(StoreClientConfig<K,?> storeConfig, P endpoint,
+    public JdkHttpContentHeader(StoreClientConfig<K,?> storeConfig,
             ClusterServerNode server)
     {
-        super(storeConfig, endpoint);
+        super(storeConfig);
         _server = server;
     }
 
@@ -46,7 +46,7 @@ public class JdkHttpContentHeader<K extends EntryKey,P extends Enum<P>>
         }
         try {
             JdkHttpClientPathBuilder path = _server.rootPath();
-            path = _pathFinder.appendPath(path, _endpoint);
+            path = _pathFinder.appendStoreEntryPath(path);
             path = _keyConverter.appendToPath(path, contentId);
             if (params != null) {
                 path = params.appendToPath(path, contentId);
