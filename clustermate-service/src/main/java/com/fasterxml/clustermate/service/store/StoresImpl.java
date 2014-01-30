@@ -107,18 +107,18 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
             StoredEntryConverter<K,E,?> entryConverter,
             StorableStore entryStore,
             NodeStateStore<IpAndPort, ActiveNodeState> nodeStates,
-            File bdbEnvRoot)
+            File dbEnvRoot)
     {
         _timeMaster = timeMaster;
         _jsonMapper = jsonMapper;
         _entryConverter = entryConverter;
         _entryStore = entryStore;
         _nodeStore = nodeStates;
-        if (bdbEnvRoot == null) {
-            bdbEnvRoot = config.metadataDirectory;
+        if (dbEnvRoot == null) {
+            dbEnvRoot = config.metadataDirectory;
         }
         _lastAccessConfig = config.lastAccess;
-        _dbRootForLastAccess = new File(bdbEnvRoot, "lastAccess");        
+        _dbRootForLastAccess = new File(dbEnvRoot, "lastAccess");        
     }
 
     @Override
