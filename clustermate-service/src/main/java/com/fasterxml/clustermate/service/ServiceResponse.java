@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.service;
 
-import javax.servlet.http.HttpServletResponse;
+import java.net.HttpURLConnection;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.service.ServiceResponse;
@@ -134,23 +134,23 @@ public abstract class ServiceResponse
     }
 
     public final ServiceResponse noContent() {
-        return setStatus(HttpServletResponse.SC_NO_CONTENT);
+        return setStatus(HttpURLConnection.HTTP_NO_CONTENT);
     }
 
     public final ServiceResponse serverOverload() { // 503
-        return setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        return setStatus(HttpURLConnection.HTTP_UNAVAILABLE);
     }
 
     public final ServiceResponse internalServerError() { // 500
-        return setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        return setStatus(HttpURLConnection.HTTP_INTERNAL_ERROR);
     }
 
     public final ServiceResponse internalServerError(String msg) { // 500
-        return set(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, msg);
+        return set(HttpURLConnection.HTTP_INTERNAL_ERROR, msg);
     }
     
     public final ServiceResponse accepted(Object entity) {
-        return set(HttpServletResponse.SC_ACCEPTED, entity);
+        return set(HttpURLConnection.HTTP_ACCEPTED, entity);
     }
 
     public final ServiceResponse partialContent(Object entity, String rangeDesc) {

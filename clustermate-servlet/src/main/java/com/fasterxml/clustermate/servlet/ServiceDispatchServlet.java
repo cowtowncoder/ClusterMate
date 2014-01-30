@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.service.servlet;
+package com.fasterxml.clustermate.servlet;
 
 import java.io.IOException;
 import java.util.EnumMap;

@@ -20,6 +20,7 @@
     <module>clustermate-client-jdk</module>
     <module>clustermate-client-ahc</module>
     <module>clustermate-service</module>
+    <module>clustermate-servlet</module>
     <module>clustermate-dropwizard</module>
   </modules>
 

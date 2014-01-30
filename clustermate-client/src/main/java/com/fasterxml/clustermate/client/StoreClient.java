@@ -40,17 +40,11 @@ public abstract class StoreClient<K extends EntryKey,
     
     /*
     /**********************************************************************
-    /* Helper objects, HTTP
+    /* Helper objects
     /**********************************************************************
      */
 
     protected final NetworkClient<K> _httpClient;
-
-    /*
-    /**********************************************************************
-    /* Helper objects, other
-    /**********************************************************************
-     */
 
     protected final ClusterStatusAccessor _statusAccessor;
 

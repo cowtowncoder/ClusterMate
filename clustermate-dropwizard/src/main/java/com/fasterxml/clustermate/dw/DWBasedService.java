@@ -11,7 +11,6 @@ import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.lifecycle.Managed;
-
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
@@ -22,7 +21,6 @@ import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.impl.StorableStoreImpl;
 import com.fasterxml.storemate.store.state.NodeStateStore;
 import com.fasterxml.storemate.store.util.PartitionedWriteMutex;
-
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
@@ -36,11 +34,11 @@ import com.fasterxml.clustermate.service.cleanup.CleanupTask;
 import com.fasterxml.clustermate.service.cluster.*;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.BackgroundMetricsAccessor;
-import com.fasterxml.clustermate.service.servlet.*;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.state.JacksonBasedConverter;
 import com.fasterxml.clustermate.service.store.*;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
+import com.fasterxml.clustermate.servlet.*;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

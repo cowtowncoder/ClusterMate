@@ -56,6 +56,11 @@ DropWizard container.
       <artifactId>clustermate-service</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-servlet</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <!-- Then DropWizard, CodahaleMetrics: needed by resources -->
     <dependency>

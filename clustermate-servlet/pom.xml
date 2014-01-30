@@ -1,0 +1,55 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion> 
+  <parent>
+    <groupId>com.fasterxml.clustermate</groupId>
+    <artifactId>clustermate-parent</artifactId>
+    <version>0.9.24-SNAPSHOT</version>
+  </parent>
+  <artifactId>clustermate-servlet</artifactId>
+  <name>ClusterMate-servlet</name>
+  <packaging>jar</packaging>
+  <description>Servlets that expose ClusterMate(-based) service
+  </description>
+
+  <dependencies>
+    <!-- Standard Java APIs -->
+    <dependency> <!-- Servlet API -->
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <version>2.5</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+    <!-- Dependies to StoreMate, other CM modules -->
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-shared</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.storemate</groupId>
+      <artifactId>storemate-store</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.clustermate</groupId>
+      <artifactId>clustermate-service</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Metrics -->
+    <dependency>
+        <groupId>com.codahale.metrics</groupId>
+        <artifactId>metrics-core</artifactId>
+    </dependency>
+  </dependencies>
+
+</project>

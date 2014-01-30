@@ -1,4 +1,4 @@
-package com.fasterxml.clustermate.service.servlet;
+package com.fasterxml.clustermate.servlet;
 
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
