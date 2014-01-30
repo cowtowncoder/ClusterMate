@@ -7,7 +7,6 @@ public interface WriteOperation<T extends WriteOperationResult<T>>
      */
     public T getCurrentState();
     
-    
     /**
      * Method called to try to complete operation such that it fulfills minimal
      * succeeded nodes criteria. Will return either when enough calls have

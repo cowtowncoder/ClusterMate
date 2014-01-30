@@ -45,10 +45,18 @@ public class PutOperationImpl<K extends EntryKey,
      * Result object we will be using to pass information.
      */
     protected final PutOperationResult _result;
+
+    /*
+    /**********************************************************************
+    /* State
+    /**********************************************************************
+     */
+
+    protected boolean _released;
     
     /*
     /**********************************************************************
-    /* Construction
+    /* Life-cycle
     /**********************************************************************
      */
     
@@ -67,6 +75,15 @@ public class PutOperationImpl<K extends EntryKey,
         _lastValidTime = _endOfTime - _callConfig.getMinimumTimeoutMsecs();
     }
 
+    @Override
+    public void release()
+    {
+        if (!_released) {
+            _content.release();
+            _released = true;
+        }
+    }
+    
     /*
     /**********************************************************************
     /* Public API implementation
@@ -111,6 +128,10 @@ public class PutOperationImpl<K extends EntryKey,
     protected PutOperationResult perform(PutOperationResult result, int oksNeeded)
         throws InterruptedException
     {
+        if (_released) {
+            throw new IllegalStateException("Can not call 'complete' methods after content has been released");
+        }
+
         // One sanity check: if not enough server nodes to talk to, can't succeed...
         int nodeCount = _serverNodes.size();
         // should this actually result in an exception?
