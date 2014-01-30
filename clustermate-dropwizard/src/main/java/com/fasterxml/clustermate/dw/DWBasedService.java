@@ -337,7 +337,6 @@ public abstract class DWBasedService<
         return new ClusterInfoHandler(stuff, cluster);
     }
 
-    // since 0.9.6
     protected CleanerUpper<K,E> constructCleanerUpper(SharedServiceStuff stuff,
             Stores<K,E> stores, ClusterViewByServer cluster)
     {
@@ -345,7 +344,6 @@ public abstract class DWBasedService<
                 constructCleanupTasks());
     }
 
-    // since 0.9.6
     protected abstract List<CleanupTask<?>> constructCleanupTasks();
 
     protected BackgroundMetricsAccessor constructMetricsAccessor(SharedServiceStuff stuff,
