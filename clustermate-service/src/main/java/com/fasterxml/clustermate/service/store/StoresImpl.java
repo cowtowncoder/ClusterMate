@@ -8,9 +8,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.TimeMaster;
@@ -54,7 +54,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      * Directory for environment used for storing last-accessed
      * information.
      */
-    private final File _bdbRootForLastAccess;
+    private final File _dbRootForLastAccess;
 
     /*
     /**********************************************************************
@@ -118,7 +118,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
             bdbEnvRoot = config.metadataDirectory;
         }
         _lastAccessConfig = config.lastAccess;
-        _bdbRootForLastAccess = new File(bdbEnvRoot, "lastAccess");        
+        _dbRootForLastAccess = new File(bdbEnvRoot, "lastAccess");        
     }
 
     @Override
@@ -214,7 +214,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     public boolean initAndOpen(boolean logInfo)
     {
         // first things first: must have directories for Environment
-        if (!_verifyOrCreateDirectory(_bdbRootForLastAccess, logInfo)) {
+        if (!_verifyOrCreateDirectory(_dbRootForLastAccess, logInfo)) {
             return false;
         }
         _openBDBs(true, true, true);
@@ -253,11 +253,11 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (log) {
             LOG.info(logPrefix+" Last-access store...");
         }
-        _lastAccessEnv = new Environment(_bdbRootForLastAccess,
+        _lastAccessEnv = new Environment(_dbRootForLastAccess,
                 lastAccessEnvConfig(allowCreate, writeAccess));
         try {
             _lastAccessStore = buildAccessStore(_lastAccessEnv, _lastAccessConfig);
-        } catch (DatabaseException e) {
+        } catch (Exception e) {
             _initProblem = "Failed to open Last-access store: "+e.getMessage();
             throw new IllegalStateException(_initProblem, e);
         }
