@@ -245,7 +245,7 @@ public abstract class StoreClient<K extends EntryKey,
      * Convenience method for PUTting specified static content;
      * may be used if content need not be streamed from other sources.
      */
-    public final PutOperationResult putContent(PutCallParameters params, K key, byte[] data)
+    public final PutOperation putContent(PutCallParameters params, K key, byte[] data)
     		throws InterruptedException
     {
         return putContent(params, key, data, 0, data.length);
@@ -255,7 +255,7 @@ public abstract class StoreClient<K extends EntryKey,
      * Convenience method for PUTting specified static content;
      * may be used if content need not be streamed from other sources.
      */
-    public final PutOperationResult putContent(PutCallParameters params, K key,
+    public final PutOperation putContent(PutCallParameters params, K key,
     		byte[] data, int dataOffset, int dataLength)
             throws InterruptedException
     {
@@ -265,7 +265,7 @@ public abstract class StoreClient<K extends EntryKey,
     /**
      * Convenience method for PUTting contents of specified File.
      */
-    public final PutOperationResult putContent(PutCallParameters params, K key, File file)
+    public final PutOperation putContent(PutCallParameters params, K key, File file)
     		throws InterruptedException {
         return putContent(params, key, PutContentProviders.forFile(file, file.length()));
     }
@@ -436,13 +436,9 @@ public abstract class StoreClient<K extends EntryKey,
     /**
      * Method called to PUT specified content into appropriate server nodes.
      * 
-     * @return Result object that indicates state of the operation as whole,
-     *   including information on servers that were accessed during operation.
-     *   Caller is expected to check details from this object to determine
-     *   whether operation was successful or not.
+     * @return Operation object that is used to actually perform PUT operation
      */
-    public PutOperationResult putContent(PutCallParameters params, K key, PutContentProvider content)
-        throws InterruptedException
+    public PutOperation putContent(PutCallParameters params, K key, PutContentProvider content)
     {
         try {
             return _putContent(params, key, content);
@@ -451,137 +447,18 @@ public abstract class StoreClient<K extends EntryKey,
         }
     }
     
-    protected PutOperationResult _putContent(PutCallParameters params, K key, PutContentProvider content)
-        throws InterruptedException
+    /**
+     * Method called to PUT specified content into appropriate server nodes.
+     * 
+     * @return Operation object that is used to actually perform PUT operation
+     */
+    protected PutOperation _putContent(PutCallParameters params, K key, PutContentProvider content)
     {
         final long startTime = System.currentTimeMillis();
-        final CONFIG config = _getConfig(params);
+        final NodesForKey nodes = _clusterView.getNodesFor(key);
 
-        // First things first: find Server nodes to talk to:
-        NodesForKey nodes = _clusterView.getNodesFor(key);
-        PutOperationResult result = new PutOperationResult(config.getOperationConfig(), params);
-
-        // One sanity check: if not enough server nodes to talk to, can't succeed...
-        int nodeCount = nodes.size();
-        // should this actually result in an exception?
-        if (nodeCount < config.getOperationConfig().getMinimalOksToSucceed()) {
-            return result;
-        }
-        // Then figure out how long we have for the whole operation
-        final long endOfTime = startTime + config.getOperationConfig().getGetOperationTimeoutMsecs();
-        final long lastValidTime = endOfTime - config.getCallConfig().getMinimumTimeoutMsecs();
-
-        /* Ok: first round; try PUT into every enabled store, up to optimal number
-         * of successes we expect.
-         */
-        final boolean noRetries = !allowRetries(config);
-        List<NodeFailure> retries = null;
-        for (int i = 0; i < nodeCount; ++i) {
-            ClusterServerNode server = nodes.node(i);
-            if (server.isDisabled() && !noRetries) { // can skip disabled, iff retries allowed
-                break;
-            }
-            CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(), params, endOfTime, key, content);
-            if (fail != null) { // only add to retry-list if something retry may help with
-                if (fail.isRetriable()) {
-                    retries = _add(retries, new NodeFailure(server, fail));
-                } else {
-                    result.withFailed(new NodeFailure(server, fail));
-                }
-                continue;
-            }
-            result.addSucceeded(server);
-            // Very first round: go up to max if it's smooth sailing!
-            if (result.succeededMaximally()) {
-                return result.withFailed(retries);
-            }
-        }
-        if (noRetries) { // if we can't retry, don't:
-            return result.withFailed(retries);
-        }
-
-        // If we got this far, let's accept sub-optimal outcomes as well; or, if we timed out
-        final long secondRoundStart = System.currentTimeMillis();
-        if (result.succeededMinimally() || secondRoundStart >= lastValidTime) {
-            return result.withFailed(retries);
-        }
-        // Do we need any delay in between?
-        _doDelay(startTime, secondRoundStart, endOfTime);
-        
-        // Otherwise: go over retry list first, and if that's not enough, try disabled
-        if (retries == null) {
-            retries = new LinkedList<NodeFailure>();
-        } else {
-            Iterator<NodeFailure> it = retries.iterator();
-            while (it.hasNext()) {
-                NodeFailure retry = it.next();
-                ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(), params, endOfTime, key, content);
-                if (fail != null) {
-                    retry.addFailure(fail);
-                    if (!fail.isRetriable()) { // not worth retrying?
-                        result.withFailed(retry);
-                        it.remove();
-                    }
-                } else {
-                    it.remove(); // remove now from retry list
-                    result.addSucceeded(server);
-                    if (result.succeededOptimally()) {
-                        return result.withFailed(retries);
-                    }
-                }
-            }
-        }
-        // if no success, add disabled nodes in the mix; but only if we don't have minimal success:
-        for (int i = 0; i < nodeCount; ++i) {
-            if (result.succeededMinimally() || System.currentTimeMillis() >= lastValidTime) {
-                return result.withFailed(retries);
-            }
-            ClusterServerNode server = nodes.node(i);
-            if (server.isDisabled()) {
-                CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(),
-                		params, endOfTime, key, content);
-                if (fail != null) {
-                    if (fail.isRetriable()) {
-                        retries.add(new NodeFailure(server, fail));
-                    } else {
-                        result.withFailed(new NodeFailure(server, fail));
-                    }
-                } else {
-                    result.addSucceeded(server);
-                }
-            }
-        }
-
-        // But from now on, keep on retrying, up to... N times (start with 1, as we did first retry)
-        long prevStartTime = secondRoundStart;
-        for (int i = 1; (i <= StoreClientConfig.MAX_RETRIES_FOR_PUT) && !retries.isEmpty(); ++i) {
-            final long currStartTime = System.currentTimeMillis();
-            _doDelay(prevStartTime, currStartTime, endOfTime);
-            // and off we go again...
-            Iterator<NodeFailure> it = retries.iterator();
-            while (it.hasNext()) {
-                if (result.succeededMinimally() || System.currentTimeMillis() >= lastValidTime) {
-                    return result.withFailed(retries);
-                }
-                NodeFailure retry = it.next();
-                ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                CallFailure fail = server.entryPutter().tryPut(config.getCallConfig(),
-                		params, endOfTime, key, content);
-                if (fail != null) {
-                    retry.addFailure(fail);
-                    if (!fail.isRetriable()) {
-                        result.withFailed(retry);
-                        it.remove();
-                    }
-                } else {
-                    result.addSucceeded(server);
-                }
-            }
-            prevStartTime = currStartTime;
-        }
-        // we are all done, failed:
-        return result.withFailed(retries);
+        return new PutOperationImpl<K,CONFIG>(_getConfig(params), startTime,
+                nodes, key, params, content);
     }
 
     /*
@@ -637,7 +514,7 @@ public abstract class StoreClient<K extends EntryKey,
         final long lastValidTime = endOfTime - config.getCallConfig().getMinimumTimeoutMsecs();
 
         // Ok: first round; try GET from every enabled store
-        final boolean noRetries = !allowRetries(config);
+        final boolean noRetries = !_allowRetries(config);
         List<NodeFailure> retries = null;
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
@@ -788,7 +665,7 @@ public abstract class StoreClient<K extends EntryKey,
         final long lastValidTime = endOfTime - config.getCallConfig().getMinimumTimeoutMsecs();
 
         // Ok: first round; try HEAD from every enabled store (or, if only one try, all)
-        final boolean noRetries = !allowRetries(config);
+        final boolean noRetries = !_allowRetries(config);
         List<NodeFailure> retries = null;
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
@@ -968,7 +845,7 @@ public abstract class StoreClient<K extends EntryKey,
         /* Ok: first round; try DETE from every enabled store, up to optimal number
          * of successes we expect.
          */
-        final boolean noRetries = !allowRetries(config);
+        final boolean noRetries = !_allowRetries(config);
         List<NodeFailure> retries = null;
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
@@ -1100,13 +977,12 @@ public abstract class StoreClient<K extends EntryKey,
         }
         return _config;
     }
-    
-    protected boolean allowRetries(CONFIG config) {
+
+    protected boolean _allowRetries(CONFIG config) {
         return config.getOperationConfig().getAllowRetries();
     }
-    
-    protected <T> List<T> _add(List<T> list, T entry)
-    {
+
+    protected <T> List<T> _add(List<T> list, T entry) {
         if (list == null) {
             list = new LinkedList<T>();
         }
