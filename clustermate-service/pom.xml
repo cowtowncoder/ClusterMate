@@ -32,14 +32,6 @@
       <groupId>com.fasterxml.storemate</groupId>
       <artifactId>storemate-store</artifactId>
     </dependency>
-    <!-- 16-May-2013, tatu: For now we do have a dep to
-       BDB-JE backend (for node and/or last-accessed store);
-       ideally should not have one in future.
-      -->
-    <dependency>
-      <groupId>com.fasterxml.storemate</groupId>
-      <artifactId>storemate-backend-bdb-je</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.clustermate</groupId>

@@ -1,6 +1,8 @@
 package com.fasterxml.clustermate.service.metrics;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.backend.BackendStats;
@@ -33,22 +35,29 @@ public class BackendMetrics
     /**
      * Backend-dependant "raw" statistics
      */
-    @JsonIgnoreProperties({ // since these would otherwise be duplicated
-        "creationTime", "timeTakenMsecs", "onlyFastStats"
-    })
-    public BackendStats stats;
+    protected Map<String,Object> extraStats;
     
     // for (de)serializer
     protected BackendMetrics() { }
 
     public BackendMetrics(long c, BackendStats rawStats)
     {
+        this(c, rawStats, rawStats.extraStats());
+    }
+    
+    public BackendMetrics(long c, BackendStats rawStats, Map<String,Object> extraStats)
+    {
         Long l = rawStats.getCreationTime();
         lastUpdated = (l == null) ? 0L : l.longValue();
         count = c;
-        stats = rawStats;
+        this.extraStats = extraStats;
         onlyFastStats = rawStats.getOnlyFastStats();
         l = rawStats.getTimeTakenMsecs();
         timeTaken = (l == null)  ? "N/A" : TimeMaster.timeDesc(l.longValue());
+    }
+
+    @JsonAnyGetter
+    public Map<String,Object> backendDependantStats() {
+        return extraStats;
     }
 }

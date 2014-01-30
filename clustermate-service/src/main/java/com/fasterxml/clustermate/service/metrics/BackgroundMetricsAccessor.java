@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import com.fasterxml.storemate.backend.bdbje.BDBBackendStats;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.backend.BackendStats;
@@ -18,7 +17,6 @@ import com.fasterxml.storemate.store.lastaccess.LastAccessStore;
 
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
-import com.fasterxml.clustermate.service.bdb.CleanBDBStats;
 
 /**
  * Helper class that is used to access metrics from a separate thread,
@@ -99,12 +97,9 @@ public class BackgroundMetricsAccessor
         StoreBackend entries = _entryStore.getBackend();
         BackendStatsConfig conf = BACKEND_STATS_CONFIG
                 .onlyCollectFast(!fullStats);
-        metrics.stores.entries = new BackendMetrics(entries.getEntryCount(),
-                _clean(entries.getEntryStatistics(conf)));
-        metrics.stores.entryIndex = new BackendMetrics(entries.getIndexedCount(),
-                _clean(entries.getIndexStatistics(conf)));
-        metrics.stores.lastAccessStore = new BackendMetrics(_lastAccessStore.getEntryCount(),
-                _clean(_lastAccessStore.getEntryStatistics(conf)));
+        metrics.stores.entries = _clean(entries.getEntryCount(), entries.getEntryStatistics(conf));
+        metrics.stores.entryIndex = _clean(entries.getIndexedCount(), entries.getIndexStatistics(conf));
+        metrics.stores.lastAccessStore = _clean(_lastAccessStore.getEntryCount(), _lastAccessStore.getEntryStatistics(conf));
 
         AllOperationMetrics opMetrics = new AllOperationMetrics();
         metrics.operations = opMetrics;
@@ -123,12 +118,15 @@ public class BackgroundMetricsAccessor
         return now >= (metrics.created + wait);
     }
 
-    protected BackendStats _clean(BackendStats stats)
+    protected BackendMetrics _clean(long count, BackendStats stats)
     {
-        // Nasty back-dep, but has to do for now...
-        if (stats instanceof BDBBackendStats) {
-            return new CleanBDBStats((BDBBackendStats) stats);
+        /* 30-Jan-2013, tatu: not super clean, but best I can do for now to ensure
+         *    that no hard deps are either from StoreMate to Jackson, or from ClusterMate
+         *    to BDB-JE...
+         */
+        if ("bdb".equals(stats.getType())) {
+            return CleanedBDBBackendMetrics.construct(count, stats);
         }
-        return stats;
+        return new BackendMetrics(count, stats);
     }
 }
