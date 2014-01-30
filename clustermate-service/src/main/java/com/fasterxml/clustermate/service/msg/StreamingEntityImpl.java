@@ -1,11 +1,9 @@
-package com.fasterxml.clustermate.service.http;
+package com.fasterxml.clustermate.service.msg;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 import com.fasterxml.jackson.databind.ObjectWriter;
-
-import com.fasterxml.clustermate.service.msg.StreamingResponseContent;
 
 public class StreamingEntityImpl
     implements StreamingResponseContent

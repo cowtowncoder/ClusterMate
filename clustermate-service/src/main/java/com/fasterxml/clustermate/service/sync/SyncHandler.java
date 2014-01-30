@@ -19,7 +19,7 @@ import com.fasterxml.clustermate.api.msg.ClusterStatusMessage;
 import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServerUpdatable;
-import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
+import com.fasterxml.clustermate.service.msg.StreamingEntityImpl;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.store.StoredEntryConverter;
 

@@ -29,7 +29,6 @@ import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.service.*;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
-import com.fasterxml.clustermate.service.http.StreamingEntityImpl;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.msg.*;
