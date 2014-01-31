@@ -14,6 +14,13 @@ public abstract class Loggable
     protected Loggable() {
         _logger = LoggerFactory.getLogger(getClass());
     }
+
+    /**
+     * Copy constructor.
+     */
+    protected Loggable(Loggable base) {
+        _logger = base._logger;
+    }
     
     protected Loggable(Class<?> loggingFor) {
         _logger = LoggerFactory.getLogger(loggingFor);

@@ -63,7 +63,7 @@ public abstract class StoreClient<K extends EntryKey,
      */
     protected Thread _thread;
 
-    protected final AtomicBoolean _stopRequested = new AtomicBoolean(false);
+    protected final AtomicBoolean _stopRequested;
 
     /*
     /**********************************************************************
@@ -110,8 +110,30 @@ public abstract class StoreClient<K extends EntryKey,
                 ListResponse.class, listItemType);
         _listReaders.put(ListItemType.fullEntries,
                 new GenericContentConverter<ListResponse<ListItem>>(mapper, fullResponseType));
+
+        _thread = null;
+        _stopRequested = new AtomicBoolean(false);
     }
 
+    /**
+     * Copy-constructor used when creating differently configured new instances
+     */
+    protected StoreClient(StoreClient<K,CONFIG,L> base, CONFIG config)
+    {
+        super(base);
+        _config = config;
+        _keyConverter = base._keyConverter;
+        _httpClient = base._httpClient;
+        
+        _statusAccessor = base._statusAccessor;
+        _clusterView = base._clusterView;
+
+        _listReaders = base._listReaders;
+
+        _thread = base._thread;
+        _stopRequested = base._stopRequested;
+    }
+    
     /**
      * Method called by {@link StoreClientBootstrapper} once bootstrapping
      * is complete to some degree.
