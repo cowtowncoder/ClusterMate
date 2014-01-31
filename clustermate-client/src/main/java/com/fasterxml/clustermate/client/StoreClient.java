@@ -184,6 +184,14 @@ public abstract class StoreClient<K extends EntryKey,
     /**********************************************************************
      */
 
+    public CONFIG getConfig() {
+        return _config;
+    }
+
+    public OperationConfig getOperationConfig() {
+        return _config.getOperationConfig();
+    }
+    
     /**
      * Accessor for getting full cluster information
      */
