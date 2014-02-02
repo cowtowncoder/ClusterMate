@@ -52,6 +52,7 @@
     <version.jackson.annotations>2.3.0</version.jackson.annotations>
     <version.jackson.core>2.3.1</version.jackson.core>
     <version.jackson.smile>${version.jackson.core}</version.jackson.smile>
+    <version.dropwizard>0.6.2</version.dropwizard>
     <version.metrics>3.0.1</version.metrics>
 
   </properties>
@@ -146,13 +147,7 @@
       <artifactId>jackson-dataformat-smile</artifactId>
       <version>${version.jackson.smile}</version>
     </dependency>
-
     <!-- DropWizard, its deps: -->
-    <dependency>
-        <groupId>com.yammer.dropwizard</groupId>
-        <artifactId>dropwizard-core</artifactId>
-        <version>0.6.2</version>
-    </dependency>
     <dependency>
       <groupId>com.codahale.metrics</groupId>
       <artifactId>metrics-core</artifactId>

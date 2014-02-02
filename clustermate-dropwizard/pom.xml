@@ -66,6 +66,7 @@ DropWizard container.
     <dependency>
         <groupId>com.yammer.dropwizard</groupId>
         <artifactId>dropwizard-core</artifactId>
+        <version>${version.dropwizard}</version>
     </dependency>
     <dependency>
       <groupId>com.codahale.metrics</groupId>
