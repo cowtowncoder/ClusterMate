@@ -9,13 +9,6 @@ package com.fasterxml.clustermate.client.operation;
  * to take (if any).
  */
 public interface PutOperation
-    extends WriteOperation<PutOperationResult>
+    extends WriteOperation<PutOperationResult, PutOperation>
 {
-    /**
-     * Method called to complete processing for this operation. It will both
-     * finalize the result information (any partially handled call sets are
-     * declared either failed -- if any retriable failures -- or skipped otherwise),
-     * and release any pending resources, such as content providers.
-     */
-    public void finish();
 }

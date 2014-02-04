@@ -58,7 +58,11 @@ public class PutOperationImpl<K extends EntryKey,
     protected long _roundStartTime;
 
     // // // State
-    
+
+    /**
+     * Number of round(s) of calls completed: each round consists of calling
+     * a subset of available nodes.
+     */
     protected int _round;
 
     /**
@@ -105,7 +109,7 @@ public class PutOperationImpl<K extends EntryKey,
     }
 
     @Override
-    public void finish()
+    public PutOperationResult finish()
     {
         if (!_released) {
             _content.release();
@@ -119,6 +123,7 @@ public class PutOperationImpl<K extends EntryKey,
                 _result.withFailed(getFails);
             }
         }
+        return _result;
     }
 
     /*
@@ -128,27 +133,38 @@ public class PutOperationImpl<K extends EntryKey,
      */
 
     @Override
-    public PutOperationResult getCurrentState() {
+    public PutOperationResult result() {
         return _result;
+    }
+
+    @Override
+    public int completedRounds() {
+        return _round;
     }
     
     @Override
-    public PutOperationResult completeMinimally() throws InterruptedException {
+    public PutOperation completeMinimally() throws InterruptedException {
         return perform(_operationConfig.getMinimalOksToSucceed());
     }
 
     @Override
-    public PutOperationResult completeOptimally() throws InterruptedException {
+    public PutOperation completeOptimally() throws InterruptedException {
         return perform(_operationConfig.getOptimalOks());
     }
 
     @Override
-    public PutOperationResult tryCompleteMaximally() throws InterruptedException {
-        return perform(_operationConfig.getMaxOks());
+    public PutOperation tryCompleteMaximally() throws InterruptedException {
+        /* Here we only want to proceed, if we get all done in first round
+         * without issues; sort of bonus call.
+         */
+        if (_round == 0) {
+            performSingleRound(_operationConfig.getMaxOks());
+        }
+        return this;
     }
     
     @Override
-    public PutOperationResult completeMaximally() throws InterruptedException {
+    public PutOperation completeMaximally() throws InterruptedException {
         return perform(_operationConfig.getMaxOks());
     }
 
@@ -162,23 +178,23 @@ public class PutOperationImpl<K extends EntryKey,
      * @param result Result object to update, return
      * @param oksNeeded Number of success nodes we need, total
      */
-    protected PutOperationResult perform(int oksNeeded) throws InterruptedException
+    protected PutOperation perform(int oksNeeded) throws InterruptedException
     {
         if (_released) {
             throw new IllegalStateException("Can not call 'complete' methods after content has been released");
         }
         // already done?
         if (_shouldFinish(_result, oksNeeded)) {
-            return _result;
+            return this;
         }
         while (_round < _maxCallRetries) {
             if (_round == 0) {
                 if (_performPrimary(oksNeeded)) {
-                    return _result;
+                    return this;
                 }
             } else {
                 if (_performSecondary(oksNeeded)) {
-                    return _result;
+                    return this;
                 }
             }
             ++_round;
@@ -187,9 +203,29 @@ public class PutOperationImpl<K extends EntryKey,
             }
             
         }
-        return _result;
+        return this;
     }
 
+    protected PutOperation performSingleRound(int oksNeeded) throws InterruptedException
+    {
+        if (_released) {
+            throw new IllegalStateException("Can not call 'complete' methods after content has been released");
+        }
+        if (!_shouldFinish(_result, oksNeeded)) {
+            if (_round == 0) {
+                if (_performPrimary(oksNeeded)) {
+                    return this;
+                }
+            } else {
+                if (_performSecondary(oksNeeded)) {
+                    return this;
+                }
+            }
+            ++_round;
+        }
+        return this;
+    }
+    
     /**
      * @return True if processing is now complete; false if more work needed
      */
