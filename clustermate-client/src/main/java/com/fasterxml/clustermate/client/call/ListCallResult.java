@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.msg.ListResponse;
-import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.storemate.shared.StorableKey;
 
 public abstract class ListCallResult<T>

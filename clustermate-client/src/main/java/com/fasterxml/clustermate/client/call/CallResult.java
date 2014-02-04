@@ -1,6 +1,5 @@
 package com.fasterxml.clustermate.client.call;
 
-import com.fasterxml.clustermate.client.CallFailure;
 
 public abstract class CallResult
 {

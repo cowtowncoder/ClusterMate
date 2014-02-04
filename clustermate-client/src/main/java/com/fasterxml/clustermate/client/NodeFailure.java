@@ -2,6 +2,8 @@ package com.fasterxml.clustermate.client;
 
 import java.util.*;
 
+import com.fasterxml.clustermate.client.call.CallFailure;
+
 /**
  * Class that contains information about failure of an operation as it
  * relates to call(s) to a single server node.

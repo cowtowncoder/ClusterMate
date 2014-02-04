@@ -4,7 +4,7 @@ import com.ning.http.client.HttpResponseHeaders;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.msg.ListResponse;
-import com.fasterxml.clustermate.client.CallFailure;
+import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.ListCallResult;
 
 public class AHCEntryListResult<T> extends ListCallResult<T>

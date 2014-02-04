@@ -5,7 +5,6 @@ import java.util.concurrent.TimeoutException;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.*;

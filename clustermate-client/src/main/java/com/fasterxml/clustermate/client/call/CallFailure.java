@@ -1,6 +1,7 @@
-package com.fasterxml.clustermate.client;
+package com.fasterxml.clustermate.client.call;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.client.ServerNode;
 import com.fasterxml.clustermate.client.util.ExceptionUtil;
 
 /**

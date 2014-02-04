@@ -4,7 +4,7 @@ import java.net.HttpURLConnection;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.msg.ListResponse;
-import com.fasterxml.clustermate.client.CallFailure;
+import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.ListCallResult;
 
 public class JdkHttpEntryListResult<T> extends ListCallResult<T>

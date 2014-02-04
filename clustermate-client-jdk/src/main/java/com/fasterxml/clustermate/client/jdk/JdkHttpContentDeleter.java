@@ -5,10 +5,10 @@ import java.net.URL;
 
 import com.fasterxml.storemate.shared.util.IOUtil;
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.CallConfig;
+import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.ContentDeleter;
 import com.fasterxml.clustermate.client.call.DeleteCallParameters;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;

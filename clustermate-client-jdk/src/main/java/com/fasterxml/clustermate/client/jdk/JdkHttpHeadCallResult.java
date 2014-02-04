@@ -2,7 +2,7 @@ package com.fasterxml.clustermate.client.jdk;
 
 import java.net.HttpURLConnection;
 
-import com.fasterxml.clustermate.client.CallFailure;
+import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.HeadCallResult;
 
 public class JdkHttpHeadCallResult extends HeadCallResult

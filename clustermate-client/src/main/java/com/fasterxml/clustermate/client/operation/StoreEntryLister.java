@@ -6,6 +6,7 @@ import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.ListItemType;
 import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.*;
+import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.ListCallResult;
 import com.fasterxml.clustermate.client.util.ContentConverter;
 import com.fasterxml.storemate.shared.StorableKey;

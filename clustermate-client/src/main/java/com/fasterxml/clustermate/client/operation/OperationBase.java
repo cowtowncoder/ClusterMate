@@ -1,10 +1,8 @@
 package com.fasterxml.clustermate.client.operation;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.client.NodesForKey;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.CallConfig;
 
@@ -19,20 +17,14 @@ public class OperationBase<K extends EntryKey,
     protected final boolean _noRetries;
     
     protected final long _startTime;
-    protected NodesForKey _serverNodes;
-
     protected final K _key;
 
-    public OperationBase(CONFIG config, NodesForKey serverNodes,
-            long startTime, K key)
+    public OperationBase(CONFIG config, long startTime, K key)
     {
         _config = config;
         _operationConfig = config.getOperationConfig();
         _callConfig = config.getCallConfig();
         _noRetries = !config.getOperationConfig().getAllowRetries();
-
-        _serverNodes = serverNodes;
-
         _startTime = startTime;
         _key = key;
     }

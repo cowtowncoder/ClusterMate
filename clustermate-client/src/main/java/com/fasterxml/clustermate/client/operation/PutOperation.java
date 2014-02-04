@@ -12,8 +12,10 @@ public interface PutOperation
     extends WriteOperation<PutOperationResult>
 {
     /**
-     * Method that can be called to release content to upload; this means that
-     * no further actions can be performed on this instance.
+     * Method called to complete processing for this operation. It will both
+     * finalize the result information (any partially handled call sets are
+     * declared either failed -- if any retriable failures -- or skipped otherwise),
+     * and release any pending resources, such as content providers.
      */
-    public void release();
+    public void finish();
 }
