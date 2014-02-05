@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.client.call;
 
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.client.CallFailure;
 
 /**
  * Interface for a general purpose DELETE accessor, for a resource stored

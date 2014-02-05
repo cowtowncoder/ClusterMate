@@ -1,12 +1,13 @@
 package com.fasterxml.clustermate.client;
 
+import java.util.*;
 
 /**
  * Container class for an ordered set of references to server nodes
  * that should be contacted for accessing content for given
  * key, based on key hash based matching.
  */
-public class NodesForKey
+public class NodesForKey implements Iterable<ClusterServerNode>
 {
     private final static ClusterServerNode[] NO_NODES = new ClusterServerNode[0];
     
@@ -38,10 +39,31 @@ public class NodesForKey
     
     public int version() { return _version; }
 
+    public boolean isEmpty() { return _nodes.length == 0; }
     public int size() { return _nodes.length; }
-    
+
     public ClusterServerNode node(int index) {
         return _nodes[index];
+    }
+
+    @Override
+    public Iterator<ClusterServerNode> iterator() {
+        if (_nodes.length == 0) {
+            return Collections.<ClusterServerNode>emptyList().iterator();
+        }
+        return Arrays.asList(_nodes).iterator();
+    }
+    
+    public List<ClusterServerNode> asList() {
+        final int len = _nodes.length;
+        if (len == 0) {
+            return Collections.emptyList();
+        }
+        List<ClusterServerNode> list = new ArrayList<ClusterServerNode>(len);
+        for (int i = 0; i < len; ++i) {
+            list.add(_nodes[i]);
+        }
+        return list;
     }
 
     /*

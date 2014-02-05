@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.client.ahc;
 
-import com.fasterxml.clustermate.client.CallFailure;
+import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.GetCallResult;
 import com.ning.http.client.HttpResponseHeaders;
 

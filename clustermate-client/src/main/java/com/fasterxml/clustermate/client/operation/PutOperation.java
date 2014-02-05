@@ -9,11 +9,6 @@ package com.fasterxml.clustermate.client.operation;
  * to take (if any).
  */
 public interface PutOperation
-    extends WriteOperation<PutOperationResult>
+    extends WriteOperation<PutOperationResult, PutOperation>
 {
-    /**
-     * Method that can be called to release content to upload; this means that
-     * no further actions can be performed on this instance.
-     */
-    public void release();
 }

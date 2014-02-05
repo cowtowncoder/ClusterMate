@@ -2,7 +2,6 @@ package com.fasterxml.clustermate.client.call;
 
 
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.client.CallFailure;
 
 /**
  * Interface for a general purpose PUT accessor, for a resource stored

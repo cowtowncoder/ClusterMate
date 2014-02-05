@@ -10,7 +10,6 @@ import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.hash.HashConstants;
 import com.fasterxml.storemate.shared.util.IOUtil;
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.client.CallFailure;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.*;

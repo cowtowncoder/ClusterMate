@@ -9,6 +9,7 @@ import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.CallConfig;
+import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.ContentHeader;
 import com.fasterxml.clustermate.client.call.ReadCallParameters;
 import com.fasterxml.storemate.shared.util.IOUtil;

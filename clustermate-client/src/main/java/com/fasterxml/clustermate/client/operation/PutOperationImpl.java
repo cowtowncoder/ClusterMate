@@ -1,16 +1,15 @@
 package com.fasterxml.clustermate.client.operation;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.client.*;
+import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.PutCallParameters;
 import com.fasterxml.clustermate.client.call.PutContentProvider;
 
 public class PutOperationImpl<K extends EntryKey,
-        CONFIG extends StoreClientConfig<K, CONFIG>
+    CONFIG extends StoreClientConfig<K, CONFIG>
 >
     extends OperationBase<K,CONFIG>
     implements PutOperation
@@ -37,10 +36,12 @@ public class PutOperationImpl<K extends EntryKey,
     /* PUT-specific config
     /**********************************************************************
      */
-    
+
     protected final PutCallParameters _params;
     protected final PutContentProvider _content;
-    
+
+    protected final int _maxCallRetries;
+
     /**
      * Result object we will be using to pass information.
      */
@@ -53,6 +54,25 @@ public class PutOperationImpl<K extends EntryKey,
      */
 
     protected boolean _released;
+
+    protected long _roundStartTime;
+
+    // // // State
+
+    /**
+     * Number of round(s) of calls completed: each round consists of calling
+     * a subset of available nodes.
+     */
+    protected int _round;
+
+    /**
+     * We need to keep a list of active nodes with possible past and future
+     * calls; ones that we may keep trying to call, and that have not yet
+     * been added to result object as success or fail.
+     */
+    protected final List<PutCallState> _activeNodes;
+
+    protected Iterator<PutCallState> _currentNodes;
     
     /*
     /**********************************************************************
@@ -64,11 +84,24 @@ public class PutOperationImpl<K extends EntryKey,
             NodesForKey serverNodes, K key,
             PutCallParameters params, PutContentProvider content)            
     {
-        super(config, serverNodes, startTime, key);
+        super(config, startTime, key);
+
+        // may make configurable in future but for now is static (not very useful to change)
+        _maxCallRetries = StoreClientConfig.MAX_RETRIES_FOR_PUT;  
 
         _params = params;
         _content = content;
         _result = new PutOperationResult(_operationConfig, _params);
+
+        final int serverCount = serverNodes.size();
+        if (serverCount == 0) {
+            _activeNodes = Collections.emptyList();
+        } else {
+            _activeNodes = new ArrayList<PutCallState>(serverCount);
+            for (int i = 0; i < serverCount; ++i) {
+                _activeNodes.add(new PutCallState(serverNodes.node(i)));
+            }
+        }
 
         // Then figure out how long we have for the whole operation
         _endOfTime = _startTime + _operationConfig.getGetOperationTimeoutMsecs();
@@ -76,14 +109,23 @@ public class PutOperationImpl<K extends EntryKey,
     }
 
     @Override
-    public void release()
+    public PutOperationResult finish()
     {
         if (!_released) {
             _content.release();
             _released = true;
         }
+        for (PutCallState state : _activeNodes) {
+            NodeFailure getFails = state.getFails();
+            if (getFails == null) {
+                _result.withIgnored(state.server());
+            } else {
+                _result.withFailed(getFails);
+            }
+        }
+        return _result;
     }
-    
+
     /*
     /**********************************************************************
     /* Public API implementation
@@ -91,28 +133,39 @@ public class PutOperationImpl<K extends EntryKey,
      */
 
     @Override
-    public PutOperationResult getCurrentState() {
+    public PutOperationResult result() {
         return _result;
     }
-    
-    @Override
-    public PutOperationResult completeMinimally() throws InterruptedException {
-        return perform(_result, _operationConfig.getMinimalOksToSucceed());
-    }
 
     @Override
-    public PutOperationResult completeOptimally() throws InterruptedException {
-        return perform(_result, _operationConfig.getOptimalOks());
-    }
-
-    @Override
-    public PutOperationResult tryCompleteMaximally() throws InterruptedException {
-        return perform(_result, _operationConfig.getMaxOks());
+    public int completedRounds() {
+        return _round;
     }
     
     @Override
-    public PutOperationResult completeMaximally() throws InterruptedException {
-        return perform(_result, _operationConfig.getMaxOks());
+    public PutOperation completeMinimally() throws InterruptedException {
+        return perform(_operationConfig.getMinimalOksToSucceed());
+    }
+
+    @Override
+    public PutOperation completeOptimally() throws InterruptedException {
+        return perform(_operationConfig.getOptimalOks());
+    }
+
+    @Override
+    public PutOperation tryCompleteMaximally() throws InterruptedException {
+        /* Here we only want to proceed, if we get all done in first round
+         * without issues; sort of bonus call.
+         */
+        if (_round == 0) {
+            performSingleRound(_operationConfig.getMaxOks());
+        }
+        return this;
+    }
+    
+    @Override
+    public PutOperation completeMaximally() throws InterruptedException {
+        return perform(_operationConfig.getMaxOks());
     }
 
     /*
@@ -125,130 +178,124 @@ public class PutOperationImpl<K extends EntryKey,
      * @param result Result object to update, return
      * @param oksNeeded Number of success nodes we need, total
      */
-    protected PutOperationResult perform(PutOperationResult result, int oksNeeded)
-        throws InterruptedException
+    protected PutOperation perform(int oksNeeded) throws InterruptedException
     {
         if (_released) {
             throw new IllegalStateException("Can not call 'complete' methods after content has been released");
         }
-
-        // One sanity check: if not enough server nodes to talk to, can't succeed...
-        int nodeCount = _serverNodes.size();
-        // should this actually result in an exception?
-        if (nodeCount < _operationConfig.getMinimalOksToSucceed()) {
-            return result;
+        // already done?
+        if (_shouldFinish(_result, oksNeeded)) {
+            return this;
         }
+        while (_round < _maxCallRetries) {
+            if (_round == 0) {
+                if (_performPrimary(oksNeeded)) {
+                    return this;
+                }
+            } else {
+                if (_performSecondary(oksNeeded)) {
+                    return this;
+                }
+            }
+            ++_round;
+            if (_noRetries) {
+                break;
+            }
+            
+        }
+        return this;
+    }
 
-        /* Ok: first round; try PUT into every enabled store, up to optimal number
-         * of successes we expect.
-         */
-        List<NodeFailure> retries = null;
-        for (int i = 0; i < nodeCount; ++i) {
-            ClusterServerNode server = _serverNodes.node(i);
-            if (server.isDisabled() && !_noRetries) { // can skip disabled, iff retries allowed
+    protected PutOperation performSingleRound(int oksNeeded) throws InterruptedException
+    {
+        if (_released) {
+            throw new IllegalStateException("Can not call 'complete' methods after content has been released");
+        }
+        if (!_shouldFinish(_result, oksNeeded)) {
+            if (_round == 0) {
+                if (_performPrimary(oksNeeded)) {
+                    return this;
+                }
+            } else {
+                if (_performSecondary(oksNeeded)) {
+                    return this;
+                }
+            }
+            ++_round;
+        }
+        return this;
+    }
+    
+    /**
+     * @return True if processing is now complete; false if more work needed
+     */
+    protected boolean _performPrimary(int oksNeeded) throws InterruptedException
+    {
+        if (_currentNodes == null) { // for very first call
+            _currentNodes = _activeNodes.iterator();
+            _roundStartTime = System.currentTimeMillis();
+        }
+        while (_currentNodes.hasNext()) {
+            final boolean includeDisabled = !_noRetries; // only try disabled ones if no retries allowed
+            final PutCallState call = _currentNodes.next();
+            final ClusterServerNode server = call.server();
+            if (!includeDisabled && server.isDisabled()) { // skip disabled during first round (unless no retries)
                 continue;
             }
             CallFailure fail = server.entryPutter().tryPut(_callConfig, _params, _endOfTime, _key, _content);
-            if (fail != null) { // only add to retry-list if something retry may help with
-                if (fail.isRetriable()) {
-                    retries = _add(retries, new NodeFailure(server, fail));
-                } else {
-                    result.withFailed(new NodeFailure(server, fail));
+            if (fail == null) { // success
+                _currentNodes.remove();
+                _result.addSucceeded(server);
+                if (_shouldFinish(_result, oksNeeded)) {
+                    return true;
                 }
                 continue;
             }
-            result.addSucceeded(server);
-            // Very first round: go up to max if it's smooth sailing!
-            if (result.succeededMaximally()) {
-                return result.withFailed(retries);
+            // nope, failed. If retriable, keep; if not, add as failure, remove from active
+            if (fail.isRetriable()) {
+                call.addFailure(fail);
+            } else {
+                _currentNodes.remove();
+                _result.withFailed(new NodeFailure(server, fail));
             }
         }
-        if (_noRetries) { // if we can't retry, don't:
-            return result.withFailed(retries);
-        }
+        return false;
+    }
 
-        // If we got this far, let's accept sub-optimal outcomes as well; or, if we timed out
-        final long secondRoundStart = System.currentTimeMillis();
-        if (_shouldFinish(result, oksNeeded, secondRoundStart)) {
-            return result.withFailed(retries);
+    protected boolean _performSecondary(int oksNeeded) throws InterruptedException
+    {
+        // Starting a new round? Will need bit of delay most likely
+        if (_currentNodes == null) {
+            if (_activeNodes.isEmpty()) { // no more nodes? We are done
+                return true;
+            }
+            _currentNodes = _activeNodes.iterator();
+            
+            // If we got this far, let's accept sub-optimal outcomes as well; or, if we timed out
+            final long nextRoundStart = System.currentTimeMillis();
+            _doDelay(_roundStartTime, nextRoundStart, _endOfTime);
+            _roundStartTime = nextRoundStart;
         }
-        // Do we need any delay in between?
-        _doDelay(_startTime, secondRoundStart, _endOfTime);
-        
-        // Otherwise: go over retry list first, and if that's not enough, try disabled
-        if (retries == null) {
-            retries = new LinkedList<NodeFailure>();
-        } else {
-            Iterator<NodeFailure> it = retries.iterator();
-            while (it.hasNext()) {
-                NodeFailure retry = it.next();
-                ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                CallFailure fail = server.entryPutter().tryPut(_callConfig, _params, _endOfTime, _key, _content);
-                if (fail != null) {
-                    retry.addFailure(fail);
-                    if (!fail.isRetriable()) { // not worth retrying?
-                        result.withFailed(retry);
-                        it.remove();
-                    }
-                } else {
-                    it.remove(); // remove now from retry list
-                    result.addSucceeded(server);
-                    if (result.succeededOptimally()) {
-                        return result.withFailed(retries);
-                    }
+        while (_currentNodes.hasNext()) {
+            final PutCallState call = _currentNodes.next();
+            final ClusterServerNode server = call.server();
+            CallFailure fail = server.entryPutter().tryPut(_callConfig, _params, _endOfTime, _key, _content);
+            if (fail == null) { // success
+                _currentNodes.remove();
+                _result.addSucceeded(server);
+                if (_shouldFinish(_result, oksNeeded)) {
+                    return true;
                 }
+                continue;
+            }
+            if (fail.isRetriable()) {
+                call.addFailure(fail);
+            } else {
+                _currentNodes.remove();
+                _result.withFailed(new NodeFailure(server, fail));
             }
         }
-        // if no success, add disabled nodes in the mix; but only if we don't have minimal success:
-        for (int i = 0; i < nodeCount; ++i) {
-            if (_shouldFinish(result, oksNeeded)) {
-                return result.withFailed(retries);
-            }
-            ClusterServerNode server = _serverNodes.node(i);
-            if (server.isDisabled()) {
-                CallFailure fail = server.entryPutter().tryPut(_callConfig,
-                         _params, _endOfTime, _key, _content);
-                if (fail != null) {
-                    if (fail.isRetriable()) {
-                        retries.add(new NodeFailure(server, fail));
-                    } else {
-                        result.withFailed(new NodeFailure(server, fail));
-                    }
-                } else {
-                    result.addSucceeded(server);
-                }
-            }
-        }
-
-        // But from now on, keep on retrying, up to... N times (start with 1, as we did first retry)
-        long prevStartTime = secondRoundStart;
-        for (int i = 1; (i <= StoreClientConfig.MAX_RETRIES_FOR_PUT) && !retries.isEmpty(); ++i) {
-            final long currStartTime = System.currentTimeMillis();
-            _doDelay(prevStartTime, currStartTime, _endOfTime);
-            // and off we go again...
-            Iterator<NodeFailure> it = retries.iterator();
-            while (it.hasNext()) {
-                if (_shouldFinish(result, oksNeeded)) {
-                    return result.withFailed(retries);
-                }
-                NodeFailure retry = it.next();
-                ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                CallFailure fail = server.entryPutter().tryPut(_callConfig,
-                        _params, _endOfTime, _key, _content);
-                if (fail != null) {
-                    retry.addFailure(fail);
-                    if (!fail.isRetriable()) {
-                        result.withFailed(retry);
-                        it.remove();
-                    }
-                } else {
-                    result.addSucceeded(server);
-                }
-            }
-            prevStartTime = currStartTime;
-        }
-        // we are all done, failed:
-        return result.withFailed(retries);
+        return false; // still node done
     }
 
     /*
@@ -276,5 +323,39 @@ public class PutOperationImpl<K extends EntryKey,
             return true;
         }
         return false;
+    }
+
+    /*
+    /**********************************************************************
+    /* Helper class(es)
+    /**********************************************************************
+     */
+
+    /**
+     * Container used to hold in-flight information about calls to a single applicable
+     * target node.
+     */
+    protected final static class PutCallState
+    {
+        protected final ClusterServerNode _node;
+
+        protected NodeFailure _fails;
+        
+        public PutCallState(ClusterServerNode node)
+        {
+            _node = node;
+        }
+
+        public void addFailure(CallFailure fail) {
+            if (_fails == null) {
+                _fails = new NodeFailure(_node, fail);
+            } else {
+                _fails.addFailure(fail);
+            }
+        }
+        
+        public ClusterServerNode server() { return _node; }
+
+        public NodeFailure getFails() { return _fails; }
     }
 }
