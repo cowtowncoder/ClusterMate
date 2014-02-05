@@ -46,6 +46,8 @@
     <javac.target.version>1.6</javac.target.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+    <version.validation.api>1.1.0.Final</version.validation.api>
+
     <!-- Occasionally use SNAPSHOT version -->
     <version.storemate>0.9.25</version.storemate>
 

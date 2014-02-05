@@ -17,7 +17,7 @@ DropWizard container.
     <dependency> <!--  Bean Validation for Annotations to use on Config objects -->
       <groupId>javax.validation</groupId>
       <artifactId>validation-api</artifactId>
-      <version>1.0.0.GA</version>
+      <version>${version.validation.api}</version>
     </dependency>
     <dependency> <!-- Servlet API -->
       <groupId>javax.servlet</groupId>
