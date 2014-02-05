@@ -27,7 +27,6 @@ import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.jaxrs.IndexResource;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
-import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cleanup.CleanerUpper;
 import com.fasterxml.clustermate.service.cleanup.CleanupTask;
@@ -47,11 +46,14 @@ public abstract class DWBasedService<
     E extends StoredEntry<K>,
     L extends ListItem,
     SCONFIG extends ServiceConfig,
-    CONF extends DWConfigBase<SCONFIG, CONF>
+    CONF extends DWConfigBase<SCONFIG, CONF>,
+    PATH extends Enum<PATH> // enumeration of known paths for endpoints
 >
     extends Service<CONF>
 {
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
+    protected final Logger LOG = LoggerFactory.getLogger(getClass());
+
+    protected final Class<PATH> _pathType;
 
     /**
      * List of {@link StartAndStoppable} objects we will dispatch start/stop calls to.
@@ -97,6 +99,10 @@ public abstract class DWBasedService<
     /* Handlers
     /**********************************************************************
      */
+
+    protected ClusterInfoHandler _clusterInfoHandler;
+
+    protected SyncHandler<K,E> _syncHandler;
     
     protected StoreHandler<K,E,L> _storeHandler;
     
@@ -106,11 +112,12 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
-    protected DWBasedService(TimeMaster timings, RunMode mode)
+    protected DWBasedService(TimeMaster timings, RunMode mode, Class<PATH> pathType)
     {
         super();
         _timeMaster = timings;
         _runMode = mode;
+        _pathType = pathType;
     }
 
     /*
@@ -128,12 +135,12 @@ public abstract class DWBasedService<
 
     public void _start() throws Exception
     {
-        LOG.info("Starting up {} VManaged objects", _managed.size());
+        LOG.info("Starting up {} Managed objects", _managed.size());
         for (StartAndStoppable managed : _managed) {
             LOG.info("Starting up: {}", managed.getClass().getName());
             managed.start();
         }
-        LOG.info("VManaged object startup complete");
+        LOG.info("Managed object startup complete");
 
         /* 27-Mar-2013, tatu: Also: need to register shutdown hook to be
          *    able to do 'prepareForStop()'
@@ -148,7 +155,7 @@ public abstract class DWBasedService<
 
     public void _prepareForStop()
     {
-        LOG.info("Calling prepareForStop on {} VManaged objects", _managed.size());
+        LOG.info("Calling prepareForStop on {} Managed objects", _managed.size());
         for (StartAndStoppable managed : _managed) {
             try {
                 managed.prepareForStop();
@@ -157,7 +164,7 @@ public abstract class DWBasedService<
                         e.getMessage());
             }
         }
-        LOG.info("prepareForStop() for managed objects complete");
+        LOG.info("prepareForStop() for Managed objects complete");
     }
     
     public void _stop() throws Exception
@@ -176,12 +183,12 @@ public abstract class DWBasedService<
                 LOG.info("Stopping: {}", desc);
                 managed.stop();
             } catch (Exception e) {
-                LOG.warn(String.format("Problems trying to stop VManaged of type %s: (%s) %s",
+                LOG.warn(String.format("Problems trying to stop Managed of type %s: (%s) %s",
                         desc, e.getClass().getName(), e.getMessage()),
                         e);
             }
         }
-        LOG.info("VManaged object shutdown complete");
+        LOG.info("Managed object shutdown complete");
     }
 
     /* Ideally, shouldn't need to track this; but after having a few issues,
@@ -228,8 +235,7 @@ public abstract class DWBasedService<
         StoredEntryConverter<K,E,L> entryConverter = constructEntryConverter(config, environment);
         FileManager files = constructFileManager(config);
 
-        _serviceStuff = constructServiceStuff(config, _timeMaster,
-               entryConverter, files);
+        _serviceStuff = constructServiceStuff(config, _timeMaster, entryConverter, files);
         if (_runMode.isTesting()) {
             _serviceStuff.markAsTest();
         }
@@ -238,13 +244,13 @@ public abstract class DWBasedService<
          * and have tables we expect; otherwise we'll fail right away.
          */
         LOG.info("Trying to open Stores (StorableStore, node store, last-access store)");
-         _stores = _constructStores(_serviceStuff);
-         _managed.add(_stores);
+        _stores = _constructStores();
+        _managed.add(_stores);
         LOG.info("Opened StorableStore successfully");
         _stores.initAndOpen(false);
 
         // Then: read in cluster information (config file, backend store settings):
-        final int port = dwConfig.getHttpConfiguration().getPort();
+        final int port = dwConfig.getHttpPort();
         LOG.info("Initializing cluster configuration (port {})...", port);
         final long startTime = _timeMaster.currentTimeMillis();
         ClusterViewByServerImpl<K,E> cl = new ClusterBootstrapper<K,E>(startTime, _serviceStuff, _stores)
@@ -259,21 +265,20 @@ public abstract class DWBasedService<
 
         // Let's first construct handlers we use:
         LOG.info("Creating handlers for service endpoints");
-        ClusterInfoHandler nodeH = constructClusterInfoHandler(_serviceStuff, _cluster);
-        SyncHandler<K,E> syncH = constructSyncHandler(_serviceStuff, _stores, _cluster);
-        _storeHandler = constructStoreHandler(_serviceStuff, _stores, _cluster);
+        _clusterInfoHandler = constructClusterInfoHandler();
+        _syncHandler = constructSyncHandler();
+        _storeHandler = constructStoreHandler();
         _managed.add(_storeHandler);
 
         LOG.info("Adding service end points");
-        addServiceEndpoints(_serviceStuff, environment,
-                nodeH, syncH, _storeHandler);
+        addServiceEndpoints(environment);
 
         LOG.info("Adding health checks");
-        addHealthChecks(_serviceStuff, environment);
+        addHealthChecks(environment);
 
         if (_runMode.shouldRunTasks()) {
             LOG.info("Initializing background cleaner tasks");
-            _cleanerUpper = constructCleanerUpper(_serviceStuff, _stores, _cluster);
+            _cleanerUpper = constructCleanerUpper();
             if (_cleanerUpper != null) {
                 _managed.add(_cleanerUpper);
             }
@@ -281,7 +286,7 @@ public abstract class DWBasedService<
             LOG.info("Skipping cleaner tasks for light-weight testing");
         }
         LOG.info("Initialization complete: HTTP service now running on port {}",
-                dwConfig.getHttpConfiguration().getPort());
+                dwConfig.getHttpPort());
     }
 
     /*
@@ -308,9 +313,8 @@ public abstract class DWBasedService<
 
     protected abstract FileManager constructFileManager(SCONFIG serviceConfig);
 
-    protected abstract StoresImpl<K,E> constructStores(SharedServiceStuff stuff,
-            SCONFIG serviceConfig, StorableStore store,
-            NodeStateStore<IpAndPort, ActiveNodeState> nodeStates);
+    protected abstract StoresImpl<K,E> constructStores(SCONFIG serviceConfig,
+            StorableStore store, NodeStateStore<IpAndPort, ActiveNodeState> nodeStates);
 
     protected abstract SharedServiceStuff constructServiceStuff(SCONFIG serviceConfig,
             TimeMaster timeMaster, StoredEntryConverter<K,E,L> entryConverter,
@@ -322,34 +326,25 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
-    protected abstract StoreHandler<K,E,L> constructStoreHandler(SharedServiceStuff serviceStuff,
-            Stores<K,E> stores, ClusterViewByServer cluster);
+    protected abstract StoreHandler<K,E,L> constructStoreHandler();
 
-    protected SyncHandler<K,E> constructSyncHandler(SharedServiceStuff stuff,
-            StoresImpl<K,E> stores, ClusterViewByServerUpdatable cluster)
-    {
-        return new SyncHandler<K,E>(stuff, stores, cluster);
+    protected SyncHandler<K,E> constructSyncHandler() {
+        return new SyncHandler<K,E>(_serviceStuff, _stores, _cluster);
     }
 
-    protected ClusterInfoHandler constructClusterInfoHandler(SharedServiceStuff stuff,
-            ClusterViewByServerUpdatable cluster)
-    {
-        return new ClusterInfoHandler(stuff, cluster);
+    protected ClusterInfoHandler constructClusterInfoHandler() {
+        return new ClusterInfoHandler(_serviceStuff, _cluster);
     }
 
-    protected CleanerUpper<K,E> constructCleanerUpper(SharedServiceStuff stuff,
-            Stores<K,E> stores, ClusterViewByServer cluster)
-    {
+    protected CleanerUpper<K,E> constructCleanerUpper() {
         return new CleanerUpper<K,E>(_serviceStuff, _stores, _cluster,
                 constructCleanupTasks());
     }
 
     protected abstract List<CleanupTask<?>> constructCleanupTasks();
 
-    protected BackgroundMetricsAccessor constructMetricsAccessor(SharedServiceStuff stuff,
-            ClusterViewByServer cluster, Stores<K,E> stores,
-            AllOperationMetrics.Provider[] metrics) {
-        return new BackgroundMetricsAccessor(stuff, stores, metrics);
+    protected BackgroundMetricsAccessor constructMetricsAccessor(AllOperationMetrics.Provider[] metrics) {
+        return new BackgroundMetricsAccessor(_serviceStuff, _stores, metrics);
     }
 
     /*
@@ -358,32 +353,48 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
-    protected abstract StoreEntryServlet<K,E> constructStoreEntryServlet(SharedServiceStuff stuff,
-            ClusterViewByServer cluster, StoreHandler<K,E,L> storeHandler);
+    protected abstract StoreEntryServlet<K,E> constructStoreEntryServlet();
 
-    protected ServletBase constructNodeStatusServlet(SharedServiceStuff stuff,
-            ClusterInfoHandler nodeHandler) {
-        return new NodeStatusServlet(stuff, nodeHandler);
+    protected ServletBase constructNodeStatusServlet() {
+        return new NodeStatusServlet(_serviceStuff, _clusterInfoHandler);
     }
 
-    protected ServletBase constructNodeMetricsServlet(SharedServiceStuff stuff,
-            BackgroundMetricsAccessor accessor) {
-        return new NodeMetricsServlet(stuff, accessor);
+    protected ServletBase constructNodeMetricsServlet(BackgroundMetricsAccessor accessor) {
+        return new NodeMetricsServlet(_serviceStuff, accessor);
     }
         
-    protected SyncListServlet<K,E> constructSyncListServlet(SharedServiceStuff stuff,
-            ClusterViewByServer cluster, SyncHandler<K,E> syncHandler) {
-        return new SyncListServlet<K,E>(stuff, cluster, syncHandler);
+    protected SyncListServlet<K,E> constructSyncListServlet() {
+        return new SyncListServlet<K,E>(_serviceStuff, _cluster, _syncHandler);
     }
 
-    protected SyncPullServlet<K,E> constructSyncPullServlet(SharedServiceStuff stuff,
-            ClusterViewByServer cluster, SyncHandler<K,E> syncHandler) {
-        return new SyncPullServlet<K,E>(stuff, cluster, syncHandler);
+    protected SyncPullServlet<K,E> constructSyncPullServlet() {
+        return new SyncPullServlet<K,E>(_serviceStuff, _cluster, _syncHandler);
     }
 
-    protected StoreListServlet<K,E> constructStoreListServlet(SharedServiceStuff stuff,
-            ClusterViewByServer cluster, StoreHandler<K,E,L> storeHandler) {
-        return new StoreListServlet<K,E>(stuff, cluster, storeHandler);
+    protected StoreListServlet<K,E> constructStoreListServlet() {
+        return new StoreListServlet<K,E>(_serviceStuff, _cluster, _storeHandler);
+    }
+
+    protected ServletBase contructDispatcherServlet()
+    {
+        EnumMap<PathType, ServletBase> servlets = new EnumMap<PathType, ServletBase>(PathType.class);
+        servlets.put(PathType.NODE_STATUS, constructNodeStatusServlet());
+
+        ServletWithMetricsBase syncListServlet = constructSyncListServlet();
+        servlets.put(PathType.SYNC_LIST, syncListServlet);
+        ServletWithMetricsBase syncPullServlet = constructSyncPullServlet();
+        servlets.put(PathType.SYNC_PULL, syncPullServlet);
+        StoreEntryServlet<K,E> storeEntryServlet = constructStoreEntryServlet();
+        servlets.put(PathType.STORE_ENTRY, storeEntryServlet);
+        ServletWithMetricsBase storeListServlet = constructStoreListServlet();
+        servlets.put(PathType.STORE_ENTRIES, storeListServlet);
+
+        final BackgroundMetricsAccessor metrics = constructMetricsAccessor(
+                new AllOperationMetrics.Provider[] {
+                    storeEntryServlet, storeListServlet, syncListServlet, syncPullServlet
+                });
+        servlets.put(PathType.NODE_METRICS, constructNodeMetricsServlet(metrics));
+        return new ServiceDispatchServlet<K,E,PathType>(_cluster, null, _serviceStuff, servlets);
     }
     
     /*
@@ -396,63 +407,26 @@ public abstract class DWBasedService<
      * Method called to create service endpoints, given set of
      * handlers.
      */
-    protected void addServiceEndpoints(SharedServiceStuff stuff,
-            Environment environment,
-            ClusterInfoHandler nodeHandler, SyncHandler<K,E> syncHandler,
-            StoreHandler<K,E,L> storeHandler)
+    protected void addServiceEndpoints(Environment environment)
     {
-        final ClusterViewByServer cluster = syncHandler.getCluster();
-
-        EnumMap<PathType, ServletBase> servlets = new EnumMap<PathType, ServletBase>(PathType.class);
-        servlets.put(PathType.NODE_STATUS, constructNodeStatusServlet(stuff, nodeHandler));
-
-        ServletWithMetricsBase syncListServlet = constructSyncListServlet(stuff, cluster, syncHandler);
-        servlets.put(PathType.SYNC_LIST, syncListServlet);
-        ServletWithMetricsBase syncPullServlet = constructSyncPullServlet(stuff, cluster, syncHandler);
-        servlets.put(PathType.SYNC_PULL, syncPullServlet);
-        StoreEntryServlet<K,E> storeEntryServlet = constructStoreEntryServlet(stuff,
-                cluster, storeHandler);
-        servlets.put(PathType.STORE_ENTRY, storeEntryServlet);
-        ServletWithMetricsBase storeListServlet = constructStoreListServlet(stuff,
-                cluster, storeHandler);
-        servlets.put(PathType.STORE_ENTRIES, storeListServlet);
-
-        final BackgroundMetricsAccessor metrics = constructMetricsAccessor(stuff, cluster,
-                storeHandler.getStores(),
-                new AllOperationMetrics.Provider[] {
-                    storeEntryServlet, storeListServlet, syncListServlet, syncPullServlet
-                });
-        servlets.put(PathType.NODE_METRICS, constructNodeMetricsServlet(stuff, metrics));
-
-//        servlets.put(PathType.STORE_FIND_ENTRY, );
-//        servlets.put(PathType.STORE_FIND_LIST, );
-        
-        ServiceDispatchServlet<K,E,PathType> dispatcher = new ServiceDispatchServlet<K,E,PathType>
-            (cluster, null, stuff, servlets);
-
-        RequestPathBuilder<?> rootBuilder = rootPath(stuff.getServiceConfig());
+        RequestPathBuilder<?> rootBuilder = rootPath(_serviceStuff.getServiceConfig());
         String rootPath = servletPath(rootBuilder);
         LOG.info("Registering main Dispatcher servlet at: "+rootPath);
-        environment.addServlet(dispatcher, rootPath);
-
-        // // And finally servlet for for entry access
-        
-        addStoreEntryServlet(stuff, environment, cluster, _storeHandler);
+        ServletBase dispatcher = contructDispatcherServlet();
+        if (dispatcher != null) {
+            environment.addServlet(dispatcher, rootPath);
+        }
+        // // And optional additional servlet for for entry access
+        addStoreEntryServlet(environment);
     }
     
     /**
      * Overridable method used for hooking standard entry access endpoint into
      * alternate location. Usually used for backwards compatibility purposes.
      */
-    protected void addStoreEntryServlet(SharedServiceStuff stuff,
-            Environment environment,
-            ClusterViewByServer cluster,
-            StoreHandler<K,E,?> storeHandler)
-    {
-    }
+    protected void addStoreEntryServlet(Environment environment) { }
     
-    protected void addHealthChecks(SharedServiceStuff stuff,
-            Environment environment) { }
+    protected void addHealthChecks(Environment environment) { }
     
     /*
     /**********************************************************************
@@ -460,10 +434,9 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
     
-    protected StoresImpl<K,E> _constructStores(SharedServiceStuff stuff)
-        throws IOException
+    protected StoresImpl<K,E> _constructStores() throws IOException
     {
-        final SCONFIG v = stuff.getServiceConfig();
+        final SCONFIG v = _serviceStuff.getServiceConfig();
         StoreBackendBuilder<?> b = v.instantiateBackendBuilder();
         StoreBackendConfig backendConfig = v._storeBackendConfigOverride;
         if (backendConfig == null) { // no overrides, use databinding
@@ -471,26 +444,25 @@ public abstract class DWBasedService<
             if (v.storeBackendConfig == null) {
                 throw new IllegalStateException("Missing 'v.storeBackendConfig");
             }
-            backendConfig = stuff.convertValue(v.storeBackendConfig, cfgType);
+            backendConfig = _serviceStuff.convertValue(v.storeBackendConfig, cfgType);
         }
         b = b.with(v.storeConfig)
                 .with(backendConfig);
         StoreBackend backend = b.build();
         StorableStore store = new StorableStoreImpl(v.storeConfig, backend, _timeMaster,
-               stuff.getFileManager(),
-               _constructThrottler(stuff), _constructWriteMutex(stuff));
-        NodeStateStore<IpAndPort, ActiveNodeState> nodeStates = _buildNodeStateStore(stuff, b);
-        return constructStores(stuff, v, store, nodeStates);
+                _serviceStuff.getFileManager(),
+               _constructThrottler(), _constructWriteMutex());
+        NodeStateStore<IpAndPort, ActiveNodeState> nodeStates = _buildNodeStateStore(b);
+        return constructStores(v, store, nodeStates);
     }
 
-    protected NodeStateStore<IpAndPort, ActiveNodeState> _buildNodeStateStore(SharedServiceStuff stuff,
-            StoreBackendBuilder<?> backendBuilder)
+    protected NodeStateStore<IpAndPort, ActiveNodeState> _buildNodeStateStore(StoreBackendBuilder<?> backendBuilder)
     {
         /* 09-Dec-2013, tatu: Now we will also construct NodeStateStore using
          *   the very same builder...
          */
-        ObjectMapper mapper = stuff.jsonMapper();
-        File root = stuff.getServiceConfig().metadataDirectory;
+        ObjectMapper mapper = _serviceStuff.jsonMapper();
+        File root = _serviceStuff.getServiceConfig().metadataDirectory;
         return backendBuilder.<IpAndPort, ActiveNodeState>buildNodeStateStore(root,
                         new JacksonBasedConverter<IpAndPort>(mapper, IpAndPort.class),
                         new JacksonBasedConverter<ActiveNodeState>(mapper, ActiveNodeState.class));
@@ -505,8 +477,7 @@ public abstract class DWBasedService<
      * Default implementation simply returns null to let the default throttler
      * be used.
      */
-    protected StoreOperationThrottler _constructThrottler(SharedServiceStuff stuff)
-    {
+    protected StoreOperationThrottler _constructThrottler() {
         // null -> use the default implementation
         return null;
     }
@@ -519,8 +490,7 @@ public abstract class DWBasedService<
      * Default implementation simply returns null to let the default implementation
      * be used.
      */
-    protected PartitionedWriteMutex _constructWriteMutex(SharedServiceStuff stuff)
-    {
+    protected PartitionedWriteMutex _constructWriteMutex() {
         // null -> use the default implementation
         return null;
     }

@@ -43,6 +43,20 @@ public abstract class DWConfigBase<
             throw new IllegalStateException("Failed to clone "+getClass().getName()+", WTH?");
         }
     }
+
+    /*
+    /**********************************************************************
+    /* Additional convenience accessors, to hide some traversal
+    /**********************************************************************
+     */
+    
+    public int getHttpPort() {
+        return getHttpConfiguration().getPort();
+    }
+
+    public int getAdminPort() {
+        return getHttpConfiguration().getAdminPort();
+    }
     
     /*
     /**********************************************************************
