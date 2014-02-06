@@ -462,13 +462,8 @@ public abstract class StoreClient<K extends EntryKey,
      * 
      * @return Operation object that is used to actually perform PUT operation
      */
-    public PutOperation putContent(PutCallParameters params, K key, PutContentProvider content)
-    {
-        try {
-            return _putContent(params, key, content);
-        } finally {
-            content.release();
-        }
+    public PutOperation putContent(PutCallParameters params, K key, PutContentProvider content) {
+        return _putContent(params, key, content);
     }
     
     /**

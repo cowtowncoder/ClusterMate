@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.9.25 (xx-xxx-2014)
+
+- Fix a problem with pre-mature release of content with PUT operation.
+
 0.9.24 (05-Feb-2014)
 
 - Further refactoring to eliminate use of `PathType`, isolate DropWizard deps
