@@ -1,6 +1,6 @@
 package com.fasterxml.clustermate.servlet;
 
-import java.util.EnumMap;
+import java.util.*;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.PathType;
@@ -94,20 +94,19 @@ public class DefaultCMServletFactory<
         EnumMap<PathType, ServletBase> servlets = new EnumMap<PathType, ServletBase>(PathType.class);
         servlets.put(PathType.NODE_STATUS, constructNodeStatusServlet());
 
-        ServletWithMetricsBase syncListServlet = constructSyncListServlet();
-        servlets.put(PathType.SYNC_LIST, syncListServlet);
-        ServletWithMetricsBase syncPullServlet = constructSyncPullServlet();
-        servlets.put(PathType.SYNC_PULL, syncPullServlet);
-        ServletWithMetricsBase storeEntryServlet = constructStoreEntryServlet();
-        servlets.put(PathType.STORE_ENTRY, storeEntryServlet);
-        ServletWithMetricsBase storeListServlet = constructStoreListServlet();
-        servlets.put(PathType.STORE_ENTRIES, storeListServlet);
+        servlets.put(PathType.SYNC_LIST, constructSyncListServlet());
+        servlets.put(PathType.SYNC_PULL, constructSyncPullServlet());
+        servlets.put(PathType.STORE_ENTRY, constructStoreEntryServlet());
+        servlets.put(PathType.STORE_ENTRIES, constructStoreListServlet());
 
-        final BackgroundMetricsAccessor metrics = constructMetricsAccessor(
-                new AllOperationMetrics.Provider[] {
-                    storeEntryServlet, storeListServlet, syncListServlet, syncPullServlet
-                });
-        servlets.put(PathType.NODE_METRICS, constructNodeMetricsServlet(metrics));
+        List<AllOperationMetrics.Provider> metrics = new ArrayList<AllOperationMetrics.Provider>();
+        for (ServletBase servlet : servlets.values()) {
+            if (servlet instanceof AllOperationMetrics.Provider) {
+                metrics.add((AllOperationMetrics.Provider) servlet);
+            }
+        }
+        final BackgroundMetricsAccessor metricAcc = constructMetricsAccessor(metrics);
+        servlets.put(PathType.NODE_METRICS, constructNodeMetricsServlet(metricAcc));
         return new ServiceDispatchServlet<K,E,PathType>(_cluster, null, _serviceStuff, servlets);
     }
 
@@ -116,18 +115,19 @@ public class DefaultCMServletFactory<
     /* Factory methods: metrics
     /**********************************************************************
      */
-    
-    protected BackgroundMetricsAccessor constructMetricsAccessor(AllOperationMetrics.Provider[] metrics) {
-        return new BackgroundMetricsAccessor(_serviceStuff, _stores, metrics);
+
+    protected BackgroundMetricsAccessor constructMetricsAccessor(List<AllOperationMetrics.Provider> metrics) {
+        AllOperationMetrics.Provider[] providers = metrics.toArray(new AllOperationMetrics.Provider[metrics.size()]);
+        return new BackgroundMetricsAccessor(_serviceStuff, _stores, providers);
     }
-    
+
     /*
     /**********************************************************************
     /* Factory methods: servlets
     /**********************************************************************
      */
 
-    protected ServletWithMetricsBase constructStoreEntryServlet() {
+    protected ServletBase constructStoreEntryServlet() {
         return new StoreEntryServlet<K,E>(_serviceStuff, _cluster, _storeHandler);
     }
 
@@ -139,15 +139,15 @@ public class DefaultCMServletFactory<
         return new NodeMetricsServlet(_serviceStuff, accessor);
     }
         
-    protected ServletWithMetricsBase constructSyncListServlet() {
+    protected ServletBase constructSyncListServlet() {
         return new SyncListServlet<K,E>(_serviceStuff, _cluster, _syncHandler);
     }
 
-    protected ServletWithMetricsBase constructSyncPullServlet() {
+    protected ServletBase constructSyncPullServlet() {
         return new SyncPullServlet<K,E>(_serviceStuff, _cluster, _syncHandler);
     }
 
-    protected ServletWithMetricsBase constructStoreListServlet() {
+    protected ServletBase constructStoreListServlet() {
         return new StoreListServlet<K,E>(_serviceStuff, _cluster, _storeHandler);
     }
 }
