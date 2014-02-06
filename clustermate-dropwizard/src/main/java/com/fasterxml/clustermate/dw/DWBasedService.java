@@ -73,6 +73,8 @@ public abstract class DWBasedService<
      */
     protected final TimeMaster _timeMaster;
 
+    protected SCONFIG _config;
+    
     /*
     /**********************************************************************
     /* State management
@@ -235,6 +237,8 @@ public abstract class DWBasedService<
                 _stop();
             }
         });
+
+        _config = dwConfig.getServiceConfig();
         
         /* 04-Jun-2013, tatu: Goddammit, disabling gzip filter is tricky due to
          *   data-binding... Object-values get re-created. So, need to patch after
@@ -244,15 +248,10 @@ public abstract class DWBasedService<
          * YAML/JSON config is the only way.
          */
         dwConfig.overrideGZIPEnabled(false);
-
-        final SCONFIG config = dwConfig.getServiceConfig();
         
         _managed = new ArrayList<StartAndStoppable>();
-
-        StoredEntryConverter<K,E,L> entryConverter = constructEntryConverter();
-        FileManager files = constructFileManager(config);
-
-        _serviceStuff = constructServiceStuff(config, _timeMaster, entryConverter, files);
+        _serviceStuff = constructServiceStuff(_config, _timeMaster, constructEntryConverter(),
+                constructFileManager());
         if (_runMode.isTesting()) {
             _serviceStuff.markAsTest();
         }
@@ -261,7 +260,7 @@ public abstract class DWBasedService<
          * and have tables we expect; otherwise we'll fail right away.
          */
         LOG.info("Trying to open Stores (StorableStore, node store, last-access store)");
-        _stores = _constructStores();
+        _stores = constructStores();
         _managed.add(_stores);
         LOG.info("Opened StorableStore successfully");
         _stores.initAndOpen(false);
@@ -315,7 +314,7 @@ public abstract class DWBasedService<
     public boolean isTesting() { return _runMode.isTesting(); }
 
     protected SCONFIG serviceConfig() {
-        return _serviceStuff.getServiceConfig();
+        return _config;
     }
 
     // For tests:
@@ -325,7 +324,9 @@ public abstract class DWBasedService<
     
     /*
     /**********************************************************************
-    /* Factory methods: basic bootstrap config objects
+    /* Factory methods: basic bootstrap config objects.
+    /* 
+    /* NOTE: _MUST_ pass SCONFIG, not yet assigned
     /**********************************************************************
      */
 
@@ -339,7 +340,7 @@ public abstract class DWBasedService<
         return (StoredEntryConverter<K,E,L>) serviceConfig().getEntryConverter();
     }
 
-    protected abstract FileManager constructFileManager(SCONFIG serviceConfig);
+    protected abstract FileManager constructFileManager();
 
     protected abstract StoresImpl<K,E> constructStores(StorableStore store,
             NodeStateStore<IpAndPort, ActiveNodeState> nodeStates);
@@ -416,7 +417,7 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
     
-    protected StoresImpl<K,E> _constructStores() throws IOException
+    protected StoresImpl<K,E> constructStores() throws IOException
     {
         final SCONFIG v = serviceConfig();
         StoreBackendBuilder<?> b = v.instantiateBackendBuilder();
@@ -433,12 +434,12 @@ public abstract class DWBasedService<
         StoreBackend backend = b.build();
         StorableStore store = new StorableStoreImpl(v.storeConfig, backend, _timeMaster,
                 _serviceStuff.getFileManager(),
-               _constructThrottler(), _constructWriteMutex());
-        NodeStateStore<IpAndPort, ActiveNodeState> nodeStates = _buildNodeStateStore(b);
+               constructThrottler(), constructWriteMutex());
+        NodeStateStore<IpAndPort, ActiveNodeState> nodeStates = constructNodeStateStore(b);
         return constructStores(store, nodeStates);
     }
 
-    protected NodeStateStore<IpAndPort, ActiveNodeState> _buildNodeStateStore(StoreBackendBuilder<?> backendBuilder)
+    protected NodeStateStore<IpAndPort, ActiveNodeState> constructNodeStateStore(StoreBackendBuilder<?> backendBuilder)
     {
         /* 09-Dec-2013, tatu: Now we will also construct NodeStateStore using
          *   the very same builder...
@@ -459,7 +460,7 @@ public abstract class DWBasedService<
      * Default implementation simply returns null to let the default throttler
      * be used.
      */
-    protected StoreOperationThrottler _constructThrottler() {
+    protected StoreOperationThrottler constructThrottler() {
         // null -> use the default implementation
         return null;
     }
@@ -472,7 +473,7 @@ public abstract class DWBasedService<
      * Default implementation simply returns null to let the default implementation
      * be used.
      */
-    protected PartitionedWriteMutex _constructWriteMutex() {
+    protected PartitionedWriteMutex constructWriteMutex() {
         // null -> use the default implementation
         return null;
     }
