@@ -325,8 +325,6 @@ public abstract class DWBasedService<
     /*
     /**********************************************************************
     /* Factory methods: basic bootstrap config objects.
-    /* 
-    /* NOTE: _MUST_ pass SCONFIG, not yet assigned
     /**********************************************************************
      */
 
@@ -419,20 +417,20 @@ public abstract class DWBasedService<
     
     protected StoresImpl<K,E> constructStores() throws IOException
     {
-        final SCONFIG v = serviceConfig();
-        StoreBackendBuilder<?> b = v.instantiateBackendBuilder();
-        StoreBackendConfig backendConfig = v._storeBackendConfigOverride;
+        final SCONFIG sconfig = serviceConfig();
+        StoreBackendBuilder<?> b = sconfig.instantiateBackendBuilder();
+        StoreBackendConfig backendConfig = sconfig._storeBackendConfigOverride;
         if (backendConfig == null) { // no overrides, use databinding
             Class<? extends StoreBackendConfig> cfgType = b.getConfigClass();
-            if (v.storeBackendConfig == null) {
-                throw new IllegalStateException("Missing 'v.storeBackendConfig");
+            if (sconfig.storeBackendConfig == null) {
+                throw new IllegalStateException("Missing 'config.storeBackendConfig");
             }
-            backendConfig = _serviceStuff.convertValue(v.storeBackendConfig, cfgType);
+            backendConfig = _serviceStuff.convertValue(sconfig.storeBackendConfig, cfgType);
         }
-        b = b.with(v.storeConfig)
+        b = b.with(sconfig.storeConfig)
                 .with(backendConfig);
         StoreBackend backend = b.build();
-        StorableStore store = new StorableStoreImpl(v.storeConfig, backend, _timeMaster,
+        StorableStore store = new StorableStoreImpl(sconfig.storeConfig, backend, _timeMaster,
                 _serviceStuff.getFileManager(),
                constructThrottler(), constructWriteMutex());
         NodeStateStore<IpAndPort, ActiveNodeState> nodeStates = constructNodeStateStore(b);

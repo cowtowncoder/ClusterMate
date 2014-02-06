@@ -1,13 +1,12 @@
 Project: ClusterMate
 
-0.9.23 (24-Jan-2014)
+0.9.24 (05-Feb-2014)
 
+- Further refactoring to eliminate use of `PathType`, isolate DropWizard deps
+- Dep update: StoreMate 1.0.0!
 - Fixed an issue with AHC-provider, pre-compressed content (was not sending original length)
 - Adding more support for client-side compression (to be enabled by implementations)
 - Dep update: StoreMate 0.9.24
-
-0.9.21 (28-Dec-2013)
-
 - Add 'count' to DeleteResponse
 - Refactoring to remove BDB deps; none for node-state store, minor remains
   for last-access store (to be eliminated RSN)
@@ -16,21 +15,12 @@ Project: ClusterMate
 
 - Minor improvements to handling of failures to allocate off-heap memory buffers
 - Dependency updates (StoreMate 0.9.22, Jackson 2.3.0)
-
-0.9.19 (09-Nov-2013)
-
 - Refactoring CallParameters, so that all methods take one; and this is used
   also to pass `StoreClientConfig` overrides, if any
-
-0.9.18 (17-Oct-2013)
-
 - Expose SYNCPULL metrics (was accidentally missing)
 - Minor improvements to calculation of sync delay to use, to try to reduce rate
   of calls
 - Try to support HTTP Headers better with client
-
-0.9.17 (03-Oct-2013)
-
 - Need to upgrade StoreMate to roll back BDB-JE version, due to a critical bug.
 - Update to latest Java leveldb version
 
@@ -41,13 +31,10 @@ Project: ClusterMate
  configuration more robust.
 #25: Add conflict resolution for rare case of two nodes receiving differing data
   for same key (older one wins; if tie, one with "higher" content hash)
+#29: Add 'PutCallParams' to pass additional parameters through client
 - Add new pseudo-cleanup-task for disk space usage tracking.
 - Fixed issues with `StoreForTests`, double-initialization (which caused issues
   with cleanup tasks during tests)
-
-0.9.13 (05-Sep-2013)
-
-#29: Add 'PutCallParams' to pass additional parameters through client
    (like max-TTL)
 - Refactor FileCleaner to allow overriding of logging details
 - Fix a problem with metrics; internal change from millis to nanos made tpXXX
@@ -56,27 +43,19 @@ Project: ClusterMate
   internal sleep
 
 0.9.10 (30-Jun-2013)
+
+#22: Redefine field in `EntryLastAccessed` to mean expiration, not create time: needed
+#23: Add calls to explicit cleaning of last-accessed entries when entries are deleted
+#24: Add extension point(s) for cleanup task for last-accessed entries
+#26: Add support for deferred (async) DELETEs.
+#28: Upgrade metrics to 3.0.0
 - Major update to buffering of request/response, file access
 - Improve diagnostics, to expose more information on request/reseponse and
   file systems reads, writes.
-
-0.9.9 (04-Jun-2013)
-
-#26: Add support for deferred (async) DELETEs.
-#28: Upgrade metrics to 3.0.0
 - Add support for database/file-system-access - based throttling.
-
-0.9.7 (23-May-2013)
-
-#23: Add calls to explicit cleaning of last-accessed entries when entries are deleted
-#24: Add extension point(s) for cleanup task for last-accessed entries
 - Add hooks for deletion of last-accessed entries
 - Improve rate-metrics exposure
 - Refactor handling of paths (PathType) to simplify adding of endpoints
-
-0.9.6 (16-May-2013)
-
-#22: Redefine field in `EntryLastAccessed` to mean expiration, not create time: needed
   to support clean up of orphan timestamps (including ones for groups, parent info)
 - Add configuration for last-accessed store, to allow use of deferred writes and
   overriding default settings like cache size.
@@ -85,23 +64,14 @@ Project: ClusterMate
 
 0.9.5 (30-Apr-2013)
 
+#13: Change logging to use slf4j for client package
+#18: Add basic endpoint statistics using Yammer metrics package
+#19: Improve shutdown handling, by adding pre-shutdown hooks
 #21: Provide `Content-Length` for GET requests
 - Increased default read buffer for StreamingResponseContentImpl 8k->16k
 - Add more stuff in OperationDiagnostics, for DB read/write, last-access update
   breakdowns
-
-0.9.3 (28-Mar-2013)
-
-#18: Add basic endpoint statistics using Yammer metrics package
-#19: Improve shutdown handling, by adding pre-shutdown hooks
 - Update to AHC 1.7.12, DropWizard 0.6.2
-- (from StoreMate 0.9.7) Add experimental LevelDB-based backend
-
-0.9.2 (21-Mar-2013)
-
-#13: Change logging to use slf4j for client package
-- Add basic handling of StoreExceptions, to try to give caller better idea of
-  failures due to underlying storage engine
 
 0.8.9 and earlier
 
