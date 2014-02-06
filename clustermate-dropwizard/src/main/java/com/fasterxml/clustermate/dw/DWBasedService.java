@@ -11,9 +11,7 @@ import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.lifecycle.Managed;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
@@ -24,7 +22,6 @@ import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.impl.StorableStoreImpl;
 import com.fasterxml.storemate.store.state.NodeStateStore;
 import com.fasterxml.storemate.store.util.PartitionedWriteMutex;
-
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.api.msg.ListItem;
@@ -252,7 +249,7 @@ public abstract class DWBasedService<
         
         _managed = new ArrayList<StartAndStoppable>();
 
-        StoredEntryConverter<K,E,L> entryConverter = constructEntryConverter(config, environment);
+        StoredEntryConverter<K,E,L> entryConverter = constructEntryConverter();
         FileManager files = constructFileManager(config);
 
         _serviceStuff = constructServiceStuff(config, _timeMaster, entryConverter, files);
@@ -311,15 +308,24 @@ public abstract class DWBasedService<
     
     /*
     /**********************************************************************
-    /* Factory methods: basic config objects
+    /* Accessors
     /**********************************************************************
      */
 
     public boolean isTesting() { return _runMode.isTesting(); }
+
+    protected SCONFIG serviceConfig() {
+        return _serviceStuff.getServiceConfig();
+    }
+
+    // For tests:
+    public TimeMaster getTimeMaster() {
+        return _timeMaster;
+    }
     
     /*
     /**********************************************************************
-    /* Factory methods: basic config objects
+    /* Factory methods: basic bootstrap config objects
     /**********************************************************************
      */
 
@@ -328,13 +334,15 @@ public abstract class DWBasedService<
      * constructing {@link StoredEntry} instances to store in the
      * entry metadata store.
      */
-    protected abstract StoredEntryConverter<K,E,L> constructEntryConverter(SCONFIG config,
-            Environment environment);
+    @SuppressWarnings("unchecked")
+    protected StoredEntryConverter<K,E,L> constructEntryConverter() {
+        return (StoredEntryConverter<K,E,L>) serviceConfig().getEntryConverter();
+    }
 
     protected abstract FileManager constructFileManager(SCONFIG serviceConfig);
 
-    protected abstract StoresImpl<K,E> constructStores(SCONFIG serviceConfig,
-            StorableStore store, NodeStateStore<IpAndPort, ActiveNodeState> nodeStates);
+    protected abstract StoresImpl<K,E> constructStores(StorableStore store,
+            NodeStateStore<IpAndPort, ActiveNodeState> nodeStates);
 
     protected abstract SharedServiceStuff constructServiceStuff(SCONFIG serviceConfig,
             TimeMaster timeMaster, StoredEntryConverter<K,E,L> entryConverter,
@@ -410,7 +418,7 @@ public abstract class DWBasedService<
     
     protected StoresImpl<K,E> _constructStores() throws IOException
     {
-        final SCONFIG v = _serviceStuff.getServiceConfig();
+        final SCONFIG v = serviceConfig();
         StoreBackendBuilder<?> b = v.instantiateBackendBuilder();
         StoreBackendConfig backendConfig = v._storeBackendConfigOverride;
         if (backendConfig == null) { // no overrides, use databinding
@@ -427,7 +435,7 @@ public abstract class DWBasedService<
                 _serviceStuff.getFileManager(),
                _constructThrottler(), _constructWriteMutex());
         NodeStateStore<IpAndPort, ActiveNodeState> nodeStates = _buildNodeStateStore(b);
-        return constructStores(v, store, nodeStates);
+        return constructStores(store, nodeStates);
     }
 
     protected NodeStateStore<IpAndPort, ActiveNodeState> _buildNodeStateStore(StoreBackendBuilder<?> backendBuilder)
@@ -467,16 +475,6 @@ public abstract class DWBasedService<
     protected PartitionedWriteMutex _constructWriteMutex() {
         // null -> use the default implementation
         return null;
-    }
-    
-    /*
-    /**********************************************************************
-    /* Accessors for tests
-    /**********************************************************************
-     */
-
-    public TimeMaster getTimeMaster() {
-        return _timeMaster;
     }
     
     /*
