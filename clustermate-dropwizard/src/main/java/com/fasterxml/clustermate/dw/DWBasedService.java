@@ -11,6 +11,9 @@ import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.lifecycle.Managed;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
@@ -21,8 +24,8 @@ import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.impl.StorableStoreImpl;
 import com.fasterxml.storemate.store.state.NodeStateStore;
 import com.fasterxml.storemate.store.util.PartitionedWriteMutex;
+
 import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.jaxrs.IndexResource;
@@ -31,35 +34,30 @@ import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cleanup.CleanerUpper;
 import com.fasterxml.clustermate.service.cleanup.CleanupTask;
 import com.fasterxml.clustermate.service.cluster.*;
-import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
-import com.fasterxml.clustermate.service.metrics.BackgroundMetricsAccessor;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.state.JacksonBasedConverter;
 import com.fasterxml.clustermate.service.store.*;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 import com.fasterxml.clustermate.servlet.*;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class DWBasedService<
     K extends EntryKey,
     E extends StoredEntry<K>,
     L extends ListItem,
     SCONFIG extends ServiceConfig,
-    CONF extends DWConfigBase<SCONFIG, CONF>,
-    PATH extends Enum<PATH> // enumeration of known paths for endpoints
+    CONF extends DWConfigBase<SCONFIG, CONF>
 >
     extends Service<CONF>
 {
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
-    protected final Class<PATH> _pathType;
-
-    /**
-     * List of {@link StartAndStoppable} objects we will dispatch start/stop calls to.
+    /*
+    /**********************************************************************
+    /* Basic configuration
+    /**********************************************************************
      */
-    protected List<StartAndStoppable> _managed = null;
-    
+
     /**
      * Running mode of this service; used to indicate whether we are running in
      * test mode, and whether background tasks ought to be run or not.
@@ -73,30 +71,30 @@ public abstract class DWBasedService<
     protected SharedServiceStuff _serviceStuff;
     
     /**
-     * Container for various stores we use for data, metadata.
-     */
-    protected StoresImpl<K,E> _stores;
-    
-    /**
      * This object is needed to allow test code to work around usual
      * waiting time restrictions.
      */
     protected final TimeMaster _timeMaster;
+
+    /*
+    /**********************************************************************
+    /* State management
+    /**********************************************************************
+     */
+    
+    /**
+     * Container for various stores we use for data, metadata.
+     */
+    protected StoresImpl<K,E> _stores;
 
     /**
      * And we better hang on to cluster view as well
      */
     protected ClusterViewByServerUpdatable _cluster;
     
-    /**
-     * Manager object that deals with data expiration and related
-     * clean up tasks.
-     */
-    protected CleanerUpper<K,E> _cleanerUpper;
-
     /*
     /**********************************************************************
-    /* Handlers
+    /* Service handlers
     /**********************************************************************
      */
 
@@ -105,6 +103,29 @@ public abstract class DWBasedService<
     protected SyncHandler<K,E> _syncHandler;
     
     protected StoreHandler<K,E,L> _storeHandler;
+
+    /*
+    /**********************************************************************
+    /* Background processes
+    /**********************************************************************
+     */
+    
+    /**
+     * Manager object that deals with data expiration and related
+     * clean up tasks.
+     */
+    protected CleanerUpper<K,E> _cleanerUpper;
+    
+    /*
+    /**********************************************************************
+    /* State
+    /**********************************************************************
+     */
+    
+    /**
+     * List of {@link StartAndStoppable} objects we will dispatch start/stop calls to.
+     */
+    protected List<StartAndStoppable> _managed = null;
     
     /*
     /**********************************************************************
@@ -112,12 +133,11 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
-    protected DWBasedService(TimeMaster timings, RunMode mode, Class<PATH> pathType)
+    protected DWBasedService(TimeMaster timings, RunMode mode)
     {
         super();
         _timeMaster = timings;
         _runMode = mode;
-        _pathType = pathType;
     }
 
     /*
@@ -218,7 +238,7 @@ public abstract class DWBasedService<
                 _stop();
             }
         });
-
+        
         /* 04-Jun-2013, tatu: Goddammit, disabling gzip filter is tricky due to
          *   data-binding... Object-values get re-created. So, need to patch after
          *   the fact. And hope it works...
@@ -271,7 +291,7 @@ public abstract class DWBasedService<
         _managed.add(_storeHandler);
 
         LOG.info("Adding service end points");
-        addServiceEndpoints(environment);
+        addServiceEndpoints(environment, constructServletFactory());
 
         LOG.info("Adding health checks");
         addHealthChecks(environment);
@@ -288,7 +308,7 @@ public abstract class DWBasedService<
         LOG.info("Initialization complete: HTTP service now running on port {}",
                 dwConfig.getHttpPort());
     }
-
+    
     /*
     /**********************************************************************
     /* Factory methods: basic config objects
@@ -343,76 +363,27 @@ public abstract class DWBasedService<
 
     protected abstract List<CleanupTask<?>> constructCleanupTasks();
 
-    protected BackgroundMetricsAccessor constructMetricsAccessor(AllOperationMetrics.Provider[] metrics) {
-        return new BackgroundMetricsAccessor(_serviceStuff, _stores, metrics);
-    }
-
-    /*
-    /**********************************************************************
-    /* Factory methods: servlets
-    /**********************************************************************
-     */
-
-    protected abstract StoreEntryServlet<K,E> constructStoreEntryServlet();
-
-    protected ServletBase constructNodeStatusServlet() {
-        return new NodeStatusServlet(_serviceStuff, _clusterInfoHandler);
-    }
-
-    protected ServletBase constructNodeMetricsServlet(BackgroundMetricsAccessor accessor) {
-        return new NodeMetricsServlet(_serviceStuff, accessor);
-    }
-        
-    protected SyncListServlet<K,E> constructSyncListServlet() {
-        return new SyncListServlet<K,E>(_serviceStuff, _cluster, _syncHandler);
-    }
-
-    protected SyncPullServlet<K,E> constructSyncPullServlet() {
-        return new SyncPullServlet<K,E>(_serviceStuff, _cluster, _syncHandler);
-    }
-
-    protected StoreListServlet<K,E> constructStoreListServlet() {
-        return new StoreListServlet<K,E>(_serviceStuff, _cluster, _storeHandler);
-    }
-
-    protected ServletBase contructDispatcherServlet()
-    {
-        EnumMap<PathType, ServletBase> servlets = new EnumMap<PathType, ServletBase>(PathType.class);
-        servlets.put(PathType.NODE_STATUS, constructNodeStatusServlet());
-
-        ServletWithMetricsBase syncListServlet = constructSyncListServlet();
-        servlets.put(PathType.SYNC_LIST, syncListServlet);
-        ServletWithMetricsBase syncPullServlet = constructSyncPullServlet();
-        servlets.put(PathType.SYNC_PULL, syncPullServlet);
-        StoreEntryServlet<K,E> storeEntryServlet = constructStoreEntryServlet();
-        servlets.put(PathType.STORE_ENTRY, storeEntryServlet);
-        ServletWithMetricsBase storeListServlet = constructStoreListServlet();
-        servlets.put(PathType.STORE_ENTRIES, storeListServlet);
-
-        final BackgroundMetricsAccessor metrics = constructMetricsAccessor(
-                new AllOperationMetrics.Provider[] {
-                    storeEntryServlet, storeListServlet, syncListServlet, syncPullServlet
-                });
-        servlets.put(PathType.NODE_METRICS, constructNodeMetricsServlet(metrics));
-        return new ServiceDispatchServlet<K,E,PathType>(_cluster, null, _serviceStuff, servlets);
-    }
-    
     /*
     /**********************************************************************
     /* Methods for service end point additions
     /**********************************************************************
      */
 
+    protected CMServletFactory constructServletFactory() {
+        return new DefaultCMServletFactory<K,E,L,SCONFIG>(_serviceStuff,
+                _stores, _cluster, _clusterInfoHandler, _syncHandler, _storeHandler);
+    }
+    
     /**
      * Method called to create service endpoints, given set of
      * handlers.
      */
-    protected void addServiceEndpoints(Environment environment)
+    protected void addServiceEndpoints(Environment environment, CMServletFactory servletFactory)
     {
         RequestPathBuilder<?> rootBuilder = rootPath(_serviceStuff.getServiceConfig());
         String rootPath = servletPath(rootBuilder);
         LOG.info("Registering main Dispatcher servlet at: "+rootPath);
-        ServletBase dispatcher = contructDispatcherServlet();
+        ServletBase dispatcher = servletFactory.contructDispatcherServlet();
         if (dispatcher != null) {
             environment.addServlet(dispatcher, rootPath);
         }
@@ -425,7 +396,10 @@ public abstract class DWBasedService<
      * alternate location. Usually used for backwards compatibility purposes.
      */
     protected void addStoreEntryServlet(Environment environment) { }
-    
+
+    /**
+     * Method called for installing DropWizard-mandated health checks.
+     */
     protected void addHealthChecks(Environment environment) { }
     
     /*
