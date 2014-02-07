@@ -21,6 +21,27 @@ public interface WriteOperation<RESULT extends WriteOperationResult<RESULT>,
      * @return Number of call rounds completed currently
      */
     public int completedRounds();
+
+    /**
+     * Method for checking whether we may make any more calls for this operation;
+     * returns false if no nodes exist for which we can make calls.
+     *<p>
+     * Functionally equivalent to:
+     *<pre>
+     *    remainingHostCount() &gt; 0;
+     *</pre>
+     * 
+     * @return True if calling one of "completeXxx()" may result in calls being made;
+     *   false if it is known that no more calls may be made.
+     */
+    public boolean hasRemainingHosts();
+    
+    /**
+     * @return Number of hosts that may still be called by this operation; zero
+     *    when operation is complete with combination of successes and/or
+     *    non-retriable failures.
+     */
+    public int remainingHostCount();
     
     /**
      * Method called to try to complete operation such that it fulfills minimal

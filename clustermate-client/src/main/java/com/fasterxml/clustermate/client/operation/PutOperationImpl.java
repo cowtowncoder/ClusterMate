@@ -141,6 +141,17 @@ public class PutOperationImpl<K extends EntryKey,
     public int completedRounds() {
         return _round;
     }
+
+    @Override
+    public boolean hasRemainingHosts() {
+        return remainingHostCount() > 0;
+    }
+
+    @Override
+    public int remainingHostCount() {
+        return _activeNodes.size();
+    }
+
     
     @Override
     public PutOperation completeMinimally() throws InterruptedException {

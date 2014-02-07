@@ -3,6 +3,7 @@ Project: ClusterMate
 0.9.25 (xx-xxx-2014)
 
 - Fix a problem with pre-mature release of content with PUT operation.
+- Add more access in WriteOperation, to figure out if operation can proceed
 
 0.9.24 (05-Feb-2014)
 
