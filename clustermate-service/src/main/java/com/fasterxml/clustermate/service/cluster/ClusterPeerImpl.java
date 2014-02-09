@@ -723,8 +723,8 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                     }
                     // missing header? Unexpected, but not illegal
                     if (headerLength == 0) {
-                        LOG.warn("Missing entry {}/{}, id {}: expired?",
-                                new Object[] { count, expCount, reqEntry.key});
+                        LOG.warn("Missing entry {}/{} (from {}), id {}: expired?",
+                                new Object[] { count, expCount, _syncState.getAddress(), reqEntry.key});
                         continue;
                     }
                     
