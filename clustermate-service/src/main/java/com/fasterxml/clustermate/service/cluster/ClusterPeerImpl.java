@@ -888,10 +888,12 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (!result.succeeded()) {
             if (result.getPreviousEntry() != null) {
                 // most likely ok: already had the entry
-                LOG.info("Redundant sync-pull for '{}': entry already existed locally", header.key);
+                LOG.info("Redundant sync-pull for '{}' (from {}): entry already existed locally",
+                        header.key, _syncState.getAddress());
             } else {
                 // should this add to 'failCount'? For now, don't
-                LOG.warn("Failed sync-pull for '{}': no old entry. Strange!", header.key);
+                LOG.warn("Failed sync-pull for '{}' (from {}): no old entry. Strange!",
+                        header.key, _syncState.getAddress());
             }
         }
     }
