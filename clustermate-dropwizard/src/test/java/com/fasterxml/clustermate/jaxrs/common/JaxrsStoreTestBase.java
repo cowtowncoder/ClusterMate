@@ -348,7 +348,18 @@ public abstract class JaxrsStoreTestBase extends TestCase
         int status = response.getStatus();
         if (status != 200) {
             byte[] b = response.getContentAsBytes();
-            String error = (b == null || b.length == 0) ? "N/A" : new String(b, "ISO-8859-1");
+            String error = "N/A";
+
+            if (b != null && b.length > 0) {
+                error = new String(b, "ISO-8859-1");
+            } else if (response.hasEntity()) {
+                Object entity = response.getEntity();
+                if (entity instanceof String) {
+                    error = (String) entity;
+                } else if (entity != null) {
+                    error = "("+entity.getClass().getName()+") "+entity;
+                }
+            }
             
             fail("Expected OK (200) response, got "+status+"; error: "+error);
         }
