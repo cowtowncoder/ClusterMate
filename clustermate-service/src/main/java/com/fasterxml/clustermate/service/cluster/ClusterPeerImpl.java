@@ -705,6 +705,8 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             int count = 0;
             int headerLength = 0;
             long payloadLength = 0;
+            final PullProblems probs = new PullProblems();
+            
             try {
                 // let's see if we can correlate entries nicely
                 headerLength = -1;
@@ -718,13 +720,16 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                     }
                     // sanity check:
                     if (count == expCount) {
+                        ++probs.other;
                         LOG.warn("Server returned more than expected {} entries; ignoring rest!", expCount);
                         break;
                     }
                     // missing header? Unexpected, but not illegal
                     if (headerLength == 0) {
-                        LOG.warn("Missing entry {}/{} (from {}), id {}: expired?",
-                                new Object[] { count, expCount, _syncState.getAddress(), reqEntry.key});
+                        if (probs.missing++ == 0) {
+                            LOG.warn("Missing entry {}/{} (from {}), id {}: expired? (will only report first)",
+                                    new Object[] { count, expCount, _syncState.getAddress(), reqEntry.key});
+                        }
                         continue;
                     }
                     
@@ -736,17 +741,20 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                     SyncPullEntry header = _syncListAccessor.decodePullEntry(headerBytes);
                     payloadLength = header.storageSize;
                     // and then create the actual entry:
-                    _pullEntry(reqEntry, header, in);
+                    _pullEntry(reqEntry, header, in, probs);
                     syncedUpTo = reqEntry.insertionTime; 
                 }
                 if (count < expCount) {
                     // let's consider 0 entries to be an error, to prevent infinite loops
                     if (count == 0) {
-                        LOG.warn("Server returned NO entries, when requested {}", expCount);
+                        LOG.warn("Server returned NO entries, when requested "+expCount);
                         ++fails;
                     }
                     LOG.warn("Server returned fewer entries than requested for sync pull: {} vs {} (in {} msecs)",
                             new Object[] { count, expCount, (_timeMaster.currentTimeMillis() - startTime)});
+                }
+                if (probs.hasIssues()) {
+                    LOG.warn("Problems with pull request to {}: {}", _syncState.getAddress(), probs);
                 }
             } catch (Exception e) {
                 LOG.warn("Problem trying to fetch syncPull entry {}/{} (header-length: {}, length: {}): ({}) {}",
@@ -824,7 +832,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      * if and as necessary.
      */
     private void _pullEntry(SyncListResponseEntry reqEntry, SyncPullEntry header,
-            InputStream in)
+            InputStream in, PullProblems probs)
         throws IOException
     {
         final StorableKey key = header.key;
@@ -879,6 +887,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             if (result.succeeded() && !bin.isCompletelyRead()) { // error or warning?
                 Storable entry = result.getNewEntry();
                 long ssize = (entry == null) ? -1L : entry.getStorageLength();
+                ++probs.other;
                 LOG.warn("Problems with sync-pull for '{}': read {} bytes, should have read {} more; entry storageSize: {}",
                         new Object[] { header.key, bin.bytesRead(), bin.bytesLeft(), ssize });
             }
@@ -886,14 +895,16 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
 
         // should we care whether this was redundant or not?
         if (!result.succeeded()) {
-            if (result.getPreviousEntry() != null) {
-                // most likely ok: already had the entry
-                LOG.info("Redundant sync-pull for '{}' (from {}): entry already existed locally",
-                        header.key, _syncState.getAddress());
-            } else {
-                // should this add to 'failCount'? For now, don't
-                LOG.warn("Failed sync-pull for '{}' (from {}): no old entry. Strange!",
-                        header.key, _syncState.getAddress());
+            if (probs.redundant++ == 0) {
+                if (result.getPreviousEntry() != null) {
+                    // most likely ok: already had the entry
+                    LOG.info("Redundant sync-pull for '{}' (from {}): entry already existed locally (will only report first)",
+                            header.key, _syncState.getAddress());
+                } else {
+                    // should this add to 'failCount'? For now, don't
+                    LOG.warn("Failed sync-pull for '{}' (from {}): no old entry. Strange! (will only report first)",
+                            header.key, _syncState.getAddress());
+                }
             }
         }
     }
@@ -901,5 +912,24 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
     protected final boolean hasOverlap(NodeState state1, NodeState state2)
     {
         return state1.totalRange().overlapsWith(state2.totalRange());
+    }
+
+    private static class PullProblems {
+        public int redundant = 0;
+        public int missing = 0;
+        public int other = 0;
+
+        public boolean hasIssues() {
+            return (redundant > 0) || (missing > 0) || (other > 0);
+        }
+
+        @Override
+        public String toString() {
+            return new StringBuilder(60)
+                .append(redundant).append(" redundant, ")
+                .append(missing).append(" missing entries and ")
+                .append(other).append(" other problems")
+                .toString();
+        }
     }
 }
