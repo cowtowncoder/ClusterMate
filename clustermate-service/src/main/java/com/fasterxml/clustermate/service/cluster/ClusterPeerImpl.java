@@ -883,7 +883,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                         new Object[] { header.key, bin.bytesRead(), bin.bytesLeft(), ssize });
             }
         }
-        
+
         // should we care whether this was redundant or not?
         if (!result.succeeded()) {
             if (result.getPreviousEntry() != null) {

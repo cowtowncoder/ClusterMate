@@ -53,22 +53,22 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
                 INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
                 null, null, null);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
                 INTERNAL_KEY2, calcChecksum(DATA2), new ByteArrayInputStream(DATA2),
                 null, null, null);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         assertEquals(2, entryCount(entries));
 
         // then verify we can find them:
         response = new FakeHttpResponse();
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY2);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         assertTrue(response.hasStreamingContent());
 
         response = new FakeHttpResponse();
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         assertTrue(response.hasStreamingContent());
         // access does update timestamp
         assertEquals(startTime, resource.getStores().getLastAccessStore().findLastAccessTime(
@@ -80,7 +80,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         TestKey deleteKey = contentKey(CLIENT_ID, KEY2);
         resource.getHandler().removeEntry(new FakeHttpRequest(), response, deleteKey);
 
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         assertSame(DeleteResponse.class, response.getEntity().getClass());
         DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(deleteKey.toString(), dr.key);
@@ -111,7 +111,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         assertFalse(entry.isDeleted());
         response = new FakeHttpResponse();
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
 
         // But content dump should give two non-deleted entries...
         List<Storable> e = ((AdminStorableStore) entries).dumpEntries(StoreOperationSource.ADMIN_TOOL, 10, true);
@@ -121,7 +121,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         response = new FakeHttpResponse();
         resource.getHandler().removeEntry(new FakeHttpRequest(), response,
                 contentKey(CLIENT_ID, KEY2));
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         assertSame(DeleteResponse.class, response.getEntity().getClass());
 
         // then, delete the other entry as well
@@ -129,7 +129,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         deleteKey = contentKey(CLIENT_ID, KEY1);
         resource.getHandler().removeEntry(new FakeHttpRequest(), response,
                 deleteKey);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         assertSame(DeleteResponse.class, response.getEntity().getClass());
         dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(deleteKey.toString(), dr.key);
@@ -165,13 +165,13 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
                 INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
                 null, null, null);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         assertEquals(1, entryCount(entries));
 
         // then DELETE it
         timeMaster.advanceCurrentTimeMillis(10L);
         resource.getHandler().removeEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         assertSame(DeleteResponse.class, response.getEntity().getClass());
         DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(INTERNAL_KEY1.toString(), dr.key);
@@ -218,12 +218,12 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
                 INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
                 null, null, null);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         assertEquals(1, entryCount(entries));
 
         timeMaster.advanceCurrentTimeMillis(10L);
         resource.getHandler().removeEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         assertSame(DeleteResponse.class, response.getEntity().getClass());
         DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(INTERNAL_KEY1.toString(), dr.key);
@@ -235,14 +235,14 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
                 INTERNAL_KEY1, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
                 null, null, null);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         PutResponse<?> pr = (PutResponse<?>) response.getEntity();
         assertNotNull(pr);
 
         // and make entry accessible
         response = new FakeHttpResponse();
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
 
         assertTrue(response.hasInlinedData());
         byte[] data = collectOutput(response);
@@ -250,7 +250,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
 
         // Oh. One more try; now with different data, ought to fail. So, DELETE again:
         resource.getHandler().removeEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         // and then try PUT with bit different data...
 
         response = new FakeHttpResponse();

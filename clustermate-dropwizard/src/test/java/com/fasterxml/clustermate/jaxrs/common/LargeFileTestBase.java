@@ -204,8 +204,8 @@ public abstract class LargeFileTestBase extends JaxrsStoreTestBase
         _testLargerPrecompressed(256000);
     }
 
-    public void testLargerPrecompressed2megs() throws Exception {
-        _testLargerPrecompressed(2 * 1000 * 1000);
+    public void testLargerPrecompressed1500k() throws Exception {
+        _testLargerPrecompressed((int) (1.5 * 1000 * 1000));
     }
         
     protected void _testLargerPrecompressed(final int origSize) throws Exception

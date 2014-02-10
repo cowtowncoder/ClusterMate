@@ -91,6 +91,14 @@ public class FakeHttpResponse extends ServiceResponse
         return _streamingContent;
     }
 
+    public byte[] getContentAsBytes() throws IOException
+    {
+        if (_streamingContent != null) {
+            return getStreamingContentAsBytes();
+        }
+        return new byte[0];
+    }
+
     public byte[] getStreamingContentAsBytes() throws IOException
     {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream(2000);

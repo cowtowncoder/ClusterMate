@@ -343,7 +343,17 @@ public abstract class JaxrsStoreTestBase extends TestCase
                     +actual+"'");
         }
     }
-	
+
+    protected void verifyResponseOk(FakeHttpResponse response) throws IOException {
+        int status = response.getStatus();
+        if (status != 200) {
+            byte[] b = response.getContentAsBytes();
+            String error = (b == null || b.length == 0) ? "N/A" : new String(b, "ISO-8859-1");
+            
+            fail("Expected OK (200) response, got "+status+"; error: "+error);
+        }
+    }
+    
     /*
     /**********************************************************************
     /* Log setup
