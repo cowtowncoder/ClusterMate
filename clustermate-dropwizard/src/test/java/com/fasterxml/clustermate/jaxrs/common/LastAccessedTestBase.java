@@ -64,17 +64,17 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
                 KEY1A, calcChecksum(DATA1A_BYTES), new ByteArrayInputStream(DATA1A_BYTES),
                 null, null, null);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
                 KEY2, calcChecksum(DATA2_BYTES), new ByteArrayInputStream(DATA2_BYTES),
                 null, null, null);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
         response = new FakeHttpResponse();
         resource.getHandler().putEntry(new FakeHttpRequest(), response,
                 KEY1B, calcChecksum(DATA1B_BYTES), new ByteArrayInputStream(DATA1B_BYTES),
                 null, null, null);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
 
         // find entries; should not yet have last-accessed timestamps
         final StorableStore entries = resource.getStores().getEntryStore();
@@ -164,7 +164,7 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
         // One more thing: deletions. Individual entries -> last-access should disappear
         response = new FakeHttpResponse();
         resource.getHandler().removeEntry(new FakeHttpRequest(), response, KEY2);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
 
         assertEquals(0L, accessStore.findLastAccessTime
                 (entry2.getKey(), entry2.getLastAccessUpdateMethod()));
@@ -177,7 +177,7 @@ public abstract class LastAccessedTestBase extends JaxrsStoreTestBase
 
         response = new FakeHttpResponse();
         resource.getHandler().removeEntry(new FakeHttpRequest(), response, KEY1A);
-        assertEquals(200, response.getStatus());
+        verifyResponseOk(response);
 
         assertEquals(0L, accessStore.findLastAccessTime
                 (entry2.getKey(), entry2.getLastAccessUpdateMethod()));
