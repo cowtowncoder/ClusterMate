@@ -53,6 +53,7 @@ public class ItemInfo extends ExtensibleType
         this.compressedLength = compressedLength;
         comp = compression;
         this.hash = hash;
+        this.flags = flags;
     }
     
     protected ItemInfo(ItemInfo base) {
