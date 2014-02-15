@@ -7,6 +7,7 @@ public enum PathType
 {
     // access to stored entries
     STORE_ENTRY, // single-entry CRUD
+    STORE_ENTRY_INFO, // metadata about single entry
     STORE_ENTRIES, // multi-entry listings
     STORE_STATUS, // diagnostics interface
 

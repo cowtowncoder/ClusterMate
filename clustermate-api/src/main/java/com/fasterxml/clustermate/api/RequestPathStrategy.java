@@ -31,12 +31,18 @@ public abstract class RequestPathStrategy<P extends Enum <P>>
      */
 
     /**
-     * @since 0.9.24
+     * Method for building path for accessing payload of specified entry.
      */
     public abstract <B extends RequestPathBuilder<B>> B appendStoreEntryPath(B basePath);
 
     /**
-     * @since 0.9.24
+     * Method for building path for entry point to access item info of individual entries.
+     */
+    public abstract <B extends RequestPathBuilder<B>> B appendStoreEntryInfoPath(B basePath);
+
+    /**
+     * Method for building path for entry point to list available entries with specified
+     * path prefix.
      */
     public abstract <B extends RequestPathBuilder<B>> B appendStoreListPath(B basePath);
     
@@ -46,24 +52,12 @@ public abstract class RequestPathStrategy<P extends Enum <P>>
     /**********************************************************************å
      */
 
-    /**
-     * @since 0.9.24
-     */
     public abstract <B extends RequestPathBuilder<B>> B appendSyncListPath(B basePath);
 
-    /**
-     * @since 0.9.24
-     */
     public abstract <B extends RequestPathBuilder<B>> B appendSyncPullPath(B basePath);
 
-    /**
-     * @since 0.9.24
-     */
     public abstract <B extends RequestPathBuilder<B>> B appendNodeMetricsPath(B basePath);
 
-    /**
-     * @since 0.9.24
-     */
     public abstract <B extends RequestPathBuilder<B>> B appendNodeStatusPath(B basePath);
     
     /*

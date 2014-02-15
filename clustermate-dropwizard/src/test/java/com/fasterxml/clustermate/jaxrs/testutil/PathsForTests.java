@@ -15,6 +15,7 @@ public class PathsForTests extends RequestPathStrategy<PathType>
     protected final static String FIRST_SEGMENT_SYNC = "testsync";
 
     protected final static String SECOND_SEGMENT_STORE_ENTRY = "entry";
+    protected final static String SECOND_SEGMENT_STORE_ENTRY_INFO = "entryInfo";
     protected final static String SECOND_SEGMENT_STORE_ENTRIES= "entries";
     protected final static String SECOND_SEGMENT_STORE_STATUS = "status";
     protected final static String SECOND_SEGMENT_STORE_FIND_ENTRY = "findEntry";
@@ -44,6 +45,8 @@ public class PathsForTests extends RequestPathStrategy<PathType>
 
         case STORE_ENTRY:
             return _storePath(basePath).addPathSegment(SECOND_SEGMENT_STORE_ENTRY);
+        case STORE_ENTRY_INFO:
+            return _storePath(basePath).addPathSegment(SECOND_SEGMENT_STORE_ENTRY_INFO);
         case STORE_FIND_ENTRY:
             return _storePath(basePath).addPathSegment(SECOND_SEGMENT_STORE_FIND_ENTRY);
         case STORE_FIND_LIST:
@@ -72,6 +75,11 @@ public class PathsForTests extends RequestPathStrategy<PathType>
         return _storePath(basePath).addPathSegment(SECOND_SEGMENT_STORE_ENTRY);
     }
 
+    @Override
+    public <B extends RequestPathBuilder<B>> B appendStoreEntryInfoPath(B basePath) {
+        return _storePath(basePath).addPathSegment(SECOND_SEGMENT_STORE_ENTRY_INFO);
+    }
+    
     @Override
     public <B extends RequestPathBuilder<B>> B appendStoreListPath(B basePath) {
         return _storePath(basePath).addPathSegment(SECOND_SEGMENT_STORE_ENTRIES);
