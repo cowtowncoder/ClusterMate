@@ -1,6 +1,10 @@
 Project: ClusterMate
 
-0.9.25 (xx-xxx-2014)
+0.9.26 (xx-Feb-2014)
+
+- Add "entry info" end point for accessing per-entry cluster-wide metadata
+
+0.9.25 (08-Feb-2014)
 
 - Fix a problem with pre-mature release of content with PUT operation.
 - Add more access in WriteOperation, to figure out if operation can proceed
