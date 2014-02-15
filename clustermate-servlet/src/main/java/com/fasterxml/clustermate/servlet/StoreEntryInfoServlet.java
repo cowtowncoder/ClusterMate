@@ -177,7 +177,7 @@ public class StoreEntryInfoServlet<K extends EntryKey, E extends StoredEntry<K>>
         if (entry == null) {
             return response.notFound();
         }
-        response = (ServletServiceResponse) _storeHandler.getEntry(request, response, key, stats);
+        response = response.ok(_entryConverter.itemInfoFromStorable(entry));
         _addStdHeaders(response);
         return response;
     }
@@ -192,7 +192,7 @@ public class StoreEntryInfoServlet<K extends EntryKey, E extends StoredEntry<K>>
         }
         // What kind of info, if any, should we return? Content-length would be possible,
         // but misleading/inaccurate, since our payload is JSON, not stored entry
-        response = response.ok(_entryConverter.itemInfoFromStorable(entry));
+        response = response.ok();
         _addStdHeaders(response);
         return response;
     }
