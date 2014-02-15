@@ -21,12 +21,16 @@ public class ItemInfo extends ExtensibleType
     protected long modtime;
 
     protected long length;
+
     protected long compressedLength;
-    
-    protected Character compression;
+
+    // instead of 'getCompression', to save space
+    @JsonProperty
+    protected Character comp;
 
     protected int hash;
 
+    @JsonProperty
     protected String flags;
     
     /*
@@ -47,7 +51,7 @@ public class ItemInfo extends ExtensibleType
         this.modtime = modtime;
         this.length = length;
         this.compressedLength = compressedLength;
-        this.compression = compression;
+        comp = compression;
         this.hash = hash;
     }
     
@@ -55,7 +59,7 @@ public class ItemInfo extends ExtensibleType
         modtime = base.modtime;
         length = base.length;
         compressedLength = base.compressedLength;
-        compression = base.compression;
+        comp = base.comp;
         hash = base.hash;
         flags = base.flags;
     }
@@ -73,10 +77,7 @@ public class ItemInfo extends ExtensibleType
 
     @JsonProperty("compLength")
     public long getCompressedLength() { return compressedLength; }
-
-    @JsonProperty("comp")
-    public Character getCompression() { return compression; }
-
+    
     /*
     /**********************************************************************
     /* Convenience accessors
@@ -84,8 +85,27 @@ public class ItemInfo extends ExtensibleType
      */
 
     @JsonIgnore
+    public Compression getCompression() {
+        if (comp == null) {
+            return Compression.NONE;
+        }
+        char c = comp.charValue();
+        for (Compression cmp : Compression.values()) {
+            if (c == cmp.asChar()) {
+                return cmp;
+            }
+        }
+        // let's allow empty for bit more robustness
+        if (c == ' ' || c == '\0') {
+            return Compression.NONE;
+        }
+        throw new IllegalStateException("Invalid compression type '"+comp+"' (0x"
+                +Integer.toHexString(c)+")");
+    }
+    
+    @JsonIgnore
     public boolean isCompressed() {
-        return (compression == null) || (compression.charValue() == Compression.NONE.asChar());
+        return (comp == null) || (comp.charValue() == Compression.NONE.asChar());
     }
 
     @JsonIgnore

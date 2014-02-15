@@ -177,7 +177,8 @@ public class StoreEntryInfoServlet<K extends EntryKey, E extends StoredEntry<K>>
         if (entry == null) {
             return response.notFound();
         }
-        response = response.ok(_entryConverter.itemInfoFromStorable(entry));
+        response = response.setContentTypeJson()
+                .ok(_entryConverter.itemInfoFromStorable(entry));
         _addStdHeaders(response);
         return response;
     }
