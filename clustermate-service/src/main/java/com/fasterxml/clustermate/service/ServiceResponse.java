@@ -121,11 +121,11 @@ public abstract class ServiceResponse
     /**********************************************************************
      */
     
-    public final ServiceResponse ok() {
+    public final <RESP extends ServiceResponse> RESP ok() {
         return setStatus(ClusterMateConstants.HTTP_STATUS_OK);
     }
 
-    public final ServiceResponse ok(Object entity) {
+    public final <RESP extends ServiceResponse> RESP ok(Object entity) {
         return ok().setEntity(entity);
     }
 
@@ -165,7 +165,7 @@ public abstract class ServiceResponse
     /**********************************************************************
      */
 
-    public final <RESP extends ServiceResponse> RESP  notChanged() {
+    public final <RESP extends ServiceResponse> RESP notChanged() {
         return setStatus(304);
     }
     
@@ -174,36 +174,36 @@ public abstract class ServiceResponse
         return setStatus(405);
     }
     
-    public final <RESP extends ServiceResponse> RESP  badRange(Object entity) {
+    public final <RESP extends ServiceResponse> RESP badRange(Object entity) {
         // 416 is used for invalid Range requests
         return set(416, entity);
     }
 
-    public final <RESP extends ServiceResponse> RESP  badRequest(Object entity) {
+    public final <RESP extends ServiceResponse> RESP badRequest(Object entity) {
         return set(400, entity);
     }
 
-    public final <RESP extends ServiceResponse> RESP  conflict(Object entity) {
+    public final <RESP extends ServiceResponse> RESP conflict(Object entity) {
         return set(409, entity);
     }
 
-    public final <RESP extends ServiceResponse> RESP  gone(Object entity) {
+    public final <RESP extends ServiceResponse> RESP gone(Object entity) {
         return set(410, entity);
     }
     
-    public final <RESP extends ServiceResponse> RESP  notFound() {
+    public final <RESP extends ServiceResponse> RESP notFound() {
         return setStatus(404);
     }
     
-    public final <RESP extends ServiceResponse> RESP  notFound(Object entity) {
+    public final <RESP extends ServiceResponse> RESP notFound(Object entity) {
         return set(404, entity);
     }
 
-    public final <RESP extends ServiceResponse> RESP  internalError(Object entity) {
+    public final <RESP extends ServiceResponse> RESP internalError(Object entity) {
         return set(500, entity);
     }
 
-    public final <RESP extends ServiceResponse> RESP  internalFileNotFound(Object entity) {
+    public final <RESP extends ServiceResponse> RESP internalFileNotFound(Object entity) {
         /* 12-Dec-2013, tatu: There isn't really any optimal 5xx code; but to distringuish
          *    this from generic 500, let's use 507 ("not enough space"), which hopefully
          *    at least allows separating it from other fails.

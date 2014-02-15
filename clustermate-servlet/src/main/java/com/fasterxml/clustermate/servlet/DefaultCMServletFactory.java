@@ -95,6 +95,7 @@ public class DefaultCMServletFactory<
         _add(servlets, PathType.SYNC_LIST, constructSyncListServlet());
         _add(servlets, PathType.SYNC_PULL, constructSyncPullServlet());
         _add(servlets, PathType.STORE_ENTRY, constructStoreEntryServlet());
+        _add(servlets, PathType.STORE_ENTRY_INFO, constructStoreEntryInfoServlet());
         _add(servlets, PathType.STORE_ENTRIES, constructStoreListServlet());
 
         List<AllOperationMetrics.Provider> metrics = new ArrayList<AllOperationMetrics.Provider>();
@@ -129,6 +130,10 @@ public class DefaultCMServletFactory<
         return new StoreEntryServlet<K,E>(_serviceStuff, _cluster, _storeHandler);
     }
 
+    protected ServletBase constructStoreEntryInfoServlet() {
+        return new StoreEntryInfoServlet<K,E>(_serviceStuff, _cluster, _storeHandler);
+    }
+    
     protected ServletBase constructNodeStatusServlet() {
         return new NodeStatusServlet(_serviceStuff, _clusterInfoHandler);
     }

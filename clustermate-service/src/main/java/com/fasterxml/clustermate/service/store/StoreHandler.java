@@ -262,12 +262,11 @@ public abstract class StoreHandler<
         } catch (IllegalArgumentException e) {
             return invalidRange(response, key, rangeStr, e.getMessage());
         }
-        final StorableStore entryStore = _stores.getEntryStore();
         String acceptableEnc = request.getHeader(ClusterMateConstants.HTTP_HEADER_ACCEPT_COMPRESSION);
         Storable rawEntry;
 
         try {
-            rawEntry = findRawEntryForReads(entryStore, key, diag);
+            rawEntry = findRawEntryForGet(key, diag);
         } catch (IOException e) {
             return _storeError(response, key, e);
         }
@@ -317,7 +316,7 @@ public abstract class StoreHandler<
             // but that can't be helped for now -- we MUST catch the problem here, before
             // adding other response information
             try {
-                output = new FileBackedResponseContentImpl(diag, _timeMaster, entryStore,
+                output = new FileBackedResponseContentImpl(diag, _timeMaster, _stores.getEntryStore(),
                     accessTime, f, skipCompression ? null : comp, range, entry);
             } catch (StoreException e) {
                 LOG.error("Problem trying to GET entry '"+key+"': "+e.getMessage());
@@ -409,7 +408,7 @@ public abstract class StoreHandler<
     	// Should this update last-accessed as well? (for now, won't)
         Storable rawEntry;
         try {
-            rawEntry = findRawEntryForReads(_stores.getEntryStore(), key, diag);
+            rawEntry = findRawEntryForHead(key, diag);
         } catch (IOException e) {
             return _storeError(response, key, e);
         } 
@@ -417,7 +416,7 @@ public abstract class StoreHandler<
             diag.setEntry(rawEntry);
         }
         if (rawEntry == null) {
-            return response.notFound(new GetErrorResponse<K>(key, "No entry found for key '"+key+"'"));
+            return response.notFound();
         }
         // second: did we get a tombstone?
         if (rawEntry.isDeleted()) {
@@ -939,7 +938,28 @@ public abstract class StoreHandler<
      */
     
     /**
-     * Overridable accessor methods used for GET and HEAD requests.
+     * Overridable accessor method used for entry HEAD requests.
+     */
+    public Storable findRawEntryForHead(K key, OperationDiagnostics diag) throws IOException, StoreException {
+        return findRawEntryForReads(_stores.getEntryStore(), key, diag);
+    }
+
+    /**
+     * Overridable accessor method used for entry GET requests
+     */
+    public Storable findRawEntryForGet(K key, OperationDiagnostics diag) throws IOException, StoreException {
+        return findRawEntryForReads(_stores.getEntryStore(), key, diag);
+    }
+
+    /**
+     * Overridable accessor method used for entry info requests
+     */
+    public Storable findRawEntryForInfo(K key, OperationDiagnostics diag) throws IOException, StoreException {
+        return findRawEntryForReads(_stores.getEntryStore(), key, diag);
+    }
+    
+    /**
+     * Overridable accessor methods used for entry GET, HEAD and info requests.
      */
     protected Storable findRawEntryForReads(StorableStore entryStore, K key,
             OperationDiagnostics diag)
