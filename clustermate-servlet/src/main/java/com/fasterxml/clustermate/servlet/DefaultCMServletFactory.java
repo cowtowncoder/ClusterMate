@@ -4,7 +4,6 @@ import java.util.*;
 
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.PathType;
-import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterInfoHandler;
@@ -19,7 +18,6 @@ import com.fasterxml.clustermate.service.sync.SyncHandler;
 public class DefaultCMServletFactory<
     K extends EntryKey,
     E extends StoredEntry<K>,
-    L extends ListItem,
     SCONFIG extends ServiceConfig
 >
     extends CMServletFactory
@@ -57,7 +55,7 @@ public class DefaultCMServletFactory<
 
     protected final SyncHandler<K,E> _syncHandler;
     
-    protected final StoreHandler<K,E,L> _storeHandler;
+    protected final StoreHandler<K,E,?> _storeHandler;
 
     /*
     /**********************************************************************
@@ -69,7 +67,7 @@ public class DefaultCMServletFactory<
             StoresImpl<K,E> stores, ClusterViewByServerUpdatable cluster,
             ClusterInfoHandler clusterInfoHandler,
             SyncHandler<K,E> syncHandler,
-            StoreHandler<K,E,L> storeHandler)
+            StoreHandler<K,E,?> storeHandler)
     {
         _serviceStuff = stuff;
         _config = stuff.getServiceConfig();
@@ -92,12 +90,12 @@ public class DefaultCMServletFactory<
     public ServletBase contructDispatcherServlet()
     {
         EnumMap<PathType, ServletBase> servlets = new EnumMap<PathType, ServletBase>(PathType.class);
-        servlets.put(PathType.NODE_STATUS, constructNodeStatusServlet());
+        _add(servlets, PathType.NODE_STATUS, constructNodeStatusServlet());
 
-        servlets.put(PathType.SYNC_LIST, constructSyncListServlet());
-        servlets.put(PathType.SYNC_PULL, constructSyncPullServlet());
-        servlets.put(PathType.STORE_ENTRY, constructStoreEntryServlet());
-        servlets.put(PathType.STORE_ENTRIES, constructStoreListServlet());
+        _add(servlets, PathType.SYNC_LIST, constructSyncListServlet());
+        _add(servlets, PathType.SYNC_PULL, constructSyncPullServlet());
+        _add(servlets, PathType.STORE_ENTRY, constructStoreEntryServlet());
+        _add(servlets, PathType.STORE_ENTRIES, constructStoreListServlet());
 
         List<AllOperationMetrics.Provider> metrics = new ArrayList<AllOperationMetrics.Provider>();
         for (ServletBase servlet : servlets.values()) {
@@ -109,7 +107,7 @@ public class DefaultCMServletFactory<
         servlets.put(PathType.NODE_METRICS, constructNodeMetricsServlet(metricAcc));
         return new ServiceDispatchServlet<K,E,PathType>(_cluster, null, _serviceStuff, servlets);
     }
-
+    
     /*
     /**********************************************************************
     /* Factory methods: metrics
@@ -149,5 +147,19 @@ public class DefaultCMServletFactory<
 
     protected ServletBase constructStoreListServlet() {
         return new StoreListServlet<K,E>(_serviceStuff, _cluster, _storeHandler);
+    }
+
+    /*
+    /**********************************************************************
+    /* Helper methods
+    /**********************************************************************
+     */
+    
+    protected <T extends Enum<T>> void _add(EnumMap<T, ServletBase> servlets,
+            T path, ServletBase servlet)
+    {
+        if (servlet != null) {
+            servlets.put(path, servlet);
+        }
     }
 }

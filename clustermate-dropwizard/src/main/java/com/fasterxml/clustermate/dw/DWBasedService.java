@@ -11,7 +11,9 @@ import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.lifecycle.Managed;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
@@ -22,9 +24,9 @@ import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.impl.StorableStoreImpl;
 import com.fasterxml.storemate.store.state.NodeStateStore;
 import com.fasterxml.storemate.store.util.PartitionedWriteMutex;
+
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
-import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.jaxrs.IndexResource;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
@@ -41,7 +43,6 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 public abstract class DWBasedService<
     K extends EntryKey,
     E extends StoredEntry<K>,
-    L extends ListItem,
     SCONFIG extends ServiceConfig,
     CONF extends DWConfigBase<SCONFIG, CONF>
 >
@@ -101,7 +102,7 @@ public abstract class DWBasedService<
 
     protected SyncHandler<K,E> _syncHandler;
     
-    protected StoreHandler<K,E,L> _storeHandler;
+    protected StoreHandler<K,E,?> _storeHandler;
 
     /*
     /**********************************************************************
@@ -334,8 +335,8 @@ public abstract class DWBasedService<
      * entry metadata store.
      */
     @SuppressWarnings("unchecked")
-    protected StoredEntryConverter<K,E,L> constructEntryConverter() {
-        return (StoredEntryConverter<K,E,L>) serviceConfig().getEntryConverter();
+    protected StoredEntryConverter<K,E,?> constructEntryConverter() {
+        return (StoredEntryConverter<K,E,?>) serviceConfig().getEntryConverter();
     }
 
     protected abstract FileManager constructFileManager();
@@ -344,7 +345,7 @@ public abstract class DWBasedService<
             NodeStateStore<IpAndPort, ActiveNodeState> nodeStates);
 
     protected abstract SharedServiceStuff constructServiceStuff(SCONFIG serviceConfig,
-            TimeMaster timeMaster, StoredEntryConverter<K,E,L> entryConverter,
+            TimeMaster timeMaster, StoredEntryConverter<K,E,?> entryConverter,
             FileManager files);
     
     /*
@@ -353,7 +354,7 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
-    protected abstract StoreHandler<K,E,L> constructStoreHandler();
+    protected abstract StoreHandler<K,E,?> constructStoreHandler();
 
     protected SyncHandler<K,E> constructSyncHandler() {
         return new SyncHandler<K,E>(_serviceStuff, _stores, _cluster);
@@ -377,7 +378,7 @@ public abstract class DWBasedService<
      */
 
     protected CMServletFactory constructServletFactory() {
-        return new DefaultCMServletFactory<K,E,L,SCONFIG>(_serviceStuff,
+        return new DefaultCMServletFactory<K,E,SCONFIG>(_serviceStuff,
                 _stores, _cluster, _clusterInfoHandler, _syncHandler, _storeHandler);
     }
     
