@@ -7,10 +7,8 @@ import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.storemate.shared.StorableKey;
 
 public abstract class ListCallResult<T>
-    extends CallResult
+    extends ReadCallResult<ListResponse<T>>
 {
-    protected final List<T> _items;
-    
     protected final StorableKey _lastSeen;
 
     /*
@@ -18,36 +16,24 @@ public abstract class ListCallResult<T>
     /* Construction, initialization
     /**********************************************************************
      */
-    
+
     public ListCallResult(ListResponse<T> resp)
     {
-        super(ClusterMateConstants.HTTP_STATUS_OK);
-        _items = resp.items;
+        super(resp);
         _lastSeen = resp.lastSeen;
     }
 
     public ListCallResult(CallFailure fail)
     {
         super(fail);
-        _items = null;
         _lastSeen = null;
     }
 
     public ListCallResult(int statusCode)
     {
         super(statusCode);
-        _items = null;
         _lastSeen = null;
     }
-    
-    /*
-    /**********************************************************************
-    /* CallResult impl
-    /**********************************************************************
-     */
-
-    @Override
-    public abstract String getHeaderValue(String key);
     
     /*
     /**********************************************************************
@@ -55,7 +41,9 @@ public abstract class ListCallResult<T>
     /**********************************************************************
      */
     
-    public List<T> getItems() { return _items; }
+    public List<T> getItems() {
+        return (_result == null) ? null : _result.items;
+    }
 
     public StorableKey getLastSeen() { return _lastSeen; }
 }
