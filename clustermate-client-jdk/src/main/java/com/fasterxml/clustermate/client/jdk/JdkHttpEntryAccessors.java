@@ -35,6 +35,11 @@ public class JdkHttpEntryAccessors<K extends EntryKey>
     }
 
     @Override
+    public EntryInspector<K> entryInspector(ClusterServerNode server) {
+        return new JdkHttpEntryInspector<K>(_storeConfig, server);
+    }
+
+    @Override
     public EntryLister<K> entryLister(ClusterServerNode server) {
         return new JdkHttpEntryLister<K>(_storeConfig, server);
     }

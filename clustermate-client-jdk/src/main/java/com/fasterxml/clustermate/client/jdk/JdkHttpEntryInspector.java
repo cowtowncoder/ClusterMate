@@ -1,61 +1,62 @@
 package com.fasterxml.clustermate.client.jdk;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import com.fasterxml.storemate.shared.util.IOUtil;
-import com.fasterxml.clustermate.api.*;
-import com.fasterxml.clustermate.api.msg.ListResponse;
-import com.fasterxml.clustermate.client.*;
+import com.fasterxml.clustermate.api.ContentType;
+import com.fasterxml.clustermate.api.EntryKey;
+import com.fasterxml.clustermate.api.msg.ItemInfo;
+import com.fasterxml.clustermate.client.ClusterServerNode;
+import com.fasterxml.clustermate.client.StoreClientConfig;
 import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.client.util.ContentConverter;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
+import com.fasterxml.storemate.shared.util.IOUtil;
 
-public class JdkHttpEntryLister<K extends EntryKey>
+public class JdkHttpEntryInspector<K extends EntryKey>
     extends BaseJdkHttpAccessor<K>
-    implements EntryLister<K>
+    implements EntryInspector<K>
 {
     protected final ClusterServerNode _server;
 
-    public JdkHttpEntryLister(StoreClientConfig<K,?> storeConfig,
+    public JdkHttpEntryInspector(StoreClientConfig<K,?> storeConfig,
             ClusterServerNode server)
     {
         super(storeConfig);
         _server = server;
     }
 
+    /*
+    /**********************************************************************
+    /* Call implementation
+    /**********************************************************************
+     */
+
     @Override
-    public <T> ListCallResult<T> tryList(CallConfig config, long endOfTime,
-            K prefix, K lastSeen, ListItemType type, int maxResults,
-            ContentConverter<ListResponse<T>> converter)
+    public <T extends ItemInfo> ReadCallResult<T> tryInspect(CallConfig config,
+            long endOfTime, K contentId, ContentConverter<T> converter)
     {
         if (converter == null) {
             throw new IllegalArgumentException("Missing converter");
         }
-        
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
         final long timeoutMsecs = Math.min(endOfTime - startTime, config.getGetCallTimeoutMsecs());
         if (timeoutMsecs < config.getMinimumTimeoutMsecs()) {
             return failed(CallFailure.timeout(_server, startTime, startTime));
         }
-        JdkHttpClientPathBuilder path = _server.rootPath();
-        path = _pathFinder.appendStoreListPath(path);
-        path = _keyConverter.appendToPath(path, prefix);
-        path.addParameter(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES, String.valueOf(maxResults))
-                .addParameter(ClusterMateConstants.QUERY_PARAM_TYPE, type.toString())
-                ;
-        if (lastSeen != null) {
-            path = path.addParameter(ClusterMateConstants.QUERY_PARAM_LAST_SEEN, toBase64(lastSeen.asBytes()));
-        }
         InputStream in = null;
 
         try {
+            JdkHttpClientPathBuilder path = _server.rootPath();
+            path = _pathFinder.appendStoreEntryInfoPath(path);
+            path = _keyConverter.appendToPath(path, contentId);
             URL url = path.asURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
             int statusCode = sendRequest("GET", conn, path, timeoutMsecs);
-            // handle std headers first, before anything else
             handleHeaders(_server, conn, startTime);
 
             // call ok?
@@ -67,8 +68,8 @@ public class JdkHttpEntryLister<K extends EntryKey>
             }
             ContentType contentType = findContentType(conn, ContentType.JSON);
             in = conn.getInputStream();
-            ListResponse<T> resp = converter.convert(contentType, in);
-            return new JdkHttpEntryListResult<T>(conn, resp);
+            T resp = converter.convert(contentType, in);
+            return new JdkHttpReadCallResult<T>(conn, resp);
         } catch (Exception e) {
             if (in != null) {
                 try {
@@ -80,7 +81,8 @@ public class JdkHttpEntryLister<K extends EntryKey>
         }
     }
 
-    protected <T> ListCallResult<T> failed(CallFailure fail) {
-        return new JdkHttpEntryListResult<T>(fail);
+    protected <T extends ItemInfo> ReadCallResult<T> failed(CallFailure fail) {
+        return new JdkHttpReadCallResult<T>(fail);
     }
 }
+

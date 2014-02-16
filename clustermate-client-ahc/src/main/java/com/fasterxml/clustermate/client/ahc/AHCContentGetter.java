@@ -32,14 +32,14 @@ public class AHCContentGetter<K extends EntryKey>
      */
 
     @Override
-    public <T> GetCallResult<T> tryGet(CallConfig config, ReadCallParameters params,
+    public <T> ReadCallResult<T> tryGet(CallConfig config, ReadCallParameters params,
             long endOfTime, K contentId, GetContentProcessor<T> processor, ByteRange range)
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
         final long timeout = Math.min(endOfTime - startTime, config.getGetCallTimeoutMsecs());
         if (timeout < config.getMinimumTimeoutMsecs()) {
-            return new AHCGetCallResult<T>(CallFailure.timeout(_server, startTime, startTime));
+            return new AHCReadCallResult<T>(CallFailure.timeout(_server, startTime, startTime));
         }
         AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendStoreEntryPath(path);
@@ -68,23 +68,23 @@ public class AHCContentGetter<K extends EntryKey>
             try {
                 resp = futurama.get(timeout, TimeUnit.MILLISECONDS);
             } catch (TimeoutException e) {
-                return new AHCGetCallResult<T>(CallFailure.timeout(_server, startTime, System.currentTimeMillis()));
+                return new AHCReadCallResult<T>(CallFailure.timeout(_server, startTime, System.currentTimeMillis()));
             }
             statusCode = handler.getStatus();
 
             handleHeaders(_server, handler.getHeaders(), startTime);
             if (handler.isFailed()) {
                 if (statusCode == 404) { // is this a fail or success? For now it's actually success...
-                    return AHCGetCallResult.notFound();
+                    return AHCReadCallResult.notFound();
                 }
                 // then the default fallback
                 String excerpt = handler.getExcerpt();
-                return new AHCGetCallResult<T>(CallFailure.general(_server, statusCode, startTime,
+                return new AHCReadCallResult<T>(CallFailure.general(_server, statusCode, startTime,
                         System.currentTimeMillis(), excerpt));
             }
-            return new AHCGetCallResult<T>(statusCode, resp);
+            return new AHCReadCallResult<T>(statusCode, resp);
         } catch (Exception e) {
-            return new AHCGetCallResult<T>(CallFailure.clientInternal(_server,
+            return new AHCReadCallResult<T>(CallFailure.clientInternal(_server,
                     startTime, System.currentTimeMillis(), _unwrap(e)));
         }
     }

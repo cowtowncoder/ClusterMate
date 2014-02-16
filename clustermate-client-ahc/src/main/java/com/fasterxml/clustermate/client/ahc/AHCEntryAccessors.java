@@ -8,8 +8,8 @@ import com.fasterxml.clustermate.client.call.ContentDeleter;
 import com.fasterxml.clustermate.client.call.ContentGetter;
 import com.fasterxml.clustermate.client.call.ContentHeader;
 import com.fasterxml.clustermate.client.call.ContentPutter;
+import com.fasterxml.clustermate.client.call.EntryInspector;
 import com.fasterxml.clustermate.client.call.EntryLister;
-
 import com.ning.http.client.AsyncHttpClient;
 
 public class AHCEntryAccessors<K extends EntryKey>
@@ -48,5 +48,10 @@ public class AHCEntryAccessors<K extends EntryKey>
     @Override
     public EntryLister<K> entryLister(ClusterServerNode server) {
         return new AHCEntryLister<K>(_storeConfig, _ahc, server);
+    }
+
+    @Override
+    public EntryInspector<K> entryInspector(ClusterServerNode server) {
+        return new AHCEntryInspector<K>(_storeConfig, _ahc, server);
     }
 }

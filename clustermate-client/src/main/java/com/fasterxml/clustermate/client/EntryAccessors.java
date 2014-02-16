@@ -5,7 +5,8 @@ import com.fasterxml.clustermate.client.call.*;
 
 /**
  * "Factory interface" that contains factory methods needed for constructing
- * accessors for CRUD operations on stored entries.
+ * accessors for operations on stored entries: both CRUD operations and
+ * related metadata accessors.
  */
 public interface EntryAccessors<K extends EntryKey>
 {
@@ -18,4 +19,6 @@ public interface EntryAccessors<K extends EntryKey>
     public abstract ContentDeleter<K> entryDeleter(ClusterServerNode server);
 
     public abstract EntryLister<K> entryLister(ClusterServerNode server);
+
+    public abstract EntryInspector<K> entryInspector(ClusterServerNode server);
 }

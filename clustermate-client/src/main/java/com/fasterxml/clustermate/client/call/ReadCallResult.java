@@ -1,8 +1,6 @@
 package com.fasterxml.clustermate.client.call;
 
-
-public abstract class GetCallResult<T>
-    extends CallResult
+public abstract class ReadCallResult<T> extends CallResult
 {
     protected final T _result;
 
@@ -12,13 +10,13 @@ public abstract class GetCallResult<T>
     /**********************************************************************
      */
     
-    protected GetCallResult(int status, T result)
+    protected ReadCallResult(int status, T result)
     {
         super(status);
         _result = result;
     }
 
-    protected GetCallResult(CallFailure fail)
+    protected ReadCallResult(CallFailure fail)
     {
         super(fail);
         _result = null;

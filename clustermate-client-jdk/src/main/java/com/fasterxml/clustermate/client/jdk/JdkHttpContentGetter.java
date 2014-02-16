@@ -35,14 +35,14 @@ public class JdkHttpContentGetter<K extends EntryKey>
      */
 
     @Override
-    public <T> GetCallResult<T> tryGet(CallConfig config, ReadCallParameters params,
+    public <T> ReadCallResult<T> tryGet(CallConfig config, ReadCallParameters params,
             long endOfTime, K contentId, GetContentProcessor<T> processor, ByteRange range)
     {
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
         final long timeoutMsecs = Math.min(endOfTime - startTime, config.getGetCallTimeoutMsecs());
         if (timeoutMsecs < config.getMinimumTimeoutMsecs()) {
-            return new JdkHttpGetCallResult<T>(CallFailure.timeout(_server, startTime, startTime));
+            return new JdkHttpReadCallResult<T>(CallFailure.timeout(_server, startTime, startTime));
         }
         try {
             JdkHttpClientPathBuilder path = _server.rootPath();
@@ -68,10 +68,10 @@ public class JdkHttpContentGetter<K extends EntryKey>
 
             if (!IOUtil.isHTTPSuccess(statusCode)) {
                 if (statusCode == 404) { // is this a fail or success? For now it's actually success...
-                    return JdkHttpGetCallResult.notFound();
+                    return JdkHttpReadCallResult.notFound();
                 }
                 // then the default fallback
-                return new JdkHttpGetCallResult<T>(CallFailure.general(_server, statusCode, startTime,
+                return new JdkHttpReadCallResult<T>(CallFailure.general(_server, statusCode, startTime,
                          System.currentTimeMillis(), getExcerpt(conn, statusCode, config.getMaxExcerptLength())));
             }
 
@@ -97,9 +97,9 @@ public class JdkHttpContentGetter<K extends EntryKey>
                 }
                 result = null;
             }
-            return new JdkHttpGetCallResult<T>(conn, statusCode, result);
+            return new JdkHttpReadCallResult<T>(conn, statusCode, result);
         } catch (Exception e) {
-            return new JdkHttpGetCallResult<T>(CallFailure.clientInternal(_server,
+            return new JdkHttpReadCallResult<T>(CallFailure.clientInternal(_server,
                     startTime, System.currentTimeMillis(), _unwrap(e)));
         }
     }

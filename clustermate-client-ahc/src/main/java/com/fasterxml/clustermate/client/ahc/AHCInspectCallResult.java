@@ -1,7 +1,7 @@
 package com.fasterxml.clustermate.client.ahc;
 
 import com.fasterxml.clustermate.client.call.CallFailure;
-import com.fasterxml.clustermate.client.call.GetCallResult;
+import com.fasterxml.clustermate.client.call.ReadCallResult;
 import com.ning.http.client.HttpResponseHeaders;
 
 /**
@@ -11,7 +11,7 @@ import com.ning.http.client.HttpResponseHeaders;
  * communication to server(s) succeeds, but no content was found
  * (either 404, or deleted content).
  */
-public final class AHCGetCallResult<T> extends GetCallResult<T>
+public final class AHCInspectCallResult<T> extends ReadCallResult<T>
 {
     protected HttpResponseHeaders _headers;
 
@@ -21,16 +21,16 @@ public final class AHCGetCallResult<T> extends GetCallResult<T>
     /**********************************************************************
      */
     
-    public AHCGetCallResult(int status, T result) {
+    public AHCInspectCallResult(int status, T result) {
         super(status, result);
     }
 
-    public AHCGetCallResult(CallFailure fail) {
+    public AHCInspectCallResult(CallFailure fail) {
         super(fail);
     }
 
-    public static <T> AHCGetCallResult<T> notFound() {
-        return new AHCGetCallResult<T>(404, null);
+    public static <T> AHCInspectCallResult<T> notFound() {
+        return new AHCInspectCallResult<T>(404, null);
     }
 
     public void setHeaders(HttpResponseHeaders h) {

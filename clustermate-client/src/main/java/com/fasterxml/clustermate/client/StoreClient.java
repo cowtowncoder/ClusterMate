@@ -538,7 +538,7 @@ public abstract class StoreClient<K extends EntryKey,
         for (int i = 0; i < nodeCount; ++i) {
             ClusterServerNode server = nodes.node(i);
             if (!server.isDisabled() || noRetries) {
-                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
+                ReadCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
                         params, endOfTime, key, processor, range);
                 if (gotten.failed()) {
                     CallFailure fail = gotten.getFailure();
@@ -574,7 +574,7 @@ public abstract class StoreClient<K extends EntryKey,
             while (it.hasNext()) {
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
+                ReadCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
                         params, endOfTime, key, processor, range);
                 if (gotten.succeeded()) {
                     T entry = gotten.getResult(); // got it?
@@ -601,7 +601,7 @@ public abstract class StoreClient<K extends EntryKey,
                 if (System.currentTimeMillis() >= lastValidTime) {
                     return result.withFailed(retries);
                 }
-                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
+                ReadCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
                         params, endOfTime, key, processor, range);
                 if (gotten.succeeded()) {
                     T entry = gotten.getResult(); // got it?
@@ -632,7 +632,7 @@ public abstract class StoreClient<K extends EntryKey,
                 }
                 NodeFailure retry = it.next();
                 ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                GetCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
+                ReadCallResult<T> gotten = server.entryGetter().tryGet(config.getCallConfig(),
                         params, endOfTime, key, processor, range);
                 if (gotten.succeeded()) {
                     T entry = gotten.getResult(); // got it?

@@ -1,9 +1,9 @@
-package com.fasterxml.clustermate.client.jdk;
+package com.fasterxml.clustermate.client.ahc;
 
-import java.net.HttpURLConnection;
-
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.client.call.CallFailure;
-import com.fasterxml.clustermate.client.call.GetCallResult;
+import com.fasterxml.clustermate.client.call.ReadCallResult;
+import com.ning.http.client.HttpResponseHeaders;
 
 /**
  * Container for results of a single GET call to a server node.
@@ -12,29 +12,34 @@ import com.fasterxml.clustermate.client.call.GetCallResult;
  * communication to server(s) succeeds, but no content was found
  * (either 404, or deleted content).
  */
-public final class JdkHttpGetCallResult<T> extends GetCallResult<T>
+public final class AHCReadCallResult<T> extends ReadCallResult<T>
 {
-    protected final HttpURLConnection _connection;
+    protected HttpResponseHeaders _headers;
 
     /*
     /**********************************************************************
     /* Construction, initialization
     /**********************************************************************
      */
+
+    public AHCReadCallResult(T result) {
+        this(ClusterMateConstants.HTTP_STATUS_OK, result);
+    }
     
-    public JdkHttpGetCallResult(HttpURLConnection connection,
-            int status, T result) {
+    public AHCReadCallResult(int status, T result) {
         super(status, result);
-        _connection = connection;
     }
 
-    public JdkHttpGetCallResult(CallFailure fail) {
+    public AHCReadCallResult(CallFailure fail) {
         super(fail);
-        _connection = null;
     }
 
-    public static <T> JdkHttpGetCallResult<T> notFound() {
-        return new JdkHttpGetCallResult<T>(null, 404, null);
+    public static <T> AHCReadCallResult<T> notFound() {
+        return new AHCReadCallResult<T>(404, null);
+    }
+
+    public void setHeaders(HttpResponseHeaders h) {
+        _headers = h;
     }
 
     /*
@@ -46,9 +51,7 @@ public final class JdkHttpGetCallResult<T> extends GetCallResult<T>
     @Override
     public String getHeaderValue(String key)
     {
-        if (_connection != null) {
-            return _connection.getHeaderField(key);
-        }
-        return null;
+        HttpResponseHeaders h = _headers;
+        return (h == null) ? null : h.getHeaders().getFirstValue(key);
     }
 }

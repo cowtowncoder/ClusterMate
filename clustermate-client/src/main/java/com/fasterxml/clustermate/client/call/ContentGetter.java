@@ -9,7 +9,7 @@ import com.fasterxml.storemate.shared.ByteRange;
  */
 public interface ContentGetter<K extends EntryKey>
 {
-    public <T> GetCallResult<T> tryGet(CallConfig config, ReadCallParameters params,
+    public <T> ReadCallResult<T> tryGet(CallConfig config, ReadCallParameters params,
             long endOfTime,
             K contentId, GetContentProcessor<T> processor, ByteRange range);
 }

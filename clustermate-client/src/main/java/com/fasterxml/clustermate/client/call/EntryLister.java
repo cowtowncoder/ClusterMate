@@ -5,6 +5,9 @@ import com.fasterxml.clustermate.api.ListItemType;
 import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.util.ContentConverter;
 
+/**
+ * Accessor used for listing metadata for entries with specified key prefix.
+ */
 public interface EntryLister<K extends EntryKey>
 {
     public <T> ListCallResult<T> tryList(CallConfig config, long endOfTime,
