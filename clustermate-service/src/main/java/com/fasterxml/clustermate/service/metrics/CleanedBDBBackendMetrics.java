@@ -37,10 +37,7 @@ public class CleanedBDBBackendMetrics extends BackendMetrics
     public static CleanedBDBBackendMetrics construct(long count, BackendStats raw)
     {
         Map<String,Object> stats = raw.extraStats();
-System.err.println("BDB-STATS: orig keys == "+stats.keySet());        
         Object env = stats.remove("env");
-System.err.println("BDB-STATS: env -> "+((env == null) ? "NULL" : env.getClass().getName()));
-System.err.println("BDB-STATS: rmed keys == "+stats.keySet());        
         return new CleanedBDBBackendMetrics(count, raw, stats, env);
     }
 }
