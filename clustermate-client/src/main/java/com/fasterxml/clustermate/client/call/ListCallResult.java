@@ -2,8 +2,8 @@ package com.fasterxml.clustermate.client.call;
 
 import java.util.List;
 
-import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.msg.ListResponse;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.storemate.shared.StorableKey;
 
 public abstract class ListCallResult<T>
@@ -17,21 +17,18 @@ public abstract class ListCallResult<T>
     /**********************************************************************
      */
 
-    public ListCallResult(ListResponse<T> resp)
-    {
-        super(resp);
+    public ListCallResult(ClusterServerNode server, ListResponse<T> resp) {
+        super(server, resp);
         _lastSeen = resp.lastSeen;
     }
 
-    public ListCallResult(CallFailure fail)
-    {
+    public ListCallResult(CallFailure fail) {
         super(fail);
         _lastSeen = null;
     }
 
-    public ListCallResult(int statusCode)
-    {
-        super(statusCode);
+    public ListCallResult(ClusterServerNode server, int statusCode) {
+        super(server, statusCode);
         _lastSeen = null;
     }
     

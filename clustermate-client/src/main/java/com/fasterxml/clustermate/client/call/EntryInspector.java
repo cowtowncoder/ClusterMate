@@ -9,6 +9,7 @@ import com.fasterxml.clustermate.client.util.ContentConverter;
  */
 public interface EntryInspector<K extends EntryKey>
 {
-    public <T extends ItemInfo> ReadCallResult<T> tryInspect(CallConfig config, long endOfTime,
+    public <T extends ItemInfo> ReadCallResult<T> tryInspect(CallConfig config,
+            ReadCallParameters params, long endOfTime,
             K key, ContentConverter<T> converter);
 }

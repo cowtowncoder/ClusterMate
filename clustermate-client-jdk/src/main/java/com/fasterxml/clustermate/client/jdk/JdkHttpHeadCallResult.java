@@ -2,6 +2,8 @@ package com.fasterxml.clustermate.client.jdk;
 
 import java.net.HttpURLConnection;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.HeadCallResult;
 
@@ -16,9 +18,14 @@ public class JdkHttpHeadCallResult extends HeadCallResult
      */
     
     public JdkHttpHeadCallResult(HttpURLConnection connection,
-            int status, long contentLength)
+            ClusterServerNode server, int status, long contentLength)
     {
-        super(status, contentLength);
+        super(server, contentLength);
+        _connection = connection;
+    }
+
+    public JdkHttpHeadCallResult(HttpURLConnection connection, CallFailure fail) {
+        super(fail);
         _connection = connection;
     }
 
@@ -27,8 +34,8 @@ public class JdkHttpHeadCallResult extends HeadCallResult
         _connection = null;
     }
 
-    public static JdkHttpHeadCallResult notFound() {
-        return new JdkHttpHeadCallResult(null, 404, -1);
+    public static JdkHttpHeadCallResult notFound(ClusterServerNode server) {
+        return new JdkHttpHeadCallResult(null, server, ClusterMateConstants.HTTP_STATUS_NOT_FOUND, -1);
     }
     
     /*

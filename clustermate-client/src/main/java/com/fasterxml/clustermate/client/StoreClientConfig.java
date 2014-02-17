@@ -63,13 +63,13 @@ public abstract class StoreClientConfig<
     protected final String[] _basePath;
 
     protected final RequestPathStrategy<?> _pathStrategy;
-    
+
     /*
     /**********************************************************************
     /* Life-cycle
     /**********************************************************************
      */
-    
+
     protected StoreClientConfig(EntryKeyConverter<K> keyConverter,
             String basePath[], RequestPathStrategy<?> pathMapper,
             ObjectMapper jsonMapper,

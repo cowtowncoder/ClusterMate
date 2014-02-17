@@ -4,6 +4,7 @@ import com.ning.http.client.HttpResponseHeaders;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.msg.ListResponse;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.ListCallResult;
 
@@ -17,20 +18,20 @@ public class AHCEntryListResult<T> extends ListCallResult<T>
     /**********************************************************************
      */
     
-    public AHCEntryListResult(ListResponse<T> resp) {
-        super(resp);
+    public AHCEntryListResult(ClusterServerNode server, ListResponse<T> resp) {
+        super(server, resp);
     }
 
     public AHCEntryListResult(CallFailure fail) {
         super(fail);
     }
 
-    public AHCEntryListResult(int failCode) {
-        super(failCode);
+    public AHCEntryListResult(ClusterServerNode server, int failCode) {
+        super(server, failCode);
     }
     
-    public static <T> AHCEntryListResult<T> notFound() {
-        return new AHCEntryListResult<T>(ClusterMateConstants.HTTP_STATUS_NOT_FOUND);
+    public static <T> AHCEntryListResult<T> notFound(ClusterServerNode server) {
+        return new AHCEntryListResult<T>(server, ClusterMateConstants.HTTP_STATUS_NOT_FOUND);
     }
 
     public void setHeaders(HttpResponseHeaders h) {

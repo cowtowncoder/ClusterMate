@@ -15,6 +15,7 @@ import com.fasterxml.clustermate.client.call.ContentDeleter;
 import com.fasterxml.clustermate.client.call.ContentGetter;
 import com.fasterxml.clustermate.client.call.ContentHeader;
 import com.fasterxml.clustermate.client.call.ContentPutter;
+import com.fasterxml.clustermate.client.call.EntryInspector;
 import com.fasterxml.clustermate.client.call.EntryLister;
 import com.fasterxml.storemate.shared.IpAndPort;
 
@@ -90,6 +91,7 @@ public class ClusterServerNodeImpl
     protected final ContentHeader<?> _entryHeader;
     protected final ContentDeleter<?> _entryDeleter;
     protected final EntryLister<?> _entryLister;
+    protected final EntryInspector<?> _entryInspector;
     
     /*
     /**********************************************************************
@@ -112,6 +114,7 @@ public class ClusterServerNodeImpl
         _entryHeader = entryAccessors.entryHeader(this);
         _entryDeleter = entryAccessors.entryDeleter(this);
         _entryLister = entryAccessors.entryLister(this);
+        _entryInspector = entryAccessors.entryInspector(this);
     }
 
     // only for test usage
@@ -129,6 +132,7 @@ public class ClusterServerNodeImpl
         _entryHeader = null;
         _entryDeleter = null;
         _entryLister = null;
+        _entryInspector = null;
     }
     
     protected static ClusterServerNodeImpl forTesting(KeyRange range) {
@@ -317,5 +321,11 @@ public class ClusterServerNodeImpl
     @Override
     public <K extends EntryKey> EntryLister<K> entryLister() {
         return (EntryLister<K>) _entryLister;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <K extends EntryKey> EntryInspector<K> entryInspector() {
+        return (EntryInspector<K>) _entryInspector;
     }
 }

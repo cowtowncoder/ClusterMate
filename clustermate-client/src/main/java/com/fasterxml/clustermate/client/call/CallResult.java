@@ -1,22 +1,31 @@
 package com.fasterxml.clustermate.client.call;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 
 public abstract class CallResult
 {
+    protected final ClusterServerNode _server;
+
     protected final int _status;
 
     protected final CallFailure _fail;
 
-    protected CallResult(int statusCode) {
-        this(statusCode, null);
+    protected CallResult(ClusterServerNode server) {
+        this(server, ClusterMateConstants.HTTP_STATUS_OK, null);
+    }
+    
+    protected CallResult(ClusterServerNode server, int statusCode) {
+        this(server, statusCode, null);
     }
 
     protected CallResult(CallFailure fail) {
-        this(fail.getStatusCode(), fail);
+        this((ClusterServerNode) fail.getServer(), fail.getStatusCode(), fail);
     }
     
-    protected CallResult(int statusCode, CallFailure fail)
+    protected CallResult(ClusterServerNode server, int statusCode, CallFailure fail)
     {
+        _server = server;
         _status = statusCode;
         _fail = fail;
     }
@@ -35,4 +44,6 @@ public abstract class CallResult
     public boolean succeeded() { return !failed(); }
 
     public CallFailure getFailure() { return _fail; }
+
+    public ClusterServerNode getServer() { return _server; }
 }

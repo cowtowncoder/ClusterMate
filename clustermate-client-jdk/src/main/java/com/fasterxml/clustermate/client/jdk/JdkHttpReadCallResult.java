@@ -3,6 +3,7 @@ package com.fasterxml.clustermate.client.jdk;
 import java.net.HttpURLConnection;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.ReadCallResult;
 
@@ -13,7 +14,7 @@ import com.fasterxml.clustermate.client.call.ReadCallResult;
  * communication to server(s) succeeds, but no content was found
  * (either 404, or deleted content).
  */
-public final class JdkHttpReadCallResult<T> extends ReadCallResult<T>
+public class JdkHttpReadCallResult<T> extends ReadCallResult<T>
 {
     protected final HttpURLConnection _connection;
 
@@ -23,23 +24,26 @@ public final class JdkHttpReadCallResult<T> extends ReadCallResult<T>
     /**********************************************************************
      */
 
-    public JdkHttpReadCallResult(HttpURLConnection connection, T result) {
-        this(connection, ClusterMateConstants.HTTP_STATUS_OK, result);
+    public JdkHttpReadCallResult(HttpURLConnection connection,
+            ClusterServerNode server, T result) {
+        super(server, result);
+        _connection = connection;
     }
     
     public JdkHttpReadCallResult(HttpURLConnection connection,
-            int status, T result) {
-        super(status, result);
+            ClusterServerNode server, int status, T result) {
+        super(server, status, result);
         _connection = connection;
     }
 
-    public JdkHttpReadCallResult(CallFailure fail) {
+    public JdkHttpReadCallResult(HttpURLConnection connection, CallFailure fail) {
         super(fail);
-        _connection = null;
+        _connection = connection;
     }
 
-    public static <T> JdkHttpReadCallResult<T> notFound() {
-        return new JdkHttpReadCallResult<T>(null, 404, null);
+    public static <T> JdkHttpReadCallResult<T> notFound(ClusterServerNode server) {
+        return new JdkHttpReadCallResult<T>(null, server,
+                ClusterMateConstants.HTTP_STATUS_NOT_FOUND, null);
     }
 
     /*

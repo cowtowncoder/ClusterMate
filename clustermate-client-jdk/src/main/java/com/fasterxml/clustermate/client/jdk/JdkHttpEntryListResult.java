@@ -4,6 +4,7 @@ import java.net.HttpURLConnection;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.msg.ListResponse;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.ListCallResult;
 
@@ -17,8 +18,9 @@ public class JdkHttpEntryListResult<T> extends ListCallResult<T>
     /**********************************************************************
      */
     
-    public JdkHttpEntryListResult(HttpURLConnection conn, ListResponse<T> resp) {
-        super(resp);
+    public JdkHttpEntryListResult(HttpURLConnection conn, ClusterServerNode server,
+            ListResponse<T> resp) {
+        super(server, resp);
         _connection = conn;
     }
 
@@ -27,13 +29,13 @@ public class JdkHttpEntryListResult<T> extends ListCallResult<T>
         _connection = null;
     }
 
-    public JdkHttpEntryListResult(int failCode) {
-        super(failCode);
+    public JdkHttpEntryListResult(ClusterServerNode server, int failCode) {
+        super(server, failCode);
         _connection = null;
     }
     
-    public static <T> JdkHttpEntryListResult<T> notFound() {
-        return new JdkHttpEntryListResult<T>(ClusterMateConstants.HTTP_STATUS_NOT_FOUND);
+    public static <T> JdkHttpEntryListResult<T> notFound(ClusterServerNode server) {
+        return new JdkHttpEntryListResult<T>(server, ClusterMateConstants.HTTP_STATUS_NOT_FOUND);
     }
 
     /*

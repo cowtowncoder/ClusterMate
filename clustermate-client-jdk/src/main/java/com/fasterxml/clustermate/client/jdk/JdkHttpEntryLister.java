@@ -68,7 +68,7 @@ public class JdkHttpEntryLister<K extends EntryKey>
             ContentType contentType = findContentType(conn, ContentType.JSON);
             in = conn.getInputStream();
             ListResponse<T> resp = converter.convert(contentType, in);
-            return new JdkHttpEntryListResult<T>(conn, resp);
+            return new JdkHttpEntryListResult<T>(conn, _server, resp);
         } catch (Exception e) {
             if (in != null) {
                 try {

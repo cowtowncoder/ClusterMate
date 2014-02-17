@@ -75,14 +75,14 @@ public class AHCContentGetter<K extends EntryKey>
             handleHeaders(_server, handler.getHeaders(), startTime);
             if (handler.isFailed()) {
                 if (statusCode == 404) { // is this a fail or success? For now it's actually success...
-                    return AHCReadCallResult.notFound();
+                    return AHCReadCallResult.notFound(_server);
                 }
                 // then the default fallback
                 String excerpt = handler.getExcerpt();
                 return new AHCReadCallResult<T>(CallFailure.general(_server, statusCode, startTime,
                         System.currentTimeMillis(), excerpt));
             }
-            return new AHCReadCallResult<T>(statusCode, resp);
+            return new AHCReadCallResult<T>(_server, resp);
         } catch (Exception e) {
             return new AHCReadCallResult<T>(CallFailure.clientInternal(_server,
                     startTime, System.currentTimeMillis(), _unwrap(e)));

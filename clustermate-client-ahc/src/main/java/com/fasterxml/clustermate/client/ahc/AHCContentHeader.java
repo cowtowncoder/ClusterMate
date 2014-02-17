@@ -83,7 +83,7 @@ public class AHCContentHeader<K extends EntryKey>
                 } else {
             		l = Long.parseLong(lenStr.trim());
                 }
-                return new AHCHeadCallResult(200, l);
+                return new AHCHeadCallResult(_server, l);
             } catch (Exception e) {
                 String desc = (lenStr == null) ? "null" : "\""+lenStr+"\"";
                 return new AHCHeadCallResult(CallFailure.formatException(_server,

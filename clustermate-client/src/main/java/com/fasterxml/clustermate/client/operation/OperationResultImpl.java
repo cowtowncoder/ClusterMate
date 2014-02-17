@@ -1,6 +1,7 @@
 package com.fasterxml.clustermate.client.operation;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 
 import com.fasterxml.clustermate.client.ClusterServerNode;
@@ -32,14 +33,13 @@ public abstract class OperationResultImpl<T extends OperationResultImpl<T>>
     /* Construction, initialization
     /**********************************************************************
      */
-    
+
     protected OperationResultImpl(OperationConfig config)
     {
         _config = config;
         _failed = new LinkedList<NodeFailure>();
         _ignored = new LinkedList<ClusterServerNode>();
     }
-
 
     // Ugly side of generics... needing to cast "this", from base class.
     @SuppressWarnings("unchecked")
@@ -108,22 +108,34 @@ public abstract class OperationResultImpl<T extends OperationResultImpl<T>>
     }
     
     @Override
-    public int getFailCount() { return _failed.size(); }
+    public int getFailCount() { return (_failed == null) ? 0 : _failed.size(); }
 
     @Override
     public abstract int getSuccessCount();
     
     @Override
-    public int getIgnoreCount() { return _ignored.size(); }
+    public int getIgnoreCount() { return (_ignored == null) ? 0 :  _ignored.size(); }
 
     @Override
-    public Iterable<NodeFailure> getFailures() { return _failed; }
+    public Iterable<NodeFailure> getFailures() {
+        if (_failed == null) {
+            return Collections.emptyList();
+        }
+        return _failed;
+    }
+
     @Override
-    public Iterable<ClusterServerNode> getIgnoredServers() { return _ignored; }
+    public Iterable<ClusterServerNode> getIgnoredServers() {
+        if (_ignored == null) {
+            return Collections.emptyList();
+        }
+        return _ignored;
+    }
 
     @Override
     public NodeFailure getFirstFail() {
-        return _failed.isEmpty() ? null : _failed.iterator().next();
+        return (_failed == null || _failed.isEmpty())
+                ? null : _failed.iterator().next();
     }
     
     /*

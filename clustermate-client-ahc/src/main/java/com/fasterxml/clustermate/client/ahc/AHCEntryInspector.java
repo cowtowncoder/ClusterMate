@@ -38,6 +38,7 @@ public class AHCEntryInspector<K extends EntryKey>
 
     @Override
     public <T extends ItemInfo> ReadCallResult<T> tryInspect(CallConfig config,
+            ReadCallParameters params,
             long endOfTime, K contentId, ContentConverter<T> converter)
     {
         if (converter == null) {
@@ -82,7 +83,7 @@ public class AHCEntryInspector<K extends EntryKey>
             ContentType contentType = findContentType(resp, ContentType.JSON);
             in = resp.getResponseBodyAsStream();
             T result = converter.convert(contentType, in);
-            return new AHCReadCallResult<T>(result);
+            return new AHCReadCallResult<T>(_server, result);
         } catch (Exception e) {
             if (in != null) {
                 try {
@@ -95,6 +96,6 @@ public class AHCEntryInspector<K extends EntryKey>
     }
 
     protected <T extends ItemInfo> ReadCallResult<T> failed(CallFailure fail) {
-        return new AHCInspectCallResult<T>(fail);
+        return new AHCReadCallResult<T>(fail);
     }
 }

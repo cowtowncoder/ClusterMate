@@ -1,6 +1,7 @@
 package com.fasterxml.clustermate.client.ahc;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
+import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.call.ReadCallResult;
 import com.ning.http.client.HttpResponseHeaders;
@@ -22,20 +23,20 @@ public final class AHCReadCallResult<T> extends ReadCallResult<T>
     /**********************************************************************
      */
 
-    public AHCReadCallResult(T result) {
-        this(ClusterMateConstants.HTTP_STATUS_OK, result);
+    public AHCReadCallResult(ClusterServerNode server, T result) {
+        super(server, result);
     }
-    
-    public AHCReadCallResult(int status, T result) {
-        super(status, result);
+
+    public AHCReadCallResult(ClusterServerNode server, int failStatus) {
+        super(server, failStatus);
     }
 
     public AHCReadCallResult(CallFailure fail) {
         super(fail);
     }
 
-    public static <T> AHCReadCallResult<T> notFound() {
-        return new AHCReadCallResult<T>(404, null);
+    public static <T> AHCReadCallResult<T> notFound(ClusterServerNode server) {
+        return new AHCReadCallResult<T>(server, ClusterMateConstants.HTTP_STATUS_NOT_FOUND);
     }
 
     public void setHeaders(HttpResponseHeaders h) {

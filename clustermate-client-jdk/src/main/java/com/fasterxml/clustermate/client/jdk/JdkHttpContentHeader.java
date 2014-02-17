@@ -66,7 +66,7 @@ public class JdkHttpContentHeader<K extends EntryKey>
                 		System.currentTimeMillis(), "N/A"));
             }
             try {
-                return new JdkHttpHeadCallResult(conn, ClusterMateConstants.HTTP_STATUS_OK,
+                return new JdkHttpHeadCallResult(conn, _server,ClusterMateConstants.HTTP_STATUS_OK,
                         parseLongHeader(conn, ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH));
             } catch (Exception e) {
                 return new JdkHttpHeadCallResult(CallFailure.formatException(_server,

@@ -7,6 +7,7 @@ import com.fasterxml.clustermate.client.call.ContentDeleter;
 import com.fasterxml.clustermate.client.call.ContentGetter;
 import com.fasterxml.clustermate.client.call.ContentHeader;
 import com.fasterxml.clustermate.client.call.ContentPutter;
+import com.fasterxml.clustermate.client.call.EntryInspector;
 import com.fasterxml.clustermate.client.call.EntryLister;
 
 /**
@@ -93,5 +94,7 @@ public interface ClusterServerNode
 
     public abstract <K extends EntryKey> ContentDeleter<K> entryDeleter();
 
+    public abstract <K extends EntryKey> EntryInspector<K> entryInspector();
+    
     public abstract <K extends EntryKey> EntryLister<K> entryLister();
 }

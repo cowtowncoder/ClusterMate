@@ -1,5 +1,6 @@
 package com.fasterxml.clustermate.client.call;
 
+import com.fasterxml.clustermate.client.ClusterServerNode;
 
 public abstract class HeadCallResult
     extends CallResult
@@ -12,14 +13,17 @@ public abstract class HeadCallResult
     /**********************************************************************
      */
     
-    protected HeadCallResult(int status, long contentLength)
-    {
-        super(status);
+    protected HeadCallResult(ClusterServerNode server, long contentLength) {
+        super(server);
         _contentLength = contentLength;
     }
 
-    protected HeadCallResult(CallFailure fail)
-    {
+    protected HeadCallResult(ClusterServerNode server, int status, long contentLength) {
+        super(server, status);
+        _contentLength = contentLength;
+    }
+
+    protected HeadCallResult(CallFailure fail) {
         super(fail);
         _contentLength = -1;
     }

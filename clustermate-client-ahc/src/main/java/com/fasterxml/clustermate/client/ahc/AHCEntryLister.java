@@ -84,7 +84,7 @@ public class AHCEntryLister<K extends EntryKey>
             }
             ContentType contentType = findContentType(resp, ContentType.JSON);
             in = resp.getResponseBodyAsStream();
-            return new AHCEntryListResult<T>(converter.convert(contentType, in));
+            return new AHCEntryListResult<T>(_server, converter.convert(contentType, in));
         } catch (Exception e) {
             if (in != null) {
                 try {

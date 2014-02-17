@@ -42,7 +42,7 @@ public class JdkHttpContentGetter<K extends EntryKey>
         final long startTime = System.currentTimeMillis();
         final long timeoutMsecs = Math.min(endOfTime - startTime, config.getGetCallTimeoutMsecs());
         if (timeoutMsecs < config.getMinimumTimeoutMsecs()) {
-            return new JdkHttpReadCallResult<T>(CallFailure.timeout(_server, startTime, startTime));
+            return new JdkHttpReadCallResult<T>(null, CallFailure.timeout(_server, startTime, startTime));
         }
         try {
             JdkHttpClientPathBuilder path = _server.rootPath();
@@ -68,10 +68,10 @@ public class JdkHttpContentGetter<K extends EntryKey>
 
             if (!IOUtil.isHTTPSuccess(statusCode)) {
                 if (statusCode == 404) { // is this a fail or success? For now it's actually success...
-                    return JdkHttpReadCallResult.notFound();
+                    return JdkHttpReadCallResult.notFound(_server);
                 }
                 // then the default fallback
-                return new JdkHttpReadCallResult<T>(CallFailure.general(_server, statusCode, startTime,
+                return new JdkHttpReadCallResult<T>(conn, CallFailure.general(_server, statusCode, startTime,
                          System.currentTimeMillis(), getExcerpt(conn, statusCode, config.getMaxExcerptLength())));
             }
 
@@ -97,9 +97,9 @@ public class JdkHttpContentGetter<K extends EntryKey>
                 }
                 result = null;
             }
-            return new JdkHttpReadCallResult<T>(conn, statusCode, result);
+            return new JdkHttpReadCallResult<T>(conn, _server, statusCode, result);
         } catch (Exception e) {
-            return new JdkHttpReadCallResult<T>(CallFailure.clientInternal(_server,
+            return new JdkHttpReadCallResult<T>(null, CallFailure.clientInternal(_server,
                     startTime, System.currentTimeMillis(), _unwrap(e)));
         }
     }

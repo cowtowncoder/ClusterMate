@@ -5,10 +5,12 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.fasterxml.clustermate.api.*;
+import com.fasterxml.clustermate.api.msg.ItemInfo;
 import com.fasterxml.clustermate.api.msg.ListItem;
 import com.fasterxml.clustermate.api.msg.ListResponse;
 import com.fasterxml.clustermate.client.call.*;
 import com.fasterxml.clustermate.client.operation.*;
+import com.fasterxml.clustermate.client.util.ContentConverter;
 import com.fasterxml.clustermate.client.util.GenericContentConverter;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,7 +22,7 @@ import com.fasterxml.storemate.shared.util.ByteAggregator;
  */
 public abstract class StoreClient<K extends EntryKey,
     CONFIG extends StoreClientConfig<K, CONFIG>,
-    L extends ListItem
+    I extends ItemInfo
 >
     extends Loggable
 {
@@ -51,6 +53,8 @@ public abstract class StoreClient<K extends EntryKey,
     protected EntryKeyConverter<K> _keyConverter;
     
     protected final EnumMap<ListItemType, GenericContentConverter<?>> _listReaders;
+
+    protected final ContentConverter<I> _infoConverter;
 
     /*
     /**********************************************************************
@@ -83,9 +87,9 @@ public abstract class StoreClient<K extends EntryKey,
      * @param config Client configuration to use
      * @param listItemType Concrete {@link ListItem} type for implementation
      */
-    protected StoreClient(CONFIG config, Class<L> listItemType,
+    protected StoreClient(CONFIG config, Class<? extends ListItem> listItemType,
             ClusterStatusAccessor statusAccessor, ClusterViewByClient<K> clusterView,
-            NetworkClient<K> httpClientImpl)
+            NetworkClient<K> httpClientImpl, ContentConverter<I> infoConverter)
     {
         super(StoreClient.class);
         _config = config;
@@ -113,12 +117,13 @@ public abstract class StoreClient<K extends EntryKey,
 
         _thread = null;
         _stopRequested = new AtomicBoolean(false);
+        _infoConverter = infoConverter;
     }
 
     /**
      * Copy-constructor used when creating differently configured new instances
      */
-    protected StoreClient(StoreClient<K,CONFIG,L> base, CONFIG config)
+    protected StoreClient(StoreClient<K,CONFIG,I> base, CONFIG config)
     {
         super(base);
         _config = config;
@@ -127,6 +132,7 @@ public abstract class StoreClient<K extends EntryKey,
         
         _statusAccessor = base._statusAccessor;
         _clusterView = base._clusterView;
+        _infoConverter = base._infoConverter;
 
         _listReaders = base._listReaders;
 
@@ -300,8 +306,6 @@ public abstract class StoreClient<K extends EntryKey,
     /**********************************************************************
      */
 
-    
-    
     /**
      * Convenience method for GETting specific content and aggregating it as a
      * byte array.
@@ -561,7 +565,7 @@ public abstract class StoreClient<K extends EntryKey,
         if (noRetries) { // if we can't retry, don't:
             return result.withFailed(retries);
         }
-        
+
         final long secondRoundStart = System.currentTimeMillis();
         // Do we need any delay in between?
         _doDelay(startTime, secondRoundStart, endOfTime);
@@ -658,10 +662,10 @@ public abstract class StoreClient<K extends EntryKey,
 
     /*
     /**********************************************************************
-    /* Actual Client API, low-level operations: HEAD
+    /* Actual Client API, low-level operations, metadata access: HEAD, Info
     /**********************************************************************
      */
-    
+
     public HeadOperationResult headContent(ReadCallParameters params, K key)
         throws InterruptedException
     {
@@ -772,7 +776,9 @@ public abstract class StoreClient<K extends EntryKey,
         for (int i = 1; (i <= StoreClientConfig.MAX_RETRIES_FOR_GET) && !retries.isEmpty(); ++i) {
             final long currStartTime = System.currentTimeMillis();
             _doDelay(prevStartTime, currStartTime, endOfTime);
+            prevStartTime = currStartTime;
             Iterator<NodeFailure> it = retries.iterator();
+
             while (it.hasNext()) {
                 if (System.currentTimeMillis() >= lastValidTime) {
                     return result.withFailed(retries);
@@ -800,6 +806,99 @@ public abstract class StoreClient<K extends EntryKey,
         }
         // we are all done and this'll be a failure...
         return result.withFailed(retries);
+    }
+
+    public InfoOperationResult<I> findInfo(ReadCallParameters params, K key)
+        throws InterruptedException
+    {
+        final long startTime = System.currentTimeMillis();
+        final CONFIG config = _getConfig(params);
+
+        NodesForKey nodes = _clusterView.getNodesFor(key);
+
+        int nodeCount = nodes.size();
+        InfoOperationResult<I> result = new InfoOperationResult<I>(config.getOperationConfig(), nodeCount);
+        if (nodeCount < 1) {
+            return result; // or Exception?
+        }
+        final long endOfTime = startTime + config.getOperationConfig().getGetOperationTimeoutMsecs();
+        final long lastValidTime = endOfTime - config.getCallConfig().getMinimumTimeoutMsecs();
+
+        // Ok: first round; try access from every store, enabled or not
+        List<NodeFailure> retries = null;
+        boolean canRetry = _allowRetries(config);
+        for (int i = 0; i < nodeCount; ++i) {
+            ClusterServerNode server = nodes.node(i);
+            ReadCallResult<I> info = server.entryInspector().tryInspect(config.getCallConfig(),
+                    params, endOfTime, key, _infoConverter);
+            if (info.succeeded()) {
+                result.withSuccess(info);
+            } else {
+                CallFailure fail = info.getFailure();
+                if (fail == null) { // not found...
+                    result.withMissing(info);
+                } else if (canRetry && fail.isRetriable()) { // fail
+                    result.withFailed(info);
+                } else {
+                    retries = _add(retries, new NodeFailure(server, fail));
+                }
+            }
+        }
+        if (!canRetry) {
+            return result;
+        }
+
+        long prevStartTime = startTime;
+        
+        main_loop:
+        for (int i = 1; (i <= StoreClientConfig.MAX_RETRIES_FOR_GET) && !retries.isEmpty(); ++i) {
+            final long currStartTime = System.currentTimeMillis();
+            _doDelay(prevStartTime, currStartTime, endOfTime);
+            prevStartTime = currStartTime;
+            Iterator<NodeFailure> it = retries.iterator();
+            while (it.hasNext()) {
+                if (System.currentTimeMillis() >= lastValidTime) {
+                    break main_loop;
+                }
+                NodeFailure retry = it.next();
+                ClusterServerNode server = (ClusterServerNode) retry.getServer();
+                ReadCallResult<I> info = server.entryInspector().tryInspect(config.getCallConfig(),
+                        params, endOfTime, key, _infoConverter);
+
+                if (info.succeeded()) {
+                    result.withSuccess(info);
+                } else {
+                    CallFailure fail = info.getFailure();
+                    if (fail == null) { // not found...
+                        result.withMissing(info);
+                    } else if (canRetry && fail.isRetriable()) { // fail
+                        result.withFailed(info);
+                    } else {
+                        retry.addFailure(fail);
+                        if (fail.isRetriable()) { // still retriable
+                            continue;
+                        }
+                        result.withFailed(info);
+                    }
+                }
+                it.remove();
+            }
+        }
+
+        // Anything left in retry list?
+        // !!! TODO
+        if (!retries.isEmpty()) {
+            Iterator<NodeFailure> it = retries.iterator();
+            while (it.hasNext()) {
+//                NodeFailure f = it.next();
+                /*
+                result.withFailed(callResult)
+                InfoCallResult               
+                */
+            }
+        }
+
+        return result;
     }
 
     /*
@@ -997,6 +1096,12 @@ public abstract class StoreClient<K extends EntryKey,
         return _config;
     }
 
+    protected static <ITEM extends ItemInfo> ContentConverter<ITEM> _stdItemInfoConverter(
+            StoreClientConfig<?,?> config, Class<ITEM> infoType)
+    {
+        return new GenericContentConverter<ITEM>(config.getJsonMapper(), infoType);
+    }
+    
     protected boolean _allowRetries(CONFIG config) {
         return config.getOperationConfig().getAllowRetries();
     }

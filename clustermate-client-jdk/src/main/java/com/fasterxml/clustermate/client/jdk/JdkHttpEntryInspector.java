@@ -36,16 +36,18 @@ public class JdkHttpEntryInspector<K extends EntryKey>
 
     @Override
     public <T extends ItemInfo> ReadCallResult<T> tryInspect(CallConfig config,
-            long endOfTime, K contentId, ContentConverter<T> converter)
+            ReadCallParameters params, long endOfTime, K contentId, ContentConverter<T> converter)
     {
         if (converter == null) {
             throw new IllegalArgumentException("Missing converter");
         }
+        HttpURLConnection conn = null;
+
         // first: if we can't spend at least 10 msecs, let's give up:
         final long startTime = System.currentTimeMillis();
         final long timeoutMsecs = Math.min(endOfTime - startTime, config.getGetCallTimeoutMsecs());
         if (timeoutMsecs < config.getMinimumTimeoutMsecs()) {
-            return failed(CallFailure.timeout(_server, startTime, startTime));
+            return failed(conn, CallFailure.timeout(_server, startTime, startTime));
         }
         InputStream in = null;
 
@@ -54,7 +56,7 @@ public class JdkHttpEntryInspector<K extends EntryKey>
             path = _pathFinder.appendStoreEntryInfoPath(path);
             path = _keyConverter.appendToPath(path, contentId);
             URL url = path.asURL();
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn = (HttpURLConnection) url.openConnection();
 
             int statusCode = sendRequest("GET", conn, path, timeoutMsecs);
             handleHeaders(_server, conn, startTime);
@@ -64,25 +66,25 @@ public class JdkHttpEntryInspector<K extends EntryKey>
                 // if not, why not? Any well-known problems? (besides timeout that was handled earlier)
                 String msg = getExcerpt(conn, statusCode, config.getMaxExcerptLength());
                 handleHeaders(_server, conn, startTime);
-                return failed(CallFailure.general(_server, statusCode, startTime, System.currentTimeMillis(), msg));
+                return failed(conn, CallFailure.general(_server, statusCode, startTime, System.currentTimeMillis(), msg));
             }
             ContentType contentType = findContentType(conn, ContentType.JSON);
             in = conn.getInputStream();
             T resp = converter.convert(contentType, in);
-            return new JdkHttpReadCallResult<T>(conn, resp);
+            return new JdkHttpReadCallResult<T>(conn, _server, resp);
         } catch (Exception e) {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e2) { }
             }
-            return failed(CallFailure.clientInternal(_server,
+            return failed(conn, CallFailure.clientInternal(_server,
                     startTime, System.currentTimeMillis(), _unwrap(e)));
         }
     }
 
-    protected <T extends ItemInfo> ReadCallResult<T> failed(CallFailure fail) {
-        return new JdkHttpReadCallResult<T>(fail);
+    protected <T extends ItemInfo> ReadCallResult<T> failed(HttpURLConnection conn, CallFailure fail) {
+        return new JdkHttpReadCallResult<T>(conn, fail);
     }
 }
 
