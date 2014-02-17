@@ -7,8 +7,8 @@ import com.fasterxml.storemate.store.Storable;
 import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 
 /**
- * Helper class we used as an intermediary for per-entry metadata chunk
- * and raw BDB-persisted entry.
+ * Helper class we use as an intermediary for per-entry metadata chunk
+ * and raw metadata entry.
  */
 public class SyncPullEntry
 {

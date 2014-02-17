@@ -198,7 +198,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
             }
         }
         
-        LOG.info("BDB data stores and environments closed");
+        LOG.info("Local stores (databases) closed");
     }
     
     /*
@@ -217,32 +217,32 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         if (!_verifyOrCreateDirectory(_dbRootForLastAccess, logInfo)) {
             return false;
         }
-        _openBDBs(true, true, true);
+        _openLocalStores(true, true, true);
         _active.set(true);
         return true;
     }
     
     /**
-     * Method called to open BDB stores if they exist, in read/write mode.
+     * Method called to open local stores if they exist, in read/write mode.
      */
     public void openIfExists()
     {
         // then try opening
-        _openBDBs(true, false, true);
+        _openLocalStores(true, false, true);
         _active.set(true);
     }
 
     /**
-     * Method called to open BDB stores if they exist, and only open for reading.
+     * Method called to open local stores if they exist, and only open for reading.
      */
     public void openForReading(boolean log)
     {
         // then try opening
-        _openBDBs(log, false, false);
+        _openLocalStores(log, false, false);
         _active.set(true);
     }
     
-    protected void _openBDBs(boolean log,
+    protected void _openLocalStores(boolean log,
           boolean allowCreate, boolean writeAccess)
     {
         _initProblem = null;
@@ -303,9 +303,8 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     protected void _verifyDirectory(File dir)
     {
         if (!dir.exists() || !dir.isDirectory()) {
-            throw new IllegalStateException("BDB path '"+dir.getAbsolutePath()
-                    +"' does not point to a directory; can not open BDB -- read Documentation on how to 'init' a node!"
-                    +" (usually something like './command.sh init')");
+            throw new IllegalStateException("Local database path '"+dir.getAbsolutePath()
+                    +"' does not point to a directory; can not open local store -- read Documentation on how to initialize a node!");
         }
     }
     
@@ -313,7 +312,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     {
         if (dir.exists()) {
             if (!dir.isDirectory()) {
-                LOG.error("There is file {} which is not directory: CAN NOT create BDB Environment!",
+                LOG.error("There is file {} which is not directory: CAN NOT create local database!",
                         dir.getAbsolutePath());
                 return false;
             }
@@ -321,7 +320,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         } else {
             LOG.info("Directory {} does not exist, will try to create", dir.getAbsolutePath());
             if (!dir.mkdirs()) {
-                LOG.error("FAILed to create directory {}: CAN NOT create BDB Environment!",
+                LOG.error("FAILed to create directory {}: CAN NOT create local database!",
                         dir.getAbsolutePath());
                 return false;
             }
