@@ -2,23 +2,20 @@ package com.fasterxml.clustermate.service.store;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sleepycat.je.Environment;
-import com.sleepycat.je.EnvironmentConfig;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.TimeMaster;
 import com.fasterxml.storemate.store.StorableStore;
-import com.fasterxml.storemate.store.lastaccess.LastAccessConfig;
 import com.fasterxml.storemate.store.lastaccess.LastAccessStore;
 import com.fasterxml.storemate.store.lastaccess.LastAccessUpdateMethod;
 import com.fasterxml.storemate.store.state.NodeStateStore;
+
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
@@ -28,15 +25,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
 	extends Stores<K, E>
     implements com.fasterxml.storemate.shared.StartAndStoppable
 {
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
-
-    /**
-     * Last-access table may get rather high concurrency as it may be
-     * updated for every GET request, so let's boost from 1 to bit higher
-     * prime number. Note, though, that we will usually try to throttle
-     * updates a bit, so nothing extraordinary needed.
-     */
-    protected final static int DEFAULT_LAST_ACCESS_LOCK_TABLES = 13;
+    protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
     /*
     /**********************************************************************
@@ -47,14 +36,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     protected final TimeMaster _timeMaster;
 
     protected final ObjectMapper _jsonMapper;
-
-    protected final LastAccessConfig _lastAccessConfig;
-
-    /**
-     * Directory for environment used for storing last-accessed
-     * information.
-     */
-    private final File _dbRootForLastAccess;
 
     /*
     /**********************************************************************
@@ -75,10 +56,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     
     // Separate Environments for last-accessed, with relatively large cache
     private final NodeStateStore<IpAndPort, ActiveNodeState> _nodeStore;
-
-    private Environment _lastAccessEnv;
-
-    private LastAccessStore<K,E,LastAccessUpdateMethod> _lastAccessStore;
 
     /*
     /**********************************************************************
@@ -114,11 +91,6 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         _entryConverter = entryConverter;
         _entryStore = entryStore;
         _nodeStore = nodeStates;
-        if (dbEnvRoot == null) {
-            dbEnvRoot = config.metadataDirectory;
-        }
-        _lastAccessConfig = config.lastAccess;
-        _dbRootForLastAccess = new File(dbEnvRoot, "lastAccess");        
     }
 
     @Override
@@ -147,15 +119,14 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
                 LOG.warn("Problems with prepareForStop() on entryStore", e);
             }
         }
-        if (_lastAccessStore != null) {
-            try {
-                _lastAccessStore.prepareForStop();
-            } catch (Exception e) {
-                LOG.warn("Problems with prepareForStop() on lastAccessStore", e);
-            }
+
+        try {
+            _prepareToCloseLocalStores();
+        } catch (Exception e) {
+            LOG.warn("Problems calling _prepareToCloseLocalStores()", e);
         }
     }
-    
+
     @Override
     public void stop() throws IOException
     {
@@ -184,21 +155,18 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
             }
         }
 
-        // and finally, last-accessed (most disposable)
-        if (_lastAccessStore == null) {
-            LOG.warn("Odd: Last-access store not open? Skipping");
-        } else {
-            LOG.info("Closing Last-access store...");
-            try {
-                _lastAccessStore.stop();
-                LOG.info("Closing Last-access environment...");
-                _lastAccessEnv.close();
-            } catch (Exception e) {
-                LOG.error("Problems closing Last-access store: {}", e.getMessage(), e);
-            }
+        // And then possibly other local database
+        try {
+            _closeLocalStores();
+        } catch (Exception e) {
+            LOG.error("Problems calling _closeLocalStores(): {}", e.getMessage(), e);
         }
         
         LOG.info("Local stores (databases) closed");
+    }
+
+    protected void setInitProblem(String prob) {
+        _initProblem = prob;
     }
     
     /*
@@ -213,11 +181,9 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     public boolean initAndOpen(boolean logInfo)
     {
-        // first things first: must have directories for Environment
-        if (!_verifyOrCreateDirectory(_dbRootForLastAccess, logInfo)) {
+        if (!_openLocalStores(true, true, true)) {
             return false;
         }
-        _openLocalStores(true, true, true);
         _active.set(true);
         return true;
     }
@@ -225,52 +191,37 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     /**
      * Method called to open local stores if they exist, in read/write mode.
      */
-    public void openIfExists()
+    public boolean openIfExists()
     {
-        // then try opening
-        _openLocalStores(true, false, true);
+        if (!_openLocalStores(true, false, true)) {
+            return false;
+        }
         _active.set(true);
+        return true;
     }
 
     /**
      * Method called to open local stores if they exist, and only open for reading.
      */
-    public void openForReading(boolean log)
+    public boolean openForReading(boolean log)
     {
-        // then try opening
-        _openLocalStores(log, false, false);
+        if (!_openLocalStores(log, false, false)) {
+            return false;
+        }
         _active.set(true);
+        return true;
     }
+
+    /**
+     * 
+     * @return True if opening succeeded; false if not; in latter case, activation
+     *   will be considered failed
+     */
+    protected abstract boolean _openLocalStores(boolean log, boolean allowCreate, boolean writeAccess);
+
+    protected abstract void _prepareToCloseLocalStores();
     
-    protected void _openLocalStores(boolean log,
-          boolean allowCreate, boolean writeAccess)
-    {
-        _initProblem = null;
-
-        final String logPrefix = allowCreate ? "Trying to open (or initialize)" : "Trying to open";
-
-        // then last access store:
-        if (log) {
-            LOG.info(logPrefix+" Last-access store...");
-        }
-        _lastAccessEnv = new Environment(_dbRootForLastAccess,
-                lastAccessEnvConfig(allowCreate, writeAccess));
-        try {
-            _lastAccessStore = buildAccessStore(_lastAccessEnv, _lastAccessConfig);
-        } catch (Exception e) {
-            _initProblem = "Failed to open Last-access store: "+e.getMessage();
-            throw new IllegalStateException(_initProblem, e);
-        }
-        if (_lastAccessStore != null) {
-            _lastAccessStore.start();
-        }
-        if (log) {
-            LOG.info("Last-access store succesfully opened");
-        }
-    }
-
-    protected abstract LastAccessStore<K,E,LastAccessUpdateMethod> buildAccessStore(Environment env,
-            LastAccessConfig config);
+    protected abstract void _closeLocalStores();
     
     /*
     /**********************************************************************
@@ -291,57 +242,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     public StorableStore getEntryStore() { return _entryStore; }
     @Override
     public NodeStateStore<IpAndPort, ActiveNodeState> getNodeStore() { return _nodeStore; }
+
     @Override
-    public LastAccessStore<K,E,LastAccessUpdateMethod> getLastAccessStore() { return _lastAccessStore; }
-    
-    /*
-    /**********************************************************************
-    /* Internal methods
-    /**********************************************************************
-     */
-
-    protected void _verifyDirectory(File dir)
-    {
-        if (!dir.exists() || !dir.isDirectory()) {
-            throw new IllegalStateException("Local database path '"+dir.getAbsolutePath()
-                    +"' does not point to a directory; can not open local store -- read Documentation on how to initialize a node!");
-        }
-    }
-    
-    protected boolean _verifyOrCreateDirectory(File dir, boolean logInfo)
-    {
-        if (dir.exists()) {
-            if (!dir.isDirectory()) {
-                LOG.error("There is file {} which is not directory: CAN NOT create local database!",
-                        dir.getAbsolutePath());
-                return false;
-            }
-            LOG.info("Directory {} exists, will use it", dir.getAbsolutePath());
-        } else {
-            LOG.info("Directory {} does not exist, will try to create", dir.getAbsolutePath());
-            if (!dir.mkdirs()) {
-                LOG.error("FAILed to create directory {}: CAN NOT create local database!",
-                        dir.getAbsolutePath());
-                return false;
-            }
-            if (logInfo) {
-                LOG.info("Directory succesfully created");
-            }
-        }
-        return true;
-    }
-
-    protected EnvironmentConfig lastAccessEnvConfig(boolean allowCreate, boolean writeAccess)
-    {
-        EnvironmentConfig config = new EnvironmentConfig();
-        config.setAllowCreate(allowCreate);
-        config.setReadOnly(!writeAccess);
-        config.setSharedCache(false);
-        config.setCacheSize(_lastAccessConfig.cacheSize.getNumberOfBytes());
-        // default of 500 msec too low:
-        config.setLockTimeout(_lastAccessConfig.lockTimeoutMsecs, TimeUnit.MILLISECONDS);
-        // and to get decent concurrency, default of 1 won't do:
-        config.setConfigParam(EnvironmentConfig.LOCK_N_LOCK_TABLES, String.valueOf(DEFAULT_LAST_ACCESS_LOCK_TABLES));
-        return config;
-    }
+    public LastAccessStore<K,E,LastAccessUpdateMethod> getLastAccessStore() { return null; }
 }
