@@ -165,6 +165,10 @@ public interface ClusterMateConstants
 
     public final static int HTTP_STATUS_NOT_FOUND = 404;
 
+    public final static int HTTP_STATUS_ERROR_CONFLICT = 409;
+
+    public final static int HTTP_STATUS_ERROR_GONE = 410;
+    
     /*
     /**********************************************************************
     /* Custom 'virtual' HTTP response codes; used to indicate client-side

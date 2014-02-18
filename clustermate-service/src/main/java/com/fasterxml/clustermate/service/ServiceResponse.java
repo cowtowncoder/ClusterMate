@@ -184,19 +184,19 @@ public abstract class ServiceResponse
     }
 
     public final <RESP extends ServiceResponse> RESP conflict(Object entity) {
-        return set(409, entity);
+        return set(ClusterMateConstants.HTTP_STATUS_ERROR_CONFLICT, entity);
     }
 
     public final <RESP extends ServiceResponse> RESP gone(Object entity) {
-        return set(410, entity);
+        return set(ClusterMateConstants.HTTP_STATUS_ERROR_GONE, entity);
     }
     
     public final <RESP extends ServiceResponse> RESP notFound() {
-        return setStatus(404);
+        return setStatus(ClusterMateConstants.HTTP_STATUS_NOT_FOUND);
     }
     
     public final <RESP extends ServiceResponse> RESP notFound(Object entity) {
-        return set(404, entity);
+        return set(ClusterMateConstants.HTTP_STATUS_NOT_FOUND, entity);
     }
 
     public final <RESP extends ServiceResponse> RESP internalError(Object entity) {
