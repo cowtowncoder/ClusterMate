@@ -2,7 +2,7 @@ package com.fasterxml.clustermate.jaxrs.leveldb;
 
 import java.io.File;
 
-import com.fasterxml.clustermate.jaxrs.common.LargeFileTestBase;
+import com.fasterxml.clustermate.jaxrs.common.LargeEntryTestBase;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.storemate.shared.IpAndPort;
@@ -10,7 +10,7 @@ import com.fasterxml.storemate.shared.util.RawEntryConverter;
 import com.fasterxml.storemate.store.backend.StoreBackend;
 import com.fasterxml.storemate.store.state.NodeStateStore;
 
-public class LargeFileTest extends LargeFileTestBase
+public class LargeFileTest extends LargeEntryTestBase
 {
     @Override protected String testPrefix() { return "large-leveldb"; }
 
