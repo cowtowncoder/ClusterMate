@@ -1,6 +1,5 @@
 package com.fasterxml.clustermate.jaxrs.testutil;
 
-import com.fasterxml.clustermate.api.PathType;
 import com.fasterxml.clustermate.api.DecodableRequestPath;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.api.RequestPathStrategy;
@@ -8,7 +7,7 @@ import com.fasterxml.clustermate.api.RequestPathStrategy;
 /**
  * Implementation used for store tests.
  */
-public class PathsForTests extends RequestPathStrategy<PathType>
+public class PathsForTests extends RequestPathStrategy<TestPath>
 {
     protected final static String FIRST_SEGMENT_STORE = "teststore";
     protected final static String FIRST_SEGMENT_NODE = "testnode";
@@ -35,7 +34,7 @@ public class PathsForTests extends RequestPathStrategy<PathType>
     
     @Override
     public <B extends RequestPathBuilder<B>> B appendPath(B basePath,
-            PathType type)
+            TestPath type)
     {
         switch (type) {
         case NODE_METRICS:
@@ -118,38 +117,38 @@ public class PathsForTests extends RequestPathStrategy<PathType>
      */
 
     @Override
-    public PathType matchPath(DecodableRequestPath pathDecoder)
+    public TestPath matchPath(DecodableRequestPath pathDecoder)
     {
         String full = pathDecoder.getPath();
         if (pathDecoder.matchPathSegment(FIRST_SEGMENT_STORE)) {
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_STORE_ENTRY)) {
-                return PathType.STORE_ENTRY;
+                return TestPath.STORE_ENTRY;
             }
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_STORE_ENTRIES)) {
-                return PathType.STORE_ENTRIES;
+                return TestPath.STORE_ENTRIES;
             }
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_STORE_STATUS)) {
-                return PathType.STORE_STATUS;
+                return TestPath.STORE_STATUS;
             }
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_STORE_FIND_ENTRY)) {
-                return PathType.STORE_FIND_ENTRY;
+                return TestPath.STORE_FIND_ENTRY;
             }
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_STORE_FIND_LIST)) {
-                return PathType.STORE_FIND_LIST;
+                return TestPath.STORE_FIND_LIST;
             }
         } else if (pathDecoder.matchPathSegment(FIRST_SEGMENT_NODE)) {
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_NODE_STATUS)) {
-                return PathType.NODE_STATUS;
+                return TestPath.NODE_STATUS;
             }
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_NODE_METRICS)) {
-                return PathType.NODE_METRICS;
+                return TestPath.NODE_METRICS;
             }
         } else if (pathDecoder.matchPathSegment(FIRST_SEGMENT_SYNC)) {
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_SYNC_LIST)) {
-                return PathType.SYNC_LIST;
+                return TestPath.SYNC_LIST;
             }
             if (pathDecoder.matchPathSegment(SECOND_SEGMENT_SYNC_PULL)) {
-                return PathType.SYNC_PULL;
+                return TestPath.SYNC_PULL;
             }
         }
         // if no match, need to reset

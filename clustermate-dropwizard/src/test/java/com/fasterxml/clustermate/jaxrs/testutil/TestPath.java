@@ -1,9 +1,9 @@
-package com.fasterxml.clustermate.api;
+package com.fasterxml.clustermate.jaxrs.testutil;
 
 /**
  * Enumeration for standard paths recognized by a service instance.
  */
-public enum PathType
+public enum TestPath
 {
     // access to stored entries
     STORE_ENTRY, // single-entry CRUD

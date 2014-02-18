@@ -377,10 +377,14 @@ public abstract class DWBasedService<
     /**********************************************************************
      */
 
+    protected abstract CMServletFactory constructServletFactory();
+
+    /*
     protected CMServletFactory constructServletFactory() {
         return new DefaultCMServletFactory<K,E,SCONFIG>(_serviceStuff,
                 _stores, _cluster, _clusterInfoHandler, _syncHandler, _storeHandler);
     }
+    */
     
     /**
      * Method called to create service endpoints, given set of
