@@ -92,6 +92,13 @@ public class InfoOperationResult<I extends ItemInfo>
     public Iterator<ReadCallResult<I>> iterator() {
         return _info.iterator();
     }
+
+    public ReadCallResult<I> get(int index) {
+        if (index < 0 || index >= _info.size()) {
+            return null;
+        }
+        return _info.get(index);
+    }
     
     public int getMissingCount() {
         return _missingCount;

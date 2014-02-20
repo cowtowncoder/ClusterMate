@@ -48,4 +48,6 @@ public abstract class ReadCallResult<T> extends CallResult
      */
     
     public T getResult() { return _result; }
+
+    public boolean hasResult() { return _result != null; }
 }

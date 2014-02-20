@@ -61,7 +61,7 @@ public abstract class StoreClient<K extends EntryKey,
     /* Life-cycle
     /**********************************************************************
      */
-    
+
     /**
      * Processing thread used for maintaining cluster state information.
      */
