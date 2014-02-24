@@ -143,6 +143,7 @@ public class AHCContentPutter<K extends EntryKey>
         AHCPathBuilder path = _server.rootPath();
         path = _pathFinder.appendStoreEntryPath(path);
         path = _keyConverter.appendToPath(path, contentId);       
+        path = path.setContentType(ClusterMateConstants.HTTP_CONTENT_BINARY);
         if (params != null) {
             path = params.appendToPath(path, contentId);
         }

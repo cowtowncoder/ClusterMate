@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.msg.ItemInfo;
@@ -63,6 +64,9 @@ public class JdkHttpEntryInspector<K extends EntryKey>
 
             // call ok?
             if (!IOUtil.isHTTPSuccess(statusCode)) {
+                if (statusCode == ClusterMateConstants.HTTP_STATUS_NOT_FOUND) { // nothing totally wrong here, present as non-failure
+                    return JdkHttpReadCallResult.notFound(_server);
+                }
                 // if not, why not? Any well-known problems? (besides timeout that was handled earlier)
                 String msg = getExcerpt(conn, statusCode, config.getMaxExcerptLength());
                 handleHeaders(_server, conn, startTime);

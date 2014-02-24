@@ -98,6 +98,8 @@ public abstract class RequestPathBuilder<
     public THIS setHeader(String key, long value) {
         return setHeader(key, String.valueOf(value));
     }
+
+    public abstract THIS setContentType(String contentType);
     
     public THIS addCompression(Compression comp, long originalLength) {
         if (comp != null) {

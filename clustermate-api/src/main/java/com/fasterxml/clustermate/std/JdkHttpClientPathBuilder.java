@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.UTF8UrlEncoder;
@@ -22,6 +23,8 @@ public class JdkHttpClientPathBuilder
 
     protected String _path;
 
+    protected String _contentType;
+    
     protected List<String> _queryParams;
 
     protected Map<String, Object> _headers;
@@ -62,6 +65,12 @@ public class JdkHttpClientPathBuilder
         _queryParams = _arrayToList(src._queryParams);
         _headers = _arrayToMap(src._headers);
     }
+
+    /*
+    /*********************************************************************
+    /* API impl, mutators
+    /*********************************************************************
+     */
     
     @Override
     public JdkHttpClientPath build() {
@@ -136,6 +145,12 @@ public class JdkHttpClientPathBuilder
          return this;
     }
 
+    @Override
+    public JdkHttpClientPathBuilder setContentType(String contentType) {
+        _contentType = contentType;
+        return this;
+    }
+
     /*
     /*********************************************************************
     /* Extended API
@@ -169,6 +184,9 @@ public class JdkHttpClientPathBuilder
 
     public void addHeaders(HttpURLConnection conn)
     {
+        if (_contentType != null && !_contentType.isEmpty()) {
+            conn.setRequestProperty(ClusterMateConstants.HTTP_HEADER_CONTENT_TYPE, _contentType);
+        }
         if (_headers != null) {
             for (Map.Entry<String,Object> entry : _headers.entrySet()) {
                 String name = entry.getKey();

@@ -205,4 +205,6 @@ public interface ClusterMateConstants
     public final static String STATE_ACTIVE = "active";
 
     public final static String STATE_INACTIVE = "inactive";
+
+    public final static String HTTP_CONTENT_BINARY = "application/octet-stream";
 }

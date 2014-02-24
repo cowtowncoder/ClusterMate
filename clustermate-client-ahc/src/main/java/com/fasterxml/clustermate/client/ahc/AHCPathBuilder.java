@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.client.ahc;
 
 import java.util.*;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.UTF8UrlEncoder;
@@ -16,6 +17,8 @@ public class AHCPathBuilder
     protected final String _serverPart;
 
     protected String _path;
+    
+    protected String _contentType;
 
     protected List<String> _queryParams;
 
@@ -77,7 +80,7 @@ public class AHCPathBuilder
 
     /*
     /*********************************************************************
-    /* API impl, 
+    /* API impl, mutators
     /*********************************************************************
      */
 	
@@ -97,6 +100,12 @@ public class AHCPathBuilder
         return this;
     }
 
+    @Override
+    public AHCPathBuilder setContentType(String contentType) {
+        _contentType = contentType;
+        return this;
+    }
+    
     /*
     /*********************************************************************
     /* Extended API
@@ -137,20 +146,23 @@ public class AHCPathBuilder
 
     private BoundRequestBuilder _addParamsAndHeaders(BoundRequestBuilder reqBuilder)
     {
+        if (_contentType != null && !_contentType.isEmpty()) {
+            reqBuilder = reqBuilder.setHeader(ClusterMateConstants.HTTP_HEADER_CONTENT_TYPE, _contentType);
+        }
         if (_headers != null) {
             for (Map.Entry<String,Object> entry : _headers.entrySet()) {
                 String name = entry.getKey();
                 Object ob = entry.getValue();
                 if (ob instanceof String) {
-                    reqBuilder = reqBuilder.setHeader(name,  (String) ob);
+                    reqBuilder = reqBuilder.setHeader(name, (String) ob);
                 } else {
                     boolean first = true;
                     for (Object value : (Object[]) ob) {
                         if (first) {
-                            reqBuilder = reqBuilder.setHeader(name,  (String) value);
+                            reqBuilder = reqBuilder.setHeader(name, (String) value);
                             first = false;
                         } else {
-                            reqBuilder = reqBuilder.addHeader(name,  (String) value);
+                            reqBuilder = reqBuilder.addHeader(name, (String) value);
                         }
                     }
                 }

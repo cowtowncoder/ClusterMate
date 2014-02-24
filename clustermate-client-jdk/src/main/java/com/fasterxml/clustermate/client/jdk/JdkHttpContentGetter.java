@@ -67,7 +67,7 @@ public class JdkHttpContentGetter<K extends EntryKey>
             handleHeaders(_server, conn, startTime);
 
             if (!IOUtil.isHTTPSuccess(statusCode)) {
-                if (statusCode == 404) { // is this a fail or success? For now it's actually success...
+                if (statusCode == ClusterMateConstants.HTTP_STATUS_NOT_FOUND) { // is this a fail or success? For now it's actually success...
                     return JdkHttpReadCallResult.notFound(_server);
                 }
                 // then the default fallback

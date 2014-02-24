@@ -9,6 +9,7 @@ import com.fasterxml.storemate.shared.ByteContainer;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.hash.HashConstants;
 import com.fasterxml.storemate.shared.util.IOUtil;
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.StoreClientConfig;
@@ -72,6 +73,7 @@ public class JdkHttpContentPutter<K extends EntryKey>
         if (comp != null) { // if so, must be indicated
             path = path.addCompression(comp, content.uncompressedLength());
         }
+        path = path.setContentType(ClusterMateConstants.HTTP_CONTENT_BINARY);
         if (params != null) {
             path = params.appendToPath(path, contentId);
         }

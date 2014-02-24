@@ -74,7 +74,7 @@ public class AHCContentGetter<K extends EntryKey>
 
             handleHeaders(_server, handler.getHeaders(), startTime);
             if (handler.isFailed()) {
-                if (statusCode == 404) { // is this a fail or success? For now it's actually success...
+                if (statusCode == ClusterMateConstants.HTTP_STATUS_NOT_FOUND) { // is this a fail or success? For now it's actually success...
                     return AHCReadCallResult.notFound(_server);
                 }
                 // then the default fallback

@@ -6,6 +6,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import com.fasterxml.clustermate.api.ClusterMateConstants;
 import com.fasterxml.clustermate.api.ContentType;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.msg.ItemInfo;
@@ -74,6 +75,9 @@ public class AHCEntryInspector<K extends EntryKey>
 
             // call ok?
             if (!IOUtil.isHTTPSuccess(statusCode)) {
+                if (statusCode == ClusterMateConstants.HTTP_STATUS_NOT_FOUND) { // missing entry is not a fail
+                    return AHCReadCallResult.notFound(_server);
+                }
                 // if not, why not? Any well-known problems? (besides timeout that was handled earlier)
 
                 // then the default fallback
