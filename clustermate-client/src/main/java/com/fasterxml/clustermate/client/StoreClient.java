@@ -844,7 +844,7 @@ public abstract class StoreClient<K extends EntryKey,
                 }
             }
         }
-        if (!canRetry) {
+        if (!canRetry || retries == null) {
             return result;
         }
 
