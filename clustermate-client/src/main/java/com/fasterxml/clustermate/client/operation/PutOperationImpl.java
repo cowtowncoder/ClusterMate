@@ -138,6 +138,11 @@ public class PutOperationImpl<K extends EntryKey,
     }
 
     @Override
+    public PutContentProvider content() {
+        return _content;
+    }
+    
+    @Override
     public int completedRounds() {
         return _round;
     }

@@ -1,5 +1,7 @@
 package com.fasterxml.clustermate.client.operation;
 
+import com.fasterxml.clustermate.client.call.PutContentProvider;
+
 /**
  * Entity that represents a PUT operation during its life-cycle; before, during and
  * after zero or more actual PUT calls. The reason for separate entity is to allow
@@ -11,4 +13,9 @@ package com.fasterxml.clustermate.client.operation;
 public interface PutOperation
     extends WriteOperation<PutOperationResult, PutOperation>
 {
+    /**
+     * Accessor for content to be PUT; usually only needed for debugging or
+     * advanced functionality (aka "hacks").
+     */
+    public PutContentProvider content();
 }
