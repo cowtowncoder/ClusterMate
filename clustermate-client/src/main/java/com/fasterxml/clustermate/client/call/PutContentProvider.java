@@ -64,4 +64,11 @@ public interface PutContentProvider
      * possible existing compression (<code>null</code>).
      */
     public Compression getExistingCompression();
+
+    /**
+     * Advanced accessor that can be used to expose underlying content source;
+     * but iff caller really knows what it is doing, as return type is
+     * opaque.
+     */
+    public Object rawSource();
 }

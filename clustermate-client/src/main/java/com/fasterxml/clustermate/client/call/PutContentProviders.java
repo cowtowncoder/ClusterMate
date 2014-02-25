@@ -125,8 +125,9 @@ public class PutContentProviders
         @Override public ByteContainer contentAsBytes() { return _bytes; }
         @Override public File contentAsFile() { return null; }
         @Override public InputStream contentAsStream() { return null; }
+        @Override public Object rawSource() { return _bytes; }
     }
-    
+
     /*
     /**********************************************************************
     /* Simple standard implementations for providers
@@ -163,5 +164,6 @@ public class PutContentProviders
         @Override public ByteContainer contentAsBytes() { return null; }
         @Override public File contentAsFile() { return _file; }
         @Override public InputStream contentAsStream() { return null; }
+        @Override public Object rawSource() { return _file; }
     }
 }
