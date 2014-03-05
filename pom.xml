@@ -48,10 +48,10 @@
 
     <version.validation.api>1.1.0.Final</version.validation.api>
 
-    <version.storemate>1.0.2-SNAPSHOT</version.storemate>
+    <version.storemate>1.0.2</version.storemate>
 
     <version.jackson.annotations>2.3.0</version.jackson.annotations>
-    <version.jackson.core>2.3.1</version.jackson.core>
+    <version.jackson.core>2.3.2</version.jackson.core>
     <version.jackson.smile>${version.jackson.core}</version.jackson.smile>
     <version.dropwizard>0.6.2</version.dropwizard>
     <version.metrics>3.0.1</version.metrics>

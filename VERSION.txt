@@ -1,6 +1,6 @@
 Project: ClusterMate
 
-0.9.26 (xx-Feb-2014)
+0.9.26 (04-Feb-2014)
 
 - Add "entry info" end point for accessing per-entry cluster-wide metadata
 - Explicitly set MIME Content-Type for PUT requests (application/octet-stream)
@@ -11,14 +11,9 @@ Project: ClusterMate
 - Add more access in WriteOperation, to figure out if operation can proceed
 - Upgrade to Storemate-1.0.1 which fixes that cause problem with sync-pulls
  (orphaned files that cause unnecessary disk space retention)
-
-0.9.24 (05-Feb-2014)
-
 - Further refactoring to eliminate use of `PathType`, isolate DropWizard deps
-- Dep update: StoreMate 1.0.0!
 - Fixed an issue with AHC-provider, pre-compressed content (was not sending original length)
 - Adding more support for client-side compression (to be enabled by implementations)
-- Dep update: StoreMate 0.9.24
 - Add 'count' to DeleteResponse
 - Refactoring to remove BDB deps; none for node-state store, minor remains
   for last-access store (to be eliminated RSN)
@@ -34,7 +29,6 @@ Project: ClusterMate
   of calls
 - Try to support HTTP Headers better with client
 - Need to upgrade StoreMate to roll back BDB-JE version, due to a critical bug.
-- Update to latest Java leveldb version
 
 0.9.15 (27-Sep-2013)
 
@@ -83,7 +77,6 @@ Project: ClusterMate
 - Increased default read buffer for StreamingResponseContentImpl 8k->16k
 - Add more stuff in OperationDiagnostics, for DB read/write, last-access update
   breakdowns
-- Update to AHC 1.7.12, DropWizard 0.6.2
 
 0.8.9 and earlier
 
