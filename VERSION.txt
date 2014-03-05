@@ -1,6 +1,6 @@
 Project: ClusterMate
 
-0.9.26 (04-Feb-2014)
+0.9.26 (04-Mar-2014)
 
 - Add "entry info" end point for accessing per-entry cluster-wide metadata
 - Explicitly set MIME Content-Type for PUT requests (application/octet-stream)
