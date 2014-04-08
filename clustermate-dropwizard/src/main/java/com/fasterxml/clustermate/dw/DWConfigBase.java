@@ -1,11 +1,19 @@
 package com.fasterxml.clustermate.dw;
 
+import io.dropwizard.Configuration;
+import io.dropwizard.jetty.HttpConnectorFactory;
+import io.dropwizard.jetty.RequestLogFactory;
+import io.dropwizard.logging.AppenderFactory;
+import io.dropwizard.server.AbstractServerFactory;
+import io.dropwizard.server.DefaultServerFactory;
+import io.dropwizard.util.Duration;
+
 import org.skife.config.TimeSpan;
 
+import ch.qos.logback.classic.Level;
+
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
-import com.yammer.dropwizard.config.Configuration;
-import com.yammer.dropwizard.config.RequestLogConfiguration;
-import com.yammer.dropwizard.util.Duration;
+import com.google.common.collect.ImmutableList;
 
 public abstract class DWConfigBase<
   SCONFIG extends ServiceConfig,
@@ -22,12 +30,20 @@ public abstract class DWConfigBase<
 
     /*
     /**********************************************************************
-    /* Abstract accessors
+    /* Additional/abstract accessors
     /**********************************************************************
      */
 
     public abstract SCONFIG getServiceConfig();
-    
+
+    public int getApplicationPort() {
+        return ((HttpConnectorFactory) defaultServerConfig().getApplicationConnectors().get(0)).getPort();
+    }
+
+    public int getAdminPort() {
+        return ((HttpConnectorFactory) defaultServerConfig().getAdminConnectors().get(0)).getPort();
+    }    
+
     /*
     /**********************************************************************
     /* Copying
@@ -46,45 +62,38 @@ public abstract class DWConfigBase<
 
     /*
     /**********************************************************************
-    /* Additional convenience accessors, to hide some traversal
-    /**********************************************************************
-     */
-    
-    public int getHttpPort() {
-        return getHttpConfiguration().getPort();
-    }
-
-    public int getAdminPort() {
-        return getHttpConfiguration().getAdminPort();
-    }
-    
-    /*
-    /**********************************************************************
     /* Additional mutators; needed to work around DW strict access
     /**********************************************************************
      */
 
     @SuppressWarnings("unchecked")
     public THIS overrideHttpPort(int p) {
-        getHttpConfiguration().setPort(p);
+        appConnector().setPort(p);
         return (THIS) this;
     }
 
     @SuppressWarnings("unchecked")
     public THIS overrideAdminPort(int p) {
-        getHttpConfiguration().setAdminPort(p);
+        adminConnector().setPort(p);
         return (THIS) this;
     }
 
     @SuppressWarnings("unchecked")
     public THIS overrideGZIPEnabled(boolean state) {
-        getHttpConfiguration().getGzipConfiguration().setEnabled(state);
+        serverConfig().getGzipFilterFactory().setEnabled(state);
         return (THIS) this;
     }
 
     @SuppressWarnings("unchecked")
+    public THIS overrideLogLevel(Level minLevel) {
+        // !!! TODO !!!
+        //config.getLoggingConfiguration().setLevel(Level.WARN);
+        return (THIS) this;
+    }
+    
+    @SuppressWarnings("unchecked")
     public THIS setShutdownGracePeriod(Duration d) {
-        getHttpConfiguration().setShutdownGracePeriod(d);
+        serverConfig().setShutdownGracePeriod(d);
         return (THIS) this;
     }
 
@@ -99,11 +108,24 @@ public abstract class DWConfigBase<
      */
     @SuppressWarnings("unchecked")
     public THIS disableRequestLog() {
-        RequestLogConfiguration reqLog = getHttpConfiguration().getRequestLogConfiguration();
-        reqLog.getConsoleConfiguration().setEnabled(false);
-        reqLog.getFileConfiguration().setEnabled(false);
-        reqLog.getSyslogConfiguration().setEnabled(false);
+        RequestLogFactory reqLog = serverConfig().getRequestLogFactory();
+        reqLog.setAppenders(ImmutableList.<AppenderFactory>of());        
         return (THIS) this;
     }
-}
 
+    protected AbstractServerFactory serverConfig() {
+        return (AbstractServerFactory) getServerFactory();
+    }
+
+    protected DefaultServerFactory defaultServerConfig() {
+        return (DefaultServerFactory) getServerFactory();
+    }
+
+    protected HttpConnectorFactory appConnector() {
+        return (HttpConnectorFactory) defaultServerConfig().getApplicationConnectors().get(0);
+    }
+    
+    protected HttpConnectorFactory adminConnector() {
+        return (HttpConnectorFactory) defaultServerConfig().getAdminConnectors().get(0);
+    }
+}

@@ -1,16 +1,16 @@
 package com.fasterxml.clustermate.dw;
 
+import io.dropwizard.Application;
+import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.lifecycle.Managed;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
+
 import java.io.*;
 import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.yammer.dropwizard.Service;
-import com.yammer.dropwizard.assets.AssetsBundle;
-import com.yammer.dropwizard.config.Bootstrap;
-import com.yammer.dropwizard.config.Environment;
-import com.yammer.dropwizard.lifecycle.Managed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -46,7 +46,7 @@ public abstract class DWBasedService<
     SCONFIG extends ServiceConfig,
     CONF extends DWConfigBase<SCONFIG, CONF>
 >
-    extends Service<CONF>
+    extends Application<CONF>
 {
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
@@ -227,7 +227,7 @@ public abstract class DWBasedService<
         }
         
         // first things first: we need to get start()/stop() calls, so:
-        environment.manage(new Managed() {
+        environment.getApplicationContext().manage(new Managed() {
             @Override
             public void start() throws Exception {
                 _start();
@@ -267,7 +267,7 @@ public abstract class DWBasedService<
         _stores.initAndOpen(false);
 
         // Then: read in cluster information (config file, backend store settings):
-        final int port = dwConfig.getHttpPort();
+        final int port = dwConfig.getApplicationPort();
         LOG.info("Initializing cluster configuration (port {})...", port);
         final long startTime = _timeMaster.currentTimeMillis();
         ClusterViewByServerImpl<K,E> cl = new ClusterBootstrapper<K,E>(startTime, _serviceStuff, _stores)
@@ -278,7 +278,8 @@ public abstract class DWBasedService<
         LOG.info("Cluster configuration setup complete, with {} nodes", _cluster.size());
         
         // Index page must be done via resource, otherwise will conflict with DW/JAX-RS Servlet:
-        environment.addResource(new IndexResource(loadResource("/index.html"), loadResource("/favicon.jpg")));
+        environment.jersey().register(new IndexResource(loadResource("/index.html"),
+                loadResource("/favicon.jpg")));
 
         // Let's first construct handlers we use:
         LOG.info("Creating handlers for service endpoints");
@@ -303,7 +304,7 @@ public abstract class DWBasedService<
             LOG.info("Skipping cleaner tasks for light-weight testing");
         }
         LOG.info("Initialization complete: HTTP service now running on port {}",
-                dwConfig.getHttpPort());
+                dwConfig.getApplicationPort());
     }
     
     /*
@@ -397,7 +398,9 @@ public abstract class DWBasedService<
         LOG.info("Registering main Dispatcher servlet at: "+rootPath);
         ServletBase dispatcher = servletFactory.contructDispatcherServlet();
         if (dispatcher != null) {
-            environment.addServlet(dispatcher, rootPath);
+            environment.servlets()
+                .addServlet("CM-Dispatcher", dispatcher)
+                .addMapping(rootPath);
         }
         // // And optional additional servlet for for entry access
         addStoreEntryServlet(environment);

@@ -64,8 +64,18 @@ DropWizard container.
 
     <!-- Then DropWizard, CodahaleMetrics: needed by resources -->
     <dependency>
-        <groupId>com.yammer.dropwizard</groupId>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-assets</artifactId>
+        <version>${version.dropwizard}</version>
+    </dependency>
+    <dependency>
+        <groupId>io.dropwizard</groupId>
         <artifactId>dropwizard-core</artifactId>
+        <version>${version.dropwizard}</version>
+    </dependency>
+    <dependency>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-jetty</artifactId>
         <version>${version.dropwizard}</version>
     </dependency>
     <dependency>
