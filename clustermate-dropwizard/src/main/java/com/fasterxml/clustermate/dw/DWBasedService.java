@@ -2,7 +2,6 @@ package com.fasterxml.clustermate.dw;
 
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
-import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
@@ -279,15 +278,9 @@ public abstract class DWBasedService<
         environment.getApplicationContext().addLifeCycleListener(l);
         
         _config = dwConfig.getServiceConfig();
-        
-        /* 04-Jun-2013, tatu: Goddammit, disabling gzip filter is tricky due to
-         *   data-binding... Object-values get re-created. So, need to patch after
-         *   the fact. And hope it works...
-         *   
-         * NOTE: looks like this is too late, and won't have effect. If so, modifying
-         * YAML/JSON config is the only way.
-         */
-        dwConfig.overrideGZIPEnabled(false);
+
+        // 09-Apr-2014, tatu: This should NOT be necessary any more with DW-0.7:
+        //dwConfig.overrideGZIPEnabled(false);
         
         _managed = new ArrayList<StartAndStoppable>();
         _serviceStuff = constructServiceStuff(_config, _timeMaster, constructEntryConverter(),
@@ -313,7 +306,7 @@ public abstract class DWBasedService<
                 .bootstrap(port);
         _cluster = cl;
         _managed.add(_cluster);
-     
+
         LOG.info("Cluster configuration setup complete, with {} nodes", _cluster.size());
         
         // Index page must be done via resource, otherwise will conflict with DW/JAX-RS Servlet:
