@@ -117,10 +117,7 @@
     <dependency>
       <groupId>com.ning</groupId>
       <artifactId>async-http-client</artifactId>
-      <version>1.8.1</version>
-<!--
-      <version>1.7.24</version>
--->
+      <version>1.8.6</version>
     </dependency>
 
     <!-- databinding with Jackson -->
