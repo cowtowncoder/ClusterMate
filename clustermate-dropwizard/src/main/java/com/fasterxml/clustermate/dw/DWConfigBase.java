@@ -6,6 +6,7 @@ import io.dropwizard.jetty.RequestLogFactory;
 import io.dropwizard.logging.AppenderFactory;
 import io.dropwizard.server.AbstractServerFactory;
 import io.dropwizard.server.DefaultServerFactory;
+import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.util.Duration;
 
 import org.skife.config.TimeSpan;
@@ -37,11 +38,29 @@ public abstract class DWConfigBase<
     public abstract SCONFIG getServiceConfig();
 
     public int getApplicationPort() {
-        return ((HttpConnectorFactory) defaultServerConfig().getApplicationConnectors().get(0)).getPort();
+        AbstractServerFactory sf = serverFactory();
+        if (sf instanceof SimpleServerFactory) {
+            SimpleServerFactory ssf = (SimpleServerFactory) sf;
+            return ((HttpConnectorFactory)ssf.getConnector()).getPort();
+        }
+        if (sf instanceof DefaultServerFactory) {
+            DefaultServerFactory dsf = (DefaultServerFactory) sf;
+            return ((HttpConnectorFactory)dsf.getApplicationConnectors().get(0)).getPort();
+        }
+        throw new IllegalStateException("Unrecognized ServerFactory: "+sf.getClass().getName());
     }
 
     public int getAdminPort() {
-        return ((HttpConnectorFactory) defaultServerConfig().getAdminConnectors().get(0)).getPort();
+        AbstractServerFactory sf = serverFactory();
+        if (sf instanceof SimpleServerFactory) {
+            SimpleServerFactory ssf = (SimpleServerFactory) sf;
+            return ((HttpConnectorFactory)ssf.getConnector()).getPort();
+        }
+        if (sf instanceof DefaultServerFactory) {
+            DefaultServerFactory dsf = (DefaultServerFactory) sf;
+            return ((HttpConnectorFactory)dsf.getAdminConnectors().get(0)).getPort();
+        }
+        throw new IllegalStateException("Unrecognized ServerFactory: "+sf.getClass().getName());
     }    
 
     /*
@@ -68,19 +87,36 @@ public abstract class DWConfigBase<
 
     @SuppressWarnings("unchecked")
     public THIS overrideHttpPort(int p) {
-        appConnector().setPort(p);
+        AbstractServerFactory sf = serverFactory();
+        if (sf instanceof SimpleServerFactory) {
+            SimpleServerFactory ssf = (SimpleServerFactory) sf;
+            ((HttpConnectorFactory)ssf.getConnector()).setPort(p);
+        } else if (sf instanceof DefaultServerFactory) {
+            DefaultServerFactory dsf = (DefaultServerFactory) sf;
+            ((HttpConnectorFactory)dsf.getApplicationConnectors().get(0)).setPort(p);
+        } else {
+            throw new IllegalStateException("Unrecognized ServerFactory: "+sf.getClass().getName());
+        }
         return (THIS) this;
     }
 
     @SuppressWarnings("unchecked")
     public THIS overrideAdminPort(int p) {
-        adminConnector().setPort(p);
+        AbstractServerFactory sf = serverFactory();
+        if (sf instanceof SimpleServerFactory) {
+            // no admin port; just ignore
+        } else if (sf instanceof DefaultServerFactory) {
+            DefaultServerFactory dsf = (DefaultServerFactory) sf;
+            ((HttpConnectorFactory)dsf.getAdminConnectors().get(0)).setPort(p);
+        } else {
+            throw new IllegalStateException("Unrecognized ServerFactory: "+sf.getClass().getName());
+        }
         return (THIS) this;
     }
 
     @SuppressWarnings("unchecked")
     public THIS overrideGZIPEnabled(boolean state) {
-        serverConfig().getGzipFilterFactory().setEnabled(state);
+        serverFactory().getGzipFilterFactory().setEnabled(state);
         return (THIS) this;
     }
 
@@ -93,7 +129,7 @@ public abstract class DWConfigBase<
     
     @SuppressWarnings("unchecked")
     public THIS setShutdownGracePeriod(Duration d) {
-        serverConfig().setShutdownGracePeriod(d);
+        serverFactory().setShutdownGracePeriod(d);
         return (THIS) this;
     }
 
@@ -108,24 +144,12 @@ public abstract class DWConfigBase<
      */
     @SuppressWarnings("unchecked")
     public THIS disableRequestLog() {
-        RequestLogFactory reqLog = serverConfig().getRequestLogFactory();
+        RequestLogFactory reqLog = serverFactory().getRequestLogFactory();
         reqLog.setAppenders(ImmutableList.<AppenderFactory>of());        
         return (THIS) this;
     }
 
-    protected AbstractServerFactory serverConfig() {
+    protected AbstractServerFactory serverFactory() {
         return (AbstractServerFactory) getServerFactory();
-    }
-
-    protected DefaultServerFactory defaultServerConfig() {
-        return (DefaultServerFactory) getServerFactory();
-    }
-
-    protected HttpConnectorFactory appConnector() {
-        return (HttpConnectorFactory) defaultServerConfig().getApplicationConnectors().get(0);
-    }
-    
-    protected HttpConnectorFactory adminConnector() {
-        return (HttpConnectorFactory) defaultServerConfig().getAdminConnectors().get(0);
     }
 }
