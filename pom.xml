@@ -156,12 +156,16 @@
       <version>${version.metrics}</version>
     </dependency>
 
-    <dependency> <!-- and it requires this EXACT version of logback...
-              (which is a drag since 1.0.13 is latest; and 1.0.12 has an important fix)
-           -->
+    <!-- and dropwizard is quite particular on logback version... -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.5</version>
+    </dependency>
+    <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.0.10</version>
+      <version>1.1.1</version>
     </dependency>
    </dependencies>
   </dependencyManagement>

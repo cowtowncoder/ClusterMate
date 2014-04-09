@@ -8,12 +8,14 @@ import io.dropwizard.setup.Environment;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.jetty.util.component.LifeCycle;
+import org.eclipse.jetty.util.component.LifeCycle.Listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
@@ -24,7 +26,6 @@ import com.fasterxml.storemate.store.file.FileManager;
 import com.fasterxml.storemate.store.impl.StorableStoreImpl;
 import com.fasterxml.storemate.store.state.NodeStateStore;
 import com.fasterxml.storemate.store.util.PartitionedWriteMutex;
-
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.api.RequestPathBuilder;
 import com.fasterxml.clustermate.jaxrs.IndexResource;
@@ -158,7 +159,11 @@ public abstract class DWBasedService<
         LOG.info("Starting up {} Managed objects", _managed.size());
         for (StartAndStoppable managed : _managed) {
             LOG.info("Starting up: {}", managed.getClass().getName());
-            managed.start();
+            try {
+                managed.start();
+            } catch (Exception e) {
+                LOG.warn("Problems starting component {}: {}", _managed.getClass().getName(), e);
+            }
         }
         LOG.info("Managed object startup complete");
 
@@ -173,8 +178,14 @@ public abstract class DWBasedService<
         });
     }
 
+    protected final AtomicBoolean _prepareForStopCalled = new AtomicBoolean(false);
+    
     public void _prepareForStop()
     {
+        // only call once:
+        if (!_prepareForStopCalled.compareAndSet(false, true)) {
+            return;
+        }
         LOG.info("Calling prepareForStop on {} Managed objects", _managed.size());
         for (StartAndStoppable managed : _managed) {
             try {
@@ -227,18 +238,46 @@ public abstract class DWBasedService<
         }
         
         // first things first: we need to get start()/stop() calls, so:
-        environment.getApplicationContext().manage(new Managed() {
+        Listener l = new Listener() {
             @Override
-            public void start() throws Exception {
-                _start();
+            public void lifeCycleStarting(LifeCycle event) {
+                try {
+                    _start();
+                } catch (Exception e) {
+                    LOG.warn("Problems starting components: {}", e);
+                }
             }
 
             @Override
-            public void stop() throws Exception {
-                _stop();
+            public void lifeCycleStarted(LifeCycle event) {
             }
-        });
 
+            @Override
+            public void lifeCycleFailure(LifeCycle event, Throwable cause) {
+                // what to do here, if anything?
+            }
+
+            @Override
+            public void lifeCycleStopping(LifeCycle event) {
+                try {
+                    _prepareForStop();
+                } catch (Exception e) {
+                    LOG.warn("Problems preparing components for stopping: {}", e);
+                }
+            }
+
+            @Override
+            public void lifeCycleStopped(LifeCycle event) {
+                try {
+                    _stop();
+                } catch (Exception e) {
+                    LOG.warn("Problems stopping components: {}", e);
+                }
+            }
+        };
+
+        environment.getApplicationContext().addLifeCycleListener(l);
+        
         _config = dwConfig.getServiceConfig();
         
         /* 04-Jun-2013, tatu: Goddammit, disabling gzip filter is tricky due to

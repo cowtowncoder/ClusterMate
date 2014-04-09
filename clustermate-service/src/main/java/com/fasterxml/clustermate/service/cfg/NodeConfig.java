@@ -4,6 +4,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.storemate.shared.IpAndPort;
 
 /**
@@ -53,6 +54,7 @@ public class NodeConfig
     protected NodeConfig() { }
 
     // Alternate internal ctor used when deserializing from simple String
+    @JsonCreator
     public NodeConfig(String str) throws IllegalArgumentException
     {
         try {
