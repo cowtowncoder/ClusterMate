@@ -6,6 +6,7 @@ import io.dropwizard.jetty.RequestLogFactory;
 import io.dropwizard.logging.AppenderFactory;
 import io.dropwizard.server.AbstractServerFactory;
 import io.dropwizard.server.DefaultServerFactory;
+import io.dropwizard.server.ServerFactory;
 import io.dropwizard.server.SimpleServerFactory;
 import io.dropwizard.util.Duration;
 
@@ -23,12 +24,36 @@ public abstract class DWConfigBase<
     extends Configuration
     implements Cloneable
 {
+    protected String _appContext = "/";
+
     public DWConfigBase() {
-        // Let's try forcing GZIP to be disabled: may not work wrt
-        // data-binding (since that'll recreate objects but...)
-        overrideGZIPEnabled(false);
+        _ensureDefaults();
     }
 
+    /*
+    /**********************************************************************
+    /* Overrides, to ensure invariants
+    /**********************************************************************
+     */
+
+    // Overridden to ensure we have proper defaults. May become problematic
+    // if users actually do want to change defaults; but let's worry about
+    // that if this becomes issue.
+    @Override
+    public void setServerFactory(ServerFactory factory) {
+        super.setServerFactory(factory);
+        _ensureDefaults();
+    }
+    
+    private void _ensureDefaults() {
+        SimpleServerFactory simpleSF = simpleServerFactory();
+        if (simpleSF != null) {
+            simpleSF.setApplicationContextPath(_appContext);
+        }
+        // and that gzip is not enabled by accident
+        overrideGZIPEnabled(false);
+    }
+    
     /*
     /**********************************************************************
     /* Additional/abstract accessors
@@ -119,7 +144,7 @@ public abstract class DWConfigBase<
         serverFactory().getGzipFilterFactory().setEnabled(state);
         return (THIS) this;
     }
-
+    
     @SuppressWarnings("unchecked")
     public THIS overrideLogLevel(Level minLevel) {
         // !!! TODO !!!
@@ -128,14 +153,21 @@ public abstract class DWConfigBase<
     }
     
     @SuppressWarnings("unchecked")
-    public THIS setShutdownGracePeriod(Duration d) {
+    public THIS overrideShutdownGracePeriod(Duration d) {
         serverFactory().setShutdownGracePeriod(d);
         return (THIS) this;
     }
 
     @SuppressWarnings("unchecked")
-    public THIS setSyncGracePeriod(TimeSpan t) {
+    public THIS overrideSyncGracePeriod(TimeSpan t) {
         getServiceConfig().cfgSyncGracePeriod = t;
+        return (THIS) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public THIS overrideApplicationContextPath(String path) {
+        _appContext = path;
+        _overrideApplicationContextPath(path);
         return (THIS) this;
     }
 
@@ -151,5 +183,17 @@ public abstract class DWConfigBase<
 
     protected AbstractServerFactory serverFactory() {
         return (AbstractServerFactory) getServerFactory();
+    }
+
+    protected SimpleServerFactory simpleServerFactory() {
+        AbstractServerFactory sf = serverFactory();
+        return (sf instanceof SimpleServerFactory) ? (SimpleServerFactory) sf : null;
+    }
+
+    private void _overrideApplicationContextPath(String path) {
+        SimpleServerFactory simpleSF = simpleServerFactory();
+        if (simpleSF != null) {
+            simpleSF.setApplicationContextPath(path);
+        }
     }
 }
