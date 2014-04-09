@@ -151,13 +151,13 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
     {
         ArrayList<NodeDefinition> defs = new ArrayList<NodeDefinition>();
         ClusterConfig clusterConfig = _serviceConfig.cluster;
-        List<NodeConfig> nodes =  clusterConfig.clusterNodes;
+        NodeConfig[] nodes =  clusterConfig.clusterNodes;
         // And then let's read static definition
         KeyRangeAllocationStrategy strategy = clusterConfig.type;
         if (strategy == null) {
             throw new IllegalStateException("Missing 'type' value for ClusterConfig");
         }
-        final int nodeCount = nodes.size();
+        final int nodeCount = nodes.length;
 
         if (nodeCount < 1) {
             throw new IllegalStateException("Missing node definitions in ClusterConfig");
@@ -183,7 +183,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
                 if (strategy == KeyRangeAllocationStrategy.STATIC) {
                     copies = copies0; // fine, whatever
                 } else if (copies0 < 0 && strategy == KeyRangeAllocationStrategy.SIMPLE_LINEAR) {
-                    copies = nodes.size();
+                    copies = nodes.length;
                     LOG.info("Number of copies set to "+copies0+": taken to mean 'maximum', in this case "+copies);
                 } else {
                     throw new IllegalStateException("Missing 'numbedOfCopies' setting in ClusterConfig (required with strategy "
@@ -193,8 +193,8 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
                 copies = copies0;
             }
         }
-        for (int i = 0, end = nodes.size(); i < end; ++i) {
-            NodeConfig node = nodes.get(i);
+        for (int i = 0, end = nodes.length; i < end; ++i) {
+            NodeConfig node = nodes[i];
             IpAndPort ip = node.ipAndPort;
             final int index = (i+1);
 

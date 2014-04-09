@@ -64,5 +64,5 @@ public class ClusterConfig
     @Valid
     // also: if defined, must have at least 1 entry
     @Size(min=1, max=Integer.MAX_VALUE)
-    public List<NodeConfig> clusterNodes = new ArrayList<NodeConfig>();
+    public NodeConfig[] clusterNodes; // = new ArrayList<NodeConfig>();
 }

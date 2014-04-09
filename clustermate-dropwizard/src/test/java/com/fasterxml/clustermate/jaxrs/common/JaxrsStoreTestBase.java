@@ -81,8 +81,8 @@ public abstract class JaxrsStoreTestBase extends TestCase
 
         ClusterConfig cluster = config.cluster;
         cluster.clusterKeyspaceSize = 360;
-        ArrayList<NodeConfig> nodes = new ArrayList<NodeConfig>();
-        nodes.add(new NodeConfig("localhost:"+TEST_PORT, 0, 360));
+        NodeConfig[] nodes = new NodeConfig[] {
+                new NodeConfig("localhost:"+TEST_PORT, 0, 360) };
         // Cluster config? Set keyspace size, but nothing else yet
         cluster.clusterNodes = nodes;
         return config;
