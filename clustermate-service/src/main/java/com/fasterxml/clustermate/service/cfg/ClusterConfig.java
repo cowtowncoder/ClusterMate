@@ -1,7 +1,5 @@
 package com.fasterxml.clustermate.service.cfg;
 
-import java.util.*;
-
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;

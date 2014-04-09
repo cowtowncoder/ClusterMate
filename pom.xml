@@ -48,7 +48,7 @@
     <version.storemate>1.0.3-SNAPSHOT</version.storemate>
 
     <version.jackson.annotations>2.3.0</version.jackson.annotations>
-    <version.jackson.core>2.3.2</version.jackson.core>
+    <version.jackson.core>2.3.3-SNAPSHOT</version.jackson.core>
     <version.jackson.smile>${version.jackson.core}</version.jackson.smile>
     <version.dropwizard>0.7.0</version.dropwizard>
     <version.metrics>3.0.1</version.metrics>
@@ -144,6 +144,14 @@
       <artifactId>jackson-dataformat-smile</artifactId>
       <version>${version.jackson.smile}</version>
     </dependency>
+    <!-- also; DropWizard uses afterburner, and 2.3.3 has critical fixes
+      -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-afterburner</artifactId>
+      <version>${version.jackson.core}</version>
+    </dependency>
+
     <!-- Metrics -->
     <dependency>
       <groupId>com.codahale.metrics</groupId>
