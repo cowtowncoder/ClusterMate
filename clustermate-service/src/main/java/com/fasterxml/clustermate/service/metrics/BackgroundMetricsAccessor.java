@@ -99,7 +99,9 @@ public class BackgroundMetricsAccessor
                 .onlyCollectFast(!fullStats);
         metrics.stores.entries = _clean(entries.getEntryCount(), entries.getEntryStatistics(conf));
         metrics.stores.entryIndex = _clean(entries.getIndexedCount(), entries.getIndexStatistics(conf));
-        metrics.stores.lastAccessStore = _clean(_lastAccessStore.getEntryCount(), _lastAccessStore.getEntryStatistics(conf));
+        if (_lastAccessStore != null) {
+            metrics.stores.lastAccessStore = _clean(_lastAccessStore.getEntryCount(), _lastAccessStore.getEntryStatistics(conf));
+        }
 
         AllOperationMetrics opMetrics = new AllOperationMetrics();
         metrics.operations = opMetrics;
