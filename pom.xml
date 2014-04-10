@@ -39,19 +39,21 @@
   </developers>
 
   <properties>
-    <javac.src.version>1.6</javac.src.version>
-    <javac.target.version>1.6</javac.target.version>
+    <!-- DropWizard requires 1.7 anyway, so:
+      -->
+    <javac.src.version>1.7</javac.src.version>
+    <javac.target.version>1.7</javac.target.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <version.validation.api>1.1.0.Final</version.validation.api>
 
-    <version.storemate>1.1.0-SNAPSHOT</version.storemate>
+    <version.storemate>1.1.0</version.storemate>
 
     <version.jackson.annotations>2.3.0</version.jackson.annotations>
     <version.jackson.core>2.3.3-SNAPSHOT</version.jackson.core>
     <version.jackson.smile>${version.jackson.core}</version.jackson.smile>
     <version.dropwizard>0.7.0</version.dropwizard>
-    <version.metrics>3.0.1</version.metrics>
+    <version.metrics>3.0.2</version.metrics>
   </properties>
 
   <licenses>
