@@ -4,6 +4,7 @@ Project: ClusterMate
 
 - Upgrade to DropWizard-0.7 (and all downstream deps that requires)
 - Require JDK7 (related to above)
+- Upgrade to Jackson 2.3.3 (important fixes for DW)
 
 0.9.26 (04-Mar-2014)
 

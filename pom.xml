@@ -50,7 +50,7 @@
     <version.storemate>1.1.0</version.storemate>
 
     <version.jackson.annotations>2.3.0</version.jackson.annotations>
-    <version.jackson.core>2.3.3-SNAPSHOT</version.jackson.core>
+    <version.jackson.core>2.3.3</version.jackson.core>
     <version.jackson.smile>${version.jackson.core}</version.jackson.smile>
     <version.dropwizard>0.7.0</version.dropwizard>
     <version.metrics>3.0.2</version.metrics>
