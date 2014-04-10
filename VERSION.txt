@@ -3,6 +3,7 @@ Project: ClusterMate
 0.10.0 (xx-xxx-2014)
 
 - Upgrade to DropWizard-0.7 (and all downstream deps that requires)
+- Require JDK7 (related to above)
 
 0.9.26 (04-Mar-2014)
 
