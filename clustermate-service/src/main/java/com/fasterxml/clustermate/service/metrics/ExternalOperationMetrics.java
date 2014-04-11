@@ -33,6 +33,10 @@ public class ExternalOperationMetrics
 
     public Histogram requestSizes;
 
+    /**
+     * For requests that can contain multiple entries (like SYNC-PULL),
+     * distribution of per-request counts are included here.
+     */
     public Histogram requestEntryCounts;
 
     /**
@@ -46,6 +50,7 @@ public class ExternalOperationMetrics
         inFlight = raw._metricInFlight.getCount();
 
         count = raw._metricTimes.getCount();
+        
         rate1Min = _doubleToInt(raw._metricTimes.getOneMinuteRate());
         rate5Min = _doubleToInt(raw._metricTimes.getFiveMinuteRate());
         rate15Min = _doubleToInt(raw._metricTimes.getFifteenMinuteRate());
@@ -72,12 +77,12 @@ public class ExternalOperationMetrics
     }
 
     private static int _doubleToInt(double d) {
-    	return (int) (d + 0.5);
+        return (int) (d + 0.5);
     }
     
     private static int _nanosToMillis(double rawTimeNanosecs) {
-    	// Since 3.0, times are in nanoseconds; used to be in milliseconds.
-    	return (int) Math.round(rawTimeNanosecs * NANOS_TO_MILLIS_MULTIPLIER);
+        // Since 3.0, times are in nanoseconds; used to be in milliseconds.
+        return (int) Math.round(rawTimeNanosecs * NANOS_TO_MILLIS_MULTIPLIER);
     }
     
     public static class Histogram

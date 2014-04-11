@@ -111,7 +111,7 @@ public class StoreEntryInfoServlet<K extends EntryKey, E extends StoredEntry<K>>
     @Override
     public void fillOperationMetrics(AllOperationMetrics metrics)
     {
-        metrics.GET = ExternalOperationMetrics.create(_getMetrics);
+        metrics.INFO = ExternalOperationMetrics.create(_getMetrics);
         _storeHandler.augmentOperationMetrics(metrics);
     }
     
