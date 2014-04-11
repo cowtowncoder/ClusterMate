@@ -33,8 +33,7 @@ public abstract class CleanupTask<T>
         // Nothing generic to do here
     }
     
-    protected boolean shouldStop()
-    {
+    protected boolean shouldStop() {
         return _shutdown.get();
     }
 
