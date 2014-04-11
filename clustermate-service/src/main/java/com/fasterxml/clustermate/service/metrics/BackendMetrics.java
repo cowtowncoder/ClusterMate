@@ -15,6 +15,8 @@ import com.fasterxml.storemate.store.backend.BackendStats;
     "count", "onlyFastStats", "timeTaken", "lastUpdated", "stats" })
 public class BackendMetrics
 {
+    public String type;
+    
     /**
      * Approximate count as reported by underlying store
      */
@@ -48,6 +50,7 @@ public class BackendMetrics
     public BackendMetrics(long c, BackendStats rawStats, Map<String,Object> extraStats)
     {
         Long l = rawStats.getCreationTime();
+        type = rawStats.getType();
         lastUpdated = (l == null) ? 0L : l.longValue();
         count = c;
         this.extraStats = extraStats;
