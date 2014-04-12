@@ -47,7 +47,7 @@
 
     <version.validation.api>1.1.0.Final</version.validation.api>
 
-    <version.storemate>1.1.0</version.storemate>
+    <version.storemate>1.1.1</version.storemate>
 
     <version.jackson.annotations>2.3.0</version.jackson.annotations>
     <version.jackson.core>2.3.3</version.jackson.core>
