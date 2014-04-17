@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.10.1 (xx-xxx-2014)
+
+#31: Replica-flag not correctly set when syncing entries
+
 0.10.0 (11-Apr-2014)
 
 #2: Add a flag that indicates if entry was replicated via sync (as opposed to directly stored)

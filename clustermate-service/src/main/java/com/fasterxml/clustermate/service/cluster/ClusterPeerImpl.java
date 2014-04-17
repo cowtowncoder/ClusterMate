@@ -39,13 +39,13 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
 
     // no point trying to sleep for trivial time
     private final static long MINIMAL_SLEEP_MSECS = 10L;
-    
+
     /**
      * If synclist is empty and server does not instruct us, simply sleep for
      * 1 second (to try avoid congestion)
      */
     private final static long SLEEP_FOR_EMPTY_SYNCLIST_MSECS = 1000L;
-    
+
     // no real hurry; use 20 seconds to account for GC, congestion etc
     private final static TimeSpan TIMEOUT_FOR_SYNCLIST = new TimeSpan(10L, TimeUnit.SECONDS);
 
@@ -53,7 +53,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      * Lowish timeout for "bye bye" message, so it won't block shutdown
      */
     private final static TimeSpan TIMEOUT_FOR_BYEBYE = new TimeSpan(250L, TimeUnit.MILLISECONDS);
-    
+
     /**
      * We will limit maximum estimate response size to some reasonable
      * limit: starting with 250 megs. The idea is to use big enough sizes
@@ -61,7 +61,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      * during normal operation.
      */
     private final static long MAX_TOTAL_PAYLOAD = 250 * 1000 * 1000;
-    
+
     /**
      * During fetching of items to sync, let's cap number of failures to some
      * number; this should make it easier to recover from cases where peer
@@ -852,6 +852,9 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
                 header.checksum, header.checksumForCompressed);
         stdMetadata.uncompressedSize = header.size;
         stdMetadata.storageSize = header.storageSize;
+        // 16-Apr-2014, tatu: Need to remember to set replica flag now
+        stdMetadata.replicated = true;
+
         ByteContainer customMetadata = _entryConverter.createMetadata(_timeMaster.currentTimeMillis(),
                 header.lastAccessMethod, header.minTTLSecs, header.maxTTLSecs);
 
