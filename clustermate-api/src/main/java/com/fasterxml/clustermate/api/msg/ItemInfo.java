@@ -30,7 +30,6 @@ public class ItemInfo extends ExtensibleType
 
     protected int hash;
 
-    @JsonProperty
     protected String flags;
     
     /*
@@ -78,6 +77,8 @@ public class ItemInfo extends ExtensibleType
 
     @JsonProperty("compLength")
     public long getCompressedLength() { return compressedLength; }
+
+    public String getFlags() { return flags; }
     
     /*
     /**********************************************************************
@@ -117,6 +118,8 @@ public class ItemInfo extends ExtensibleType
 
     @JsonIgnore
     public boolean isReplica() { return (flags.indexOf(FLAG_REPLICA) >= 0); }
+
+    
     
     /**
      * Convenience accessor that determines actual storage length used by server;
