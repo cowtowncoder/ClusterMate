@@ -43,25 +43,32 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
     
     // will use 16k recyclable read buffers
     private final static int BUFFER_LENGTH = 16000;
-    
+
     private final static Logger LOG = LoggerFactory.getLogger(SyncPullResponse.class);
 
     // and here's how recycling will work
     protected final static BufferRecycler _readBuffers = new BufferRecycler(BUFFER_LENGTH);
 
     private final FileManager _fileManager;
+
+    /**
+     * We need to know timestamp of accessing data, to properly modify time-to-live
+     * settings to avoid extending expiration time during sync-pull.
+     */
+    private final long _writeTime;
     
     /**
      * Smile serializer to use for metadata entries
      */
     private final ObjectWriter _smileWriter;
-    
+   
     private List<E> _entries;
     
-    public SyncPullResponse(FileManager fileManager, ObjectWriter smileWriter,
-            List<E> entries)
+    public SyncPullResponse(FileManager fileManager, long writeTime,
+            ObjectWriter smileWriter, List<E> entries)
     {
         _fileManager = fileManager;
+        _writeTime = writeTime;
         _smileWriter = smileWriter;
         _entries = entries;
     }
@@ -84,6 +91,7 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
     {
         final int count = _entries.size();
         int warningsPrinted = 0;
+        
         try {
             for (int i = 0; i < count; ++i) {
                 E entry  = _entries.get(i);
@@ -95,7 +103,33 @@ public class SyncPullResponse<E extends StoredEntry<? extends EntryKey>>
                     _writeLength(output, 0);
                     continue;
                 }
-                SyncPullEntry header = new SyncPullEntry(entry);
+                /* 25-Apr-2014, tatu: We need to modify maxTTL because recipient will
+                 *    reset creationTime to current time at that host, and if initial
+                 *    maxTTL was used as is, this would effectively extend time-to-live
+                 *    for all sync'ed entries. This is especially bad when recovering
+                 *    complete node contents, in which case all live data would get up
+                 *    to twice the normal retention time.
+                 */
+                int maxTTLSecs = entry.getMaxTTLSecs();
+                if (maxTTLSecs > 0) {
+                    final long created = entry.getCreationTime();
+
+                    // sanity check; do not increase maxTTL time even if create time was corrupt
+                    if (created > _writeTime) {
+                        LOG.warn("Strange creation time for entry ({}/{}); {} msecs in future",
+                                i, count, (created - _writeTime));
+                    } else {
+                        long expireTime = entry.getCreationTime() + (1000L * maxTTLSecs);
+                        long msecsLeft = expireTime - _writeTime;
+                        int secsLeft = (int) (msecsLeft / 1000L);
+    
+                        // We may be past expiration. Actually should probably try to skip these;
+                        // but for now, let's just reset value
+                        maxTTLSecs = Math.max(10, secsLeft);
+                    }
+                }
+                    
+                SyncPullEntry header = SyncPullEntry.forEntry(entry, maxTTLSecs);
                 byte[] metadata = _smileWriter.writeValueAsBytes(header);
                 if (metadata.length > SyncHandler.MAX_HEADER_LENGTH) { // sanity check; never to occur...
                     LOG.error("Internal error: too long header ({}) (entry key '{}'); must skip",

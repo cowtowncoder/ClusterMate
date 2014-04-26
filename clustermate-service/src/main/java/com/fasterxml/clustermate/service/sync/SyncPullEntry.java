@@ -31,7 +31,7 @@ public class SyncPullEntry
 
     public SyncPullEntry() { }
 
-    SyncPullEntry(StoredEntry<?> src)
+    SyncPullEntry(StoredEntry<?> src, int maxTTLSecs)
     {
         final Storable raw = src.getRaw();
         key = src.getKey().asStorableKey();
@@ -50,8 +50,13 @@ public class SyncPullEntry
         LastAccessUpdateMethod m = src.getLastAccessUpdateMethod();
         lastAccessMethod = (m == null) ? 0 : m.asByte();
         minTTLSecs = src.getMinTTLSinceAccessSecs();
-        maxTTLSecs = src.getMaxTTLSecs();
+        this.maxTTLSecs = maxTTLSecs;
         
         isDeleted = src.isDeleted();
+    }
+
+    public static SyncPullEntry forEntry(StoredEntry<?> src, int maxTTLSecs)
+    {
+        return new SyncPullEntry(src, maxTTLSecs);
     }
 }

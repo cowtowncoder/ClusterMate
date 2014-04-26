@@ -293,7 +293,8 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
                 metadata = metadata.setItemCount(entries.size());
             }
         } 
-        return (OUT) response.ok(new SyncPullResponse<E>(_fileManager, _syncPullSmileWriter, entries));
+        return (OUT) response.ok(new SyncPullResponse<E>(_fileManager, _timeMaster.currentTimeMillis(),
+                _syncPullSmileWriter, entries));
     }
 
     /*

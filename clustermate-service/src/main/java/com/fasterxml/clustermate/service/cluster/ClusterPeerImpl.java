@@ -855,6 +855,13 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
         // 16-Apr-2014, tatu: Need to remember to set replica flag now
         stdMetadata.replicated = true;
 
+        /* 25-Apr-2014, As per [#32], we need to compensate time-to-live settings so that
+         *   it is not reset; rather, it stay as close to remaining TTL as possible.
+         *   
+         *   Note that this means that "maxTTLSecs" IS modified, and "minTTLSecs" NOT, since
+         *   former is measured from creation and latter (if used) from last-access.
+         */
+        
         ByteContainer customMetadata = _entryConverter.createMetadata(_timeMaster.currentTimeMillis(),
                 header.lastAccessMethod, header.minTTLSecs, header.maxTTLSecs);
 
