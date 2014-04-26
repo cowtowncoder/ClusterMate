@@ -17,8 +17,8 @@
     <module>clustermate-api</module>
     <module>clustermate-json</module>
     <module>clustermate-client</module>
-    <module>clustermate-client-jdk</module>
     <module>clustermate-client-ahc</module>
+    <module>clustermate-client-jdk</module>
     <module>clustermate-service</module>
     <module>clustermate-servlet</module>
     <module>clustermate-dropwizard</module>
@@ -185,8 +185,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
         <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
+          <source>${javac.src.version}</source>
+          <target>${javac.target.version}</target>
           <showDeprecation>true</showDeprecation>
           <showWarnings>true</showWarnings>
           <optimize>true</optimize>

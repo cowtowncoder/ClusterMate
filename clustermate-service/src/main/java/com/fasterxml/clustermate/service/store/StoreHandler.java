@@ -333,18 +333,17 @@ public abstract class StoreHandler<
             }
             output = new SimpleStreamingResponseContent(diag, _timeMaster, inlined, range, inlined.byteLength());
         }
-        // #21: provide content length header
         long cl = output.getLength();
         if (cl >= 0L) {
             response = response.setContentLength(cl);
         }
-        // one more thing; add header for range if necessary; also, response code differs
+        // add header for range if necessary; also, response code differs
         if (range == null) {
             response = response.ok(output);
         } else {
             response = response.partialContent(output, range.asResponseHeader());
         }
-        // Issue #6: Need to provide Etag, if content hash available
+        // Need to provide Etag, if content hash available
         int contentHash = rawEntry.getContentHash();
         if (contentHash != HashConstants.NO_CHECKSUM) {
             StringBuilder sb = new StringBuilder();
@@ -353,7 +352,6 @@ public abstract class StoreHandler<
             sb.append('"');
             response = response.addHeader(ClusterMateConstants.HTTP_HEADER_ETAG, sb.toString());
         }
-        
         // also need to let client know we left compression in there:
         if (skipCompression) {
             response = response.setBodyCompression(comp.asContentEncoding());
