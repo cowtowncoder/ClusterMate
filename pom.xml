@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion> 
   <parent>
-    <groupId>org.sonatype.oss</groupId>
+    <groupId>com.fasterxml</groupId>
     <artifactId>oss-parent</artifactId>
-    <version>7</version>
+    <version>16</version>
   </parent>
   <groupId>com.fasterxml.clustermate</groupId>
   <artifactId>clustermate-parent</artifactId>
@@ -40,10 +40,11 @@
   </developers>
 
   <properties>
-    <!-- DropWizard requires 1.7 anyway, so:
+    <!-- DropWizard requires 1.7, but on very short term we may still want
+         to build non-DW parts with 1.6 compatibility
       -->
-    <javac.src.version>1.7</javac.src.version>
-    <javac.target.version>1.7</javac.target.version>
+    <javac.src.version>1.6</javac.src.version>
+    <javac.target.version>1.6</javac.target.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <version.validation.api>1.1.0.Final</version.validation.api>

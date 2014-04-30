@@ -86,14 +86,11 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
                         response.internalError("Failed syncHandler.listEntries(): "+e.getMessage());
                     } catch (InterruptedException e) {
                         // Swallow during shutdown (mostly during tests)
-                        if (!_terminated.get()) {
-                            /* 08-Jan-2013, tatu: This seems to occur during shutdowns, should
-                             *   find a way to pipe shutdown notifications to servlet too.
-                             *   But for now, let's just customize message a bit:
-                             */
-                            throw new IOException("syncHandler.listEntries() interrupted, system not yet shut down: probably harmless");
+                        if (_terminated.get()) {
+                            LOG.info("SyncListServlet interrupted due to termination, ignoring");
+                        } else {
+                            reportUnexpectedInterruptForListEntries();
                         }
-                        LOG.info("SyncListServlet interupted due to termination, ignoring");
                         return;
                     }
                     _addStdHeaders(response);
@@ -105,5 +102,15 @@ public class SyncListServlet<K extends EntryKey, E extends StoredEntry<K>>
                 metrics.finish(timer, stats);
            }
         }
+    }
+
+    protected void reportUnexpectedInterruptForListEntries()
+        throws IOException
+    {
+        /* 08-Jan-2013, tatu: This seems to occur during shutdowns, should
+         *   find a way to pipe shutdown notifications to servlet too.
+         *   But for now, let's just customize message a bit:
+         */
+        throw new IOException("syncHandler.listEntries() interrupted, system not yet shut down: probably harmless");
     }
 }
