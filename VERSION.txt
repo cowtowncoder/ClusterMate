@@ -1,6 +1,6 @@
 Project: ClusterMate
 
-0.10.2
+0.10.2 (06-May-2014)
 
 - Allow overriding of "sync list interrupted" error handling
 
