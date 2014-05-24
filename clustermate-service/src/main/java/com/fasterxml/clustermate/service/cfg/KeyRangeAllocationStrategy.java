@@ -53,6 +53,8 @@ public enum KeyRangeAllocationStrategy
      *<p>
      * No additional node discovery is made, although additional nodes may
      * join cluster if this is enabled.
+     *<p>
+     * NOTE: as of version 0.10.x, this allocation strategy has NOT been implemented.
      */
     DYNAMIC_WITH_APPEND,
 

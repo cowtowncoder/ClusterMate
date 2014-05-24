@@ -600,7 +600,7 @@ public abstract class StoreHandler<
         try {
             result = _deferredDeleter.addDeferredDeletion(key.asStorableKey(), startTime);
         } catch (Exception e) {
-            LOG.error("Problem during DELETE scheduling: {}", e);
+            LOG.error("Problem during DELETE scheduling: "+e.getMessage(), e);
             return response.internalError("Failure due to: "+e);
         }
 

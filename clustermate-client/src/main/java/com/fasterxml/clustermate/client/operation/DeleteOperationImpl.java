@@ -3,68 +3,53 @@ package com.fasterxml.clustermate.client.operation;
 import com.fasterxml.clustermate.api.EntryKey;
 import com.fasterxml.clustermate.client.*;
 import com.fasterxml.clustermate.client.call.CallFailure;
-import com.fasterxml.clustermate.client.call.PutCallParameters;
-import com.fasterxml.clustermate.client.call.PutContentProvider;
+import com.fasterxml.clustermate.client.call.DeleteCallParameters;
 
-public class PutOperationImpl<K extends EntryKey,
+public class DeleteOperationImpl<K extends EntryKey,
     CONFIG extends StoreClientConfig<K, CONFIG>
 >
-    extends WriteOperationBase<K,CONFIG,PutCallParameters,PutOperationResult>
-    implements PutOperation
+    extends WriteOperationBase<K,CONFIG,DeleteCallParameters,DeleteOperationResult>
+    implements DeleteOperation
 {
-    /*
-    /**********************************************************************
-    /* PUT-specific config
-    /**********************************************************************
-     */
-
-    protected final PutContentProvider _content;
-
     /*
     /**********************************************************************
     /* Life-cycle
     /**********************************************************************
      */
     
-    public PutOperationImpl(CONFIG config, long startTime,
+    public DeleteOperationImpl(CONFIG config, long startTime,
             NodesForKey serverNodes, K key,
-            PutCallParameters params, PutContentProvider content)            
+            DeleteCallParameters params)
     {
         super(config, startTime, serverNodes, key, params,
-                new PutOperationResult(config.getOperationConfig(), params),
-                StoreClientConfig.MAX_RETRIES_FOR_PUT,
-                config.getOperationConfig().getPutOperationTimeoutMsecs());
-        _content = content;
+                new DeleteOperationResult(config.getOperationConfig(), params),
+                StoreClientConfig.MAX_RETRIES_FOR_DELETE,
+                config.getOperationConfig().getDeleteOperationTimeoutMsecs());
     }
 
     @Override
     protected void _release() {
-        _content.release();
+        // nothing to release for this type
     }
-    
+
     /*
     /**********************************************************************
-    /* Public API implementation
+    /* Actual completion
     /**********************************************************************
      */
-
+    
     @Override
-    public PutContentProvider content() {
-        return _content;
-    }
-
-    @Override
-    public PutOperation completeMinimally() throws InterruptedException {
+    public DeleteOperation completeMinimally() throws InterruptedException {
         return perform(_operationConfig.getMinimalOksToSucceed());
     }
 
     @Override
-    public PutOperation completeOptimally() throws InterruptedException {
+    public DeleteOperation completeOptimally() throws InterruptedException {
         return perform(_operationConfig.getOptimalOks());
     }
 
     @Override
-    public PutOperation tryCompleteMaximally() throws InterruptedException {
+    public DeleteOperation tryCompleteMaximally() throws InterruptedException {
         /* Here we only want to proceed, if we get all done in first round
          * without issues; sort of bonus call.
          */
@@ -75,7 +60,7 @@ public class PutOperationImpl<K extends EntryKey,
     }
     
     @Override
-    public PutOperation completeMaximally() throws InterruptedException {
+    public DeleteOperation completeMaximally() throws InterruptedException {
         return perform(_operationConfig.getMaxOks());
     }
 
@@ -89,7 +74,7 @@ public class PutOperationImpl<K extends EntryKey,
      * @param result Result object to update, return
      * @param oksNeeded Number of success nodes we need, total
      */
-    protected PutOperation perform(int oksNeeded) throws InterruptedException
+    protected DeleteOperation perform(int oksNeeded) throws InterruptedException
     {
         if (_released) {
             throw new IllegalStateException("Can not call 'complete' methods after content has been released");
@@ -117,7 +102,7 @@ public class PutOperationImpl<K extends EntryKey,
         return this;
     }
 
-    protected PutOperation performSingleRound(int oksNeeded) throws InterruptedException
+    protected DeleteOperation performSingleRound(int oksNeeded) throws InterruptedException
     {
         if (_released) {
             throw new IllegalStateException("Can not call 'complete' methods after content has been released");
@@ -153,7 +138,7 @@ public class PutOperationImpl<K extends EntryKey,
             if (!includeDisabled && server.isDisabled()) { // skip disabled during first round (unless no retries)
                 continue;
             }
-            CallFailure fail = server.entryPutter().tryPut(_callConfig, _params, _endOfTime, _key, _content);
+            CallFailure fail = server.entryDeleter().tryDelete(_callConfig, _params, _endOfTime, _key);
             if (fail == null) { // success
                 _currentNodes.remove();
                 _result.addSucceeded(server);
@@ -190,7 +175,7 @@ public class PutOperationImpl<K extends EntryKey,
         while (_currentNodes.hasNext()) {
             final SingleCallState call = _currentNodes.next();
             final ClusterServerNode server = call.server();
-            CallFailure fail = server.entryPutter().tryPut(_callConfig, _params, _endOfTime, _key, _content);
+            CallFailure fail = server.entryDeleter().tryDelete(_callConfig, _params, _endOfTime, _key);
             if (fail == null) { // success
                 _currentNodes.remove();
                 _result.addSucceeded(server);

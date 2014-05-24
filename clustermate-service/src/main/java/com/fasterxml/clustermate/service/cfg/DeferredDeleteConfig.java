@@ -20,7 +20,7 @@ public class DeferredDeleteConfig
      * milliseconds.
      */
     private final static TimeSpan DEFAULT_TARGET_DELAY = new TimeSpan(100, TimeUnit.MILLISECONDS);
-    
+
     /**
      * This is the minimum length of deferred deletion queue to use,
      * regardless of dynamic calculation

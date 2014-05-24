@@ -949,7 +949,7 @@ public abstract class StoreClient<K extends EntryKey,
 
         // First things first: find Server nodes to talk to:
         NodesForKey nodes = _clusterView.getNodesFor(key);
-        DeleteOperationResult result = new DeleteOperationResult(config.getOperationConfig());
+        DeleteOperationResult result = new DeleteOperationResult(config.getOperationConfig(), params);
 
         // One sanity check: if not enough server nodes to talk to, can't succeed...
         int nodeCount = nodes.size();
