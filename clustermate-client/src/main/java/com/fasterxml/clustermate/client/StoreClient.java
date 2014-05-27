@@ -932,7 +932,7 @@ public abstract class StoreClient<K extends EntryKey,
     /* Actual Client API, low-level operations: DELETE
     /**********************************************************************
      */
-    
+
     /**
      * Method called to DELETE specified content from appropriate server nodes.
      * 
@@ -941,7 +941,7 @@ public abstract class StoreClient<K extends EntryKey,
      *   Caller is expected to check details from this object to determine
      *   whether operation was successful or not.
      */
-    public DeleteOperationResult deleteContent(DeleteCallParameters params, K key)
+    public DeleteOperation deleteContent(DeleteCallParameters params, K key)
         throws InterruptedException
     {
         final long startTime = System.currentTimeMillis();
@@ -949,135 +949,9 @@ public abstract class StoreClient<K extends EntryKey,
 
         // First things first: find Server nodes to talk to:
         NodesForKey nodes = _clusterView.getNodesFor(key);
-        DeleteOperationResult result = new DeleteOperationResult(config.getOperationConfig(), params);
-
-        // One sanity check: if not enough server nodes to talk to, can't succeed...
-        int nodeCount = nodes.size();
-        if (nodeCount < config.getOperationConfig().getMinimalOksToSucceed()) {
-            return result; // or Exception?
-        }
-        // Then figure out how long we have for the whole operation
-        final long endOfTime = startTime + config.getOperationConfig().getGetOperationTimeoutMsecs();
-        final long lastValidTime = endOfTime - config.getCallConfig().getMinimumTimeoutMsecs();
-
-        /* Ok: first round; try DETE from every enabled store, up to optimal number
-         * of successes we expect.
-         */
-        final boolean noRetries = !_allowRetries(config);
-        List<NodeFailure> retries = null;
-        for (int i = 0; i < nodeCount; ++i) {
-            ClusterServerNode server = nodes.node(i);
-            if (server.isDisabled() && !noRetries) { // should be able to break, but let's double check
-                break;
-            }
-            CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(),
-                    params, endOfTime, key);
-            if (fail != null) {
-                if (fail.isRetriable()) {
-                    retries = _add(retries, new NodeFailure(server, fail));
-                } else {
-                    result.withFailed(new NodeFailure(server, fail));
-                }
-                continue;
-            }
-            result.addSucceeded(server);
-            // first round: go to the max, if possible
-            if (result.succeededMaximally()) {
-                return result.withFailed(retries);
-            }
-        }
-        if (noRetries) { // if no retries, bail out quickly
-            return result.withFailed(retries);
-        }
-        
-        /* If we got this far, let's accept 'just optimal'; but keep on trying for
-         * optimal since deletion via expiration is much more costly than explicit
-         * DELETEs.
-         */
-        final long secondRoundStart = System.currentTimeMillis();
-        if (result.succeededOptimally() || secondRoundStart >= lastValidTime) {
-            return result.withFailed(retries);
-        }
-        // Do we need any delay in between?
-        _doDelay(startTime, secondRoundStart, endOfTime);
-        
-        // Otherwise: go over retry list first, and if that's not enough, try disabled
-        if (retries == null) {
-            retries = new LinkedList<NodeFailure>();
-        } else {
-            Iterator<NodeFailure> it = retries.iterator();
-            while (it.hasNext()) {
-                NodeFailure retry = it.next();
-                ClusterServerNode server = (ClusterServerNode) retry.getServer();
-                CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(),
-                        params, endOfTime, key);
-                if (fail != null) {
-                    retry.addFailure(fail);
-                    if (!fail.isRetriable()) { // not worth retrying?
-                        result.withFailed(retry);
-                        it.remove();
-                    }
-                } else {
-                    it.remove(); // remove now from retry list
-                    result.addSucceeded(server);
-                    if (result.succeededOptimally()) {
-                        return result.withFailed(retries);
-                    }
-                }
-            }
-        }
-
-        // if no success, add disabled nodes in the mix; but only if we don't have minimal success:
-        for (int i = 0; i < nodeCount; ++i) {
-            if (result.succeededMinimally() || System.currentTimeMillis() >= lastValidTime) {
-                return result.withFailed(retries);
-            }
-            ClusterServerNode server = nodes.node(i);
-            if (server.isDisabled()) {
-                CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(),
-                        params, endOfTime, key);
-                if (fail != null) {
-                    if (fail.isRetriable()) {
-                        retries.add(new NodeFailure(server, fail));
-                    } else {
-                        result.withFailed(new NodeFailure(server, fail));
-                    }
-                } else {
-                    result.addSucceeded(server);
-                }
-            }
-        }
-
-        long prevStartTime = secondRoundStart;
-        for (int i = 1; (i <= StoreClientConfig.MAX_RETRIES_FOR_DELETE) && !retries.isEmpty(); ++i) {
-            final long currStartTime = System.currentTimeMillis();
-            _doDelay(prevStartTime, currStartTime, endOfTime);
-            // and off we go again...
-            Iterator<NodeFailure> it = retries.iterator();
-            while (it.hasNext()) {
-                if (result.succeededMinimally() || System.currentTimeMillis() >= lastValidTime) {
-                    return result.withFailed(retries);
-                }
-                NodeFailure retry = it.next();
-                ClusterServerNode server = retry.getServer();
-                CallFailure fail = server.entryDeleter().tryDelete(config.getCallConfig(),
-                        params, endOfTime, key);
-                if (fail != null) {
-                    retry.addFailure(fail);
-                    if (!fail.isRetriable()) {
-                        result.withFailed(retry);
-                        it.remove();
-                    }
-                } else {
-                    result.addSucceeded(server);
-                }
-            }
-            prevStartTime = currStartTime;
-        }
-        // we are all done, failed:
-        return result.withFailed(retries);
+        return new DeleteOperationImpl<K,CONFIG>(config, startTime, nodes, key, params);
     }
-    
+
     /*
     /**********************************************************************
     /* Helper methods

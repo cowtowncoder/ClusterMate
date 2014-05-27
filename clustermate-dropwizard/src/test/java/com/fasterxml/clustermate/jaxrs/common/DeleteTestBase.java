@@ -91,7 +91,8 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         // but shouldn't be able to find it any more; 204 indicates this
         response = new FakeHttpResponse();
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY2);
-        assertEquals(204, response.getStatus());
+        // 27-May-2014, tatu: Two possible responses; 204 and 404. Default is 404.
+        assertEquals(404, response.getStatus());
         // even though store has the entry
         Storable rawEntry = entries.findEntry(StoreOperationSource.REQUEST, null, INTERNAL_KEY2.asStorableKey());
         assertNotNull(rawEntry);
@@ -137,7 +138,8 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         assertEquals(2, entryCount(entries));
         response = new FakeHttpResponse();
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
-        assertEquals(204, response.getStatus());
+        // 27-May-2014, tatu: Two possible responses; 204 and 404. Default is 404.
+        assertEquals(404, response.getStatus());
 
         // clean up:
         resource.getStores().stop();
@@ -190,7 +192,8 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         // and also should not be visible any more
         response = new FakeHttpResponse();
         resource.getHandler().getEntry(new FakeHttpRequest(), response, INTERNAL_KEY1);
-        assertEquals(204, response.getStatus());
+        // 27-May-2014, tatu: Two possible responses; 204 and 404. Default is 404.
+        assertEquals(404, response.getStatus());
     }
 
     /**

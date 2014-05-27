@@ -126,8 +126,10 @@ public abstract class ServiceConfig
      * with tombstone are reported as empty entries (204, No Content)
      * or as missing (404, Not Found): if false, 404 returned,
      * if true, 204.
+     *<p>
+     * Default setting is false.
      */
-    public boolean cfgReportDeletedAsEmpty = true;
+    public boolean cfgReportDeletedAsEmpty = false;
 
     /**
      * DELETE operations may be deferred; and if so, here's configuration

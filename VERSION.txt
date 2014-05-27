@@ -1,5 +1,9 @@
 Project: ClusterMate
 
+0.10.3 (28-May-2014)
+
+#33: Add support for incremental DELETE operations (similar to how PUTs work)
+
 0.10.2 (06-May-2014)
 
 - Allow overriding of "sync list interrupted" error handling
