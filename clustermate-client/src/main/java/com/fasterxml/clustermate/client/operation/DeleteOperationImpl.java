@@ -37,6 +37,9 @@ public class DeleteOperationImpl<K extends EntryKey,
     /* Actual completion
     /**********************************************************************
      */
+ 
+    @Override
+    public String getTypeDesc() { return "DELETE"; }
     
     @Override
     public DeleteOperation completeMinimally() throws InterruptedException {

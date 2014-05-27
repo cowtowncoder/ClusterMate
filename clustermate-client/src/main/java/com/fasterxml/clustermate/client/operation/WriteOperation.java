@@ -5,6 +5,12 @@ public interface WriteOperation<RESULT extends WriteOperationResult<RESULT>,
 >
 {
     /**
+     * Accessor for simple, developer-visible type of this operation;
+     * suitable for debugging and diagnostics messages
+     */
+    public String getTypeDesc();
+
+    /**
      * Accessor that can be used to check the current state of the write operation
      */
     public RESULT result();

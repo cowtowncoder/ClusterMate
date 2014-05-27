@@ -49,6 +49,9 @@ public class PutOperationImpl<K extends EntryKey,
      */
 
     @Override
+    public String getTypeDesc() { return "DELETE"; }
+
+    @Override
     public PutContentProvider content() {
         return _content;
     }
