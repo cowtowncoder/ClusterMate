@@ -13,24 +13,23 @@ import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 
 /**
- * Servlet that handles "sync-pull" requests by peer nodes of the same (local)
- * cluster.
+ * Servlet that handles "sync-pull" requests by nodes of remote clusters.
  */
-public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
+public class RemoteSyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
     extends SyncPullServletBase<K,E>
 {
     private static final long serialVersionUID = 1L;
 
-    public SyncPullServlet(SharedServiceStuff stuff, ClusterViewByServer clusterView,
+    public RemoteSyncPullServlet(SharedServiceStuff stuff, ClusterViewByServer clusterView,
             SyncHandler<K,E> h)
     {
         // null -> use servlet path base as-is
-        super(stuff, clusterView, h, "SyncPull");
+        super(stuff, clusterView, h, "remoteSyncPull");
     }
 
     @Override
     public void fillOperationMetrics(AllOperationMetrics metrics) {
-        metrics.SYNCPULL = ExternalOperationMetrics.create(_pullMetrics);
+        metrics.REMOTE_SP = ExternalOperationMetrics.create(_pullMetrics);
     }
 
     @Override
@@ -38,6 +37,6 @@ public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
             ServletServiceResponse response,
             OperationDiagnostics metadata) throws IOException
     {
-        return _syncHandler.localPullEntries(request, response, request.getInputStream(), metadata);
+        return _syncHandler.remotePullEntries(request, response, request.getInputStream(), metadata);
     }
 }

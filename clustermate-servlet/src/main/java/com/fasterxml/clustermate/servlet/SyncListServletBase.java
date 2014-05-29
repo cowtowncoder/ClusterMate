@@ -10,7 +10,6 @@ import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cluster.ClusterViewByServer;
 import com.fasterxml.clustermate.service.metrics.AllOperationMetrics;
-import com.fasterxml.clustermate.service.metrics.ExternalOperationMetrics;
 import com.fasterxml.clustermate.service.metrics.OperationMetrics;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
@@ -56,9 +55,7 @@ abstract class SyncListServletBase<K extends EntryKey, E extends StoredEntry<K>>
     }
 
     @Override
-    public void fillOperationMetrics(AllOperationMetrics metrics) {
-        metrics.SYNCLIST = ExternalOperationMetrics.create(_listMetrics);
-    }
+    public abstract void fillOperationMetrics(AllOperationMetrics metrics);
 
     @Override
     public void handleGet(ServletServiceRequest request, ServletServiceResponse response,
