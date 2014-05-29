@@ -119,7 +119,7 @@ public abstract class SyncListTestBase extends JaxrsStoreTestBase
         
         FakeHttpResponse response = new FakeHttpResponse();
         
-        syncH.listEntries(syncReq, response, creationTime, diag);
+        syncH.localListEntries(syncReq, response, creationTime, diag);
         assertTrue(response.hasStreamingContent());
         assertEquals(200, response.getStatus());
         assertEquals(ContentType.SMILE.toString(), response.getContentType());

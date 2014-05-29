@@ -56,7 +56,7 @@ public class SyncPullServlet<K extends EntryKey, E extends StoredEntry<K>>
         final OperationMetrics metrics = _pullMetrics;
         Context timer = (metrics == null) ? null : metrics.start();
         try {
-            _syncHandler.pullEntries(request, response, request.getInputStream(), metadata);
+            _syncHandler.localPullEntries(request, response, request.getInputStream(), metadata);
             _addStdHeaders(response);
             response.writeOut(_jsonWriter);
         } finally {
