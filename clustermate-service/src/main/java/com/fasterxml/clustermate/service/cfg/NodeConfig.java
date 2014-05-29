@@ -21,7 +21,7 @@ import com.fasterxml.storemate.shared.IpAndPort;
 public class NodeConfig
 {
     /**
-     * Ip name (or number) and port that this node instance listens to.
+     * IP name (or number) and port that this node instance listens to.
      * Usually used in conjunction with node index (which is either
      * initialized externally or defined via {@link KeyRangeAllocationStrategy})
      * to match incoming configuration settings and stored node state
