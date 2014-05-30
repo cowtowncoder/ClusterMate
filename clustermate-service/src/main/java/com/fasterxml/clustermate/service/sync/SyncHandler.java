@@ -154,43 +154,72 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
     /* API, file listing
     /**********************************************************************
      */
-    
+
     /**
-     * End point clients use to find out metadata for entries this node has,
+     * End point local cluster clients use to find out metadata for entries this node has,
      * starting with the given timestamp.
+     * One side-effect of requests serve this way is that calling node may be automatically
+     * registered as part of this cluster.
      */
     @SuppressWarnings("unchecked")
-    public <OUT extends ServiceResponse> OUT listEntries(ServiceRequest request, OUT response,
+    public <OUT extends ServiceResponse> OUT localListEntries(ServiceRequest request, OUT response,
             Long sinceL, OperationDiagnostics metadata)
+        throws InterruptedException, StoreException
+    {
+        return (OUT) _listEntries(request, response, sinceL, metadata, true);
+    }
+
+    /**
+     * End point remote cluster clients use to find out metadata for entries this node has,
+     * starting with the given timestamp.
+     * Unlike local calls, auto-registration does not occur.
+     */
+    @SuppressWarnings("unchecked")
+    public <OUT extends ServiceResponse> OUT remoteListEntries(ServiceRequest request, OUT response,
+            Long sinceL, OperationDiagnostics metadata)
+        throws InterruptedException, StoreException
+    {
+        return (OUT) _listEntries(request, response, sinceL, metadata, false);
+    }
+    
+    /**
+     * @param isLocal Whether this call is from local cluster (end point) or not (remote)
+     */
+    protected ServiceResponse _listEntries(ServiceRequest request, ServiceResponse response,
+            Long sinceL, OperationDiagnostics metadata,
+            boolean isLocal)
         throws InterruptedException, StoreException
     {
         // simple validation first
         if (sinceL == null) {
-            return (OUT) badRequest(response, "Missing path parameter for 'list-since'");
+            return badRequest(response, "Missing path parameter for 'list-since'");
         }
         Integer keyRangeStart = _findIntParam(request, ClusterMateConstants.QUERY_PARAM_KEYRANGE_START);
         if (keyRangeStart == null) {
-            return (OUT) missingArgument(response, ClusterMateConstants.QUERY_PARAM_KEYRANGE_START);
+            return missingArgument(response, ClusterMateConstants.QUERY_PARAM_KEYRANGE_START);
         }
         Integer keyRangeLength = _findIntParam(request, ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH);
         if (keyRangeLength == null) {
-            return (OUT) missingArgument(response, ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH);
+            return missingArgument(response, ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH);
         }
         long clusterHash = _findLongParam(request, ClusterMateConstants.QUERY_PARAM_CLUSTER_HASH);
         KeyRange range;
         try {
             range = _cluster.getKeySpace().range(keyRangeStart, keyRangeLength);
         } catch (Exception e) {
-            return (OUT) badRequest(response, "Invalid key-range definition (start '%s', end '%s'): %s",
+            return badRequest(response, "Invalid key-range definition (start '%s', end '%s'): %s",
                     keyRangeStart, keyRangeLength, e.getMessage());
         }
 
         /* 20-Nov-2012, tatu: We can now piggyback auto-registration by sending minimal
          *   info about caller...
          */
+        // 29-May-2014, tatu: Important! Only when handling local requests
         IpAndPort caller = getCallerQueryParam(request);
-        if (caller != null) {
-            _cluster.checkMembership(caller, 0L, range);
+        if (isLocal) {
+            if (caller != null) {
+                _cluster.checkMembership(caller, 0L, range);
+            }
         }
         boolean useSmile = _acceptSmileContentType(request);
         final long currentTime = _timeMaster.currentTimeMillis();
@@ -219,14 +248,9 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
             } catch (StoreException e) {
                 return _storeError(response, e);
             }
-
-    /*
-System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+"); between "+sinceL+" and "+upUntil+", got "+entries.size()+"/"
-+_stores.getEntryStore().getEntryCount()+" entries... (time: "+_timeMaster.currentTimeMillis()+")");
-*/
         } else {
             LOG.warn("Sync list request by {} for range {}; does not overlap with local range of {}; skipping",
-                    caller, range, localRange);
+                    (caller == null) ? "UNKNOWN" : caller, range, localRange);
             resp = SyncListResponse.emptyResponse();
         }
         if (metadata != null) {
@@ -240,7 +264,7 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
         final ObjectWriter w = useSmile ? _syncListSmileWriter : _syncListJsonWriter;
         final String contentType = useSmile ? ContentType.SMILE.toString() : ContentType.JSON.toString();
         
-        return (OUT) response.ok(new StreamingEntityImpl(w, resp))
+        return response.ok(new StreamingEntityImpl(w, resp))
                 .setContentType(contentType);
     }
     
@@ -252,22 +276,43 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
      */
 
     /**
-     * Access endpoint used by others nodes to 'pull' data for entries they are
+     * Access endpoint used by other local nodes to 'pull' data for entries they are
      * missing.
      * Note that request payload must be JSON; could change to Smile in future if
      * need be.
      */
     @SuppressWarnings("unchecked")
-    public <OUT extends ServiceResponse> OUT pullEntries(ServiceRequest request, OUT response,
+    public <OUT extends ServiceResponse> OUT localPullEntries(ServiceRequest request, OUT response,
             InputStream in,
             OperationDiagnostics metadata)
+        throws IOException, StoreException
+    {
+        return (OUT) _pullEntries(request, response, in, metadata, true);
+    }
+    
+    /**
+     * Access endpoint used by nodes of remote clusters to 'pull' data for entries they are
+     * missing.
+     */
+    @SuppressWarnings("unchecked")
+    public <OUT extends ServiceResponse> OUT remotePullEntries(ServiceRequest request, OUT response,
+            InputStream in,
+            OperationDiagnostics metadata)
+        throws IOException, StoreException
+    {
+        return (OUT) _pullEntries(request, response, in, metadata, false);
+    }
+    
+    public ServiceResponse _pullEntries(ServiceRequest request, ServiceResponse response,
+            InputStream in, OperationDiagnostics metadata,
+            boolean isLocal)
         throws IOException, StoreException
     {
         SyncPullRequest requestEntity = null;
         try {
             requestEntity = _jsonSyncPullReader.readValue(in);
         } catch (Exception e) {
-            return (OUT) badRequest(response, "JSON parsing error: %s", e.getMessage());
+            return badRequest(response, "JSON parsing error: %s", e.getMessage());
         }
         // Bit of validation, as unknown props are allowed:
         if (requestEntity.hasUnknownProperties()) {
@@ -293,7 +338,7 @@ System.err.println("Sync for "+_localState.getRangeActive()+" (slice of "+range+
                 metadata = metadata.setItemCount(entries.size());
             }
         } 
-        return (OUT) response.ok(new SyncPullResponse<E>(_fileManager, _timeMaster.currentTimeMillis(),
+        return response.ok(new SyncPullResponse<E>(_fileManager, _timeMaster.currentTimeMillis(),
                 _syncPullSmileWriter, entries));
     }
 

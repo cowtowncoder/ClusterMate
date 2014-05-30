@@ -47,9 +47,27 @@ public abstract class ServiceConfig
     /**********************************************************************
      */
 
+    /**
+     * This is the mandatory definition for local cluster: at minimum, it needs to
+     * specify enough information for local node to find out actual definition
+     * via end points.
+     */
     @NotNull
     @Valid
     public ClusterConfig cluster = new ClusterConfig();
+
+    /**
+     * Optional definition of zero or more "remote" clusters, with which nodes
+     * of this cluster will synchronize content; but using different sync/pull
+     * approach. If left as null or empty, no cluster-to-cluster synchronization
+     * occurs; otherwise nodes of this cluster will try to synchronize data from
+     * defined remote clusters.
+     * Note that definitions between clusters may be asymmetric: that is, it is not
+     * necessary for both sides to be pulling content. Leaving this empy on one side
+     * will allow read-only, uni-directional synchronization.
+     */
+    @Valid
+    public RemoteClusterConfig[] remoteClusters;
 
     /*
     /**********************************************************************
