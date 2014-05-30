@@ -204,7 +204,7 @@ public abstract class ServiceResponse
     }
 
     public final <RESP extends ServiceResponse> RESP internalFileNotFound(Object entity) {
-        /* 12-Dec-2013, tatu: There isn't really any optimal 5xx code; but to distringuish
+        /* 12-Dec-2013, tatu: There isn't really any optimal 5xx code; but to distinguish
          *    this from generic 500, let's use 507 ("not enough space"), which hopefully
          *    at least allows separating it from other fails.
          */

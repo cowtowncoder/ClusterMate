@@ -33,7 +33,7 @@ public interface PutContentProvider
      * Physical length of content; compressed content if
      * {@link #getExistingCompression()} returns actual compression
      * method.
-     * 
+     *
      * @return Length of content, if known; -1 if not known
      */
     public long length();

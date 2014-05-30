@@ -85,7 +85,7 @@ public abstract class ServiceConfig
     /* Storage config: paths
     /**********************************************************************
      */
-  
+
     /**
      * Directory used for storing service metadata, such as node
      * states, last-accessed timestamps.
