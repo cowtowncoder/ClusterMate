@@ -24,5 +24,7 @@ public enum TestPath
     SYNC_LIST, // request for change list (ids)
     SYNC_PULL, // request for specific (changed/new) entries
     
+    REMOTE_SYNC_LIST, // request for change list (ids)
+    REMOTE_SYNC_PULL, // request for specific (changed/new) entries
     ;
 }

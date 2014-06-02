@@ -59,6 +59,12 @@ public abstract class RequestPathStrategy<P extends Enum <P>>
     public abstract <B extends RequestPathBuilder<B>> B appendNodeMetricsPath(B basePath);
 
     public abstract <B extends RequestPathBuilder<B>> B appendNodeStatusPath(B basePath);
+
+    public abstract <B extends RequestPathBuilder<B>> B appendRemoteSyncListPath(B basePath);
+
+    public abstract <B extends RequestPathBuilder<B>> B appendRemoteSyncPullPath(B basePath);
+
+    public abstract <B extends RequestPathBuilder<B>> B appendRemoteStatusPath(B basePath);
     
     /*
     /**********************************************************************
