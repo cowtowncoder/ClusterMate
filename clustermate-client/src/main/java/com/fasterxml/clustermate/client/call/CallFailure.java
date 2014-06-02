@@ -211,10 +211,17 @@ public class CallFailure
      */
     public boolean isRetriable()
     {
-        // We can actually just retry 5xx codes (which includes timeouts)
-        return (_statusCode >= 500) && (_statusCode < 600);
+        // We can actually only retry 5xx codes (which includes timeouts)
+        if ((_statusCode >= 500) && (_statusCode < 600)) {
+            return true;
+        }
+        /* 02-Jun-2014, tatu: Not 100% sure, but I suspect we might also want
+         *   to allow retrying some of client-side failures? (error code < -1).
+         *   For now, won't change logic, just noting that we may eventually want to.
+         */
+        return false;
     }
-    
+
     /*
     /**********************************************************************
     /* Overrides
