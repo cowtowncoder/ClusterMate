@@ -1,5 +1,10 @@
 Project: ClusterMate
 
+0.10.4 (xx-xxx-2014)
+
+#34: Handle JDK client timeout (`java.io.SocketTimeoutException`) explicitly
+ (to return 598 aka `ClusterMateConstants.HTTP_STATUS_CLIENT_TIMEOUT_ON_READ`)
+
 0.10.3 (28-May-2014)
 
 #33: Add support for incremental DELETE operations (similar to how PUTs work)

@@ -189,6 +189,14 @@ public interface ClusterMateConstants
      */
     public final static int HTTP_STATUS_CUSTOM_FAIL_CLIENT_MESSAGE = -3;
 
+    /**
+     * More specialized variant that stems from a {@link NullPointerException} on
+     * client side, before or during processing of the request, but before
+     * getting a real HTTP response code to use.
+     * 
+     * @since 0.10.4
+     */
+    public final static int HTTP_STATUS_CUSTOM_FAIL_CLIENT_NPE = -4;
 
     /* Response code used when the request timed out; as per docs, while
      * not a formally standardized code, is actually used. And is considered

@@ -1,6 +1,7 @@
 package com.fasterxml.clustermate.client.jdk;
 
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 
 import com.fasterxml.storemate.shared.util.IOUtil;
@@ -60,6 +61,8 @@ public class JdkHttpContentDeleter<K extends EntryKey>
             }
             drain(conn, statusCode);
             return null;
+        } catch (SocketTimeoutException e) { // as per [#34]
+            return CallFailure.timeout(_server, startTime, System.currentTimeMillis());
         } catch (Exception e) {
             return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e);
         }

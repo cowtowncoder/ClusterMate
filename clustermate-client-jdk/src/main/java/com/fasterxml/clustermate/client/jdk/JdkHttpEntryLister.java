@@ -2,6 +2,7 @@ package com.fasterxml.clustermate.client.jdk;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 
 import com.fasterxml.storemate.shared.util.IOUtil;
@@ -69,6 +70,8 @@ public class JdkHttpEntryLister<K extends EntryKey>
             in = conn.getInputStream();
             ListResponse<T> resp = converter.convert(contentType, in);
             return new JdkHttpEntryListResult<T>(conn, _server, resp);
+        } catch (SocketTimeoutException e) { // as per [#34]
+            return failed(CallFailure.timeout(_server, startTime, System.currentTimeMillis()));
         } catch (Exception e) {
             if (in != null) {
                 try {

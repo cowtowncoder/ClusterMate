@@ -128,12 +128,11 @@ public class CallFailure
         
         // Let's produce stack trace for certain problems
         if (cause instanceof NullPointerException) {
-            return new CallFailure(server, ClusterMateConstants.HTTP_STATUS_CUSTOM_FAIL_CLIENT_THROWABLE,
+            return new CallFailure(server, ClusterMateConstants.HTTP_STATUS_CUSTOM_FAIL_CLIENT_NPE,
                     callTime, endTime, cause,
                     "NullPointerException at "+ExceptionUtil.getStackTraceDesc(cause, 5),
-                    null);            
+                    null);
         }
-        
         return new CallFailure(server, ClusterMateConstants.HTTP_STATUS_CUSTOM_FAIL_CLIENT_THROWABLE,
                 callTime, endTime, cause, null);
     }
