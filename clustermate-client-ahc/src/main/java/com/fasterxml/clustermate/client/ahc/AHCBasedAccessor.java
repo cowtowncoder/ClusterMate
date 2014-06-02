@@ -1,11 +1,14 @@
 package com.fasterxml.clustermate.client.ahc;
 
 import java.io.*;
+import java.net.ConnectException;
+import java.net.SocketTimeoutException;
 
 import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.client.ClusterServerNode;
 import com.fasterxml.clustermate.client.Loggable;
 import com.fasterxml.clustermate.client.StoreClientConfig;
+import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ning.http.client.AsyncHttpClient;
@@ -29,9 +32,13 @@ public abstract class AHCBasedAccessor<
     
     protected EntryKeyConverter<K> _keyConverter;
 
-    protected AHCBasedAccessor(StoreClientConfig<K,?> storeConfig, AsyncHttpClient hc)
+    protected final ClusterServerNode _server;
+    
+    protected AHCBasedAccessor(StoreClientConfig<K,?> storeConfig, AsyncHttpClient hc,
+            ClusterServerNode server)
     {
         super();
+        _server = server;
         _httpClient = hc;
         _mapper = storeConfig.getJsonMapper();
         _pathFinder = storeConfig.getPathStrategy();
@@ -131,6 +138,18 @@ public abstract class AHCBasedAccessor<
             }
         }
         return defaultType;
+    }
+
+    protected CallFailure failFromException(Exception e0, long startTime)
+    {
+        Throwable t = _unwrap(e0);
+        if (t instanceof ConnectException) {
+            return CallFailure.connectTimeout(_server, startTime, System.currentTimeMillis());
+        }
+        if (t instanceof SocketTimeoutException) {
+            return CallFailure.timeout(_server, startTime, System.currentTimeMillis());
+        }
+        return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), t);
     }
     
     /*

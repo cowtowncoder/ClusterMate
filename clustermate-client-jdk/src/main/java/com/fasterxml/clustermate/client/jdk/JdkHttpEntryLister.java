@@ -1,6 +1,7 @@
 package com.fasterxml.clustermate.client.jdk;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
@@ -17,13 +18,10 @@ public class JdkHttpEntryLister<K extends EntryKey>
     extends BaseJdkHttpAccessor<K>
     implements EntryLister<K>
 {
-    protected final ClusterServerNode _server;
-
     public JdkHttpEntryLister(StoreClientConfig<K,?> storeConfig,
             ClusterServerNode server)
     {
-        super(storeConfig);
-        _server = server;
+        super(storeConfig, server);
     }
 
     @Override
@@ -70,16 +68,19 @@ public class JdkHttpEntryLister<K extends EntryKey>
             in = conn.getInputStream();
             ListResponse<T> resp = converter.convert(contentType, in);
             return new JdkHttpEntryListResult<T>(conn, _server, resp);
+        } catch (ConnectException e) { // as per [#34]
+            return failed(CallFailure.connectTimeout(_server, startTime, System.currentTimeMillis()));
         } catch (SocketTimeoutException e) { // as per [#34]
             return failed(CallFailure.timeout(_server, startTime, System.currentTimeMillis()));
         } catch (Exception e) {
+            return failed(CallFailure.clientInternal(_server,
+                    startTime, System.currentTimeMillis(), _unwrap(e)));
+        } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e2) { }
             }
-            return failed(CallFailure.clientInternal(_server,
-                    startTime, System.currentTimeMillis(), _unwrap(e)));
         }
     }
 

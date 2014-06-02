@@ -20,14 +20,10 @@ public class AHCEntryLister<K extends EntryKey>
     extends AHCBasedAccessor<K>
     implements EntryLister<K>
 {
-    protected final ClusterServerNode _server;
-
     public AHCEntryLister(StoreClientConfig<K,?> storeConfig,
-            AsyncHttpClient hc,
-            ClusterServerNode server)
+            AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(storeConfig, hc);
-        _server = server;
+        super(storeConfig, hc, server);
     }
 
     @Override
@@ -86,13 +82,13 @@ public class AHCEntryLister<K extends EntryKey>
             in = resp.getResponseBodyAsStream();
             return new AHCEntryListResult<T>(_server, converter.convert(contentType, in));
         } catch (Exception e) {
+            return failed(failFromException(e, startTime));
+        } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e2) { }
             }
-            return failed(CallFailure.clientInternal(_server,
-                    startTime, System.currentTimeMillis(), _unwrap(e)));
         }
     }
 

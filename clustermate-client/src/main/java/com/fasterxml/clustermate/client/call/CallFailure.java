@@ -82,7 +82,12 @@ public class CallFailure
      */
     public static CallFailure timeout(ServerNode server, long callTime, long endTime) {
         return new CallFailure(server, ClusterMateConstants.HTTP_STATUS_CLIENT_TIMEOUT_ON_READ,
-                callTime, endTime, "timeout after "+ (endTime - callTime) + " msecs",
+                callTime, endTime, "read or write timeout after "+ (endTime - callTime) + " msecs", null);
+    }
+
+    public static CallFailure connectTimeout(ServerNode server, long callTime, long endTime) {
+        return new CallFailure(server, ClusterMateConstants.HTTP_STATUS_CLIENT_TIMEOUT_ON_CONNECT,
+                callTime, endTime, "connect timeout after "+ (endTime - callTime) + " msecs",
                 null);
     }
 

@@ -21,13 +21,10 @@ public class AHCContentHeader<K extends EntryKey>
     extends AHCBasedAccessor<K>
     implements ContentHeader<K>
 {
-    protected final ClusterServerNode _server;
-    
     public AHCContentHeader(StoreClientConfig<K,?> storeConfig,
             AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(storeConfig, hc);
-        _server = server;
+        super(storeConfig, hc, server);
     }
 
     /*
@@ -91,7 +88,7 @@ public class AHCContentHeader<K extends EntryKey>
                         "Invalid '"+ClusterMateConstants.HTTP_HEADER_CONTENT_LENGTH+"' value: "+desc));
             }
         } catch (Exception e) {
-            return new AHCHeadCallResult(CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e));
+            return new AHCHeadCallResult(failFromException(e, startTime));
         }
     }
 

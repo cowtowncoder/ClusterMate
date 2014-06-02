@@ -2,7 +2,6 @@ package com.fasterxml.clustermate.client.jdk;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
@@ -25,13 +24,10 @@ public class JdkHttpContentPutter<K extends EntryKey>
     extends BaseJdkHttpAccessor<K>
     implements ContentPutter<K>
 {
-    protected final ClusterServerNode _server;
-
     public JdkHttpContentPutter(StoreClientConfig<K,?> storeConfig,
             ClusterServerNode server)
     {
-        super(storeConfig);
-        _server = server;
+        super(storeConfig, server);
         _keyConverter = storeConfig.getKeyConverter();
     }
 
@@ -47,10 +43,8 @@ public class JdkHttpContentPutter<K extends EntryKey>
         }
         try {
             return _tryPut(config, params, endOfTime, contentId, content, startTime, timeout);
-        } catch (SocketTimeoutException e) { // as per [#34]
-            return CallFailure.timeout(_server, startTime, System.currentTimeMillis());
         } catch (Exception e) {
-            return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e);
+            return failFromException(e, startTime);
         }
     }
 

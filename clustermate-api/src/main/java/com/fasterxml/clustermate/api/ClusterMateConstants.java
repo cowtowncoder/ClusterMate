@@ -197,13 +197,21 @@ public interface ClusterMateConstants
      * @since 0.10.4
      */
     public final static int HTTP_STATUS_CUSTOM_FAIL_CLIENT_NPE = -4;
-
-    /* Response code used when the request timed out; as per docs, while
-     * not a formally standardized code, is actually used. And is considered
+    
+    /**
+     * Response code used when the request timed out on client side; as per docs,
+     * While not a formally standardized code, is actually used. And is considered
      * retriable (as 5xx code) which is why we choose it.
      */
     public final static int HTTP_STATUS_CLIENT_TIMEOUT_ON_READ = 598;    
 
+    /**
+     * Response code used when the request failed to open connection to target server.
+     * While not a formally standardized code, is actually used. And is considered
+     * retriable (as 5xx code) which is why we choose it.
+     */
+    public final static int HTTP_STATUS_CLIENT_TIMEOUT_ON_CONNECT = 599;    
+    
     /*
     /**********************************************************************
     /* Other constants

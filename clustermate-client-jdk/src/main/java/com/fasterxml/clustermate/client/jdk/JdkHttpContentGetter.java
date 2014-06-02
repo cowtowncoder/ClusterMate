@@ -2,7 +2,6 @@ package com.fasterxml.clustermate.client.jdk;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 
 import com.fasterxml.storemate.shared.ByteRange;
@@ -20,13 +19,10 @@ public class JdkHttpContentGetter<K extends EntryKey>
     extends BaseJdkHttpAccessor<K>
     implements ContentGetter<K>
 {
-    protected final ClusterServerNode _server;
-
     public JdkHttpContentGetter(StoreClientConfig<K,?> storeConfig,
             ClusterServerNode server)
     {
-        super(storeConfig);
-        _server = server;
+        super(storeConfig, server);
     }
 
     /*
@@ -99,12 +95,8 @@ public class JdkHttpContentGetter<K extends EntryKey>
                 result = null;
             }
             return new JdkHttpReadCallResult<T>(conn, _server, statusCode, result);
-        } catch (SocketTimeoutException e) { // as per [#34]
-            return new JdkHttpReadCallResult<T>(null,
-                    CallFailure.timeout(_server, startTime, System.currentTimeMillis()));
         } catch (Exception e) {
-            return new JdkHttpReadCallResult<T>(null, CallFailure.clientInternal(_server,
-                    startTime, System.currentTimeMillis(), _unwrap(e)));
+            return new JdkHttpReadCallResult<T>(null, failFromException(e, startTime));
         }
     }
 }

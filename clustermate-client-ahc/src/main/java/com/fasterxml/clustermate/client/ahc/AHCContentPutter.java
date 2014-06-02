@@ -40,13 +40,10 @@ public class AHCContentPutter<K extends EntryKey>
     extends AHCBasedAccessor<K>
     implements ContentPutter<K>
 {
-    protected final ClusterServerNode _server;
-
     public AHCContentPutter(StoreClientConfig<K,?> storeConfig,
             AsyncHttpClient asyncHC, ClusterServerNode server)
     {
-        super(storeConfig, asyncHC);
-        _server = server;
+        super(storeConfig, asyncHC, server);
         _keyConverter = storeConfig.getKeyConverter();
     }
 
@@ -65,7 +62,7 @@ public class AHCContentPutter<K extends EntryKey>
             return _tryPutAsync
                     (config, params, endOfTime, contentId, content, startTime, timeout);
         } catch (Exception e) {
-            return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e);
+            return failFromException(e, startTime);
         }
     }
 

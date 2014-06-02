@@ -16,13 +16,10 @@ public class AHCContentGetter<K extends EntryKey>
     extends AHCBasedAccessor<K>
     implements ContentGetter<K>
 {
-    protected final ClusterServerNode _server;
-
     public AHCContentGetter(StoreClientConfig<K,?> storeConfig,
             AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(storeConfig, hc);
-        _server = server;
+        super(storeConfig, hc, server);
     }
 
     /*
@@ -84,8 +81,7 @@ public class AHCContentGetter<K extends EntryKey>
             }
             return new AHCReadCallResult<T>(_server, resp);
         } catch (Exception e) {
-            return new AHCReadCallResult<T>(CallFailure.clientInternal(_server,
-                    startTime, System.currentTimeMillis(), _unwrap(e)));
+            return new AHCReadCallResult<T>(failFromException(e, startTime));
         }
     }
 }

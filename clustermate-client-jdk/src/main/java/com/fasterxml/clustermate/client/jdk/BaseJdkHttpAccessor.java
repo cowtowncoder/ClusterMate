@@ -1,12 +1,15 @@
 package com.fasterxml.clustermate.client.jdk;
 
 import java.io.*;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.util.BufferRecycler;
 import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.client.*;
+import com.fasterxml.clustermate.client.call.CallFailure;
 import com.fasterxml.clustermate.client.cluster.ClusterServerNodeImpl;
 import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 
@@ -36,9 +39,12 @@ public abstract class BaseJdkHttpAccessor<
 
     protected EntryKeyConverter<K> _keyConverter;
 
-    protected BaseJdkHttpAccessor(StoreClientConfig<K,?> storeConfig)
+    protected final ClusterServerNode _server;
+    
+    protected BaseJdkHttpAccessor(StoreClientConfig<K,?> storeConfig, ClusterServerNode server)
     {
         super();
+        _server = server;
         _mapper = storeConfig.getJsonMapper();
         _pathFinder = storeConfig.getPathStrategy();
         _keyConverter = storeConfig.getKeyConverter();
@@ -240,6 +246,18 @@ public abstract class BaseJdkHttpAccessor<
         return new String(buf, 0, offset);
     }
 
+    protected CallFailure failFromException(Exception e0, long startTime)
+    {
+        Throwable t = _unwrap(e0);
+        if (t instanceof ConnectException) {
+            return CallFailure.connectTimeout(_server, startTime, System.currentTimeMillis());
+        }
+        if (t instanceof SocketTimeoutException) {
+            return CallFailure.timeout(_server, startTime, System.currentTimeMillis());
+        }
+        return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), t);
+    }
+    
     /*
     /**********************************************************************
     /* Other

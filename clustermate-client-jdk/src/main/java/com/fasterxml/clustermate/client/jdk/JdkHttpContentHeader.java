@@ -1,7 +1,6 @@
 package com.fasterxml.clustermate.client.jdk;
 
 import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 
 import com.fasterxml.clustermate.api.ClusterMateConstants;
@@ -21,13 +20,10 @@ public class JdkHttpContentHeader<K extends EntryKey>
     extends BaseJdkHttpAccessor<K>
     implements ContentHeader<K>
 {
-    protected final ClusterServerNode _server;
-    
     public JdkHttpContentHeader(StoreClientConfig<K,?> storeConfig,
             ClusterServerNode server)
     {
-        super(storeConfig);
-        _server = server;
+        super(storeConfig, server);
     }
 
     /*
@@ -73,10 +69,8 @@ public class JdkHttpContentHeader<K extends EntryKey>
                 return new JdkHttpHeadCallResult(CallFailure.formatException(_server,
                         statusCode, startTime, System.currentTimeMillis(), e.getMessage()));
             }
-        } catch (SocketTimeoutException e) { // as per [#34]
-            return new JdkHttpHeadCallResult(CallFailure.timeout(_server, startTime, System.currentTimeMillis()));
         } catch (Exception e) {
-            return new JdkHttpHeadCallResult(CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e));
+            return new JdkHttpHeadCallResult(failFromException(e, startTime));
         }
     }
 }

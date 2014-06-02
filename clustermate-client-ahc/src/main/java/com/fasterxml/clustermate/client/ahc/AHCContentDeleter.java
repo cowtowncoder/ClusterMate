@@ -20,13 +20,10 @@ public class AHCContentDeleter<K extends EntryKey>
     extends AHCBasedAccessor<K>
     implements ContentDeleter<K>
 {
-    protected final ClusterServerNode _server;
-
     public AHCContentDeleter(StoreClientConfig<K,?> storeConfig,
             AsyncHttpClient hc, ClusterServerNode server)
     {
-        super(storeConfig, hc);
-        _server = server;
+        super(storeConfig, hc, server);
     }
 
     @Override
@@ -71,7 +68,7 @@ public class AHCContentDeleter<K extends EntryKey>
             }
             return null;
         } catch (Exception e) {
-            return CallFailure.clientInternal(_server, startTime, System.currentTimeMillis(), e);
+            return failFromException(e, startTime);
         }
     }
 }
