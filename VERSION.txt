@@ -5,6 +5,7 @@ Project: ClusterMate
 #34: Handle JDK client timeout (`java.io.SocketTimeoutException`) explicitly
  (to return 598 aka `ClusterMateConstants.HTTP_STATUS_CLIENT_TIMEOUT_ON_READ`);
  ditto for `java.net.ConnectException` (becomes 599)
+- Upgrade to Jackson 2.4.0 (but not relying; 2.3 would still work)
 
 0.10.3 (28-May-2014)
 
