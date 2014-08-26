@@ -4,16 +4,13 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.skife.config.TimeSpan;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.storemate.shared.ByteContainer;
-import com.fasterxml.storemate.shared.ByteRange;
-import com.fasterxml.storemate.shared.StartAndStoppable;
-import com.fasterxml.storemate.shared.StorableKey;
-import com.fasterxml.storemate.shared.TimeMaster;
+import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.shared.compress.Compression;
 import com.fasterxml.storemate.shared.compress.Compressors;
 import com.fasterxml.storemate.shared.hash.HashConstants;
@@ -61,6 +58,22 @@ public abstract class StoreHandler<
                 .withMaxEntries(MAX_MAX_ENTRIES)
                 .withMaxMsecs(MAX_LIST_TIME_MSECS);
 
+    /**
+     * This value determines default "max-to-delete-with-multi-delete" limit.
+     */
+    private final static int MAX_TO_DELETE_DEFAULT = 1000;
+    
+    /**
+     * But let's not allow deletion of more than 20k regardless?
+     */
+    private final static int MAX_TO_DELETE_MAX = 20 * 1000;
+    
+    private final static ListLimits DELETE_FIND_LIMITS = ListLimits.defaultLimits()
+            .withIncludeTombstones(false)
+            .withMaxEntries(MAX_TO_DELETE_DEFAULT)
+            .withMaxMsecs(100L)
+    ;
+    
     /*
     /**********************************************************************
     /* Configuration
@@ -606,10 +619,10 @@ public abstract class StoreHandler<
 
         switch (result.getStatus()) {
         case COMPLETED:
-            response = response.ok(new DeleteResponse<K>(key, 1));
+            response = response.ok(new DeleteResponse<K>(key, 1, true));
             break;
         case DEFERRED:
-            response = response.accepted(new DeleteResponse<K>(key, -1));
+            response = response.accepted(new DeleteResponse<K>(key, -1, false));
             break;
         case QUEUE_FULL:
             return response.internalServerError();
@@ -644,6 +657,74 @@ public abstract class StoreHandler<
         return response;
     }
 
+    @SuppressWarnings("unchecked")
+    public <OUT extends ServiceResponse> OUT removeEntries(ServiceRequest request, OUT response,
+            final K prefix, OperationDiagnostics stats)
+        throws StoreException
+    {
+        // simple validation first
+        if (prefix == null) {
+            return (OUT) badRequest(response, "Missing path parameter for 'deleteEntries'");
+        }
+        /* Then a sanity check: prefix should map to our active or passive range.
+         * If not, we should not have any data to delete; so let's (for now?) fail request:
+         */
+        int rawHash = _keyConverter.routingHashFor(prefix);
+        // note: _cluster is null for testing, not for regular operation
+        if ((_cluster != null) && !_cluster.getLocalState().inAnyRange(rawHash)) {
+            return (OUT) badRequest(response, "Invalid prefix: not in key range (%s) of node",
+                    _cluster.getLocalState().totalRange());
+        }
+        // Otherwise can start deletions
+
+        // and just for fun, allow response to be sent as Smile, instead of (textual) JSON
+        boolean useSmile = _acceptSmileContentType(request);
+        final StorableKey rawPrefix = prefix.asStorableKey();
+
+        // For service-protection limit max. number of deletions done
+        ListLimits maxToDelete = DELETE_FIND_LIMITS;
+        String maxStr = request.getQueryParameter(ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES);
+        if (maxStr != null) {
+            maxStr = maxStr.trim();
+            int count;
+            if (!maxStr.isEmpty()) {
+                try {
+                    count = Integer.parseInt(maxStr);
+                } catch (IllegalArgumentException e) {
+                    return (OUT) badRequest(response, "Invalid value for '"+ClusterMateConstants.QUERY_PARAM_MAX_ENTRIES+"' ('%s') not a number",
+                            maxStr);
+                }
+                if (count > 0) {
+                    if (count > MAX_TO_DELETE_MAX) {
+                        count = MAX_TO_DELETE_MAX;
+                    }
+                    maxToDelete = maxToDelete.withMaxEntries(count);
+                }
+            }
+        }
+        AtomicBoolean completed = new AtomicBoolean(false);
+        List<StorableKey> keys = _listIds(stats, rawPrefix, null, maxToDelete, completed);
+        int count = keys.size();
+        if (count != 0) {
+            for (StorableKey key : keys) {
+                try {
+                    /*StorableDeletionResult result = */_stores.getEntryStore()
+                        .softDelete(StoreOperationSource.REQUEST, stats, key, true, true);
+                } catch (IOException e) {
+                    return _storeError(response, _keyConverter.rawToEntryKey(key), e);
+                }
+            }
+        }
+        DeleteResponse<?> deleteResponse = new DeleteResponse<K>(prefix, count, completed.get());
+        if (stats != null) {
+            stats.setItemCount(count);
+        }
+        final ObjectWriter w = useSmile ? _listSmileWriter : _listJsonWriter;
+        final String contentType = useSmile ? ContentType.SMILE.toString()
+                : ContentType.JSON.toString();
+        return (OUT) response.ok(contentType, new StreamingEntityImpl(w, deleteResponse));
+    }
+    
     /*
     /**********************************************************************
     /* Listing entries
@@ -718,13 +799,13 @@ public abstract class StoreHandler<
         switch (listType) {
         case ids:
             {
-                List<StorableKey> ids = _listIds(stats, rawPrefix, lastSeen, limits);
+                List<StorableKey> ids = _listIds(stats, rawPrefix, lastSeen, limits, null);
                 listResponse = new ListResponse.IdListResponse(ids, _last(ids));
             }
             break;
         case names:
             {
-                List<StorableKey> ids = _listIds(stats, rawPrefix, lastSeen, limits);
+                List<StorableKey> ids = _listIds(stats, rawPrefix, lastSeen, limits, null);
                 ArrayList<String> names = new ArrayList<String>(ids.size());
                 for (StorableKey id : ids) {
                     names.add(_keyConverter.rawToString(id));
@@ -794,7 +875,8 @@ public abstract class StoreHandler<
 
     protected List<StorableKey> _listIds(final OperationDiagnostics diag,
             final StorableKey prefix, StorableKey lastSeen,
-            final ListLimits limits)
+            final ListLimits limits,
+            final AtomicBoolean completed)
         throws StoreException
     {
         final long maxTime = _timeMaster.currentTimeMillis() + limits.getMaxMsecs();
@@ -808,6 +890,9 @@ public abstract class StoreHandler<
             @Override
             public IterationAction verifyKey(StorableKey key) {
                 if (!key.hasPrefix(prefix)) {
+                    if (completed != null) {
+                        completed.set(true);
+                    }
                     return IterationAction.TERMINATE_ITERATION;
                 }
                 // Can add right away, if it's ok to include tombstones
@@ -837,7 +922,7 @@ public abstract class StoreHandler<
                     && _timeMaster.currentTimeMillis() >= maxTime) {
                         return IterationAction.TERMINATE_ITERATION;
                 }
-                // no need for entry; key has all the data
+                // no need for further processing of entry, we know what to do
                 return IterationAction.SKIP_ENTRY;
             }
         };

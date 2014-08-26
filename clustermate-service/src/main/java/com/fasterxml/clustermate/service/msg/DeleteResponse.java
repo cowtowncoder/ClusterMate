@@ -16,20 +16,24 @@ public class DeleteResponse<K extends EntryKey> extends CRUDResponseBase<K>
      */
     public int count;
 
-    @Deprecated
-    public DeleteResponse(K key) {
-        super(key, "OK");
-        count = 0;
-    }
+    /**
+     * Flag that indicates that deletion request is fully complete, if known
+     * at the time of response.
+     * Note that this includes both completion of synchronous deletion AND that
+     * there are no more entries matching prefix (if prefix is used).
+     */
+    public boolean complete;
 
-    public DeleteResponse(K key, int count) {
+    public DeleteResponse(K key, int count, boolean complete) {
         super(key, "OK");
         this.count = count;
+        this.complete = complete;
     }
 
     // For errors
     public DeleteResponse(K key, String message, int count) {
         super(key, message);
         this.count = count;
+        this.complete = false;
     }
 }
