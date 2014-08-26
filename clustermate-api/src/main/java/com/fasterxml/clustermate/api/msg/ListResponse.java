@@ -15,6 +15,7 @@ import com.fasterxml.storemate.shared.StorableKey;
  *    textual name ({@link java.lang.String}) or full {@link ListItem}.
  */
 public class ListResponse<T> // not a CRUD request/response
+    extends ExtensibleType
 {
     /**
      * Error message for failed requests

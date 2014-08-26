@@ -818,6 +818,15 @@ public abstract class StoreHandler<
                 return IterationAction.PROCESS_ENTRY;
             }
 
+            @Override
+            public IterationAction processEntry(Storable entry) throws StoreException {
+                // earlier check for 'includeTombstones' should be past if we get here
+                if (entry.isDeleted()) {
+                    return IterationAction.SKIP_ENTRY;
+                }
+                return _addEntry(entry.getKey());
+            }
+
             private final IterationAction _addEntry(StorableKey key)
             {
                 result.add(key);
@@ -830,14 +839,6 @@ public abstract class StoreHandler<
                 }
                 // no need for entry; key has all the data
                 return IterationAction.SKIP_ENTRY;
-            }
-
-            @Override
-            public IterationAction processEntry(Storable entry) throws StoreException {
-                if (includeTombstones || entry.isDeleted()) {
-                    return IterationAction.SKIP_ENTRY;
-                }
-                return _addEntry(entry.getKey());
             }
         };
         /* Two cases; either starting without last seen -- in which case we should include
