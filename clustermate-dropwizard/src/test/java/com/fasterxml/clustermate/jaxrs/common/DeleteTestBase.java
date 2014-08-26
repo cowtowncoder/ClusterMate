@@ -84,6 +84,7 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
         assertSame(DeleteResponse.class, response.getEntity().getClass());
         DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
         assertEquals(deleteKey.toString(), dr.key);
+        assertEquals(1, dr.count);
 
         // count won't change, since there's tombstone:
         assertEquals(2, entryCount(entries));
@@ -262,5 +263,67 @@ public abstract class DeleteTestBase extends JaxrsStoreTestBase
                 INTERNAL_KEY1, calcChecksum(DATA2), new ByteArrayInputStream(DATA2),
                 null, null, null);
         assertEquals(409, response.getStatus());
+    }
+
+    public void testMultiDelete() throws Exception
+    {
+        long startTime = 1234L;
+        final TimeMasterForSimpleTesting timeMaster = new TimeMasterForSimpleTesting(startTime);
+        StoreResource<TestKey, StoredEntry<TestKey>> resource = createResource(testPrefix()+"MultiDelete", timeMaster, true);
+        final String PAYLOAD = "some stuff, inlined, whatever";
+        final byte[] DATA1 = PAYLOAD.getBytes("UTF-8");
+
+        StorableStore entries = resource.getStores().getEntryStore();
+        assertEquals(0, entryCount(entries));
+
+        final TestKey INTERNAL_KEY0 = contentKey(CLIENT_ID, "data/basic/0");
+        final TestKey INTERNAL_KEY1 = contentKey(CLIENT_ID, "data/small/1");
+        final TestKey INTERNAL_KEY2 = contentKey(CLIENT_ID, "data/small/2");
+        final TestKey INTERNAL_KEY3 = contentKey(CLIENT_ID, "data/tiny/1");
+
+        FakeHttpResponse response;
+        // PUT all first
+        for (TestKey key : new TestKey[] {
+                INTERNAL_KEY0, INTERNAL_KEY1, INTERNAL_KEY2, INTERNAL_KEY3    
+        }) {
+            response = new FakeHttpResponse();
+            resource.getHandler().putEntry(new FakeHttpRequest(), response,
+                    key, calcChecksum(DATA1), new ByteArrayInputStream(DATA1),
+                    null, null, null);
+            verifyResponseOk(response);
+        }
+        assertEquals(4, entryCount(entries));
+
+        timeMaster.advanceCurrentTimeMillis(10L);
+
+        final TestKey PREFIX = contentKey(CLIENT_ID, "data/small/");
+        response = new FakeHttpResponse();
+        resource.getHandler().removeEntries(new FakeHttpRequest(), response, PREFIX, null);
+
+        verifyResponseOk(response);
+        
+        assertSame(DeleteResponse.class, response.getEntity().getClass());
+        DeleteResponse<?> dr = (DeleteResponse<?>) response.getEntity();
+
+        // should have deleted 2 entries
+        assertEquals(2, dr.count);
+        assertTrue(dr.complete);
+        assertEquals(PREFIX.toString(), dr.key);
+
+        // count won't change, since there are tombstones left
+        assertEquals(4, entryCount(entries));
+
+        for (TestKey key : new TestKey[] { INTERNAL_KEY1, INTERNAL_KEY2 }) {
+            Storable rawEntry = entries.findEntry(StoreOperationSource.REQUEST, null, key.asStorableKey());
+            assertNotNull(rawEntry);
+            assertTrue(rawEntry.isDeleted());
+        }
+
+        // but other ones remain
+        for (TestKey key : new TestKey[] { INTERNAL_KEY0, INTERNAL_KEY3 }) {
+            Storable rawEntry = entries.findEntry(StoreOperationSource.REQUEST, null, key.asStorableKey());
+            assertNotNull(rawEntry);
+            assertFalse(rawEntry.isDeleted());
+        }
     }
 }

@@ -719,10 +719,12 @@ public abstract class StoreHandler<
         if (stats != null) {
             stats.setItemCount(count);
         }
-        final ObjectWriter w = useSmile ? _listSmileWriter : _listJsonWriter;
-        final String contentType = useSmile ? ContentType.SMILE.toString()
-                : ContentType.JSON.toString();
-        return (OUT) response.ok(contentType, new StreamingEntityImpl(w, deleteResponse));
+        // One more thing; use status code to differentiate between full deletion (200),
+        // and incomplete one (202, "Accepted")
+        if (deleteResponse.complete) {
+            return (OUT) response.ok(deleteResponse);
+        }
+        return (OUT) response.accepted(deleteResponse);
     }
     
     /*

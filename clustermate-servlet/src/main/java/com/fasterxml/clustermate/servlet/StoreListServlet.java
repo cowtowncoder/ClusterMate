@@ -106,4 +106,26 @@ public class StoreListServlet<K extends EntryKey,
             }
         }
     }
+
+    @Override
+    public void handleDelete(ServletServiceRequest request, ServletServiceResponse response,
+            OperationDiagnostics stats) throws IOException
+    {
+        final OperationMetrics metrics = _listMetrics;
+        Context timer = (metrics == null) ? null : metrics.start();
+        try {
+            K prefix = _findKey(request, response);
+            if (prefix == null) {
+                super.handleDelete(request, response, stats);
+                return;
+            }
+            _storeHandler.removeEntries(request, response, prefix, stats);
+            _addStdHeaders(response);
+            response.writeOut(null);
+        } finally {
+            if (metrics != null) {
+                 metrics.finish(timer, stats);
+            }
+        }
+    }
 }

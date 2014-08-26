@@ -148,11 +148,15 @@ public abstract class ServiceResponse
     public final ServiceResponse internalServerError(String msg) { // 500
         return set(HttpURLConnection.HTTP_INTERNAL_ERROR, msg);
     }
-    
+
     public final ServiceResponse accepted(Object entity) {
         return set(HttpURLConnection.HTTP_ACCEPTED, entity);
     }
 
+    public final ServiceResponse accepted(String contentType, Object entity) {
+        return accepted(entity).setContentType(contentType);
+    }
+    
     public final ServiceResponse partialContent(Object entity, String rangeDesc) {
         // 206 means "partial content"
         return set(ClusterMateConstants.HTTP_STATUS_OK_PARTIAL, entity)
