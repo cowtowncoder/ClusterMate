@@ -3,6 +3,8 @@ package com.fasterxml.clustermate.service.cfg;
 import javax.validation.Valid;
 import javax.validation.constraints.*;
 
+import com.fasterxml.storemate.shared.IpAndPort;
+
 /**
  * Configuration settings for one of optional "remote" clusters; remote
  * clusters are clusters with which local cluster exchanges data, and
@@ -38,5 +40,5 @@ public class RemoteClusterConfig
     // also: if defined, must have at least 1 entry
     @Valid
     @Size(min=1, max=Integer.MAX_VALUE)
-    public NodeConfig[] nodes;
+    public IpAndPort[] nodes;
 }
