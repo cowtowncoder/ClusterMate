@@ -20,4 +20,15 @@ public abstract class NodeStateStoreHelper
                         new JacksonBasedConverter<ActiveNodeState>(mapper, ActiveNodeState.class));
         return nodeStates;
     }
+
+    public static NodeStateStore<IpAndPort, ActiveNodeState> defaultRemoteNodeStateStore(StoreBackendBuilder<?> backendBuilder,
+            SharedServiceStuff stuff, File metadataDir, String id)
+    {
+        final ObjectMapper mapper = stuff.jsonMapper();
+        NodeStateStore<IpAndPort, ActiveNodeState> nodeStates =
+                backendBuilder.buildSecondaryNodeStateStore(metadataDir, id,
+                        new JacksonBasedConverter<IpAndPort>(mapper, IpAndPort.class),
+                        new JacksonBasedConverter<ActiveNodeState>(mapper, ActiveNodeState.class));
+        return nodeStates;
+    }
 }
