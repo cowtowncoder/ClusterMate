@@ -38,7 +38,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     /**
      * Information about this node; not included in the list of peer nodes.
      */
-    protected NodeState _localState;
+    protected final NodeState _localState;
 
     /**
      * States of all nodes found during bootstrapping, including the
