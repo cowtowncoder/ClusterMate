@@ -41,7 +41,23 @@ public class JdkClusterStatusAccessor extends ClusterStatusAccessor
     }
 
     @Override
+    public ClusterStatusMessage getRemoteStatus(IpAndPort ip, long timeoutMsecs)
+        throws IOException
+    {
+        JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(ip)
+            .addPathSegments(_basePath);
+        pathBuilder = _paths.appendRemoteStatusPath(pathBuilder);
+        return getClusterStatus(pathBuilder.toString(), timeoutMsecs);
+    }
+    
+    @Override
     public ClusterStatusMessage getClusterStatus(String endpoint, long timeoutMsecs)
+        throws IOException
+    {
+        return _getClusterStatus(endpoint, timeoutMsecs);
+    }
+
+    protected ClusterStatusMessage _getClusterStatus(String endpoint, long timeoutMsecs)
         throws IOException
     {
         // first: if we can't spend at least 10 msecs, let's give up:

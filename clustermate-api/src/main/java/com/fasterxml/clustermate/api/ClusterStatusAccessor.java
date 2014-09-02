@@ -15,6 +15,8 @@ public abstract class ClusterStatusAccessor
 
     public abstract ClusterStatusMessage getClusterStatus(IpAndPort ip, long timeoutMsecs)
         throws IOException;
+    public abstract ClusterStatusMessage getRemoteStatus(IpAndPort ip, long timeoutMsecs)
+        throws IOException;
 
     public abstract ClusterStatusMessage getClusterStatus(String endpoint, long timeoutMsecs)
         throws IOException;
