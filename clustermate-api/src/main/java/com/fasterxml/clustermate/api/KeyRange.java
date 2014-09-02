@@ -304,11 +304,14 @@ public class KeyRange implements Comparable<KeyRange>
      * If you want to verify containment, you may want to instead call
      * {@link #clockwiseDistanceIfContained(KeyHash, int)}.
      */
-    public int clockwiseDistance(KeyHash key)
-    {
+    public int clockwiseDistance(KeyHash key) {
         return _clockwiseDistance(key.getModuloHash());
     }
 
+    public int clockwiseDistance(KeyRange otherRange) {
+        return _clockwiseDistance(otherRange.getStart());
+    }
+    
     public int clockwiseDistanceIfContained(KeyHash key, int notContainedMarker)
     {
         int dist = _clockwiseDistance(key.getModuloHash());
