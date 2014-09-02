@@ -269,7 +269,7 @@ public abstract class StoreClientBootstrapper<
                             config, _httpClient, local.totalRange().getKeyspace());
                     clusterView.updateDirectState(ip, local,
                             requestTime, System.currentTimeMillis(), resp.creationTime);
-                    for (NodeState stateSec : resp.remote) {
+                    for (NodeState stateSec : resp.peers) {
                         clusterView.updateIndirectState(ip, stateSec);
                     }
                     return clusterView;
@@ -317,7 +317,7 @@ public abstract class StoreClientBootstrapper<
                 it.remove(); // remove from bootstrap list
                 clusterView.updateDirectState(ip,  resp.local,
                         requestTime, System.currentTimeMillis(), resp.clusterLastUpdated);
-                for (NodeState stateSec : resp.remote) {
+                for (NodeState stateSec : resp.peers) {
                     clusterView.updateIndirectState(ip, stateSec);
                 }
                 return true;

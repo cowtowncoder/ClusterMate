@@ -288,8 +288,8 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
                 ++mods;
             }
         }
-        if (msg.remote != null) {
-            for (NodeState state : msg.remote) {
+        if (msg.peers != null) {
+            for (NodeState state : msg.peers) {
                 if (updateStatus(state, false)) {
                     ++mods;
                 }

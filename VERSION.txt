@@ -3,6 +3,7 @@ Project: ClusterMate
 0.11.0 (xx-xxx-20214)
 
 - Start adding support for "multi-delete"
+- Rename ClusterStatusMessage 'remote' as 'peers' to reduce confusion
 
 0.10.4 (04-Jun-2014)
 
