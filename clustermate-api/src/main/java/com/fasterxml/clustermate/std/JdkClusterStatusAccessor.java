@@ -37,7 +37,7 @@ public class JdkClusterStatusAccessor extends ClusterStatusAccessor
         JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(ip)
             .addPathSegments(_basePath);
         pathBuilder = _paths.appendNodeStatusPath(pathBuilder);
-        return getClusterStatus(pathBuilder.toString(), timeoutMsecs);
+        return _getClusterStatus(pathBuilder.toString(), timeoutMsecs, true);
     }
 
     @Override
@@ -47,17 +47,18 @@ public class JdkClusterStatusAccessor extends ClusterStatusAccessor
         JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(ip)
             .addPathSegments(_basePath);
         pathBuilder = _paths.appendRemoteStatusPath(pathBuilder);
-        return getClusterStatus(pathBuilder.toString(), timeoutMsecs);
+        return _getClusterStatus(pathBuilder.toString(), timeoutMsecs, false);
     }
     
     @Override
     public ClusterStatusMessage getClusterStatus(String endpoint, long timeoutMsecs)
         throws IOException
     {
-        return _getClusterStatus(endpoint, timeoutMsecs);
+        return _getClusterStatus(endpoint, timeoutMsecs, true);
     }
 
-    protected ClusterStatusMessage _getClusterStatus(String endpoint, long timeoutMsecs)
+    protected ClusterStatusMessage _getClusterStatus(String endpoint, long timeoutMsecs,
+	boolean verifyLocalPeers)
         throws IOException
     {
         // first: if we can't spend at least 10 msecs, let's give up:
@@ -106,8 +107,8 @@ public class JdkClusterStatusAccessor extends ClusterStatusAccessor
         if (result.local.getAddress() == null) {
             throw new IOException("Invalid Cluster state returned by '"+endpoint+"', missing 'local.address' info");
         }
-        if (result.peers == null) {
-            throw new IOException("Invalid Cluster state returned by '"+endpoint+"', missing 'remote' info"); 
+        if (verifyLocalPeers && result.peers == null) {
+            throw new IOException("Invalid Cluster state returned by '"+endpoint+"', missing 'peers' info"); 
         }
         return result;
     }
