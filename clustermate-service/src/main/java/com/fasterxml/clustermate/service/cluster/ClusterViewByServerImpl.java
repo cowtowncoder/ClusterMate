@@ -17,6 +17,7 @@ import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.clustermate.service.remote.RemoteClusterHandler;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 import com.fasterxml.clustermate.std.JdkClusterStatusAccessor;
@@ -49,6 +50,12 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     protected final TimeMaster _timeMaster;
 
     protected final ClusterStatusAccessor _clusterAccessor;
+
+    /**
+     * Need a reference to remote-peer handler just to return remote-peer
+     * info for status requests.
+     */
+    protected RemoteClusterHandler _remoteClusterHandler;
     
     /**
      * Timestamp of the last update to aggregated state; used for letting
@@ -87,6 +94,10 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         _lastUpdated = new AtomicLong(updateTime);
     }
 
+    public void setRemoteHandler(RemoteClusterHandler h) {
+        _remoteClusterHandler = h;
+    }
+    
     private ClusterPeerImpl<K,E> _createPeer(ActiveNodeState nodeState) {
         return new ClusterPeerImpl<K,E>(_stuff, this,
                 _stores.getNodeStore(), _stores.getEntryStore(), nodeState,
@@ -288,8 +299,8 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
                 ++mods;
             }
         }
-        if (msg.peers != null) {
-            for (NodeState state : msg.peers) {
+        if (msg.localPeers != null) {
+            for (NodeState state : msg.localPeers) {
                 if (updateStatus(state, false)) {
                     ++mods;
                 }

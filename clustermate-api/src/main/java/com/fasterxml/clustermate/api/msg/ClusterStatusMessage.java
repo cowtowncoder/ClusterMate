@@ -21,8 +21,13 @@ public class ClusterStatusMessage
     /**
      * Set of "other" nodes in this cluster.
      */
-    public Collection<NodeState> peers;
+    public Collection<NodeState> localPeers;
 
+    /**
+     * And optional set of one or more peers in remote cluster(s).
+     */
+    public Collection<NodeState> remotePeers;
+    
     /**
      * Timestamp of time when this message was composed.
      */
@@ -45,9 +50,9 @@ public class ClusterStatusMessage
         this.clusterLastUpdated = lastUpdated;
         this.local = local;
         if (remote == null) {
-            this.peers = Collections.emptyList();
+            this.localPeers = Collections.emptyList();
         } else {
-            this.peers = remote;
+            this.localPeers = remote;
         }
     }
 }

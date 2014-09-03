@@ -9,17 +9,16 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.store.state.NodeStateStore;
-import com.fasterxml.clustermate.api.EntryKey;
-import com.fasterxml.clustermate.api.KeyRange;
-import com.fasterxml.clustermate.api.KeySpace;
-import com.fasterxml.clustermate.api.NodeDefinition;
+import com.fasterxml.clustermate.api.*;
 import com.fasterxml.clustermate.service.ServerUtil;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ClusterConfig;
 import com.fasterxml.clustermate.service.cfg.KeyRangeAllocationStrategy;
 import com.fasterxml.clustermate.service.cfg.NodeConfig;
+import com.fasterxml.clustermate.service.cfg.RemoteClusterConfig;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.clustermate.service.remote.RemoteClusterHandler;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.store.StoredEntry;
 
@@ -140,6 +139,28 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
                 localAct, activeState, clusterUpdateTime);
     }
 
+    /**
+     * Method to call to try to initialize settings needed to do (optional)
+     * synchronization 
+     */
+    public RemoteClusterHandler bootstrapRemoteCluster(ClusterViewByServerImpl<K,E> localCluster)
+        throws IOException
+    {
+        RemoteClusterConfig rconfig = _serviceConfig.remoteCluster;
+        
+        IpAndPort[] remoteDefs = (rconfig == null) ? null : rconfig.nodes;
+        Set<IpAndPort> remoteIps = (remoteDefs == null) ? null : new LinkedHashSet<IpAndPort>(Arrays.asList(remoteDefs));
+        if (remoteIps == null || remoteIps.size() == 0) {
+            LOG.info("No Remote Cluster definitions found -- will skip RC bootstrapping");
+            return null;
+        }
+        LOG.info("Found Remote Cluster definitions for {} nodes, will create remote cluster handler", remoteIps.size());
+
+        RemoteClusterHandler h = new RemoteClusterHandler(_stuff, remoteIps, localCluster.getLocalState());
+        localCluster.setRemoteHandler(h);
+        return h;
+    }
+    
     /*
     /**********************************************************************
     /* Internal methods

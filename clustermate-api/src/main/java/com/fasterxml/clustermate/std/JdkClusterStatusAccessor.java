@@ -107,8 +107,8 @@ public class JdkClusterStatusAccessor extends ClusterStatusAccessor
         if (result.local.getAddress() == null) {
             throw new IOException("Invalid Cluster state returned by '"+endpoint+"', missing 'local.address' info");
         }
-        if (verifyLocalPeers && result.peers == null) {
-            throw new IOException("Invalid Cluster state returned by '"+endpoint+"', missing 'peers' info"); 
+        if (verifyLocalPeers && result.localPeers == null) {
+            throw new IOException("Invalid Cluster state returned by '"+endpoint+"', missing 'localPeers' info"); 
         }
         return result;
     }

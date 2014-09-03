@@ -677,8 +677,7 @@ public abstract class StoreHandler<
         }
         // Otherwise can start deletions
 
-        // and just for fun, allow response to be sent as Smile, instead of (textual) JSON
-        boolean useSmile = _acceptSmileContentType(request);
+//        boolean useSmile = _acceptSmileContentType(request);
         final StorableKey rawPrefix = prefix.asStorableKey();
 
         // For service-protection limit max. number of deletions done

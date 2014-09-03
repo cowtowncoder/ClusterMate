@@ -57,7 +57,7 @@ public abstract class ServiceConfig
     public ClusterConfig cluster = new ClusterConfig();
 
     /**
-     * Optional definition of zero or more "remote" clusters, with which nodes
+     * Optional definition of zero or one "remote" cluster, with which nodes
      * of this cluster will synchronize content; but using different sync/pull
      * approach. If left as null or empty, no cluster-to-cluster synchronization
      * occurs; otherwise nodes of this cluster will try to synchronize data from
@@ -67,7 +67,7 @@ public abstract class ServiceConfig
      * will allow read-only, uni-directional synchronization.
      */
     @Valid
-    public RemoteClusterConfig[] remoteClusters;
+    public RemoteClusterConfig remoteCluster;
 
     /*
     /**********************************************************************

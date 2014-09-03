@@ -113,6 +113,20 @@ public abstract class SharedServiceStuff
 
     /*
     /**********************************************************************
+    /* Convenience methods for TimeMaster
+    /**********************************************************************
+     */
+
+    public long currentTimeMillis() {
+        return _timeMaster.currentTimeMillis();
+    }
+
+    public void sleep(long waitTimeMsecs) throws InterruptedException {
+        _timeMaster.sleep(waitTimeMsecs);
+    }
+    
+    /*
+    /**********************************************************************
     /* Data formats
     /**********************************************************************
      */
