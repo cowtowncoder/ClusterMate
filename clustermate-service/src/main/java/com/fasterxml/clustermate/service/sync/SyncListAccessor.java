@@ -19,6 +19,8 @@ import com.fasterxml.clustermate.std.JdkHttpClientPathBuilder;
 import com.fasterxml.storemate.shared.IpAndPort;
 import com.fasterxml.storemate.shared.util.IOUtil;
 
+import static com.fasterxml.clustermate.api.ClusterMateConstants.*;
+
 public class SyncListAccessor
     implements com.fasterxml.storemate.shared.StartAndStoppable
 {
@@ -72,25 +74,44 @@ public class SyncListAccessor
     // quick note: errors are in JSON, data as Smile.
         
     // And then the Real Thing, with basic JDK stuff:
-    
-    /*
-            _syncState.getAddress(), 
-            _syncState.getSyncedUpTo(), _syncState.getRangeSync());
+
+    /**
+     * Method called to request SYNCLIST from a local peer; this will include
+     * a bit of piggyback information both ways, and may also lead to implicit
+     * joining of caller into local cluster.
      */
-    
     public SyncListResponse<?> fetchSyncList(ClusterViewByServerUpdatable cluster,
             TimeSpan timeout, NodeState remote, long lastClusterHash)
         throws InterruptedException
     {
-        final String urlStr = _buildSyncListUrl(cluster, remote, lastClusterHash);
+        return _fetchSyncList(buildLocalSyncListUrl(cluster, remote, lastClusterHash), timeout,
+                "Local fetchSyncList");
+    }
+
+    /**
+     * Alternate accessor method used when calling remote nodes for information.
+     * There is less implicit and/or piggybacked information to include and handle.
+     */
+    public SyncListResponse<?> fetchRemoteSyncList(NodeState localState, IpAndPort remoteEndpoint,
+            long syncedUpTo, TimeSpan timeout)
+        throws InterruptedException
+    {
+        return _fetchSyncList(buildRemoteSyncListUrl(localState, remoteEndpoint, syncedUpTo),
+            timeout, "Remote fetchSyncList");
+    }
+
+    public SyncListResponse<?> _fetchSyncList(final String urlStr, TimeSpan timeout,
+            String type)
+        throws InterruptedException
+    {
         HttpURLConnection conn;
         try {
             conn = prepareGet(urlStr, timeout);
-            conn.setRequestProperty(ClusterMateConstants.HTTP_HEADER_ACCEPT, ACCEPTED_CONTENT_TYPES);
+            conn.setRequestProperty(HTTP_HEADER_ACCEPT, ACCEPTED_CONTENT_TYPES);
             conn.connect();
         } catch (Exception e) {
-            LOG.warn("fetchSyncList request to {} failed on send with Exception ({}): {}",
-                    new Object[] { urlStr, e.getClass().getName(), e.getMessage()});
+            LOG.warn("{} request to {} failed on send with Exception ({}): {}",
+                    new Object[] { type, urlStr, e.getClass().getName(), e.getMessage()});
             return null;
         }
         
@@ -103,7 +124,7 @@ public class SyncListAccessor
                 try {
                     resp = _syncListReader.readValue(in);
                 } catch (IOException e) {
-                    throw new IOException("Invalid sync list returned by '"+urlStr+"', failed to parse Smile: "+e.getMessage());
+                    throw new IOException(type+" request returned by '"+urlStr+"', failed to parse Smile: "+e.getMessage());
                 } finally {
                     try {
                         in.close();
@@ -115,28 +136,46 @@ public class SyncListAccessor
                 }
                 return resp;
             }
-            handleHTTPFailure(conn, urlStr, statusCode, "fetchSyncList");
+            handleHTTPFailure(conn, urlStr, statusCode, type);
         } catch (Exception e) {
-            LOG.warn("syncList request to {} failed on response with Exception ({}): {}",
-                    new Object[] { urlStr, e.getClass().getName(), e.getMessage()});
+            LOG.warn("{} request to {} failed on response with Exception ({}): {}",
+                    new Object[] { type, urlStr, e.getClass().getName(), e.getMessage()});
         }            
         return null;
-
     }
 
-    public InputStream readSyncPullResponse(SyncPullRequest request, TimeSpan timeout,
+    public InputStream readLocalSyncPullResponse(SyncPullRequest request, TimeSpan timeout,
             IpAndPort endpoint, AtomicInteger statusCodeWrapper,
             int expectedPayloadSize)
         throws IOException
     {
-        final String urlStr = _buildSyncPullUrl(endpoint);
+        return _readSyncPullResponse(request, timeout,
+                _buildSyncPullUrl(endpoint),
+                statusCodeWrapper, expectedPayloadSize);
+    }
+
+    public InputStream readRemoteSyncPullResponse(SyncPullRequest request, TimeSpan timeout,
+            IpAndPort endpoint, AtomicInteger statusCodeWrapper,
+            int expectedPayloadSize)
+        throws IOException
+    {
+        return _readSyncPullResponse(request, timeout,
+                _buildSyncPullUrl(endpoint),
+                statusCodeWrapper, expectedPayloadSize);
+    }
+    
+    protected InputStream _readSyncPullResponse(SyncPullRequest request, TimeSpan timeout,
+            String endpointURL, AtomicInteger statusCodeWrapper,
+            int expectedPayloadSize)
+        throws IOException
+    {
         byte[] reqPayload = _syncPullRequestWriter.writeValueAsBytes(request);
         final int reqLength = reqPayload.length;
         
         HttpURLConnection conn;
         OutputStream out = null;
         try {
-            conn = preparePost(urlStr, timeout, ContentType.JSON);
+            conn = preparePost(endpointURL, timeout, ContentType.JSON);
             // since we do know length in advance, let's just do this:
             conn.setFixedLengthStreamingMode(reqLength);
             conn.connect();
@@ -145,7 +184,7 @@ public class SyncListAccessor
             out.close();
         } catch (Exception e) {
             LOG.warn("readSyncPullResponse request to {} failed on send with Exception ({}): {}",
-                    new Object[] { urlStr, e.getClass().getName(), e.getMessage()});
+                    new Object[] { endpointURL, e.getClass().getName(), e.getMessage()});
             return null;
         } finally {
             if (out != null) {
@@ -157,18 +196,18 @@ public class SyncListAccessor
             int statusCode = conn.getResponseCode();
             if (IOUtil.isHTTPSuccess(statusCode)) {
                 try {
-                	return conn.getInputStream();
+                    return conn.getInputStream();
                 } catch (IOException e) {
-                    throw new IOException("readSyncPullResponse from '"+urlStr+"' failed: "
-                    		+e.getMessage(), e);
+                    throw new IOException("readSyncPullResponse from '"+endpointURL+"' failed: "
+                              +e.getMessage(), e);
                 }
             }
-            handleHTTPFailure(conn, urlStr, statusCode,
-            		"readSyncPullResponse (requesting "+request.size()+" entries (of about "+expectedPayloadSize+" mB total payload)"
-            		);
+            handleHTTPFailure(conn, endpointURL, statusCode,
+                    "readSyncPullResponse (requesting "+request.size()+" entries (of about "+expectedPayloadSize+" mB total payload)"
+                    );
         } catch (Exception e) {
             LOG.warn("syncList request to {} failed on response with Exception ({}): {}",
-                    new Object[] { urlStr, e.getClass().getName(), e.getMessage()});
+                    new Object[] { endpointURL, e.getClass().getName(), e.getMessage()});
         }            
         return null;
     }
@@ -237,7 +276,7 @@ public class SyncListAccessor
         conn.setDoOutput(sendInput);
         conn.setDoInput(true); // we always read response
         if (contentType != null) { // should also indicate content type...
-            conn.setRequestProperty(ClusterMateConstants.HTTP_HEADER_CONTENT_TYPE, contentType.toString());
+            conn.setRequestProperty(HTTP_HEADER_CONTENT_TYPE, contentType.toString());
         }
         
         // how about timeouts... JDK one does not give us whole-operation granularity but:
@@ -255,7 +294,7 @@ public class SyncListAccessor
     }
 
     protected void handleHTTPFailure(HttpURLConnection conn, String urlStr, int statusCode,
-    		String operation)
+          String operation)
     {
         String msg = "N/A";
         try {
@@ -269,31 +308,46 @@ public class SyncListAccessor
                 operation, urlStr, statusCode, msg);
     }
 
-    protected String _buildSyncListUrl(ClusterViewByServerUpdatable cluster, NodeState remote,
-            long lastClusterHash)
+    protected String buildLocalSyncListUrl(ClusterViewByServerUpdatable cluster,
+            NodeState remote, long lastClusterHash)
     {
-        final NodeState local = cluster.getLocalState();
-        final long syncedUpTo = remote.getSyncedUpTo();
+        JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote.getAddress())
+            .addPathSegments(_stuff.getServiceConfig().servicePathRoot);
+        pathBuilder = _pathStrategy.appendSyncListPath(pathBuilder);
+        pathBuilder = _buildSyncListUrl(pathBuilder, cluster.getLocalState(), remote.getSyncedUpTo());
+        // this will include 'caller' param:
+        pathBuilder = cluster.addClusterStateInfo(pathBuilder);
+        pathBuilder = pathBuilder.addParameter(QUERY_PARAM_CLUSTER_HASH,
+                String.valueOf(lastClusterHash));
+        return pathBuilder.toString();
+    }
 
+    protected String buildRemoteSyncListUrl(NodeState localState, IpAndPort remoteEndpoint,
+            long syncedUpTo)
+    {
+        JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remoteEndpoint)
+            .addPathSegments(_stuff.getServiceConfig().servicePathRoot);
+        pathBuilder = _pathStrategy.appendRemoteSyncListPath(pathBuilder);
+        pathBuilder = _buildSyncListUrl(pathBuilder, localState, syncedUpTo);
+
+        // NOTE: no piggy-backing of local cluster info here
+        return pathBuilder.toString();
+    }
+    
+    protected JdkHttpClientPathBuilder _buildSyncListUrl(JdkHttpClientPathBuilder pathBuilder,
+            NodeState local, final long syncedUpTo)
+    {
         /* Need to be sure to pass the full range; remote end can do filtering,
          * (to reduce range if need be), but it needs to know full range
          * for initial auto-registration. Although ideally maybe we should
          * pass active and passive separately... has to do, for now.
          */
         final KeyRange syncRange = local.totalRange();
-        final ServiceConfig config = _stuff.getServiceConfig();
-        JdkHttpClientPathBuilder pathBuilder = new JdkHttpClientPathBuilder(remote.getAddress())
-            .addPathSegments(config.servicePathRoot);
-        pathBuilder = _pathStrategy.appendSyncListPath(pathBuilder);
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_SINCE,
+        pathBuilder = pathBuilder.addParameter(QUERY_PARAM_SINCE,
                 String.valueOf(syncedUpTo));
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
-        // this will include 'caller' param:
-        pathBuilder = cluster.addClusterStateInfo(pathBuilder);
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_CLUSTER_HASH,
-                String.valueOf(lastClusterHash));
-        return pathBuilder.toString();
+        pathBuilder = pathBuilder.addParameter(QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
+        pathBuilder = pathBuilder.addParameter(QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
+        return pathBuilder;
     }
     
     protected String _buildNodeStatusUpdateUrl(ClusterViewByServerUpdatable cluster, IpAndPort remote,
@@ -304,11 +358,11 @@ public class SyncListAccessor
             .addPathSegments(_stuff.getServiceConfig().servicePathRoot);
  
         pathBuilder = _pathStrategy.appendNodeStatusPath(pathBuilder);
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_TIMESTAMP,
+        pathBuilder = pathBuilder.addParameter(QUERY_PARAM_KEYRANGE_START, String.valueOf(syncRange.getStart()));
+        pathBuilder = pathBuilder.addParameter(QUERY_PARAM_KEYRANGE_LENGTH, String.valueOf(syncRange.getLength()));
+        pathBuilder = pathBuilder.addParameter(QUERY_PARAM_TIMESTAMP,
                 String.valueOf(_stuff.getTimeMaster().currentTimeMillis()));
-        pathBuilder = pathBuilder.addParameter(ClusterMateConstants.QUERY_PARAM_STATE, state);
+        pathBuilder = pathBuilder.addParameter(QUERY_PARAM_STATE, state);
         // this will include 'caller' param:
         pathBuilder = cluster.addClusterStateInfo(pathBuilder);
         return pathBuilder.toString();

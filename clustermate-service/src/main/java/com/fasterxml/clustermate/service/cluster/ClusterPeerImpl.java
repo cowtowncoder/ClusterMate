@@ -680,7 +680,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
             AtomicInteger status = new AtomicInteger(0);
             InputStream in = null;
             try {
-                in = _syncListAccessor.readSyncPullResponse(req, TIMEOUT_FOR_SYNCLIST,
+                in = _syncListAccessor.readLocalSyncPullResponse(req, TIMEOUT_FOR_SYNCLIST,
                          getAddress(), status, payloadSize.get());
 //            } catch (org.apache.http.conn.HttpHostConnectException e) { // if using Apache HC
             } catch (java.net.ConnectException e) {
