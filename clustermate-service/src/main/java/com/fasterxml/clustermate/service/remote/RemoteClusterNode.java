@@ -1,15 +1,20 @@
 package com.fasterxml.clustermate.service.remote;
 
-import java.util.concurrent.atomic.AtomicLong;
-
-import com.fasterxml.clustermate.api.*;
 import com.fasterxml.storemate.shared.IpAndPort;
+
+import com.fasterxml.clustermate.api.KeyRange;
+import com.fasterxml.clustermate.api.NodeState;
+import com.fasterxml.clustermate.service.state.ActiveNodeState;
 
 /**
  * Value class used to keep track of state
- * of a single cluster node.
- * Instances are mutable to a degree, and properly synchronized to allow
- * thread-safe use.
+ * of a single node of remote cluster.
+ * Note that unlike with instances used with local cluster nodes,
+ * these instances are NOT accessed from multiple threads, and as
+ * such no synchronization is used.
+ * Above is not to say that all instances are necessarily used from
+ * a single thread, but rather that each instance is access from a single
+ * thread at a time.
  */
 public class RemoteClusterNode
 {
@@ -29,33 +34,21 @@ public class RemoteClusterNode
      * Time when last request was sent specifically for this server node
      * (i.e. not updated when we get indirect updates)
      */
-    protected final AtomicLong _lastRequestSent = new AtomicLong(0L);
+    protected long _lastRequestSent = 0L;
 
     /**
-     * Time when last request was sent specifically from this server node
-     * (i.e. not updated when we get indirect updates)
+     * Time when last successful response was received
      */
-    protected final AtomicLong _lastResponseReceived = new AtomicLong(0L);
+    protected long _lastResponseReceived = 0L;
 
     /**
-     * Timestamp of last update for information regarding this node; regardless
-     * of whether directly or indirectly.
+     * Timestamp used for figuring out the most recent piece of gossip
+     * info for cluster state.
      */
-    protected long _lastNodeUpdateFetched = 0L;
+    protected long _lastNodeUpdateFetched;
 
-    /**
-     * Timestamp of last version of cluster update from this server node
-     * (i.e. not applicable for indirect updates)
-     */
-    protected long _lastClusterUpdateFetched = 0L;
-
-    /**
-     * Timestamp of last version of cluster update that this server node
-     * might have; received indirectly via one of GET, PUT or DELETE
-     * operations.
-     */
-    protected final AtomicLong _lastClusterUpdateAvailable = new AtomicLong(1L);
-
+    protected transient ActiveNodeState _persisted;
+    
     /*
     /**********************************************************************
     /* Instance creation
@@ -73,6 +66,9 @@ public class RemoteClusterNode
     public NodeState asNodeState(NodeState localNode) {
         return new RemoteNodeState(this, localNode);
     }
+
+    public ActiveNodeState persisted() { return _persisted; }
+    public void setPersisted(ActiveNodeState p) { _persisted = p; }
     
     /*
     /**********************************************************************
@@ -92,25 +88,16 @@ public class RemoteClusterNode
     }
 
     public void setLastRequestSent(long timestamp) {
-        _lastRequestSent.set(timestamp);
+        _lastRequestSent = timestamp;
     }
 
     public void setLastResponseReceived(long timestamp) {
-        _lastResponseReceived.set(timestamp);
+        _lastResponseReceived = timestamp;
     }
 
     public void setLastNodeUpdateFetched(long timestamp) {
         _lastNodeUpdateFetched = timestamp;
     }
-
-    public void setLastClusterUpdateFetched(long timestamp) {
-        _lastClusterUpdateFetched = timestamp;
-    }
-
-    public void setLastClusterUpdateAvailable(long timestamp) {
-        _lastClusterUpdateAvailable.set(timestamp);
-    }
-
     /*
     /**********************************************************************
     /* ReadOnlyServerNodeState implementation (public accessors)
@@ -123,14 +110,10 @@ public class RemoteClusterNode
 
     public KeyRange getPassiveRange() { return _passiveRange; }
     public KeyRange getTotalRange() { return _totalRange; }
-
-    public long getLastRequestSent() { return _lastRequestSent.get(); }
-    public long getLastResponseReceived() { return _lastResponseReceived.get(); }
-
+    
+    public long getLastRequestSent() { return _lastRequestSent; }
+    public long getLastResponseReceived() { return _lastResponseReceived; }
     public long getLastNodeUpdateFetched() { return _lastNodeUpdateFetched; }
-    public long getLastClusterUpdateFetched() { return _lastClusterUpdateFetched; }
-
-    public long getLastClusterUpdateAvailable() { return _lastClusterUpdateAvailable.get(); }
 
     @Override
     public String toString() {

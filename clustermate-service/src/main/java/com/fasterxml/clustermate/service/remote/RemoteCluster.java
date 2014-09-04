@@ -35,6 +35,10 @@ public class RemoteCluster
         return (currentTime <= _validUntil);
     }
 
+    public NodeState getLocalState() {
+        return _localState;
+    }
+    
     public List<RemoteClusterNode> getRemotePeers() {
         return _overlappingPeers;
     }

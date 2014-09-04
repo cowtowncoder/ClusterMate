@@ -33,6 +33,7 @@ import com.fasterxml.clustermate.service.cfg.ServiceConfig;
 import com.fasterxml.clustermate.service.cleanup.CleanerUpper;
 import com.fasterxml.clustermate.service.cleanup.CleanupTask;
 import com.fasterxml.clustermate.service.cluster.*;
+import com.fasterxml.clustermate.service.remote.RemoteClusterHandler;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.state.JacksonBasedConverter;
 import com.fasterxml.clustermate.service.store.*;
@@ -302,12 +303,20 @@ public abstract class DWBasedService<
         final int port = dwConfig.getApplicationPort();
         LOG.info("Initializing cluster configuration (port {})...", port);
         final long startTime = _timeMaster.currentTimeMillis();
-        ClusterViewByServerImpl<K,E> cl = new ClusterBootstrapper<K,E>(startTime, _serviceStuff, _stores)
-                .bootstrap(port);
+        ClusterBootstrapper<K,E> cbs = new ClusterBootstrapper<K,E>(startTime, _serviceStuff, _stores);
+        ClusterViewByServerImpl<K,E> cl = cbs.bootstrap(port);
         _cluster = cl;
         _managed.add(_cluster);
+        LOG.info("Local cluster configuration setup complete, with {} nodes", _cluster.size());
 
-        LOG.info("Cluster configuration setup complete, with {} nodes", _cluster.size());
+        // 02-Sep-2014, tsaloranta: ... and maybe remote cluster for DC-failover/DR?
+        RemoteClusterHandler<K,E> remoteCluster = cbs.bootstrapRemoteCluster(cl);
+        if (remoteCluster == null) {
+            LOG.info("No remote cluster configuration, skip");
+        } else {
+            LOG.info("Remote (DR) cluster configuration setup complete");
+            _managed.add(remoteCluster);
+        }
         
         // Index page must be done via resource, otherwise will conflict with DW/JAX-RS Servlet:
         environment.jersey().register(new IndexResource(loadResource("/index.html"),

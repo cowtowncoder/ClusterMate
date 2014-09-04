@@ -55,7 +55,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
      * Need a reference to remote-peer handler just to return remote-peer
      * info for status requests.
      */
-    protected RemoteClusterHandler _remoteClusterHandler;
+    protected RemoteClusterHandler<K,E> _remoteClusterHandler;
     
     /**
      * Timestamp of the last update to aggregated state; used for letting
@@ -94,7 +94,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
         _lastUpdated = new AtomicLong(updateTime);
     }
 
-    public void setRemoteHandler(RemoteClusterHandler h) {
+    public void setRemoteHandler(RemoteClusterHandler<K,E> h) {
         _remoteClusterHandler = h;
     }
     

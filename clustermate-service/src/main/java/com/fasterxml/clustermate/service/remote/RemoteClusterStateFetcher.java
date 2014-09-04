@@ -80,7 +80,8 @@ public class RemoteClusterStateFetcher
     ///////////////////////////////////////////////////////////////////////
      */
 	
-    public RemoteClusterStateFetcher(SharedServiceStuff stuff, AtomicBoolean running,
+    public RemoteClusterStateFetcher(SharedServiceStuff stuff,
+            AtomicBoolean running,
             Set<IpAndPort> endpoints, NodeState local)
     {
         _config = stuff;
@@ -154,10 +155,12 @@ public class RemoteClusterStateFetcher
                         continue;
                     }
                     it.remove(); // remove from bootstrap list
-                    NodeState local = resp.local;
-                    bs.updateDirectState(ip, local,
+                    NodeState peer = resp.local;
+                    bs.updateDirectState(ip, peer,
                             requestTime, System.currentTimeMillis(), resp.creationTime);
-                    for (NodeState stateSec : resp.remotePeers) {
+                    // Important: include LOCAL peers of REMOTE that we called; must NOT
+                    // Cross the Lines
+                    for (NodeState stateSec : resp.localPeers) {
                         bs.updateIndirectState(ip, stateSec);
                     }
                     // and we don't really care about remote peers here
@@ -283,7 +286,6 @@ public class RemoteClusterStateFetcher
             localState.setLastRequestSent(requestTime);
             localState.setLastResponseReceived(responseTime);
             localState.setLastNodeUpdateFetched(stateInfo.getLastUpdated());
-            localState.setLastClusterUpdateFetched(clusterInfoVersion);
         }
 
         /**

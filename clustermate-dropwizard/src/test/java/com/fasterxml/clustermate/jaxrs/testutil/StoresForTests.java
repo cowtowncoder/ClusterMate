@@ -113,15 +113,27 @@ public class StoresForTests extends StoresImpl<TestKey, StoredEntry<TestKey>>
 
     /*
     ///////////////////////////////////////////////////////////////////////
-    // Other
+    // Store accessors
     ///////////////////////////////////////////////////////////////////////
      */
-    
+
     @Override
     public LastAccessStore<TestKey, StoredEntry<TestKey>,LastAccessUpdateMethod> getLastAccessStore() {
         return _lastAccessStore;
     }
 
+    // Not needed for tests, leave stubbed out
+    @Override
+    public NodeStateStore<IpAndPort, ActiveNodeState> getRemoteNodeStore() {
+        return null;
+    }
+
+    /*
+    ///////////////////////////////////////////////////////////////////////
+    // Other
+    ///////////////////////////////////////////////////////////////////////
+     */
+    
     protected LastAccessStore<TestKey, StoredEntry<TestKey>,LastAccessUpdateMethod> buildAccessStore(Environment env,
             LastAccessConfig config)
     {
@@ -170,4 +182,5 @@ public class StoresForTests extends StoresImpl<TestKey, StoredEntry<TestKey>>
             }
         }
         return true;
-    }}
+    }
+}

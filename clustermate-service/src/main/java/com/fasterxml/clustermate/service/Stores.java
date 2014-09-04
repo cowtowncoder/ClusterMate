@@ -22,8 +22,26 @@ public abstract class Stores<K extends EntryKey, E extends StoredEntry<K>>
     public abstract String getInitProblem();
 
     public abstract StoredEntryConverter<K,E,?> getEntryConverter();
-    
+
+    /**
+     * Accessor for store used for entry metadata.
+     */
     public abstract StorableStore getEntryStore();
+
+    /**
+     * Accessor for store used for local cluster node information, including
+     * key ranges and update state.
+     */
     public abstract NodeStateStore<IpAndPort, ActiveNodeState> getNodeStore();
+
+    /**
+     * Accessor for store used for storing last-accessed information.
+     */
     public abstract LastAccessStore<K,E,LastAccessUpdateMethod> getLastAccessStore();
+
+    /**
+     * Accessor for store used for remote cluster node information, mostly
+     * update sync information but also key ranges.
+     */
+    public abstract NodeStateStore<IpAndPort, ActiveNodeState> getRemoteNodeStore();
 }

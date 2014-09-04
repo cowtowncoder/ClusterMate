@@ -58,7 +58,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
     }
     
     /**
-     * Factory method for constructing state object from static cluster
+     * Factory method for constructing cluster state object from static cluster
      * configuration
      * 
      * @param thisInstancePort Port number this instance is listening to; needed to
@@ -143,7 +143,7 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
      * Method to call to try to initialize settings needed to do (optional)
      * synchronization 
      */
-    public RemoteClusterHandler bootstrapRemoteCluster(ClusterViewByServerImpl<K,E> localCluster)
+    public RemoteClusterHandler<K,E> bootstrapRemoteCluster(ClusterViewByServerImpl<K,E> localCluster)
         throws IOException
     {
         RemoteClusterConfig rconfig = _serviceConfig.remoteCluster;
@@ -156,7 +156,8 @@ public class ClusterBootstrapper<K extends EntryKey, E extends StoredEntry<K>>
         }
         LOG.info("Found Remote Cluster definitions for {} nodes, will create remote cluster handler", remoteIps.size());
 
-        RemoteClusterHandler h = new RemoteClusterHandler(_stuff, remoteIps, localCluster.getLocalState());
+        RemoteClusterHandler<K,E> h = new RemoteClusterHandler<K,E>(_stuff, _stores,
+                remoteIps, localCluster.getLocalState());
         localCluster.setRemoteHandler(h);
         return h;
     }
