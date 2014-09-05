@@ -325,7 +325,10 @@ public class RemoteClusterHandler<K extends EntryKey, E extends StoredEntry<K>>
                 SyncListResponse<?> fetchRemoteSyncList = _syncListAccessor
                         .fetchRemoteSyncList(_localState, peer.getAddress(),
                                 pstate.getSyncedUpTo(), TIMEOUT_FOR_INITIAL_SYNCLIST_MSECS);
-                return _syncPull(startTime, peer, fetchRemoteSyncList);
+                // Returns null if call fails
+                if (fetchRemoteSyncList != null) {
+                    return _syncPull(startTime, peer, fetchRemoteSyncList);
+                }
             } catch (InterruptedException e) { // presumably should bail out
                 throw e;
             } catch (Exception e) {
