@@ -63,8 +63,14 @@ public class RemoteClusterHandler<K extends EntryKey, E extends StoredEntry<K>>
      * We'll do bit of sleep before starting remote-sync in general;
      * 10 seconds should be enough.
      */
-    private final static long SLEEP_INITIAL = 10 * 1000L;
+    private final static long SLEEP_INITIAL_MSECS = 10 * 1000L;
 
+    /**
+     * When hitting end-of-input (list) for the first time, sleep for modest
+     * amount of time (200 msec)
+     */
+    private final static long SLEEP_AFTER_FIRST_EOI = 200L;
+    
     /**
      * Timeout for the first sync-list for each round should not be trivially
      * low, since it determines whether peer is considered to be live or not.
@@ -237,7 +243,7 @@ public class RemoteClusterHandler<K extends EntryKey, E extends StoredEntry<K>>
     {
 //        public RemoteCluster fetch(int maxWaitSecs) throws IOException
 
-        final long initialSleepMsecs = SLEEP_INITIAL;
+        final long initialSleepMsecs = SLEEP_INITIAL_MSECS;
         LOG.info("Starting {} thread, will sleep for {} msec before operation",
                 getName(), initialSleepMsecs);
 
@@ -321,13 +327,12 @@ public class RemoteClusterHandler<K extends EntryKey, E extends StoredEntry<K>>
             // Let's try initial call with relatively high timeout; if it succeeds,
             // we'll consider matching peer to be live and do actual sync
             try {
-                final long startTime = System.currentTimeMillis(); // real time since it's displayed
                 SyncListResponse<?> fetchRemoteSyncList = _syncListAccessor
                         .fetchRemoteSyncList(_localState, peer.getAddress(),
                                 pstate.getSyncedUpTo(), TIMEOUT_FOR_INITIAL_SYNCLIST_MSECS);
                 // Returns null if call fails
                 if (fetchRemoteSyncList != null) {
-                    return _syncPull(startTime, peer, fetchRemoteSyncList);
+                    return _syncPull(peer, fetchRemoteSyncList);
                 }
             } catch (InterruptedException e) { // presumably should bail out
                 throw e;
@@ -347,19 +352,21 @@ public class RemoteClusterHandler<K extends EntryKey, E extends StoredEntry<K>>
      * @return Number of listed entries, if complete; positive, or, if timed out
      *    negative count
      */
-    protected long _syncPull(final long startTime, RemoteClusterNode peer, SyncListResponse<?> listResponse)
+    protected long _syncPull(RemoteClusterNode peer, SyncListResponse<?> listResponse)
         throws InterruptedException, IOException
     {
         final long processUntil = _stuff.currentTimeMillis() + MAX_TIME_FOR_SYNCPULL_MSECS;
         long total = 0L;
         ActiveNodeState savedState = null;
         int listCalls = 0;
+        boolean seenEoi = false;
 
         ActiveNodeState pstate = peer.persisted();
 
         // Let's try to limit damage from infinite loops by second check
         // (ideally shouldn't need such ad hoc limit but...)
-        while (_running.get() && ++listCalls < 1000) {
+
+        while (_running.get() && ++listCalls < 500) {
             final int count = listResponse.size();
             total += count;
             if (count == 0) {
@@ -373,6 +380,8 @@ public class RemoteClusterHandler<K extends EntryKey, E extends StoredEntry<K>>
             if (!_running.get()) { // short-circuit during shutdown
                 break;
             }
+            // use real system time since it's measuring actual time taken (not virtual time for syncing)
+            final long startTime = System.currentTimeMillis();
             if (!newEntries.isEmpty()) {
                 int newCount = newEntries.size();
                 AtomicInteger rounds = new AtomicInteger(0);
@@ -406,15 +415,20 @@ public class RemoteClusterHandler<K extends EntryKey, E extends StoredEntry<K>>
             // And then get more stuff...
             /* Except for one more thing: if we seem to be running out of entries,
              * let's not wait for trickles; inefficient to request stuff by ones and twos.
-             * Instead, let stuff aggregate and we ought to get more.
-             * 
-             * ... would be good to be able to verify it has an effect too. But for now
-             * just need to assume it does.
+             * Instead, let's bail out for now, to induce bit more delay
              */
-            if (count < 50) {
-                if (listResponse.clientWait > 0L) {
+            if (listResponse.eoi) {
+                // We'll take one end-of-input, wait a little; but bail on second
+                if (seenEoi) {
                     break;
                 }
+                final long sleepMsec = SLEEP_AFTER_FIRST_EOI;
+                
+                // TODO: 04-Sep-2014, tatu: Left for now, for debugging, remote in future
+                LOG.warn("Reached end of input to sync from {} (with {} listed, total {}), will sleep for {} msec",
+                        peer.getAddress(), count, total, sleepMsec);
+                seenEoi = true;
+                _stuff.sleep(sleepMsec);
             }
 
             listResponse = _syncListAccessor

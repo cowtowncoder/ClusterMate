@@ -38,6 +38,12 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
     private final static long MAX_LIST_PROC_TIME_IN_MSECS = 400L;
 
     /**
+     * When running out of entries to list, we should suggest bit of sleep
+     * for client, as courtesy.
+     */
+    public final static long CLIENT_WAIT_IF_NO_MORE_ENTRIES = 50L;
+    
+    /**
      * End marker we use to signal end of response
      */
     public final static int LENGTH_EOF = 0xFFFF;
@@ -357,6 +363,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         final ArrayList<E> result = new ArrayList<E>(Math.min(100, maxCount));
         long lastSeenTimestamp = 0L;
         long clientWait = 0L; // we may instruct client to do bit of waiting before retry
+        boolean eoi = false;
         
         // let's only allow single wait; hence two rounds
         long upTo0 = 0;
@@ -403,15 +410,20 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
                         secs, totals, result.size()));
                 break;
             }
-
-            // No waiting if there are results
+            
+            // If there are results, only indicate client wait if there's nothing more available
             if (result.size() > 0) {
                 if (r == IterationResult.FULLY_ITERATED) { // means we got through all data (nothing to see)
                     // Oh. Also, if we got this far, we better update last-seen timestamp;
                     // otherwise we'll be checking same last entry over and over again
                     lastSeenTimestamp = upTo;
+                    eoi = true;
+                    clientWait = CLIENT_WAIT_IF_NO_MORE_ENTRIES;
                 } else {
                     lastSeenTimestamp = cb.getLastSeenTimestamp();
+                    if (r == IterationResult.TERMINATED_FOR_TIMESTAMP) {
+                        eoi = true;
+                    }
                 }
                 break;
             }
@@ -443,6 +455,7 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
                 if (r == IterationResult.TERMINATED_FOR_TIMESTAMP) {
                     long targetTime = (cb.getNextTimestamp() + _cfgSyncGracePeriodMsecs);
                     clientWait = targetTime - _timeMaster.currentTimeMillis();
+                    eoi = true;
 
                     /*
 LOG.error(" TERMINATED_FOR_TIMESTAMP: next stamp={}, graceMsecs={}, target={}, current={}", cb.getNextTimestamp(), _cfgSyncGracePeriodMsecs,
@@ -452,6 +465,7 @@ targetTime, _timeMaster.currentTimeMillis());
                 } else if (r == IterationResult.FULLY_ITERATED) {
                     lastSeenTimestamp = upTo;
                     clientWait = _cfgSyncGracePeriodMsecs;
+                    eoi = true;
                 } // otherwise should be TERMINATED_FOR_ENTRY, which means entries were added, no need for delay
 
 //LOG.warn("Server setting clientWait at {} msecs", clientWait);
@@ -470,6 +484,9 @@ targetTime, _timeMaster.currentTimeMillis());
         resp.setLastSeenTimestamp(lastSeenTimestamp);
         if (clientWait > 0L) {
             resp.setClientWait(clientWait);
+        }
+        if (eoi) {
+            resp.eoi = true;
         }
 
         return resp;

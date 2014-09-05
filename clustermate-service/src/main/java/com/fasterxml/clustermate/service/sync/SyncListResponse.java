@@ -46,6 +46,12 @@ public class SyncListResponse<E extends StoredEntry<?>>
      * Time is in milliseconds.
      */
     public long clientWait;
+
+    /**
+     * Flag that is set to true if this response contains "end-of-input": that is,
+     * there are no more entries available for listing right at this moment.
+     */
+    public boolean eoi;
     
     /**
      * Optionally included cluster view.
