@@ -36,6 +36,7 @@ import com.fasterxml.clustermate.service.cluster.*;
 import com.fasterxml.clustermate.service.remote.RemoteClusterHandler;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.state.JacksonBasedConverter;
+import com.fasterxml.clustermate.service.state.NodeStateStoreHelper;
 import com.fasterxml.clustermate.service.store.*;
 import com.fasterxml.clustermate.service.sync.SyncHandler;
 import com.fasterxml.clustermate.servlet.*;
@@ -49,6 +50,8 @@ public abstract class DWBasedService<
 >
     extends Application<CONF>
 {
+    public final static String DEFAULT_REMOTE_NODE_STORE_ID = "remote1";
+
     protected final Logger LOG = LoggerFactory.getLogger(getClass());
 
     /*
@@ -384,7 +387,8 @@ public abstract class DWBasedService<
     protected abstract FileManager constructFileManager();
 
     protected abstract StoresImpl<K,E> constructStores(StorableStore store,
-            NodeStateStore<IpAndPort, ActiveNodeState> nodeStates);
+            NodeStateStore<IpAndPort, ActiveNodeState> nodeStates,
+            NodeStateStore<IpAndPort, ActiveNodeState> remoteNodeStates);
 
     protected abstract SharedServiceStuff constructServiceStuff(SCONFIG serviceConfig,
             TimeMaster timeMaster, StoredEntryConverter<K,E,?> entryConverter,
@@ -482,20 +486,21 @@ public abstract class DWBasedService<
         StorableStore store = new StorableStoreImpl(sconfig.storeConfig, backend, _timeMaster,
                 _serviceStuff.getFileManager(),
                constructThrottler(), constructWriteMutex());
-        NodeStateStore<IpAndPort, ActiveNodeState> nodeStates = constructNodeStateStore(b);
-        return constructStores(store, nodeStates);
+        return constructStores(store, constructNodeStateStore(b),
+                constructRemoteNodeStateStore(b, DEFAULT_REMOTE_NODE_STORE_ID));
     }
 
-    protected NodeStateStore<IpAndPort, ActiveNodeState> constructNodeStateStore(StoreBackendBuilder<?> backendBuilder)
+    protected NodeStateStore<IpAndPort, ActiveNodeState> constructNodeStateStore(StoreBackendBuilder<?> bb)
     {
-        /* 09-Dec-2013, tatu: Now we will also construct NodeStateStore using
-         *   the very same builder...
-         */
-        ObjectMapper mapper = _serviceStuff.jsonMapper();
         File root = _serviceStuff.getServiceConfig().metadataDirectory;
-        return backendBuilder.<IpAndPort, ActiveNodeState>buildNodeStateStore(root,
-                        new JacksonBasedConverter<IpAndPort>(mapper, IpAndPort.class),
-                        new JacksonBasedConverter<ActiveNodeState>(mapper, ActiveNodeState.class));
+        return NodeStateStoreHelper.defaultNodeStateStore(bb, _serviceStuff,  root);
+    }
+
+    protected NodeStateStore<IpAndPort, ActiveNodeState> constructRemoteNodeStateStore(StoreBackendBuilder<?> bb,
+            String id)
+    {
+        File root = _serviceStuff.getServiceConfig().metadataDirectory;
+        return NodeStateStoreHelper.defaultRemoteNodeStateStore(bb, _serviceStuff,  root, id);
     }
     
     /**

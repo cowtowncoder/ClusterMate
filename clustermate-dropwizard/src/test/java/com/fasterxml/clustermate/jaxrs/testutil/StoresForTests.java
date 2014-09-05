@@ -42,7 +42,8 @@ public class StoresForTests extends StoresImpl<TestKey, StoredEntry<TestKey>>
             StorableStore entryStore, NodeStateStore<IpAndPort, ActiveNodeState> nodeStates,
             File dataStoreRoot)
     {
-        super(config, timeMaster, jsonMapper, entryConverter, entryStore, nodeStates, dataStoreRoot);
+        // null -> no need for remote node state store
+        super(config, timeMaster, jsonMapper, entryConverter, entryStore, nodeStates, null, dataStoreRoot);
         if (dataStoreRoot == null) {
             dataStoreRoot = config.metadataDirectory;
         }

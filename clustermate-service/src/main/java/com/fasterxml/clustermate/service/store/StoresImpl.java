@@ -53,10 +53,18 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
      * We also need a factory for converting keys, entries.
      */
     protected final StoredEntryConverter<K,E,?> _entryConverter;
-    
-    // Separate Environments for last-accessed, with relatively large cache
+
+    /**
+     * Store for keeping track of states of local peers.
+     */
     private final NodeStateStore<IpAndPort, ActiveNodeState> _nodeStore;
 
+    /**
+     * Store for keeping minimal state information about nodes of the remote
+     * cluster (if configured).
+     */
+    private final NodeStateStore<IpAndPort, ActiveNodeState> _remoteNodeStore;
+    
     /*
     /**********************************************************************
     /* Status
@@ -84,6 +92,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
             StoredEntryConverter<K,E,?> entryConverter,
             StorableStore entryStore,
             NodeStateStore<IpAndPort, ActiveNodeState> nodeStates,
+            NodeStateStore<IpAndPort, ActiveNodeState> remoteNodeStates,
             File dbEnvRoot)
     {
         _timeMaster = timeMaster;
@@ -91,6 +100,7 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
         _entryConverter = entryConverter;
         _entryStore = entryStore;
         _nodeStore = nodeStates;
+        _remoteNodeStore = remoteNodeStates;
     }
 
     @Override
@@ -240,9 +250,13 @@ public abstract class StoresImpl<K extends EntryKey, E extends StoredEntry<K>>
     
     @Override
     public StorableStore getEntryStore() { return _entryStore; }
+
     @Override
     public NodeStateStore<IpAndPort, ActiveNodeState> getNodeStore() { return _nodeStore; }
 
+    @Override
+    public NodeStateStore<IpAndPort, ActiveNodeState> getRemoteNodeStore() { return _remoteNodeStore; }
+    
     @Override
     public LastAccessStore<K,E,LastAccessUpdateMethod> getLastAccessStore() { return null; }
 }
