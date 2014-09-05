@@ -44,15 +44,23 @@ public class ClusterStatusMessage
     protected ClusterStatusMessage() { }
 
     public ClusterStatusMessage(long creationTime, long lastUpdated,
-            NodeState local, Collection<NodeState> remote)
+            NodeState local, Collection<NodeState> localPeers,
+            Collection<NodeState> remotePeers)
     {
         this.creationTime = creationTime;
         this.clusterLastUpdated = lastUpdated;
         this.local = local;
-        if (remote == null) {
+
+        if (localPeers == null) {
             this.localPeers = Collections.emptyList();
         } else {
-            this.localPeers = remote;
+            this.localPeers = localPeers;
+        }
+
+        if (remotePeers == null) {
+            this.remotePeers = Collections.emptyList();
+        } else {
+            this.remotePeers = remotePeers;
         }
     }
 }

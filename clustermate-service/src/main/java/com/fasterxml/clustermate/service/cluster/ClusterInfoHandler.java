@@ -38,7 +38,8 @@ public class ClusterInfoHandler
             OperationDiagnostics metadata)
     {
         // use streaming impl just so we'll use specific ObjectWriter
-        return (RESP) response.ok(new StreamingEntityImpl(_writer, _cluster.asMessage()))
+        // true -> do include remote peer info too
+        return (RESP) response.ok(new StreamingEntityImpl(_writer, _cluster.asMessage(true)))
             .setContentTypeJson();
     }
 

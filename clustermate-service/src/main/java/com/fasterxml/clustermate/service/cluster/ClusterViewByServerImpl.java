@@ -17,6 +17,7 @@ import com.fasterxml.clustermate.service.ServiceResponse;
 import com.fasterxml.clustermate.service.SharedServiceStuff;
 import com.fasterxml.clustermate.service.Stores;
 import com.fasterxml.clustermate.service.cfg.ServiceConfig;
+import com.fasterxml.clustermate.service.remote.RemoteCluster;
 import com.fasterxml.clustermate.service.remote.RemoteClusterHandler;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
 import com.fasterxml.clustermate.service.store.StoredEntry;
@@ -177,7 +178,7 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     }
 
     @Override
-    public Collection<NodeState> getRemoteStates() {
+    public Collection<NodeState> getPeerStates() {
         ArrayList<NodeState> result = new ArrayList<NodeState>(_peers.size());
         for (ClusterPeerImpl<?,?> peer : _peers.values()) {
             result.add(peer.getSyncState());
@@ -464,9 +465,12 @@ public class ClusterViewByServerImpl<K extends EntryKey, E extends StoredEntry<K
     }
 
     @Override
-    public ClusterStatusMessage asMessage() {
+    public ClusterStatusMessage asMessage(boolean includeRemote) {
+        RemoteCluster rc = (!includeRemote || (_remoteClusterHandler == null)) ?
+                null : _remoteClusterHandler.getRemoteCluster();
         return new ClusterStatusMessage(_timeMaster.currentTimeMillis(),
-                getLastUpdated(), getLocalState(), getRemoteStates());
+                getLastUpdated(), getLocalState(), getPeerStates(),
+                (rc == null) ? null : rc.asNodeStates());
     }
 
     @Override

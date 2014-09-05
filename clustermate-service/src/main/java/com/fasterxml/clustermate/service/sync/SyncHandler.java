@@ -258,8 +258,9 @@ public class SyncHandler<K extends EntryKey, E extends StoredEntry<K>>
         }
         long currentHash = _cluster.getHashOverState();
         resp.setClusterHash(currentHash);
+        // false -> don't bother include remote peer info on piggy-backed message
         ClusterStatusMessage clusterStatus = (clusterHash == 0L || clusterHash != currentHash) ?
-                _cluster.asMessage() : null;
+                _cluster.asMessage(false) : null;
         resp.setClusterStatus(clusterStatus);                
         final ObjectWriter w = useSmile ? _syncListSmileWriter : _syncListJsonWriter;
         final String contentType = useSmile ? ContentType.SMILE.toString() : ContentType.JSON.toString();

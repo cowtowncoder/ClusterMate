@@ -31,7 +31,7 @@ public abstract class ClusterViewByServer
     // need generic type to avoid casts when accessing impl
     public abstract List<ClusterPeer> getPeers();
 
-    public abstract Collection<NodeState> getRemoteStates();
+    public abstract Collection<NodeState> getPeerStates();
     
     public abstract long getLastUpdated();
 
@@ -55,7 +55,7 @@ public abstract class ClusterViewByServer
     
     public abstract int getTotalCoveragePct();
 
-    public abstract ClusterStatusMessage asMessage();
+    public abstract ClusterStatusMessage asMessage(boolean includeRemote);
 
     /**
      * Method for calculating hash code over shared date, used for determining
