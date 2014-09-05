@@ -31,7 +31,7 @@ public class RemoteClusterStateFetcher
      * But since the other definition is in <code>VagabondClientConfigBuilder</code>,
      * which is inaccessible from  here, this'll have to do for now.
      */
-    protected final static String[] DEFAULT_BASE_PATH = new String[] { "apicursorfile", "v" };
+    protected final static String[] DEFAULT_BASE_PATH = new String[] { "ts" };
 
     /**
      * Let's keep initial timeouts relatively low, since we can usually
