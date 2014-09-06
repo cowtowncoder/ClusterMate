@@ -76,7 +76,7 @@ public class ClusterPeerImpl<K extends EntryKey, E extends StoredEntry<K>>
      */
     private final int MAX_FETCH_TRIES = 20;
 
-    private final static Logger LOG = LoggerFactory.getLogger(ClusterPeer.class);
+    private final static Logger LOG = LoggerFactory.getLogger(ClusterPeerImpl.class);
     
     /*
     /**********************************************************************
