@@ -8,7 +8,7 @@
   <groupId>com.fasterxml.clustermate</groupId>
   <artifactId>clustermate-parent</artifactId>
   <name>ClusterMate-parent</name>
-  <version>0.10.6-SNAPSHOT</version>
+  <version>0.11.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <description>Parent pom for shared settings for project sub-modules
   </description>
@@ -40,11 +40,8 @@
   </developers>
 
   <properties>
-    <!-- DropWizard requires 1.7, but on very short term we may still want
-         to build non-DW parts with 1.6 compatibility
-      -->
-    <javac.src.version>1.6</javac.src.version>
-    <javac.target.version>1.6</javac.target.version>
+    <javac.src.version>1.7</javac.src.version>
+    <javac.target.version>1.7</javac.target.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <version.validation.api>1.1.0.Final</version.validation.api>
@@ -52,10 +49,10 @@
     <version.storemate>1.1.2</version.storemate>
 
     <version.jackson.annotations>2.4.0</version.jackson.annotations>
-    <version.jackson.core>2.4.2</version.jackson.core>
+    <version.jackson.core>2.4.3</version.jackson.core>
     <version.jackson.smile>${version.jackson.core}</version.jackson.smile>
-    <version.dropwizard>0.7.1</version.dropwizard>
-    <version.metrics>3.0.2</version.metrics>
+    <version.dropwizard>0.8.0-rc1</version.dropwizard>
+    <version.metrics>3.1.0</version.metrics>
   </properties>
 
   <licenses>
@@ -155,12 +152,12 @@
 
     <!-- Metrics -->
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
+      <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-core</artifactId>
       <version>${version.metrics}</version>
     </dependency>
     <dependency>
-      <groupId>com.codahale.metrics</groupId>
+      <groupId>io.dropwizard.metrics</groupId>
       <artifactId>metrics-annotation</artifactId>
       <version>${version.metrics}</version>
     </dependency>
@@ -169,12 +166,12 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.5</version>
+      <version>1.7.7</version>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.1.1</version>
+      <version>1.1.2</version>
     </dependency>
    </dependencies>
   </dependencyManagement>
