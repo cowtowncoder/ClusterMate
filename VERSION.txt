@@ -2,7 +2,8 @@ Project: ClusterMate
 
 0.11.0
 
-- Upgrade to DropWizard-0.8.0
+- Upgrade to DropWizard 0.9
+- Upgrade to Jackson 2.7
 
 0.10.5 (04-Sep-2014)
 
