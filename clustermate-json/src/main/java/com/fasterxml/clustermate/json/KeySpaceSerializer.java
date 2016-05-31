@@ -11,7 +11,9 @@ import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
 
 public class KeySpaceSerializer extends StdScalarSerializer<KeySpace>
 {
-    public KeySpaceSerializer() { super(KeySpace.class); }
+	private static final long serialVersionUID = 1L;
+
+	public KeySpaceSerializer() { super(KeySpace.class); }
     
     @Override
     public void serialize(KeySpace value, JsonGenerator jgen, SerializerProvider provider)

@@ -17,7 +17,9 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
  */
 public class KeyRangeSerializer extends StdSerializer<KeyRange>
 {
-    public KeyRangeSerializer() { super(KeyRange.class); }
+	private static final long serialVersionUID = 1L;
+
+	public KeyRangeSerializer() { super(KeyRange.class); }
 
     @Override
     public void serialize(KeyRange value, JsonGenerator jgen, SerializerProvider provider)

@@ -10,7 +10,9 @@ import com.fasterxml.storemate.shared.IpAndPort;
 
 public class IpAndPortSerializer extends StdScalarSerializer<IpAndPort>
 {
-    public IpAndPortSerializer() {
+	private static final long serialVersionUID = 1L;
+
+	public IpAndPortSerializer() {
         super(IpAndPort.class);
     }
     

@@ -67,7 +67,7 @@ public class BackgroundMetricsAccessor
          * classes can be instantiated. So for now need to use NON_EMPTY...
          */
         mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
-        _jsonWriter = mapper.writerWithType(ExternalMetrics.class)
+        _jsonWriter = mapper.writerFor(ExternalMetrics.class)
                 .without(SerializationFeature.FAIL_ON_EMPTY_BEANS);
     }
     

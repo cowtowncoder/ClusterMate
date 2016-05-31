@@ -288,9 +288,10 @@ public class ClusterServerNodeImpl
     }
     */
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public <B extends RequestPathBuilder<B>> B rootPath() {
-        return _pathBase.builder();
+        return (B) _pathBase.builder();
     }
     
     @SuppressWarnings("unchecked")

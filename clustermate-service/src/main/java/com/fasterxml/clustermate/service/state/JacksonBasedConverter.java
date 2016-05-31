@@ -16,8 +16,8 @@ public class JacksonBasedConverter<T>
 
     public JacksonBasedConverter(ObjectMapper mapper, Class<T> type)
     {
-        _reader = mapper.reader(type);
-        _writer = mapper.writerWithType(type);
+        _reader = mapper.readerFor(type);
+        _writer = mapper.writerFor(type);
     }
     
     @Override

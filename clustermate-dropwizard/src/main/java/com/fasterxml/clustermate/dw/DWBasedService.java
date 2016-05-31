@@ -14,7 +14,6 @@ import org.eclipse.jetty.util.component.LifeCycle.Listener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.storemate.shared.*;
 import com.fasterxml.storemate.store.StorableStore;
 import com.fasterxml.storemate.store.StoreOperationThrottler;
@@ -35,7 +34,6 @@ import com.fasterxml.clustermate.service.cleanup.CleanupTask;
 import com.fasterxml.clustermate.service.cluster.*;
 import com.fasterxml.clustermate.service.remote.RemoteClusterHandler;
 import com.fasterxml.clustermate.service.state.ActiveNodeState;
-import com.fasterxml.clustermate.service.state.JacksonBasedConverter;
 import com.fasterxml.clustermate.service.state.NodeStateStoreHelper;
 import com.fasterxml.clustermate.service.store.*;
 import com.fasterxml.clustermate.service.sync.SyncHandler;

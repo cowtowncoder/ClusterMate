@@ -12,7 +12,9 @@ import com.fasterxml.storemate.shared.util.WithBytesCallback;
 
 public class StorableKeySerializer extends StdScalarSerializer<StorableKey>
 {
-    public StorableKeySerializer() {
+	private static final long serialVersionUID = 1L;
+
+	public StorableKeySerializer() {
         super(StorableKey.class);
     }
     

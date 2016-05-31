@@ -20,8 +20,8 @@ public class ClusterMessageConverter extends ClusterStatusAccessor.Converter
 
     public ClusterMessageConverter(ObjectMapper mapper)
     {
-        _reader = mapper.reader(ClusterStatusMessage.class);
-        _writer = mapper.writerWithType(ClusterStatusMessage.class);
+        _reader = mapper.readerFor(ClusterStatusMessage.class);
+        _writer = mapper.writerFor(ClusterStatusMessage.class);
     }
     
     @Override

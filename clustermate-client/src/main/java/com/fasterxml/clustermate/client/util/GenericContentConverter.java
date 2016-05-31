@@ -21,11 +21,11 @@ public class GenericContentConverter<T> implements ContentConverter<T>
     protected final ObjectReader _jsonReader;
 
     public GenericContentConverter(ObjectMapper jsonMapper, Class<T> targetType) {
-        _jsonReader = jsonMapper.reader(targetType);
+        _jsonReader = jsonMapper.readerFor(targetType);
     }
 
     public GenericContentConverter(ObjectMapper jsonMapper, JavaType targetType) {
-        _jsonReader = jsonMapper.reader(targetType);
+        _jsonReader = jsonMapper.readerFor(targetType);
     }
     
     @Override

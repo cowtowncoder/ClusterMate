@@ -136,11 +136,11 @@ public abstract class SharedServiceStuff
     }
     
     public ObjectReader jsonReader(Class<?> type) {
-        return _jsonMapper.reader(type);
+        return _jsonMapper.readerFor(type);
     }
 
     public ObjectReader smileReader(Class<?> type) {
-        return _smileMapper.reader(type);
+        return _smileMapper.readerFor(type);
     }
 
     public ObjectWriter jsonWriter() {
@@ -148,7 +148,7 @@ public abstract class SharedServiceStuff
     }
 
     public ObjectWriter jsonWriter(Class<?> type) {
-        return _jsonMapper.writerWithType(type);
+        return _jsonMapper.writerFor(type);
     }
 
     public ObjectWriter smileWriter() {
@@ -156,7 +156,7 @@ public abstract class SharedServiceStuff
     }
 
     public ObjectWriter smileWriter(Class<?> type) {
-        return _smileMapper.writerWithType(type);
+        return _smileMapper.writerFor(type);
     }
     
     public <T> T convertValue(Object value, Class<T> targetType) throws IOException {
