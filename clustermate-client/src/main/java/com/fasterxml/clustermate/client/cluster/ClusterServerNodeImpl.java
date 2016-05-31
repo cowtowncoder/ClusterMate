@@ -288,9 +288,9 @@ public class ClusterServerNodeImpl
     }
     */
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-    public <B extends RequestPathBuilder<B>> B rootPath() {
+    public <B extends RequestPathBuilder> B rootPath() {
         return (B) _pathBase.builder();
     }
     

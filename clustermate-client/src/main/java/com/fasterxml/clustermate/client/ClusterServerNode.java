@@ -84,7 +84,8 @@ public interface ClusterServerNode
      * the service for this node; used for building paths to access
      * things like entries and node state.
      */
-    public <B extends RequestPathBuilder<B>> B rootPath();
+    @SuppressWarnings("rawtypes")
+	public <B extends RequestPathBuilder> B rootPath();
 
     public abstract <K extends EntryKey> ContentPutter<K> entryPutter();
 
