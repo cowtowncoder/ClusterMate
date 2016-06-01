@@ -142,11 +142,11 @@ public class RemoteClusterStateFetcher
         long roundStart;
         int round = 0;
 
-        while (!ips.isEmpty() && (roundStart = System.currentTimeMillis()) < waitUntil) {
+        while (!ips.isEmpty() && (roundStart = _config.currentTimeMillis()) < waitUntil) {
             Iterator<IpAndPort> it = ips.iterator();
             while (it.hasNext()) {
                 IpAndPort ip = it.next();
-                final long requestTime = System.currentTimeMillis();
+                final long requestTime = _config.currentTimeMillis();
                 long maxTimeout = waitUntil - requestTime;
                 try {
                     ClusterStatusMessage resp = _accessor.getRemoteStatus(ip,
@@ -157,7 +157,7 @@ public class RemoteClusterStateFetcher
                     it.remove(); // remove from bootstrap list
                     NodeState peer = resp.local;
                     bs.updateDirectState(ip, peer,
-                            requestTime, System.currentTimeMillis(), resp.creationTime);
+                            requestTime, _config.currentTimeMillis(), resp.creationTime);
                     // Important: include LOCAL peers of REMOTE that we called; must NOT
                     // Cross the Lines
                     for (NodeState stateSec : resp.localPeers) {
@@ -181,7 +181,7 @@ public class RemoteClusterStateFetcher
             ++round;
 
             // If we failed first time around, let's wait a bit...
-            long timeTaken = System.currentTimeMillis() - roundStart;
+            long timeTaken = _config.currentTimeMillis() - roundStart;
             if (timeTaken < 1000L) { // if we had string of failures, wait a bit
                 try {
                     Thread.sleep(1000L - timeTaken);

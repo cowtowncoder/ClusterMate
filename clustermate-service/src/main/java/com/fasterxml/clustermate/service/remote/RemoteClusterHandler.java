@@ -247,21 +247,14 @@ public class RemoteClusterHandler<K extends EntryKey, E extends StoredEntry<K>>
         LOG.info("Starting {} thread, will sleep for {} msec before operation",
                 getName(), initialSleepMsecs);
 
-        // TODO: any special handling for tests? Or just avoid running altogether?
-        /*
-        if (_stuff.isRunningTests()) {
-            try {
-                _timeMaster.sleep(1L);
-            } catch (InterruptedException e) { }
-        }
-         */
-        
         // Delay start just slightly since startup is slow time, don't want to pile
         // lots of background processing
-        try {
-            Thread.sleep(initialSleepMsecs);
-        } catch (InterruptedException e) {
-            // will most likely just quit in a bit
+        if (!_stuff.isRunningTests()) {
+	        try {
+	            Thread.sleep(initialSleepMsecs);
+	        } catch (InterruptedException e) {
+	            // will most likely just quit in a bit
+	        }
         }
 
         /* At high level, we have two kinds of tasks, depending on whether
